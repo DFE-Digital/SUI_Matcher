@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
+		<NoWarn>$(NoWarn);NU1507</NoWarn>
+		<GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
+	</PropertyGroup>
+</Project>
