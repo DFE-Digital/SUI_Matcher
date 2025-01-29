@@ -8,9 +8,6 @@
 		<OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
 		<HealthCheckVersion>8.0.2</HealthCheckVersion>
 		<AspVersioningVersion>8.1.0</AspVersioningVersion>
-		<MassTransitVersion>8.3.0</MassTransitVersion>
-		<MartenVersion>7.10.1</MartenVersion>
-		<AIExtensions>9.0.0-preview.9.24556.5</AIExtensions>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageVersion Include="Microsoft.AspNet.WebApi.Core" Version="5.3.0" />
@@ -25,10 +22,6 @@
 		<PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.0" />
 		<PackageVersion Include="FluentValidation" Version="11.10.0" />
 		<PackageVersion Include="Riok.Mapperly" Version="3.5.1" ExcludeAssets="runtime" PrivateAssets="all" />
-		<PackageVersion Include="MassTransit" Version="$(MassTransitVersion)" />
-		<PackageVersion Include="MassTransit.RabbitMQ" Version="$(MassTransitVersion)" />
-		<PackageVersion Include="Marten.AspNetCore" Version="$(MartenVersion)" />
-		<PackageVersion Include="Marten" Version="$(MartenVersion)" />
 		<PackageVersion Include="Yarp.ReverseProxy" Version="2.2.0" />
 	</ItemGroup>
 	<ItemGroup>
@@ -41,12 +34,8 @@
 		<!-- Aspire -->
 		<PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
 		<PackageVersion Include="Aspire.Hosting.AppHost" Version="$(AspireVersion)" />
-		<PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
-		<PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="$(AspireVersion)" />
 		<PackageVersion Include="Aspire.Hosting.Redis" Version="$(AspireVersion)" />
 		<PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
-		<PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0-rc.2.24551.3" />
-		<PackageVersion Include="Aspire.Azure.AI.OpenAI" Version="9.0.0-preview.5.24551.3" />
 		<PackageVersion Include="WireMock.Net.Aspire" Version="1.6.7" />
 		<!-- Aspire Custom Extensions -->
 		<PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="$(AspireVersion)" />
@@ -63,8 +52,6 @@
 	<ItemGroup>
 		<!-- Healthchecks -->
 		<PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="8.0.1" />
-		<PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="$(HealthCheckVersion)" />
-		<PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="$(HealthCheckVersion)" />
 		<PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="8.0.1" />
 	</ItemGroup>
 	<ItemGroup>
@@ -75,25 +62,5 @@
 		<PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
 		<PackageVersion Include="MSTest" Version="3.2.0" />
 		<PackageVersion Include="ReportGenerator" Version="5.3.6" />
-	</ItemGroup>
-	<ItemGroup Label="EF">
-		<PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfVersion)" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfVersion)" PrivateAssets="all" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfVersion)" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="$(EfVersion)" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="$(EfVersion)" />
-		<PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="$(EfVersion)" />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.1" />
-		<PackageVersion Include="EFCore.NamingConventions" Version="8.0.3" />
-		<PackageVersion Include="Pgvector" Version="0.3.0" />
-		<PackageVersion Include="Pgvector.EntityFrameworkCore" Version="0.2.1" />
-	</ItemGroup>
-	<ItemGroup Label="AI">
-		<PackageVersion Include="Microsoft.Extensions.AI" Version="$(AIExtensions)" />
-		<PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="$(AIExtensions)" />
-		<PackageVersion Include="Microsoft.Extensions.AI.Ollama" Version="$(AIExtensions)" />
-		<PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="$(AIExtensions)" />
-		<PackageVersion Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="9.0.0-beta.66" />
-		<PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0-beta.2" />
 	</ItemGroup>
 </Project>
