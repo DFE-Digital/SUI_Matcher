@@ -2,7 +2,7 @@
 
 public static class ActivitySourceProvider
 {
-	public const string DefaultSourceName = "coffeeshop";
+	public const string DefaultSourceName = "suimatcher";
 	public static readonly ActivitySource Instance = new(DefaultSourceName, "v1");
 
 	public static ActivityListener AddDummyListener(
