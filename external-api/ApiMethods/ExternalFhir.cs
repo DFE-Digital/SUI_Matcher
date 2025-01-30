@@ -2,13 +2,13 @@ using Shared.Endpoint;
 using Shared.OpenTelemetry;
 
 
-namespace MatchingApi.ApiMethods;
+namespace ExternalApi.ApiMethods;
 
-public class MatchEndpoint : IEndpoint
+public class ExternalFhirEndpoint : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapGet("/matchperson", () => 
+		app.MapGet("/search", () => 
 		{
 			var value = "Person is Matched!!";
 			return value;

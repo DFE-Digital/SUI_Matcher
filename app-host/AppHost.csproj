@@ -8,7 +8,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Aspire.Azure.Security.KeyVault" />
 		<PackageReference Include="Aspire.Hosting.AppHost" />
+		<PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
 		<PackageReference Include="Aspire.Hosting.Redis" />
 		<PackageReference Include="Yarp.ReverseProxy" />
 	</ItemGroup>
@@ -21,6 +23,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\matching-api\Matching.csproj" />
 		<ProjectReference Include="..\validate-api\Validate.csproj" />
+		<ProjectReference Include="..\auth-api\Auth.csproj" />
+		<ProjectReference Include="..\external-api\External.csproj" />
 		<ProjectReference Include="..\yarp\Yarp\Yarp.csproj" />
 	</ItemGroup>
 

@@ -2,9 +2,9 @@ using Shared.Endpoint;
 using Shared.OpenTelemetry;
 
 
-namespace MatchingApi.ApiMethods;
+namespace AuthApi.ApiMethods;
 
-public class MatchEndpoint : IEndpoint
+public class AuthhEndpoint : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{

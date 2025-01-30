@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RootNamespace>MatchingApi</RootNamespace>
-    <ContainerRepository>matching-api</ContainerRepository>
+    <RootNamespace>AuthApi</RootNamespace>
+    <ContainerRepository>auth-api</ContainerRepository>
     <ContainerImageTag>latest</ContainerImageTag>
   </PropertyGroup>
 
