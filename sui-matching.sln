@@ -7,7 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchingApi", "matching-api
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValidateApi", "validate-api\Validate.csproj", "{605A641D-F5E3-4B6F-9092-591F0A7DEE9D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = ".AppHost", "app-host\AppHost.csproj", "{EB61218A-CF80-4389-9C6A-D6AA5C205E95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthApi", "auth-api\Validate.csproj", "{605A641D-F5E3-4B6F-9092-591F0A7DEE9D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalApi", "external-api\Validate.csproj", "{605A641D-F5E3-4B6F-9092-591F0A7DEE9D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppHost", "app-host\AppHost.csproj", "{EB61218A-CF80-4389-9C6A-D6AA5C205E95}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{140D0842-3BBC-4339-9C75-331FD9CB50F8}"
 	ProjectSection(SolutionItems) = preProject
