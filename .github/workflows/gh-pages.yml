@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./documentation
-        run: poetry init
+        run: poetry install --no-root
 
       - name: Deploy website
         working-directory: ./documentation
