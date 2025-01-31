@@ -12,6 +12,10 @@ To build and run the project:
 dotnet build sui-matching.sln
 dotnet run --project app-host/AppHost.csproj
 ```
+Run simple test:
+```
+curl -vv http://localhost:5000/validate/api/v1/runvalidation
+```
 If you have errors connecting to the aspire host page you may need to run the below commands:
 ```
 dotnet dev-certs https --clean
@@ -94,3 +98,11 @@ Currently a skeleton container in order to mimic azure keyvault in local testing
 
 ## Current Status of Repo
 Scaffolding of services built out with an attempt to tie them together.
+
+## Branching and Pull Requests
+
+## Commit Messages
+
+## Testing
+
+## CI/CD

@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchingApi", "matching-api
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValidateApi", "validate-api\Validate.csproj", "{605A641D-F5E3-4B6F-9092-591F0A7DEE9D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthApi", "auth-api\Validate.csproj", "{605A641D-F5E3-4B6F-9092-591F0A7DEE9D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthApi", "auth-api\Auth.csproj", "{605A641D-F5E3-4B6F-9092-591F0A7DEE9D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalApi", "external-api\Validate.csproj", "{605A641D-F5E3-4B6F-9092-591F0A7DEE9D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalApi", "external-api\External.csproj", "{605A641D-F5E3-4B6F-9092-591F0A7DEE9D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppHost", "app-host\AppHost.csproj", "{EB61218A-CF80-4389-9C6A-D6AA5C205E95}"
 EndProject
