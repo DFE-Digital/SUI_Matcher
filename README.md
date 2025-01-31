@@ -98,11 +98,3 @@ Currently a skeleton container in order to mimic azure keyvault in local testing
 
 ## Current Status of Repo
 Scaffolding of services built out with an attempt to tie them together.
-
-## Branching and Pull Requests
-
-## Commit Messages
-
-## Testing
-
-## CI/CD

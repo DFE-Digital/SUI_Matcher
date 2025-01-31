@@ -1,0 +1,37 @@
+name: Sphinx docs to gh-pages
+env:
+  PYTHON_VERSION = "3.12"
+
+on:
+  push:
+    branches:
+      - main
+      - initial_testing_branch
+
+# workflow_dispatch:        # Un comment line if you also want to trigger action manually
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install Dependencies
+        working-directory: ./documentation
+        run: poetry init
+
+      - name: Deploy website
+        working-directory: ./documentation
+        run: poetry run mkdocs gh-deploy
