@@ -5,7 +5,11 @@
 Pre-reqs
 https://learn.microsoft.com/en-us/dotnet/aspire/fundamentals/setup-tooling?tabs=linux&pivots=dotnet-cli
 
-Get V9
+Install .net SDK v9. Instructions for MacOS below.
+
+```curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --version 9.0.102 --install-dir "$HOME/.dotnet
+echo 'export PATH="$HOME/.dotnet:$PATH"' >> ~/.zshrc && source ~/.zshrc && echo $PATH
+```
 
 To build and run the project:
 ```
