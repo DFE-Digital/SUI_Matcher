@@ -3,7 +3,7 @@
 
 The **NHS Number Matcher Pilot** is a tool that allows for person records to be matched against NHS numbers held on the NHS SPINE, via the [PDS FHIR API](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir).
 
-Check out the [architecture](architecture) section for further information.
+Check out the [architecture](architecture.md) section for further information.
 
 !!! note
 
@@ -17,3 +17,6 @@ The key goals of this project are:
 * Evaluate how good the match rate is
 * Understand any IG challenges
 
+
+## Current Status of Repo
+Scaffolding of services built out with an attempt to tie them together.

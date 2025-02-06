@@ -1,9 +1,10 @@
 site_name: NHS Number Matcher 
 theme:
-  name: readthedocs
+  name: material
   highlightjs: true
 plugins:
   - search
+  - mermaid2
   - mkdocstrings:
       handlers:
         # See: https://mkdocstrings.github.io/python/usage/
@@ -11,6 +12,12 @@ plugins:
           options:
             docstring_style: sphinx
 markdown_extensions:
-  - markdown_include.include:
-      base_path: .
+  - tables
   - admonition
+  - pymdownx.superfences:
+      # make exceptions to highlighting of code:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid_custom
+  - markdown_include.include:
