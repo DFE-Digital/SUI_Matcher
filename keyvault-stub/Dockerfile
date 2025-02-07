@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
 WORKDIR /app
 
 COPY . ./
+COPY ./Properties/* /app
 RUN dotnet restore
 RUN dotnet publish -c Release -o out
 

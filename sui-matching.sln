@@ -29,6 +29,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "shared\Shared\Sha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp", "yarp\Yarp\Yarp.csproj", "{B64CA4AA-AE04-4C84-AADE-704FDA69F06E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration-tests", "integration-tests", "{AC1B57FC-52F7-4C0D-8FE9-295CF13D46D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidateApi.IntegrationTests", "integration-tests\validate-tests\ValidateApi.IntegrationTests.csproj", "{5538D982-E7B4-45F9-9F66-40ACD5F58F63}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,11 +74,18 @@ Global
 		{B64CA4AA-AE04-4C84-AADE-704FDA69F06E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B64CA4AA-AE04-4C84-AADE-704FDA69F06E}.Release|Any CPU.ActiveCfg = Release|AnyCPU
 		{B64CA4AA-AE04-4C84-AADE-704FDA69F06E}.Release|Any CPU.Build.0 = Release|AnyCPU
+		{5538D982-E7B4-45F9-9F66-40ACD5F58F63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5538D982-E7B4-45F9-9F66-40ACD5F58F63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5538D982-E7B4-45F9-9F66-40ACD5F58F63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5538D982-E7B4-45F9-9F66-40ACD5F58F63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C3003BB3-31B7-4AFA-80BD-E3FB6FBC2CAD}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5538D982-E7B4-45F9-9F66-40ACD5F58F63} = {AC1B57FC-52F7-4C0D-8FE9-295CF13D46D8}
 	EndGlobalSection
 EndGlobal
