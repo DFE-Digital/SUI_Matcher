@@ -1,11 +1,14 @@
 using Shared.Endpoint;
 using Shared.Exceptions;
-using Shared.OpenTelemetry;
 using System.Diagnostics.CodeAnalysis;
+using ExternalApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+builder.Services.AddHttpClient<AuthServiceClient>(
+	static client => client.BaseAddress = new("https+http://auth-api"));
 
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
