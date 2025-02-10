@@ -1,10 +1,11 @@
 using AppHost;
+using Microsoft.Extensions.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 var redis = builder.AddRedis("redis")
-				   .WithLifetime(ContainerLifetime.Persistent)
-				   .WithHealthCheck();
+	.WithLifetime(ContainerLifetime.Persistent)
+	.WithHealthCheck();
 
 var secrets = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureKeyVault("secrets")
@@ -17,6 +18,7 @@ var authApi = builder.AddProject<Projects.Auth>("auth-api")
 					 .WithSwaggerUI();
 
 var externalApi = builder.AddProject<Projects.External>("external-api")
+					.WithReference(authApi)
 					 .WithReference(redis).WaitFor(redis)
 					 .WithReference(secrets)
 					 .WithSwaggerUI();
@@ -27,6 +29,7 @@ var validateApi = builder.AddProject<Projects.Validate>("validate-api")
 var matchingApi = builder.AddProject<Projects.Matching>("matching-api")
 						 .WithReference(authApi)
 						 .WithReference(validateApi)
+						 .WithReference(externalApi)
 						 .WithSwaggerUI();
 
 builder.AddProject<Projects.Yarp>("yarp")
