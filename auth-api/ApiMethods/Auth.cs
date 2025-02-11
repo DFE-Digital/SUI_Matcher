@@ -1,18 +1,17 @@
+using AuthApi.Services;
 using Shared.Endpoint;
-using Shared.OpenTelemetry;
-
 
 namespace AuthApi.ApiMethods;
 
-public class AuthhEndpoint : IEndpoint
+/**
+ * https://digital.nhs.uk/developer/guides-and-documentation/tutorials/signed-jwt-authentication-c-tutorial
+ */
+public class AuthEndpoint(ITokenService tokenService) : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapGet("/matchperson", () => 
-		{
-			var value = "Person is Matched!!";
-			return value;
-		});
+		// Gets the access token from NHS Digital 
+		app.MapGet("/get-token", async () => await tokenService.GetBearerToken());
 	}
 
 }

@@ -1,18 +1,18 @@
+using ExternalApi.Services;
 using Shared.Endpoint;
-using Shared.OpenTelemetry;
-
 
 namespace ExternalApi.ApiMethods;
 
-public class ExternalAuthEndpoint : IEndpoint
+public class ExternalAuthEndpoint(AuthServiceClient authServiceClient) : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapGet("/authnhs", () => 
+		app.MapGet("/perform-search", async () => 
 		{
+			await authServiceClient.GetToken();
+			
 			var value = "Person is Matched!!";
 			return value;
 		});
 	}
-
 }

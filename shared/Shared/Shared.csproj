@@ -2,6 +2,7 @@
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="Aspire.Hosting.Redis" />
 		<PackageReference Include="FluentValidation" />
 		<PackageReference Include="MediatR" />
 		<PackageReference Include="MassTransit" />

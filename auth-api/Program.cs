@@ -1,9 +1,21 @@
 using Shared.Endpoint;
 using Shared.Exceptions;
-using Shared.OpenTelemetry;
 using System.Diagnostics.CodeAnalysis;
+using AuthApi.Services;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Environment.IsDevelopment())
+{
+	DotNetEnv.Env.Load();
+	builder.Configuration.AddEnvironmentVariables();
+	builder.Services.AddSingleton<ITokenService, StubTokenService>();
+}
+else
+{
+	builder.Services.AddSingleton<ITokenService, TokenService>();
+}
 
 builder.AddServiceDefaults();
 
@@ -26,6 +38,8 @@ builder.Services.AddApiVersioning(options =>
 });
 
 builder.Services.AddEndpoints(typeof(Program).Assembly);
+
+builder.AddRedisDistributedCache(connectionName: "redis");
 
 var app = builder.Build();
 
