@@ -1,0 +1,6 @@
+{
+    "tokenUrl": "https:localhost.com/oauth2/token",
+    "privKey": "randomkeyinfo",
+    "clientId": "randomclientid",
+    "keyId": "localkeyid"
+}
