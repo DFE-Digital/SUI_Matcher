@@ -33,4 +33,4 @@ jobs:
 
       - name: Deploy website
         working-directory: ./documentation
-        run: poetry run mkdocs gh-deploy
+        run: poetry run mkdocs gh-deploy --force

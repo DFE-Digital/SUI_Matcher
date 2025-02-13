@@ -30,6 +30,8 @@ public class AuthClientCredentials
             {"client_assertion", jwt},
         };
         var content = new FormUrlEncodedContent(values);
+
+        Console.WriteLine("Requesting token from " + _tokenUrl);
         
         var response = await _client.PostAsync(_tokenUrl, content);
         

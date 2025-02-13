@@ -12,13 +12,11 @@ using System;
 
 public class TokenService : ITokenService
 {
-    private readonly string _tokenUrl = Environment.GetEnvironmentVariable("NHS_DIGITAL_TOKEN_URL")!;
-    
     // Keyvault Client
     private readonly SecretClient _secretClient;
-    
     // Redis Client
     private readonly IDistributedCache _distributedCache;
+    private readonly string _tokenUrl;
 
     public TokenService(IConfiguration configuration, 
         IDistributedCache cache)
@@ -26,6 +24,7 @@ public class TokenService : ITokenService
         var keyVaultUri = new Uri(configuration["ConnectionStrings:secrets"]!);
         _secretClient = new SecretClient(keyVaultUri, new DefaultAzureCredential());
         _distributedCache = cache;
+        _tokenUrl = configuration["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"]!;
     }
 
     public async Task<string> GetBearerToken()

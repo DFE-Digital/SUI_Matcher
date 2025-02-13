@@ -30,15 +30,26 @@ dotnet dev-certs https --trust
 
 #### Prerequisites
 
-- Create `.env` file in the `auth-api` project (this is necessary to use the stub secrets manager, like Azure KeyVault)
+Now running using the environmental files. All non secret material is located in the environment appsettings file. By default all external connectivity is stubbed out. If you want to use the NHS integration environment you will need to set a private key.
+
+- Create `.env` file in the project root (this is necessary to use the stub secrets manager, like Azure KeyVault)
+
+Add the following to the .env file and add in the secret values inside the quotes. Make sure the private key is in the PKCS#1 format. if it is in PKCS#8 you can change it with openssl as shown below. Be sure to include the prefix and suffix.
 
 ```properties
-NHS_DIGITAL_TOKEN_URL=https://int.api.service.nhs.uk/oauth2/token
-NHS_DIGITAL_CLIENT_ID=Rj2aEm3VE4G3c5TpD8aP2WroCeASpMIc
-NHS_DIGITAL_KID=test-1
-NHS_DIGITAL_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
+export NhsAuthConfig__NHS_DIGITAL_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
 {Your Private Key}
 -----BEGIN RSA PRIVATE KEY-----"
+
+export NhsAuthConfig__NHS_DIGITAL_CLIENT_ID=""
+```
+To change your key into correct format:
+```
+openssl rsa -in originalkey.pem -traditional -out newkey.pem
+```
+Then run the command (mac):
+```
+source .env
 ```
 
 #### Running
@@ -46,8 +57,7 @@ NHS_DIGITAL_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
 - To run the whole test suite via the terminal:
 
 ```
-cd sui-tests
-dotnet test
+dotnet test --settings tests.runsettings
 ```
 
 or individually:
