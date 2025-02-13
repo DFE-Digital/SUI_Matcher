@@ -23,7 +23,6 @@ public class StubTokenService(IConfiguration configuration,
                 return await Task.FromResult(_configuration["NhsAuthConfig:NHS_DIGITAL_KID"]);
             case NhsDigitalKeyConstants.PrivateKey:
                 var privateKey = _configuration["NhsAuthConfig:NHS_DIGITAL_PRIVATE_KEY"];
-                Console.WriteLine($"Private key: {privateKey}");
             if (string.IsNullOrEmpty(privateKey))
             {
                 using (var rsa = RSA.Create(2048))

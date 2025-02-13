@@ -34,10 +34,12 @@ Now running using the environmental files. All non secret material is located in
 
 - Create `.env` file in the project root (this is necessary to use the stub secrets manager, like Azure KeyVault)
 
-Add the following to the .env file and add in the secret values inside the quotes. Make sure the private key is in the PKCS#1 format. if it is in PKCS#8 you can change it with openssl
+Add the following to the .env file and add in the secret values inside the quotes. Make sure the private key is in the PKCS#1 format. if it is in PKCS#8 you can change it with openssl as shown below. Be sure to include the prefix and suffix.
 
 ```properties
-export NhsAuthConfig__NHS_DIGITAL_PRIVATE_KEY=""
+export NhsAuthConfig__NHS_DIGITAL_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
+{Your Private Key}
+-----BEGIN RSA PRIVATE KEY-----"
 
 export NhsAuthConfig__NHS_DIGITAL_CLIENT_ID=""
 ```
@@ -49,7 +51,6 @@ Then run the command (mac):
 ```
 source .env
 ```
-The 
 
 #### Running
 
