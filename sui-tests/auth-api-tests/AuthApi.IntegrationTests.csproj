@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <IsPublishable>false</IsPublishable>
+		<IsPackable>false</IsPackable>
+    <IsAspireHost>true</IsAspireHost>
+  </PropertyGroup>
+
+  <ItemGroup>
+		<PackageReference Include="coverlet.collector" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="WireMock.Net.Aspire" />
+		<PackageReference Include="xunit" />
+		<PackageReference Include="xunit.runner.visualstudio" />
+		<PackageReference Include="ReportGenerator" />
+		<PackageReference Include="Asp.Versioning.Http.Client" />
+		<PackageReference Include="MSTest" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Aspire.Hosting.AppHost" />
+		<PackageReference Include="Aspire.Hosting.PostgreSQL" />
+		<PackageReference Include="Aspire.Hosting.Redis" />
+		<PackageReference Include="Aspire.Hosting.RabbitMQ" />
+		<PackageReference Include="Aspire.Hosting.Testing" />
+	</ItemGroup>
+
+  <ItemGroup>
+		<ProjectReference Include="..\..\auth-api\Auth.csproj" IsAspireProjectResource="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="TestResults\" />
+	</ItemGroup>
+
+</Project>
