@@ -9,9 +9,10 @@ namespace ExternalApi.Services;
 
 public class NhsFhirClient(
     AuthServiceClient authServiceClient, 
-    ILogger<NhsFhirClient> logger)
+    ILogger<NhsFhirClient> logger,
+    IConfiguration configuration)
 {
-    private readonly string _baseUri = Environment.GetEnvironmentVariable("NHS_DIGITAL_FHIR_ENDPOINT")!;
+    private readonly string _baseUri = configuration["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"]!;
     
     public async Task<SearchResult> PerformSearch(SearchQuery query)
     {

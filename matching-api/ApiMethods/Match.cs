@@ -1,3 +1,6 @@
+using Json.More;
+using MatchingApi.Lib;
+using MatchingApi.Models;
 using MatchingApi.Services;
 using Shared.Endpoint;
 
@@ -7,12 +10,26 @@ public class MatchEndpoint(ExternalServiceClient externalServiceClient) : IEndpo
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapGet("/matchperson", async () =>
+		app.MapPost("/matchperson", async (PersonSpecification personSpecification) =>
 		{
-			await externalServiceClient.PerformQuery();
+			var validationResults = ValidationUtil.Validate(personSpecification);
+
+			if (validationResults.Results!.Any())
+			{
+				return Results.BadRequest(new
+				{
+					Results = validationResults.Results!.Select(vr => new
+					{
+						vr.MemberNames,
+						vr.ErrorMessage
+					})
+				});
+			}
+			
+			var searchResult = await externalServiceClient.PerformQuery(personSpecification);
 			
 			var value = "Person is Matched!!";
-			return value;
+			return Results.Ok(value);
 		});
 	}
 

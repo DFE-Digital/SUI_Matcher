@@ -9,6 +9,7 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <LangVersion>default</LangVersion>
+        <RootNamespace>AppHost.IntegrationTests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

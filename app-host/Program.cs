@@ -23,12 +23,8 @@ var externalApi = builder.AddProject<Projects.External>("external-api")
 					     .WithReference(secrets)
 					     .WithSwaggerUI();
 
-var validateApi = builder.AddProject<Projects.Validate>("validate-api")
-						 .WithSwaggerUI();
-
 var matchingApi = builder.AddProject<Projects.Matching>("matching-api")
 						 .WithReference(authApi)
-						 .WithReference(validateApi)
 						 .WithReference(externalApi)
 						 .WithSwaggerUI();
 

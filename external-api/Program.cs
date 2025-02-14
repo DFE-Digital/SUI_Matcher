@@ -7,9 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-DotNetEnv.Env.Load();
-builder.Configuration.AddEnvironmentVariables();
-
 builder.Services.AddHttpClient<AuthServiceClient>(
 	static client => client.BaseAddress = new("https+http://auth-api"));
 

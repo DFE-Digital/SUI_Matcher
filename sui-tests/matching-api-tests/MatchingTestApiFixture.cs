@@ -1,21 +1,15 @@
-using Aspire.Hosting.Testing;
-using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Testing;
-
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 
-namespace ValidateApi.IntegrationTests;
+namespace MatchingApi.IntegrationTests;
 
-public sealed class ValidateApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
+public sealed class MatchingApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
 	private readonly IHost _app;
 
-	public ValidateApiFixture()
+	public MatchingApiFixture()
 	{
-		var options = new DistributedApplicationOptions { AssemblyName = typeof(ValidateApiFixture).Assembly.FullName, DisableDashboard = true };
+		var options = new DistributedApplicationOptions { AssemblyName = typeof(MatchingApiFixture).Assembly.FullName, DisableDashboard = true };
 		var appBuilder = DistributedApplication.CreateBuilder(options);
 
 		_app = appBuilder.Build();
@@ -23,14 +17,13 @@ public sealed class ValidateApiFixture : WebApplicationFactory<Program>, IAsyncL
 
 	protected override IHost CreateHost(IHostBuilder builder)
 	{
-		builder.ConfigureWebHost(builder =>
+		builder.ConfigureWebHost(b =>
 		{
-			builder.UseTestServer()
+			b.UseTestServer()
 				.ConfigureServices(services =>
 				{
 					services.RemoveAll<IHostedService>();
 				});
-
 		});
 
 		return base.CreateHost(builder);

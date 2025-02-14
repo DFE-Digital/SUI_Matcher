@@ -5,8 +5,6 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchingApi", "matching-api\Matching.csproj", "{1E1B0C85-DB1F-485E-8B5A-CE03E9977029}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValidateApi", "validate-api\Validate.csproj", "{605A641D-F5E3-4B6F-9092-591F0A7DEE9D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppHost", "app-host\AppHost.csproj", "{EB61218A-CF80-4389-9C6A-D6AA5C205E95}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{140D0842-3BBC-4339-9C75-331FD9CB50F8}"
@@ -25,17 +23,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "shared\Shared\Sha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp", "yarp\Yarp\Yarp.csproj", "{B64CA4AA-AE04-4C84-AADE-704FDA69F06E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sui-tests", "sui-tests", "{79E4CE9C-EF46-4CD5-A433-127380AF517C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppHost.IntegrationTests", "sui-tests\app-host-tests\AppHost.IntegrationTests.csproj", "{D80E6F3D-BF63-4F8D-B83A-6841CC5F3D2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sui-tests", "sui-tests\app-host-tests\sui-tests.csproj", "{D80E6F3D-BF63-4F8D-B83A-6841CC5F3D2A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidateApi.IntegrationTests", "sui-tests\validate-api-tests\ValidateApi.IntegrationTests.csproj", "{98A16972-5E73-4DEE-B247-35B8A77A60DF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingApi.IntegrationTests", "sui-tests\matching-api-tests\MatchingApi.IntegrationTests.csproj", "{98A16972-5E73-4DEE-B247-35B8A77A60DF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthApi.IntegrationTests", "sui-tests\auth-api-tests\AuthApi.IntegrationTests.csproj", "{6414D09D-7299-42C4-9F4C-F281C63CA4D1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auth", "auth-api\Auth.csproj", "{8D518FC9-2360-4F6F-9348-5F5840F9D0F4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "External", "external-api\External.csproj", "{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExternalApi.IntegrationTests", "sui-tests\sui-external-tests\ExternalApi.IntegrationTests.csproj", "{2440D760-54E0-4647-9EFB-9DC0BE4DA86F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,6 +83,10 @@ Global
 		{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2440D760-54E0-4647-9EFB-9DC0BE4DA86F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2440D760-54E0-4647-9EFB-9DC0BE4DA86F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2440D760-54E0-4647-9EFB-9DC0BE4DA86F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2440D760-54E0-4647-9EFB-9DC0BE4DA86F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

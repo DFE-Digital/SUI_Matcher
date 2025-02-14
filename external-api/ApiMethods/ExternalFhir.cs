@@ -14,18 +14,6 @@ public class ExternalFhirEndpoint(NhsFhirClient fhirClient) : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapPost("/search", async (SearchQuery query) =>
-		{
-			var validationResults = new List<ValidationResult>();
-			var context = new ValidationContext(query);
-			bool isValid = Validator.TryValidateObject(query, context, validationResults, true);
-
-			if (!isValid)
-			{
-				//return Results.BadRequest(validationResults);
-			}
-			
-			return await fhirClient.PerformSearch(query);
-		});
+		app.MapPost("/search", async (SearchQuery query) => await fhirClient.PerformSearch(query));
 	}
 }
