@@ -1,19 +1,16 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using Asp.Versioning;
-using Asp.Versioning.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
-using ValidateApi.Models;
-using Xunit;
+using MatchingApi.Models;
 
-namespace ValidateApi.IntegrationTests;
+namespace MatchingApi.IntegrationTests;
 
-public sealed class ValidateTest : IClassFixture<WebApplicationFactory<Program>>
+public sealed class MatchingTest : IClassFixture<WebApplicationFactory<Program>>
 {
 	private readonly WebApplicationFactory<Program> _webApplicationFactory;
 	private readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web);
 
-	public ValidateTest(WebApplicationFactory<Program> factory)
+	public MatchingTest(WebApplicationFactory<Program> factory)
 	{
 		_webApplicationFactory = factory;
 	}
@@ -26,30 +23,35 @@ public sealed class ValidateTest : IClassFixture<WebApplicationFactory<Program>>
 	[Theory]
 	[InlineData("", "Doe", "2000-01-01", "1234567890", "test@example.com", "male", "AB1 2CD", "Given name is required")]
 	[InlineData("John", "", "2000-01-01", "1234567890", "test@example.com", "male", "AB1 2CD", "Family name is required")]
-	[InlineData("John", "Doe", "invalid-date", "1234567890", "test@example.com", "male", "AB1 2CD", "Incorrect Date Format")]
 	[InlineData("John", "Doe", "2000-01-01", "invalid-phone", "test@example.com", "male", "AB1 2CD", "Invalid phone number.")]
 	[InlineData("John", "Doe", "2000-01-01", "1234567890", "invalid-email", "male", "AB1 2CD", "Invalid email address.")]
 	[InlineData("John", "Doe", "2000-01-01", "1234567890", "test@example.com", "invalid-gender", "AB1 2CD", "Gender has to match FHIR standards")]
 	[InlineData("John", "Doe", "2000-01-01", "1234567890", "test@example.com", "male", "invalid-postcode", "Invalid postcode.")]
 	public async Task Validate_InvalidData(string given, string family, string birthdate, string phone, string email, string gender, string addresspostalcode, string expectedErrorMessage)
 	{
-		var _httpClient = CreateHttpClient();
-		var response = await _httpClient.GetAsync($"/api/v1/runvalidation?given={given}&family={family}&birthdate={birthdate}&phone={phone}&email={email}&gender={gender}&addresspostalcode={addresspostalcode}");
+		var httpClient = CreateHttpClient();
+		
+		var response = await httpClient.PostAsync("/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+		{
+			Given = given,
+			Family = family,
+			BirthDate = Convert.ToDateTime(birthdate),
+			Phone = phone,
+			Email = email,
+			Gender = gender,
+			AddressPostalCode = addresspostalcode
+		}));
 		
 		// Assert
 		Assert.False(response.IsSuccessStatusCode);
         var validateResponse = await response.Content.ReadFromJsonAsync<ValidationResponse>(_jsonSerializerOptions);
-		Assert.Contains(validateResponse.ValidationResults, vr => vr.ErrorMessage == expectedErrorMessage);
+        Assert.NotNull(validateResponse?.Results);
+		Assert.Contains(validateResponse.Results, vr => vr.ErrorMessage == expectedErrorMessage);
 	}
 
-	private class ValidationResponse
+	/*[Fact]
+	public async Task Matching_SinglePerson()
 	{
-		public IEnumerable<ValidationResult> ValidationResults { get; set; }
-	}
-
-	private class ValidationResult
-	{
-		public IEnumerable<string> MemberNames { get; set; }
-		public string ErrorMessage { get; set; }
-	}
+		// TODO
+	}*/
 }

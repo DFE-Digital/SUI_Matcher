@@ -8,10 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+		<PackageReference Include="Hl7.Fhir.R4" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
 		<PackageReference Include="Asp.Versioning.Http" />
 		<PackageReference Include="FluentValidation.AspNetCore" />
+      <PackageReference Include="DotNetEnv" />
   </ItemGroup>
 
 	<ItemGroup>

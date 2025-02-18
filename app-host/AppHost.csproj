@@ -23,7 +23,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\matching-api\Matching.csproj" />
-		<ProjectReference Include="..\validate-api\Validate.csproj" />
 		<ProjectReference Include="..\auth-api\Auth.csproj" />
 		<ProjectReference Include="..\external-api\External.csproj" />
 		<ProjectReference Include="..\yarp\Yarp\Yarp.csproj" />

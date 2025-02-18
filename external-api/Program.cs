@@ -10,6 +10,8 @@ builder.AddServiceDefaults();
 builder.Services.AddHttpClient<AuthServiceClient>(
 	static client => client.BaseAddress = new("https+http://auth-api"));
 
+builder.Services.AddSingleton<NhsFhirClient>();
+
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();

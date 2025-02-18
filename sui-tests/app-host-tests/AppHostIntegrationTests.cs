@@ -1,27 +1,14 @@
 using Aspire.Hosting.Testing;
-using Shared.Helpers;
-using Xunit;
 using Xunit.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
 
-namespace sui_tests.Tests;
+namespace AppHost.IntegrationTests;
 
-public class AuthEndpointIntegrationTests
+public class AppHostIntegrationTests(ITestOutputHelper output)
 {
-    private readonly ITestOutputHelper _output;
-    public AuthEndpointIntegrationTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     public static IEnumerable<object[]> GetEndpoints()
     {
         yield return new object[] { "auth-api", "/health" };
         yield return new object[] { "matching-api", "/health" };
-        yield return new object[] { "validate-api", "/health" };
         yield return new object[] { "external-api", "/health" };
     }
 
