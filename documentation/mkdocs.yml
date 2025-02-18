@@ -13,6 +13,7 @@ plugins:
             docstring_style: sphinx
 markdown_extensions:
   - tables
+  - def_list
   - admonition
   - pymdownx.superfences:
       # make exceptions to highlighting of code:
