@@ -12,9 +12,103 @@ The PDS FHIR API has a limitation of 5TPS for requests, and the "fallback" logic
 
 For principles, please refer to the [DfE Technical Guidance](https://technical-guidance.education.gov.uk/principles/general/) and [Secure by Design Principles](https://www.security.gov.uk/policy-and-guidance/secure-by-design/).
 
-## Logical Architecture
+## High Level Logical Architecture
 
-Placeholder
+```mermaid
+C4Container
+	title High Level Components - NHS SUI
+    Container_Boundary(c1, "Local Authority") {
+        System(laclient, "Local Authority Client")
+        System(sui_matching_service, "Sui Matching Service")
+        ContainerDb(db, "File Storage", "Liquid Logic Output")
+    }
+    Container_Boundary(c2, "NHS Services") {
+        System(nhs_fhir_api, "NHS PDS FHIR API")
+        System(nhs_auth_api, "NHS PDS Auth API") 
+    }
+
+    Rel(laclient, db, "Gets File")
+	Rel(laclient, sui_matching_service, "HTTPS")
+	Rel(sui_matching_service, nhs_fhir_api, "HTTPS")
+    Rel(sui_matching_service, nhs_auth_api, "HTTPS")
+```
+
+## Systems Architecture
+### Physical View
+<img src="../assets/SUI-systems-arch.drawio.png"/>
+
+#### Definitions:
+**Liquid Logic Server (Local Authority owned and run):** 
+Case management system used for recording referrals. Contains records with demographic information about referrals.
+
+**File Storage (Local Authority owned and run):**
+Server that will contain the file with the source information.
+
+**Client Tool (New Component):**
+A tool that takes the input file from the file storage and loops through the rows of data making a request to the SUI matching service. It outputs a results of the matching process and extra information about it.
+
+**SUI Resource Group (New Component):**
+Represents the application that will be deployed in a Local Authority.
+
+#### Step by Step Flow Happy Path
+
+1. A nightly batch job runs that outputs a CSV file to an accessible location.
+2. The client tool periodically checks for a new file.
+3. When a new file is present it consumes it and starts to process the data.
+4. The client loops through the records in the file and extracts the information needed to be able to make an API call against the SUI Matching Service via a private endpoint.
+5. The SUI Matching Service ingress controller (reverse proxy) accepts the request and forwards it onto the service.
+6. The SUI Service validates the data.
+7. With valid data it then checks authentication is in place to make a request to the NHS.
+8. With valid data and a valid authentication token it then makes one or more calls to the NHS PDS FHIR API to retrieve a NHS number. This call is made over the internet.
+9. The returned results are examined and then returned to the client.
+10. The client outputs the data to a results CSV file (NHS numbers alongside the data) and a metadata CSV file that gives further information on the process and input data.
+
+### Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    box Client Tooling
+    participant client as Client Tool
+    end
+    box SUI Service
+    participant suimatch as SUI Matching Service
+    participant suiexternal as SUI External Service
+    participant suiauth as SUI Auth Service
+    participant redis as Redis
+    end
+    box NHS Services
+    participant nhsauth as NHS AUTH API
+    participant nhssearch as NHS FHIR API
+    end
+
+    client->>+suimatch: Sends record to be validated and matched
+    loop Validate Data
+        suimatch->>suimatch: Validate the data sent
+        alt Invalid Data
+            suimatch-->>client: Data invalid end process
+        else Valid Data
+            suimatch->>+suiexternal: Sends query so a request can be made
+        end
+    end
+        suiexternal->>+suiauth: Checks authentication status
+        suiauth->>redis: Checks for token
+        alt Token Does Not Exist
+            redis-->>suiauth: No token to return
+            suiauth->>nhsauth: Get new token
+            nhsauth-->>suiauth: Return new token
+            suiauth->>redis: Store token
+        else Token Exists
+            redis-->>suiauth: Token available to return
+        end
+        suiauth-->>-suiexternal: Token Available
+        suiexternal->>redis: Get token
+        redis-->>suiexternal: Returns token
+        suiexternal->>nhssearch: Makes request to NHS service
+        nhssearch-->>suiexternal: Returns data
+        suiexternal-->>-suimatch: Passes response to be formatted
+        suimatch-->>-client: Returns data to client to be output
+
+```
 
 ## Application Architecture 
 
@@ -28,8 +122,6 @@ C4Container
 
 	Container_Boundary(c1, "Sui Matching Service") {
 		Container(reverse_proxy, "Gateway", "C#, .NET 8, YARP", "The reverse proxy/API gateway of the SUI matcher.")
-
-		Container(validate_api, "Validate APIs", "C#, .NET 8, MassTransit", "The counter service.")
 		Container(matching_api, "Matching APIs", "C#, .NET 8, MassTransit", "The barista service.")
 		Container(auth_api, "Auth APIs", "C#, .NET 8, MassTransit", "The authentication service.")
 		Container(external_api, "External Services", "C#, .NET 8, Marten", "Makes the outbound connections for other services")
@@ -45,56 +137,98 @@ C4Container
     }
 
 	Rel(laclient, reverse_proxy, "Uses", "HTTPS")
+    UpdateRelStyle(laclient, reverse_proxy, $offsetY="-20")
 	
-	Rel(reverse_proxy, validate_api, "Proxies", "HTTP")
 	Rel(reverse_proxy, matching_api, "Proxies", "HTTP")
 
-	Rel(auth_api, cache, "Adds/checks Tokens", "TCP")
-    Rel(auth_api, keyvault, "Gets Secrets", "TCP")
+	Rel(auth_api, cache, "Adds/checks Tokens", "HTTP")
+    Rel(auth_api, keyvault, "Gets Secrets", "HTTP")
+    Rel(auth_api, pds, "Authenticates", "HTTPS")
+    UpdateRelStyle(auth_api, cache, $offsetX="30")
 
-    Rel(external_api, cache, "Gets Tokens", "TCP")
-    Rel(external_api, keyvault, "Gets Secrets", "TCP")
+    Rel(external_api, cache, "Gets Token", "HTTP")
+    Rel(external_api, keyvault, "Gets Secrets", "HTTP")
     Rel(external_api, pds, "Retrieves NHS Number", "HTTPS")
+    UpdateRelStyle(external_api, keyvault, $offsetX="40", $offsetY="40")
 	
-	Rel(matching_api, auth_api, "Calls", "HTTP")
+	Rel(external_api, auth_api, "Calls", "HTTP")
+
     Rel(matching_api, external_api, "Calls", "HTTP")
 	
 ```
 
 ### Services:
 
-#### validate (external):
+#### matching:
 
-Endpoint used to validate data send to the endpoint. Will return information about the validatity of the data sent to it. Should validate for the following data items:
+The matching service provides the ingress into the application. It also serves as the logic controller for the application. It accepts the following parameters:
 
 * given name (required)
 * family name (required)
+* date of birth - which can be a range (required)
 * gender
 * postcode
-* date of birth - which can be a range (required)
 * email address
 * phone number
 
-Adapted from the schema specified here:
-https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient
+Adapted from the schema specified here
+[NHS PDS FHIR Schema](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient).
 
-#### matching (external):
+It validates these parameters meet the schema and then handles the logic for making external calls to the NHS in order to find a matching NHS number.
 
-Supplied with the information also supplied to the validate endpoint. It controls the logic for matching a single record. It crafts the request parameters to pass to the external api service in order to make the outbound call to the NHS.
+Response 200:
+``` json
+{ 
+    "result": {
+        "matchStatus": "match",
+        "nhsNumber": "1234567890",
+        "processStage": "3",
+        "score": "0.96"
+    },
+    "dataQuality": {
+        "given": "valid",
+        "family": "valid",
+        "birthdate": "valid",
+        "addressPostalCode": "valid",
+        "phone": "invalid",
+        "email": "invalid",
+        "gender": "notProvided"
+    }
+}
+```
+**result**
 
-#### auth (internal):
+| Name         | Type   | Desc         | Values                                    |
+| :---         | :---   |     :---     |                                      :--- |
+| matchStatus  | string | Match Result | match, noMatch, potentialMatch, manyMatch |
+| nhsNumber    | string | nhsNumnber   | 10 digit string, empty string             |
+| ProcessStage | int    | stage of the process it exited at | 0, 1, 2, 3           |
+| score        | number | Score of the search | 0.0 to 1.0                         |
 
-Handles the secret key material in order to get the bearer token. It will maake its outbound connections via the external API. It will use azure keyvault to get the material needed to retrieve the bearer token. It will then store the bearer token in redis to be accessed by the external service.
+**matchStatus**
 
-NHS has [Examples of how to build](https://github.com/NHSDigital/hello-world-auth-examples/tree/main/application-restricted-signed-jwt-tutorials/csharp) on their git repo. 
+| Name           | Desc                            |
+| :---           | :---                            |  
+| match          | One match has been returned     |
+| noMatch        | No match has been returned      |
+| potentialMatch | There is a potential match. One match with score above 0.85 and below 0.95 |
+| manyMatch      | System returns mulitple matches |
 
-#### external (internal):
-Makes the external calls to the NHS authentication and NHS PDS endpoints. Will get secerts from keyvault and bearer token from Redis.
+**dataQuality**
 
-[Firely Client](https://docs.fire.ly/projects/Firely-NET-SDK/en/latest/client/setup.html) should be implemented using this library.
+| Return       | Type   | Desc |
+| :---         | :---   |                          |  
+| Valid        | string | Data provided is valid   |
+| Invalid      | string | Data provided is invalid |
+| notProvided  | string | No data was provided     |
 
-#### keyvault stub (local):
-Currently a skeleton container in order to mimic azure keyvault in local testing. Unfortunately aspire does not provide an emulator for keyvault.
+#### auth:
+
+Handles the secret key material in order to get the bearer token. It will use azure keyvault to get the material needed to retrieve the bearer token. It will then store the bearer token in redis to be accessed by the external service.
+
+#### external:
+
+Makes the external calls to the NHS PDS endpoints. Will get secerts from keyvault and bearer token from Redis.
 
 ### Search Criteria
 
@@ -144,15 +278,26 @@ The search critera being used for the start of the pilot is as below, and is sub
 | :---         | :---         |     :---       |          :--- |
 | 1 | fuzzy search with given name, family name and DOB. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 | 2 | fuzzy search with given name, family name and DOB range 6 months either side of given date. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1961-01-09` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES |
-| 3 | fuzzy search with given name, family name and DOB. Given name and family name swapped. | `_fuzzy-match`=`true`, `family`=`topper`, `given`=`harley`, `birthdate`=`eq1960-06-09` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES |
-| 4 | fuzzy search with given name, family name and DOB range 6 months either side of given date. Given name and family name swapped. | `_fuzzy-match`=`true`, `family`=`topper`, `given`=`harley`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1961-01-09` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES |
-| 5 | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES |
+| 3 | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES |
 
 Definition of fuzzy search is defined here: [NHS FHIR API Search](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient).
 
-## Information Architecture
+## Data Overview
 
-Placeholder
+This section is a work in progress...
+
+This project will collect anonymous data about the process. For each record that is sent to the service we will record information on the following:
+
+* Data Quality
+* Match Result
+* Match Result Process Info
+* Age Range
+
+This will allow for aggregate information to be collated and an evaluation on the process overall to be viewed.
+
+This information will be collated via log messages.
+
+No PII will be recorded.
 
 ## Non Functional Requirements 
 

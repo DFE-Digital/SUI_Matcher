@@ -16,7 +16,3 @@ The key goals of this project are:
 * Improve matching processes for NHS numbers
 * Evaluate how good the match rate is
 * Understand any IG challenges
-
-
-## Current Status of Repo
-Scaffolding of services built out with an attempt to tie them together.
