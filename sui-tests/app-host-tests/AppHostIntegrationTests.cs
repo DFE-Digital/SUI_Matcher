@@ -7,7 +7,6 @@ public class AppHostIntegrationTests(ITestOutputHelper output)
 {
     public static IEnumerable<object[]> GetEndpoints()
     {
-        yield return new object[] { "auth-api", "/health" };
         yield return new object[] { "matching-api", "/health" };
         yield return new object[] { "external-api", "/health" };
     }

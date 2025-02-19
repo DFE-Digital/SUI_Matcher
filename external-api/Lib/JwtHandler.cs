@@ -1,13 +1,10 @@
-using System.Text;
-using System.Text.RegularExpressions;
 using IdentityModel;
 
-namespace AuthApi.Lib;
+namespace ExternalApi.Lib;
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.Tokens;
 
 public class JwtHandler

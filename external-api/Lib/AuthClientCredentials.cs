@@ -1,4 +1,4 @@
-namespace AuthApi.Lib;
+namespace ExternalApi.Lib;
 
 using System.Net;
 using System.Text.Json.Nodes;

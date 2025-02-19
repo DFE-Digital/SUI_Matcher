@@ -3,12 +3,11 @@ using System.Net.Http.Headers;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Shared.Models;
-using Task = System.Threading.Tasks.Task;
 
 namespace ExternalApi.Services;
 
 public class NhsFhirClient(
-    AuthServiceClient authServiceClient, 
+    ITokenService tokenService,
     ILogger<NhsFhirClient> logger,
     IConfiguration configuration)
 {
@@ -37,7 +36,7 @@ public class NhsFhirClient(
         // Set the authorization header
         if (fhirClient.RequestHeaders != null)
         {
-            var accessToken = await authServiceClient.GetToken();
+            var accessToken = await tokenService.GetBearerToken();
             fhirClient.RequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             fhirClient.RequestHeaders.Add("X-Request-ID", Guid.NewGuid().ToString());
         }
@@ -60,7 +59,8 @@ public class NhsFhirClient(
                 return new SearchResult
                 {
                     Type = SearchResult.ResultType.Matched,
-                    NhsNumber = patient.Entry[0].Resource.Id
+                    NhsNumber = patient.Entry[0].Resource.Id,
+                    Score = patient.Entry[0].Search.Score
                 };
             }
             

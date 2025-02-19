@@ -15,8 +15,8 @@ public sealed class MockNhsFhirServer(string baseUrl)
 
         builder.Given(b => b
             .WithRequest(request => request
-                .UsingGet()
-                .WithPath("/api/v1/get-token")
+                .UsingPost()
+                .WithPath("/oauth2/token")
             )
             .WithResponse(response => response
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))

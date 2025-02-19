@@ -16,14 +16,7 @@ public class MatchEndpoint(ExternalServiceClient externalServiceClient) : IEndpo
 
 			if (validationResults.Results!.Any())
 			{
-				return Results.BadRequest(new
-				{
-					Results = validationResults.Results!.Select(vr => new
-					{
-						vr.MemberNames,
-						vr.ErrorMessage
-					})
-				});
+				return Results.BadRequest(validationResults);
 			}
 			
 			var searchResult = await externalServiceClient.PerformQuery(personSpecification);

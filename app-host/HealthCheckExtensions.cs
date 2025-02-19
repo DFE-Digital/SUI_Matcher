@@ -1,4 +1,4 @@
-﻿using HealthChecks.Redis;
+﻿
 using HealthChecks.Uris;
 
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -10,11 +10,6 @@ namespace AppHost;
 /// </summary>
 public static class Extensions
 {
-	public static IResourceBuilder<RedisResource> WithHealthCheck(this IResourceBuilder<RedisResource> builder)
-	{
-		return builder.WithAnnotation(HealthCheckAnnotation.Create(cs => new RedisHealthCheck(cs)));
-	}
-
 	public static IResourceBuilder<T> WithHealthCheck<T>(
 		this IResourceBuilder<T> builder,
 		string? endpointName = null,

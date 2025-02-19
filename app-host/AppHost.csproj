@@ -12,18 +12,15 @@
 		<PackageReference Include="Aspire.Hosting.AppHost" />
 		<PackageReference Include="Aspire.Hosting.Azure" />
 		<PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
-		<PackageReference Include="Aspire.Hosting.Redis" />
 		<PackageReference Include="Yarp.ReverseProxy" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AspNetCore.HealthChecks.Redis" />
 		<PackageReference Include="AspNetCore.HealthChecks.Uris" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\matching-api\Matching.csproj" />
-		<ProjectReference Include="..\auth-api\Auth.csproj" />
 		<ProjectReference Include="..\external-api\External.csproj" />
 		<ProjectReference Include="..\yarp\Yarp\Yarp.csproj" />
 	</ItemGroup>
