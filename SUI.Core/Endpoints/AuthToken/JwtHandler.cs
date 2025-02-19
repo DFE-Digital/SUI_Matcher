@@ -1,11 +1,10 @@
 using IdentityModel;
-
-namespace ExternalApi.Lib;
-
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using Microsoft.IdentityModel.Tokens;
+
+namespace SUI.Core.Endpoints.AuthToken;
 
 public class JwtHandler
 {
@@ -13,7 +12,7 @@ public class JwtHandler
     private readonly string _clientId;
     private readonly SigningCredentials _signingCredentials;
 
-    public JwtHandler(String keyOrPfx, string audience, string clientId, string kid)
+    public JwtHandler(string keyOrPfx, string audience, string clientId, string kid)
     {
         _audience = audience;
         _clientId = clientId;

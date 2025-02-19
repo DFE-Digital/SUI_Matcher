@@ -1,8 +1,7 @@
-using ExternalApi.Models;
-using Microsoft.Extensions.Caching.Distributed;
+﻿using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
 
-namespace ExternalApi.Services;
+namespace SUI.Core.Endpoints.AuthToken;
 
 public class StubTokenService(IConfiguration configuration) : TokenService(configuration)
 {
@@ -18,14 +17,14 @@ public class StubTokenService(IConfiguration configuration) : TokenService(confi
                 return await Task.FromResult(_configuration["NhsAuthConfig:NHS_DIGITAL_KID"]);
             case NhsDigitalKeyConstants.PrivateKey:
                 var privateKey = _configuration["NhsAuthConfig:NHS_DIGITAL_PRIVATE_KEY"];
-            if (string.IsNullOrEmpty(privateKey))
-            {
-                using (var rsa = RSA.Create(2048))
+                if (string.IsNullOrEmpty(privateKey))
                 {
-                    privateKey = Convert.ToBase64String(rsa.ExportRSAPrivateKey());
+                    using (var rsa = RSA.Create(2048))
+                    {
+                        privateKey = Convert.ToBase64String(rsa.ExportRSAPrivateKey());
+                    }
                 }
-            }
-            return await Task.FromResult(privateKey);
+                return await Task.FromResult(privateKey);
             default:
                 return null;
         }

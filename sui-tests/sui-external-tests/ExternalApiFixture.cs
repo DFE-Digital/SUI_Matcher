@@ -1,7 +1,5 @@
-using ExternalApi.Services;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ExternalApi.IntegrationTests;
 

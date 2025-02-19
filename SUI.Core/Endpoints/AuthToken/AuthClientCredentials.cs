@@ -1,11 +1,9 @@
-namespace ExternalApi.Lib;
 
 using System.Net;
 using System.Text.Json.Nodes;
 
-/**
- * https://github.com/NHSDigital/hello-world-auth-examples
- */
+namespace SUI.Core.Endpoints.AuthToken;
+
 public class AuthClientCredentials
 {
     private readonly HttpClient _client;

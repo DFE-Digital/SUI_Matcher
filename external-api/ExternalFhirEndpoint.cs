@@ -1,10 +1,10 @@
-using ExternalApi.Services;
 using Shared.Endpoint;
 using Shared.Models;
+using SUI.Core.Endpoints;
 
-namespace ExternalApi.ApiMethods;
+namespace ExternalApi;
 
-public class ExternalFhirEndpoint(NhsFhirClient fhirClient) : IEndpoint
+public class ExternalFhirEndpoint(INhsFhirClient fhirClient) : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{

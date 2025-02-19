@@ -1,7 +1,8 @@
 using Shared.Endpoint;
 using Shared.Exceptions;
+using SUI.Core.Endpoints;
+using SUI.Core.Endpoints.AuthToken;
 using System.Diagnostics.CodeAnalysis;
-using ExternalApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,7 @@ else
 	builder.Services.AddSingleton<ITokenService, TokenService>();
 }
 
-builder.Services.AddSingleton<NhsFhirClient>();
+builder.Services.AddSingleton<INhsFhirClient, NhsFhirClient>();
 
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

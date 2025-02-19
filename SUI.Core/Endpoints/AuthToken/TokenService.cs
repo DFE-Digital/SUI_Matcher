@@ -1,17 +1,26 @@
-using System.Text;
-using ExternalApi.Lib;
-using ExternalApi.Models;
-using Microsoft.Extensions.Caching.Distributed;
-
-namespace ExternalApi.Services;
-
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
-using System;
+
+namespace SUI.Core.Endpoints.AuthToken;
+
+public interface ITokenService
+{
+    Task<string> GetBearerToken();
+
+    Task Initialise();
+}
 
 public class TokenService : ITokenService
 {
+    public static class NhsDigitalKeyConstants
+    {
+        public const string ClientId = "nhs-digital.client-id";
+        public const string PrivateKey = "nhs-digital.private-key";
+        public const string Kid = "nhs-digital.kid";
+        public const int AccountTokenExpiresInMinutes = 5;
+    }
+
     // Keyvault Client
     private readonly SecretClient _secretClient;
     private readonly string _tokenUrl;
