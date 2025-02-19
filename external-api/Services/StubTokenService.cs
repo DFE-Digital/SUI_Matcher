@@ -1,15 +1,10 @@
-using AuthApi.Models;
+using ExternalApi.Models;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Threading.Tasks;
 using System.Security.Cryptography;
 
+namespace ExternalApi.Services;
 
-namespace AuthApi.Services;
-
-public class StubTokenService(IConfiguration configuration, 
-    IDistributedCache cache) : TokenService(configuration, cache)
+public class StubTokenService(IConfiguration configuration) : TokenService(configuration)
 {
     private readonly IConfiguration _configuration = configuration;
 

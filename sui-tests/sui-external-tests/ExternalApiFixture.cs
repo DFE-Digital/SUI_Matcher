@@ -41,16 +41,6 @@ public sealed class ExternalApiFixture : WebApplicationFactory<Program>, IAsyncL
             }!);
         });
 
-		builder.ConfigureServices((context, services) =>
-		{
-			services.RemoveAll<AuthServiceClient>();
-			services.AddHttpClient<AuthServiceClient>(client =>
-			{
-				var baseAddress = NhsAuthMockService.GetEndpoint("http").Url;
-				client.BaseAddress = new Uri(baseAddress);
-			});
-		});
-
 		return base.CreateHost(builder);
 	}
 

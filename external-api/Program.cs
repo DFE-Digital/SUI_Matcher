@@ -7,8 +7,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.AddHttpClient<AuthServiceClient>(
-	static client => client.BaseAddress = new("https+http://auth-api"));
+if (builder.Environment.IsDevelopment())
+{
+	builder.Services.AddSingleton<ITokenService, StubTokenService>();
+}
+else
+{
+	builder.Services.AddSingleton<ITokenService, TokenService>();
+}
 
 builder.Services.AddSingleton<NhsFhirClient>();
 
@@ -50,6 +56,12 @@ app.UseRouting();
 app.MapDefaultEndpoints();
 app.MapEndpoints(versionedGroup);
 app.MapOpenApi();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+	var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+	await tokenService.Initialise();
+}
 
 app.Run();
 

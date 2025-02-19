@@ -27,10 +27,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppHost.IntegrationTests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingApi.IntegrationTests", "sui-tests\matching-api-tests\MatchingApi.IntegrationTests.csproj", "{98A16972-5E73-4DEE-B247-35B8A77A60DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthApi.IntegrationTests", "sui-tests\auth-api-tests\AuthApi.IntegrationTests.csproj", "{6414D09D-7299-42C4-9F4C-F281C63CA4D1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auth", "auth-api\Auth.csproj", "{8D518FC9-2360-4F6F-9348-5F5840F9D0F4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "External", "external-api\External.csproj", "{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExternalApi.IntegrationTests", "sui-tests\sui-external-tests\ExternalApi.IntegrationTests.csproj", "{2440D760-54E0-4647-9EFB-9DC0BE4DA86F}"
@@ -71,14 +67,6 @@ Global
 		{98A16972-5E73-4DEE-B247-35B8A77A60DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98A16972-5E73-4DEE-B247-35B8A77A60DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98A16972-5E73-4DEE-B247-35B8A77A60DF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6414D09D-7299-42C4-9F4C-F281C63CA4D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6414D09D-7299-42C4-9F4C-F281C63CA4D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6414D09D-7299-42C4-9F4C-F281C63CA4D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6414D09D-7299-42C4-9F4C-F281C63CA4D1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8D518FC9-2360-4F6F-9348-5F5840F9D0F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8D518FC9-2360-4F6F-9348-5F5840F9D0F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8D518FC9-2360-4F6F-9348-5F5840F9D0F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8D518FC9-2360-4F6F-9348-5F5840F9D0F4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -97,6 +85,5 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{D80E6F3D-BF63-4F8D-B83A-6841CC5F3D2A} = {79E4CE9C-EF46-4CD5-A433-127380AF517C}
 		{98A16972-5E73-4DEE-B247-35B8A77A60DF} = {79E4CE9C-EF46-4CD5-A433-127380AF517C}
-		{6414D09D-7299-42C4-9F4C-F281C63CA4D1} = {79E4CE9C-EF46-4CD5-A433-127380AF517C}
 	EndGlobalSection
 EndGlobal
