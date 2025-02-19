@@ -1,13 +1,15 @@
+using MatchingApi;
 using Shared.Endpoint;
 using Shared.Exceptions;
+using SUI.Core.Endpoints;
+using SUI.Core.Services;
 using System.Diagnostics.CodeAnalysis;
-using MatchingApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.AddHttpClient<ExternalServiceClient>(
+builder.Services.AddHttpClient<NhsFhirClientApiWrapper>(
 	static client => client.BaseAddress = new("https+http://external-api"));
 
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
@@ -15,6 +17,9 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IMatchingService, MatchingService>();
+builder.Services.AddSingleton<IValidationService, ValidationService>();
+builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();

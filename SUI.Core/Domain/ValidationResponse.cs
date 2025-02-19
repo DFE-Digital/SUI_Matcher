@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MatchingApi.Models;
+namespace SUI.Core.Domain;
 
 public class ValidationResponse
 {
