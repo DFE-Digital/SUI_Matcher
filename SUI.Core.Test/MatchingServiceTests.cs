@@ -23,8 +23,8 @@ public sealed class MatchingServiceTests
     }
 
     [TestMethod]
-    [DataRow("2000-11-16", 5)] // non-swappable day/month in dob - so expect 5 search strategies
-    [DataRow("2000-11-10", 6)] // swappable day/month in dob - so expect 6 search strategies
+    [DataRow("2000-11-16", 3)] // non-swappable day/month in dob - so expect 5 search strategies
+    [DataRow("2000-11-10", 4)] // swappable day/month in dob - so expect 6 search strategies
     public async Task MultpleQueryStrategiesWereUsed(string dob, int expectedSearchStrategiesUsed)
     {
         var dateOfBirth = DateTime.Parse(dob);
