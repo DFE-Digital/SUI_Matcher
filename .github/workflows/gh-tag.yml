@@ -1,0 +1,17 @@
+name: Bump version
+on:
+  push:
+    branches:
+      - main
+env:
+  MAJOR_MINOR_VERSION: 0.0
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Bump version and push tag
+        uses: laputansoft/github-tag-action@v4.6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: "v${{ env.MAJOR_MINOR_VERSION }}.${{ github.run_number }}"
