@@ -74,7 +74,6 @@ sequenceDiagram
     participant suimatch as SUI Matching Service
     participant suiexternal as SUI External Service
     participant suiauth as SUI Auth Service
-    participant redis as Redis
     end
     box NHS Services
     participant nhsauth as NHS AUTH API
@@ -91,18 +90,12 @@ sequenceDiagram
         end
     end
         suiexternal->>+suiauth: Checks authentication status
-        suiauth->>redis: Checks for token
         alt Token Does Not Exist
-            redis-->>suiauth: No token to return
             suiauth->>nhsauth: Get new token
             nhsauth-->>suiauth: Return new token
-            suiauth->>redis: Store token
         else Token Exists
-            redis-->>suiauth: Token available to return
+            suiauth-->>suiexternal: Token available to return
         end
-        suiauth-->>-suiexternal: Token Available
-        suiexternal->>redis: Get token
-        redis-->>suiexternal: Returns token
         suiexternal->>nhssearch: Makes request to NHS service
         nhssearch-->>suiexternal: Returns data
         suiexternal-->>-suimatch: Passes response to be formatted
