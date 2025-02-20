@@ -2,9 +2,9 @@
 
 public enum MatchStatus
 {
-    Confirmed,
-    Candidate,
-    Multiple,
+    Match,
+    PotentialMatch,
+    ManyMatch,
     NoMatch,
     Error
 }

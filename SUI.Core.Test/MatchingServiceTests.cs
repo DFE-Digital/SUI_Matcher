@@ -1,4 +1,7 @@
-﻿using Moq;
+﻿using Json.More;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Newtonsoft.Json;
 using Shared.Models;
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
@@ -14,12 +17,22 @@ public sealed class MatchingServiceTests
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
         var validationService = new ValidationService();
-        var subj = new MatchingService(nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
 
         var result = await subj.SearchAsync(new PersonSpecification());
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.Error, result.Status);
+        Assert.AreEqual(MatchStatus.Error, result.Result!.MatchStatus);
+        Assert.AreEqual(JsonConvert.SerializeObject(new PersonMatchResponse.DataQualityResult
+        {
+            Given = PersonMatchResponse.QualityType.NotProvided,
+            Family = PersonMatchResponse.QualityType.NotProvided,
+            Birthdate = PersonMatchResponse.QualityType.Valid,
+            Gender = PersonMatchResponse.QualityType.NotProvided,
+            Phone = PersonMatchResponse.QualityType.NotProvided,
+            Email = PersonMatchResponse.QualityType.NotProvided,
+            AddressPostalCode = PersonMatchResponse.QualityType.NotProvided
+        }), JsonConvert.SerializeObject(result.DataQuality));
     }
 
     [TestMethod]
@@ -30,7 +43,7 @@ public sealed class MatchingServiceTests
         var dateOfBirth = DateTime.Parse(dob);
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
         var validationService = new ValidationService();
-        var subj = new MatchingService(nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
 
         var model = new PersonSpecification
         {
@@ -46,10 +59,9 @@ public sealed class MatchingServiceTests
         var result = await subj.SearchAsync(model);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.NoMatch, result.Status);
+        Assert.AreEqual(MatchStatus.NoMatch, result.Result!.MatchStatus);
         nhsFhir.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Exactly(expectedSearchStrategiesUsed));
     }
-
 
     [TestMethod]
     public async Task SingleConfirmedMatch()
@@ -65,7 +77,7 @@ public sealed class MatchingServiceTests
 
 
         var validationService = new ValidationService();
-        var subj = new MatchingService(nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
 
         var model = new PersonSpecification
         {
@@ -81,7 +93,7 @@ public sealed class MatchingServiceTests
         var result = await subj.SearchAsync(model);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.Confirmed, result.Status);
+        Assert.AreEqual(MatchStatus.Match, result.Result!.MatchStatus);
         Assert.AreEqual(0.99m, result.Result.Score);
     }
 
@@ -99,7 +111,7 @@ public sealed class MatchingServiceTests
 
 
         var validationService = new ValidationService();
-        var subj = new MatchingService(nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
 
         var model = new PersonSpecification
         {
@@ -115,7 +127,7 @@ public sealed class MatchingServiceTests
         var result = await subj.SearchAsync(model);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.Candidate, result.Status);
+        Assert.AreEqual(MatchStatus.PotentialMatch, result.Result!.MatchStatus);
         Assert.AreEqual(0.94m, result.Result.Score);
     }
 
@@ -132,7 +144,7 @@ public sealed class MatchingServiceTests
 
 
         var validationService = new ValidationService();
-        var subj = new MatchingService(nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
 
         var model = new PersonSpecification
         {
@@ -148,7 +160,7 @@ public sealed class MatchingServiceTests
         var result = await subj.SearchAsync(model);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.Multiple, result.Status);
+        Assert.AreEqual(MatchStatus.ManyMatch, result.Result!.MatchStatus);
     }
 
     [TestMethod]
@@ -164,7 +176,7 @@ public sealed class MatchingServiceTests
 
 
         var validationService = new ValidationService();
-        var subj = new MatchingService(nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
 
         var model = new PersonSpecification
         {
@@ -180,7 +192,9 @@ public sealed class MatchingServiceTests
         var result = await subj.SearchAsync(model);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.NoMatch, result.Status);
+        Assert.AreEqual(MatchStatus.NoMatch, result.Result!.MatchStatus);
     }
 
+    private ILogger<MatchingService> CreateLogger() =>
+         new Logger<MatchingService>(new LoggerFactory());
 }
