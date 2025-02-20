@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace SUI.Core.Domain;
 
 public class ValidationResponse
