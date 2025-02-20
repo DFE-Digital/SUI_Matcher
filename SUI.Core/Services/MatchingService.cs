@@ -86,28 +86,6 @@ public class MatchingService(INhsFhirClient nhsFhirClient, IValidationService va
                 Family = model.Family,
                 Birthdate = dobRange,
             },
-            new() // 3. fuzzy search with given name, family name and DOB. Given name and family name swapped.
-            {
-                FuzzyMatch = true,
-                Given = [model.Family],
-                Family = model.Given,
-                Email = model.Email,
-                Gender = model.Gender,
-                Phone = model.Phone,
-                Birthdate = dob,
-                AddressPostalcode = model.AddressPostalCode,
-            },
-            new() // 4. fuzzy search with given name, family name and DOB range 6 months either side of given date. Given name and family name swapped.
-            {
-                FuzzyMatch = true,
-                Given = [model.Family],
-                Family = model.Given,
-                Email = model.Email,
-                Gender = model.Gender,
-                Phone = model.Phone,
-                Birthdate = dobRange,
-                AddressPostalcode = model.AddressPostalCode,
-            },
         };
 
         // Only applicable if dob day is less than or equal to 12
