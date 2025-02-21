@@ -1,0 +1,60 @@
+name: Azure Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+    environment:
+      description: The environment target for deployment
+      default: 'Integration'
+      type: choice
+      options:
+        - 'Integration'
+    version:
+      description: The version of the infrastructure to deploy
+      default: 'v0.0.1'
+      type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env: 
+      AZURE_ENV_NAME: ${{ github.event.inputs.environment }}"
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_LOCATION: "westeurope"
+      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      APPLICATION_VERSION: ${{ github.event.inputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        ref: ${{ env.APPLICATION_VERSION }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install azd
+        uses: Azure/setup-azd@v2
+
+      - name: Install .NET Aspire workload
+        run: dotnet workload install aspire
+
+      - name: Log in with Azure (Federated Credentials)
+        if: ${{ env.AZURE_CLIENT_ID != '' }}
+        run: |
+          azd auth login `
+            --client-id "$Env:AZURE_CLIENT_ID" `
+            --federated-credential-provider "github" `
+            --tenant-id "$Env:AZURE_TENANT_ID"
+        shell: pwsh
+
+      - name: Provision Infrastructure
+        run: azd provision --no-prompt
+        working-directory: app-host
