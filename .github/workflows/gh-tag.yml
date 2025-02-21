@@ -16,5 +16,7 @@ jobs:
           MAJOR_MINOR_VERSION: ${{ env.MAJOR_MINOR_VERSION }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
           git tag -a v${MAJOR_MINOR_VERSION}.${{ github.run_number }} -m "Version v${MAJOR_MINOR_VERSION}.${{ github.run_number }}"
           git push origin v${MAJOR_MINOR_VERSION}.${{ github.run_number }}
