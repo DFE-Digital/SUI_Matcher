@@ -18,7 +18,10 @@ dotnet run --project app-host/AppHost.csproj
 ```
 Run simple test:
 ```
-curl -vv http://localhost:5000/validate/api/v1/runvalidation
+curl -H 'Content-Type: application/json' \
+      -d '{ "given":"octavia","family":"chislett", "birthdate": "2008-09-20"}' \
+      -X POST \
+      http://localhost:5000/matching/api/v1/matchperson
 ```
 If you have errors connecting to the aspire host page you may need to run the below commands:
 ```
