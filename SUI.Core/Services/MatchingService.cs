@@ -215,7 +215,7 @@ public class MatchingService(
                     spec.Gender = null;
                 }
             }
-            else if (spec.Gender == null || spec.Gender.Length >= 1)
+            else if (string.IsNullOrEmpty(spec.Gender))
             {
                 result.Gender = PersonMatchResponse.QualityType.NotProvided;
             }
@@ -230,7 +230,7 @@ public class MatchingService(
                     spec.Phone = null;
                 }
             }
-            else if (spec.Phone == null || spec.Phone.Length >= 1)
+            else if (string.IsNullOrEmpty(spec.Phone))
             {
                 result.Phone = PersonMatchResponse.QualityType.NotProvided;
             }
@@ -245,7 +245,7 @@ public class MatchingService(
                     spec.Email = null;
                 }
             }
-            else if (spec.Email == null || spec.Email.Length >= 1)
+            else if (string.IsNullOrEmpty(spec.Email))
             {
                 result.Email = PersonMatchResponse.QualityType.NotProvided;
             }
@@ -260,7 +260,7 @@ public class MatchingService(
                     spec.AddressPostalCode = null;
                 }
             }
-            else if (spec.AddressPostalCode == null || spec.AddressPostalCode.Length >= 1)
+            else if (string.IsNullOrEmpty(spec.AddressPostalCode))
             {
                 result.AddressPostalCode = PersonMatchResponse.QualityType.NotProvided;
             }
