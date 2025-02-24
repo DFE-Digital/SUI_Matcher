@@ -1,4 +1,4 @@
-name: Azure Deployment
+name: Azure Infra Deployment
 
 on:
   workflow_dispatch:

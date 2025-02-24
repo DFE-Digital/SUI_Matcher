@@ -3,19 +3,20 @@ param location string = resourceGroup().location
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
+
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
 var resourceToken = uniqueString(resourceGroup().id)
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'mi-${resourceToken}'
+  name: 's215d01-integration-mi-01'
   location: location
   tags: tags
 }
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: replace('acr-${resourceToken}', '-', '')
+  name: 's215d01-integration-acr-01'
   location: location
   sku: {
     name: 'Basic'
@@ -32,11 +33,10 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
 //     roleDefinitionId:  subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 //   }
 // }
-// To do manually after deployment of infra
-// AcrPull role assignment to managed identity
+// Arc pull to be added to MI after deploy
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: 'law-${resourceToken}'
+  name: 's215d01-integration-loganalytics-01'
   location: location
   properties: {
     sku: {
@@ -47,8 +47,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
 }
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-preview' = {
-  name: 'cae-${resourceToken}'
-  location: location
+  name: 's215d01-integration-cae-01'
   properties: {
     workloadProfiles: [{
       workloadProfileType: 'Consumption'
@@ -65,13 +64,14 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-p
   tags: tags
 
   resource aspireDashboard 'dotNetComponents' = {
-    name: 'aspire-dashboard'
+    name: 's215d01-integration-aspire-dashboard-01'
     properties: {
       componentType: 'AspireDashboard'
     }
   }
 
 }
+
 
 output MANAGED_IDENTITY_CLIENT_ID string = managedIdentity.properties.clientId
 output MANAGED_IDENTITY_NAME string = managedIdentity.name
