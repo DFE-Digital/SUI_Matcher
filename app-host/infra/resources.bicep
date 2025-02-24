@@ -15,8 +15,9 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   tags: tags
 }
 
+// The below resource can only contain alpha numeric characters - facepalm!
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: 's215d01-integration-acr-01'
+  name: 's215d01integrationacr01'
   location: location
   sku: {
     name: 'Basic'
@@ -65,7 +66,7 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-p
   tags: tags
 
   resource aspireDashboard 'dotNetComponents' = {
-    name: 's215d01-integration-aspire-dashboard-01'
+    name: 's215d01-integration-dashboard-01'
     properties: {
       componentType: 'AspireDashboard'
     }
