@@ -1,2 +1,35 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using SUI.Client.Core;
+
+const string Name = "********** SUI CSV File Processor **********";
+var p = new string('*', Name.Length);
+
+Console.WriteLine(p); 
+Console.WriteLine(Name);
+Console.WriteLine(p);
+Console.WriteLine();
+
+if (args.Length == 0)
+{
+    Console.WriteLine("Usage: suic <csv-file>");
+}
+else
+{
+    var csvFilePath = args[0];
+
+    var config = new ConfigurationBuilder()
+        .SetBasePath(AppContext.BaseDirectory)
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .Build();
+
+    var mapping = config.GetSection("CsvMapping").Get<CsvMappingConfig>() ?? new CsvMappingConfig();
+
+    var services = new ServiceCollection()
+        .AddSingleton(mapping)
+        .AddSingleton(x=>new HttpClient() {  BaseAddress = new Uri("https://match.api") })
+        .AddSingleton<IFileProcessor, FileProcessor>()
+        .BuildServiceProvider();
+
+
+}
