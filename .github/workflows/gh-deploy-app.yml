@@ -5,13 +5,11 @@ on:
     inputs:
     environment:
       description: The environment target for deployment
-      default: 'Integration'
       type: choice
       options:
         - 'Integration'
     version:
       description: The version of the infrastructure to deploy
-      default: 'v0.0.1'
       type: string
 
 permissions:
@@ -22,7 +20,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env: 
-      AZURE_ENV_NAME: ${{ github.event.inputs.environment }}"
+      AZURE_ENV_NAME: ${{ github.event.inputs.environment }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

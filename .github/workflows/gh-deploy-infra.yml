@@ -22,7 +22,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env: 
-      AZURE_ENV_NAME: ${{ github.event.inputs.environment }}"
+      AZURE_ENV_NAME: ${{ github.event.inputs.environment }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -34,7 +34,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.APPLICATION_VERSION }}
+          ref: feat/sui-67/build-infra-s1
+          # ref: ${{ env.APPLICATION_VERSION }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
