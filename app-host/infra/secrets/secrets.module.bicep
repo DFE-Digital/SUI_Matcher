@@ -5,8 +5,9 @@ param principalId string
 
 param principalType string
 
+// 3 - 24 alphanumeric characters 
 resource secrets 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: 's215d01-integration-keyvault-01'
+  name: 's215d01-int-kv01'
   location: location
   properties: {
     tenantId: tenant().tenantId
