@@ -48,6 +48,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-preview' = {
   name: 's215d01-integration-cae-01'
+  location: location
   properties: {
     workloadProfiles: [{
       workloadProfileType: 'Consumption'
