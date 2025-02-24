@@ -9,9 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.AddHttpClient<NhsFhirClientApiWrapper>(
-	static client => client.BaseAddress = new("https+http://external-api"));
-
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -20,6 +17,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IMatchingService, MatchingService>();
 builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
+
+builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(
+	static client => client.BaseAddress = new("https+http://external-api"));
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
