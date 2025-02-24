@@ -6,7 +6,7 @@ param principalId string
 param principalType string
 
 resource secrets 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: take('secrets-${uniqueString(resourceGroup().id)}', 24)
+  name: 's215d01-integration-keyvault-01'
   location: location
   properties: {
     tenantId: tenant().tenantId
