@@ -58,5 +58,5 @@ jobs:
         shell: pwsh
 
       - name: Provision Infrastructure
-        run: azd provision --no-prompt
+        run: azd provision --no-prompt --environment ${{ env.AZURE_ENV_NAME }}
         working-directory: app-host
