@@ -5,6 +5,7 @@ on:
     inputs:
     environment:
       description: The environment target for deployment
+      default: 'Integration'
       type: choice
       options:
         - 'Integration'
