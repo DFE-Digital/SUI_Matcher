@@ -24,6 +24,7 @@ public class TokenService : ITokenService
     // Keyvault Client
     private readonly SecretClient _secretClient;
     private readonly string _tokenUrl;
+    private readonly int _accountTokenExpiresInMinutes;
     private string _privateKey;
     private string _clientId;
     private string _kid;
@@ -36,6 +37,14 @@ public class TokenService : ITokenService
         var keyVaultUri = new Uri(configuration["ConnectionStrings:secrets"]!);
         _secretClient = new SecretClient(keyVaultUri, new DefaultAzureCredential());
         _tokenUrl = configuration["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"]!;
+        
+        var parsed = int.TryParse(configuration["NhsAuthConfig:NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES"],
+            out _accountTokenExpiresInMinutes);
+
+        if (!parsed)
+        {
+            _accountTokenExpiresInMinutes = NhsDigitalKeyConstants.AccountTokenExpiresInMinutes;
+        }
     }
 
     public async Task<string> GetBearerToken()
@@ -47,8 +56,8 @@ public class TokenService : ITokenService
         
         // Perform request to NHS auth endpoint
         var auth = new AuthClientCredentials(_tokenUrl, _privateKey, _clientId, _kid);
-        _accessTokenExpiration = DateTimeOffset.UtcNow.AddMinutes(NhsDigitalKeyConstants.AccountTokenExpiresInMinutes);
-        _accessToken = await auth.AccessToken(NhsDigitalKeyConstants.AccountTokenExpiresInMinutes) ?? 
+        _accessTokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_accountTokenExpiresInMinutes);
+        _accessToken = await auth.AccessToken(_accountTokenExpiresInMinutes) ?? 
                           throw new Exception("Failed to get access token");
         
         return _accessToken;

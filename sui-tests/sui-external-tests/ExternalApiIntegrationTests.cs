@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shared.Models;
 
@@ -7,17 +6,11 @@ namespace ExternalApi.IntegrationTests;
 
 public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
 {
-    private readonly WebApplicationFactory<Program> _webApplicationFactory;
-    private readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web);
-
     private readonly HttpClient _httpClient;
-    private readonly string _redisConnectionString;
 
     public ExternalApiIntegrationTests(ExternalApiFixture fixture)
     {
-        _webApplicationFactory = fixture;
-        _httpClient = _webApplicationFactory.CreateDefaultClient();
-        _redisConnectionString = fixture.GetRedisConnectionString();
+        _httpClient = fixture.CreateDefaultClient();
     }
 
     [Fact]

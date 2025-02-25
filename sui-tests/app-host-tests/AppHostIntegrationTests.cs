@@ -1,53 +1,222 @@
-using Aspire.Hosting.Testing;
-using Xunit.Abstractions;
+using System.Net.Http.Json;
+using SUI.Core.Domain;
+using WireMock.Client;
 
 namespace AppHost.IntegrationTests;
 
-public class AppHostIntegrationTests(ITestOutputHelper output)
+public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 {
+    private readonly HttpClient _client;
+    private readonly IWireMockAdminApi _nhsAuthMockApi;
+    private readonly AppHostFixture _fixture;
+
+    public AppHostIntegrationTests(AppHostFixture fixture)
+    {
+        _fixture = fixture;
+        _client = fixture.CreateHttpClient("yarp");
+        _nhsAuthMockApi = fixture.NhsAuthMockApi();
+    }
+    
     public static IEnumerable<object[]> GetEndpoints()
     {
-        yield return new object[] { "matching-api", "/health" };
-        yield return new object[] { "external-api", "/health" };
+        yield return ["matching-api", "/health"];
+        yield return ["external-api", "/health"];
     }
 
     [Fact]
     public async Task AppHostRunsCleanly()
     {
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.AppHost>();
-        await using var app = await appHost.BuildAsync().WaitAsync(TimeSpan.FromSeconds(15));
-
-        await app.StartAsync().WaitAsync(TimeSpan.FromSeconds(120));
-        var resourceNotificationService = app.Services.GetRequiredService<ResourceNotificationService>();
-        await resourceNotificationService.WaitForResourceAsync("yarp", KnownResourceStates.Running)
-                                         .WaitAsync(TimeSpan.FromSeconds(180));
-
-
-        await app.StopAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification()));
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Theory]
     [MemberData(nameof(GetEndpoints))]
     public async Task AppHostApiChecks(string endpointName, string endpointUrl)
     {
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.AppHost>();
-        await using var app = await appHost.BuildAsync().WaitAsync(TimeSpan.FromSeconds(15));
-
-        await app.StartAsync().WaitAsync(TimeSpan.FromSeconds(120));
-        var resourceNotificationService = app.Services.GetRequiredService<ResourceNotificationService>();
-
-        using var httpClient = app.CreateHttpClient(endpointName);
-        await resourceNotificationService.WaitForResourceAsync(
-            endpointName,
-            KnownResourceStates.Running
-            )
-            .WaitAsync(TimeSpan.FromSeconds(30));
-
+        using var httpClient = _fixture.CreateHttpClient(endpointName);
         var response = await httpClient.GetAsync(endpointUrl);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+    
+    // Single Match with high confidence score (>95%, Confirmed match)
 
-        await app.StopAsync().WaitAsync(TimeSpan.FromSeconds(15));
+    [Fact]
+    public async Task MatchingApi_Match()
+    {
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "OCTAVIA",
+            Family = "CHISLETT",
+            BirthDate = Convert.ToDateTime("2008-09-20"),
+        }));
+        
+        // Assert
+        Assert.True(response.IsSuccessStatusCode);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        Assert.NotNull(personMatchResponse?.Result);
+        Assert.Equal(MatchStatus.Match, personMatchResponse.Result.MatchStatus);
     }
 
+    // Single Match with low confidence (<95%, Candidate Match)
+    
+    [Fact]
+    public async Task MatchingApi_SingleMatchWithLowConfidence()
+    {
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "Hannah",
+            Family = "Robinson",
+            BirthDate = Convert.ToDateTime("2005-10-15"),
+        }));
+        
+        // Assert
+        Assert.True(response.IsSuccessStatusCode);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        Assert.NotNull(personMatchResponse?.Result);
+        Assert.Equal(MatchStatus.PotentialMatch, personMatchResponse.Result.MatchStatus);
+    }
+
+    // Single Match with really low confidence (<85%, Candidate Match)
+    
+    [Fact]
+    public async Task MatchingApi_SingleMatchWithReallyLowConfidence()
+    {
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "Joe",
+            Family = "Robinson",
+            BirthDate = Convert.ToDateTime("2005-10-15"),
+        }));
+        
+        // Assert
+        Assert.True(response.IsSuccessStatusCode);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        Assert.NotNull(personMatchResponse?.Result);
+        Assert.Equal(MatchStatus.NoMatch, personMatchResponse.Result.MatchStatus);
+    }
+    
+    [Fact]
+    public async Task MatchingApi_NoMatch()
+    {
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "OCTAVIAN",
+            Family = "CHISLETTE",
+            BirthDate = Convert.ToDateTime("2008-09-21"),
+        }));
+        
+        // Assert
+        Assert.True(response.IsSuccessStatusCode);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        Assert.NotNull(personMatchResponse?.Result);
+        Assert.Equal(MatchStatus.NoMatch, personMatchResponse.Result.MatchStatus);
+    }
+
+    // Multiple Matches
+    
+    [Fact]
+    public async Task MatchingApi_ManyMatch()
+    {
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "John",
+            Family = "Doe",
+            BirthDate = Convert.ToDateTime("2010-01-01"),
+        }));
+        
+        // Assert
+        Assert.True(response.IsSuccessStatusCode);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        Assert.NotNull(personMatchResponse?.Result);
+        Assert.Equal(MatchStatus.ManyMatch, personMatchResponse.Result.MatchStatus);
+    }
+    
+    // No match with additional conditions
+
+    // Client supplies incorrect data and gets error
+    
+    [Fact]
+    public async Task MatchingApi_InvalidSearchData_ErrorResponse()
+    {
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "",
+            BirthDate = Convert.ToDateTime("2010-01-01"),
+        }));
+        
+        // Assert
+        Assert.True(response.IsSuccessStatusCode);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        Assert.NotNull(personMatchResponse?.Result);
+        Assert.NotNull(personMatchResponse.DataQuality);
+        Assert.Equal(MatchStatus.Error, personMatchResponse.Result.MatchStatus);
+        Assert.Equal(PersonMatchResponse.QualityType.NotProvided, personMatchResponse.DataQuality.Given);
+        Assert.Equal(PersonMatchResponse.QualityType.NotProvided, personMatchResponse.DataQuality.Family);
+        Assert.Equal(PersonMatchResponse.QualityType.Valid, personMatchResponse.DataQuality.Birthdate);
+        
+    }
+
+    // Client supplies enough data to get a match, but some invalid fields
+
+    [Fact]
+    public async Task MatchingApi_MatchWithSomeInvalidFields()
+    {
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "OCTAVIA",
+            Family = "CHISLETT",
+            BirthDate = Convert.ToDateTime("2008-09-20"),
+            Email = "not an email",
+            Gender = "car",
+            Phone = "hello",
+            AddressPostalCode = "12@24"
+        }));
+        
+        // Assert
+        Assert.True(response.IsSuccessStatusCode);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        Assert.NotNull(personMatchResponse?.Result);
+        Assert.Equal(MatchStatus.Match, personMatchResponse.Result.MatchStatus);
+        Assert.NotNull(personMatchResponse.DataQuality);
+        Assert.Equal(PersonMatchResponse.QualityType.Invalid, personMatchResponse.DataQuality.Email);
+        Assert.Equal(PersonMatchResponse.QualityType.Invalid, personMatchResponse.DataQuality.Gender);
+        Assert.Equal(PersonMatchResponse.QualityType.Invalid, personMatchResponse.DataQuality.Phone);
+        Assert.Equal(PersonMatchResponse.QualityType.Invalid, personMatchResponse.DataQuality.AddressPostalCode);
+    }
+
+    // JWT renewal (needed for technical conformance.)
+
+    [Fact]
+    public async Task MatchingApi_ExpireTheAccessToken_TokenRenews()
+    {
+        for (var i = 0; i < 2; i++) 
+        {
+            await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+            {
+                Given = "OCTAVIA",
+                Family = "CHISLETT",
+                BirthDate = Convert.ToDateTime("2008-09-20"),
+            }));
+        }
+
+        // Confirms that the access token is cached
+        (await _nhsAuthMockApi.Should()).HaveReceived(1).Calls()
+            .AtPath("/oauth2/token");
+        
+        await Task.Delay(TimeSpan.FromMinutes(1));
+        
+        await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "OCTAVIA",
+            Family = "CHISLETT",
+            BirthDate = Convert.ToDateTime("2008-09-20"),
+        }));
+        
+        // Confirms that a new token was requested
+        (await _nhsAuthMockApi.Should()).HaveReceived(2).Calls()
+            .AtPath("/oauth2/token");
+    }
 }
