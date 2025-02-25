@@ -1,4 +1,4 @@
-name: CI for sUI_Matcher
+name: CI for SUI_Matcher
 
 on:
   pull_request:

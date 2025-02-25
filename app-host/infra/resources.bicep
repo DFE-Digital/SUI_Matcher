@@ -1,8 +1,23 @@
 @description('The location used for all deployed resources')
 param location string = resourceGroup().location
+
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
+@description('The address prefix for the virtual network')
+param containerAppVnet string = '192.168.0.0/25'
+
+@description('Container App environment subnet')
+param containerAppEnvSubnet string = '192.168.0.0/26'
+
+@description('Container App environment subnet')
+param containerAppFirewallSubnet string = '192.168.0.64/26'
+
+@description('environmentName')
+param environmentName string = 'integration'
+
+@description('environmentPrefix')
+param environmentPrefix string = 's215d01'
 
 @description('Tags that will be applied to all resources')
 param tags object = {}
@@ -10,14 +25,14 @@ param tags object = {}
 var resourceToken = uniqueString(resourceGroup().id)
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 's215d01-integration-mi-01'
+  name: '${environmentPrefix}-${environmentName}-mi-01'
   location: location
   tags: tags
 }
 
 // The below resource can only contain alpha numeric characters - facepalm!
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: 's215d01integrationacr01'
+  name: '${environmentPrefix}${environmentName}acr01'
   location: location
   sku: {
     name: 'Basic'
@@ -34,10 +49,10 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
 //     roleDefinitionId:  subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 //   }
 // }
-// Arc pull to be added to MI after deploy
+// Arc pull to be added to MI after deploy AcrPull
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: 's215d01-integration-loganalytics-01'
+  name: '${environmentPrefix}-${environmentName}-loganalytics-01'
   location: location
   properties: {
     sku: {
@@ -47,14 +62,37 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
   tags: tags
 }
 
-resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-preview' = {
-  name: 's215d01-integration-cae-01'
+resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
+  name: '${environmentPrefix}-${environmentName}-vnet-cae-01'
   location: location
   properties: {
-    workloadProfiles: [{
-      workloadProfileType: 'Consumption'
-      name: 'consumption'
-    }]
+    addressSpace: {
+      addressPrefixes: [
+        containerAppVnet
+      ]
+    }
+    subnets: [
+      {
+        name: '${environmentPrefix}-${environmentName}-subnet-cae-01'
+        properties: {
+          addressPrefix: containerAppEnvSubnet
+        }
+      }
+      {
+        name: '${environmentPrefix}-${environmentName}-vnet-fw-01'
+        properties: {
+          addressPrefix: containerAppFirewallSubnet
+        }
+      }
+    ]
+  }
+}
+
+
+resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-preview' = {
+  name: '${environmentPrefix}-${environmentName}-cae-01'
+  location: location
+  properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
@@ -62,16 +100,129 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-p
         sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
       }
     }
+    vnetConfiguration: {
+      infrastructureSubnetId: caevnets.properties.subnets[0].id
+      internal: true
+    }
+    publicNetworkAccess: 'Disabled'
+
   }
   tags: tags
 
   resource aspireDashboard 'dotNetComponents' = {
-    name: 's215d01-integration-dashboard-01'
+    name: '${environmentPrefix}-${environmentName}-dashboard-01'
     properties: {
       componentType: 'AspireDashboard'
     }
   }
 
+}
+
+resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
+  name: '${environmentPrefix}-${environmentName}-pib-01'
+  location: location
+  tags: tags
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'static'
+    publicIPAddressVersion: 'IPv4'
+  }
+}
+
+resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01'= {
+  name: '${environmentPrefix}-${environmentName}-fwp-01'
+  location: location
+  properties: {
+    threatIntelMode: 'Alert'
+  }
+  tags: tags
+}
+
+resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
+  parent: firewallPolicy
+  name: 'DefaultApplicationRuleCollectionGroup'
+  properties: {
+    priority: 300
+    ruleCollections: [
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        action: {
+          type: 'Allow'
+        }
+        name: 'Global-rules-arc'
+        priority: 300
+        rules: [
+          {
+            ruleType: 'ApplicationRule'
+            name: 'global-rule-01'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              'int.api.service.nhs.uk'
+            ]
+            terminateTLS: false
+            sourceIpGroups: [
+              workloadIpGroup.id
+              infraIpGroup.id
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  tags: tags
+}
+
+resource fireWall 'Microsoft.Network/azureFirewalls@2021-03-01' = {
+  name: '${environmentPrefix}-${environmentName}-fw-01'
+  location: location
+  dependsOn: [
+    containerAppEnvironment
+    applicationRuleCollectionGroup
+  ]
+  properties: {
+    ipConfigurations: [{
+      name: 'fw-ip-config-01'
+      properties: {
+        publicIPAddress: {
+          id: publicIP.id
+        }
+        subnet: {
+          id: caevnets.properties.subnets[1].id
+        }
+      }
+    }]
+    firewallPolicy: {
+      id: firewallPolicy.id
+    }
+  }
+  tags: tags
+}
+
+resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
+  location: location
+  name: '${environmentPrefix}-${environmentName}-rt-01'
+  properties: {
+    disableBgpRoutePropagation: true
+    routes: [
+      {
+        name: '${environmentPrefix}-${environmentName}-internet'
+        properties: {
+          addressPrefix: '0.0.0.0/0'
+          nextHopIpAddress: fireWall.properties.ipConfigurations[0].properties.privateIPAddress
+          nextHopType: 'Internet'
+        }
+        type: 'string'
+      }
+    ]
+  }
+  tags: tags
 }
 
 
