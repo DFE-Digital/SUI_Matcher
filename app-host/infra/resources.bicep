@@ -1,9 +1,6 @@
 @description('The location used for all deployed resources')
 param location string = resourceGroup().location
 
-@description('Id of the user or app to assign application roles')
-param principalId string = ''
-
 @description('The address prefix for the virtual network')
 param containerAppVnet string = '192.168.0.0/25'
 
@@ -22,8 +19,6 @@ param environmentPrefix string = 's215d01'
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
-var resourceToken = uniqueString(resourceGroup().id)
-
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: '${environmentPrefix}-${environmentName}-mi-01'
   location: location
@@ -38,6 +33,17 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
     name: 'Basic'
   }
   tags: tags
+}
+
+resource infraIpGroup 'Microsoft.Network/ipGroups@2022-01-01' = {
+  name: '${environmentPrefix}${environmentName}-ipg-01'
+  location: location
+  properties: {
+    ipAddresses: [
+      containerAppEnvSubnet
+      containerAppFirewallSubnet
+    ]
+  }
 }
 
 // resource caeMiRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -168,7 +174,6 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
             ]
             terminateTLS: false
             sourceIpGroups: [
-              workloadIpGroup.id
               infraIpGroup.id
             ]
           }
@@ -176,7 +181,6 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
       }
     ]
   }
-  tags: tags
 }
 
 resource fireWall 'Microsoft.Network/azureFirewalls@2021-03-01' = {
