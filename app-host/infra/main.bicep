@@ -25,7 +25,6 @@ module resources 'resources.bicep' = {
   params: {
     location: location
     tags: tags
-    principalId: principalId
   }
 }
 
@@ -33,8 +32,6 @@ module secrets 'secrets/secrets.module.bicep' = {
   name: 'secrets'
   params: {
     location: location
-    principalId: resources.outputs.MANAGED_IDENTITY_PRINCIPAL_ID
-    principalType: 'ServicePrincipal'
   }
 }
 
