@@ -173,100 +173,120 @@ public class MatchingService(
         
         foreach (var vResult in validationResults)
         {
-            if (vResult.MemberNames.Contains("Given"))
+            if (result.Given == PersonMatchResponse.QualityType.Valid)
             {
-                if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GivenNameRequired) ?? false)
+                if (vResult.MemberNames.Contains("Given"))
                 {
-                    result.Given = PersonMatchResponse.QualityType.NotProvided;
-                }
-                else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GivenNameInvalid) ?? false)
-                {
-                    result.Given = PersonMatchResponse.QualityType.Invalid;
+                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GivenNameRequired) ?? false)
+                    {
+                        result.Given = PersonMatchResponse.QualityType.NotProvided;
+                    }
+                    else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GivenNameInvalid) ?? false)
+                    {
+                        result.Given = PersonMatchResponse.QualityType.Invalid;
+                    }
                 }
             }
-            
-            if (vResult.MemberNames.Contains("Family"))
-            {
-                if (vResult.ErrorMessage?.Equals(PersonValidationConstants.FamilyNameRequired) ?? false)
-                {
-                    result.Family = PersonMatchResponse.QualityType.NotProvided;
-                }
-                else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.FamilyNameInvalid) ?? false)
-                {
-                    result.Family = PersonMatchResponse.QualityType.Invalid;
-                }
-            }
-            
-            if (vResult.MemberNames.Contains("Birthdate"))
-            {
-                if (vResult.ErrorMessage?.Equals(PersonValidationConstants.BirthDateRequired) ?? false)
-                {
-                    result.Birthdate = PersonMatchResponse.QualityType.NotProvided;
-                }
-                else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.BirthDateInvalid) ?? false)
-                {
-                    result.Birthdate = PersonMatchResponse.QualityType.Invalid;
-                }
-            }
-            
-            if (vResult.MemberNames.Contains("Gender"))
-            {
-                if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GenderInvalid) ?? false)
-                {
-                    result.Gender = PersonMatchResponse.QualityType.Invalid;
 
-                    // Remove from search query, if invalid
-                    spec.Gender = null;
-                }
-            }
-            else if (string.IsNullOrEmpty(spec.Gender))
+            if (result.Family == PersonMatchResponse.QualityType.Valid)
             {
-                result.Gender = PersonMatchResponse.QualityType.NotProvided;
-            }
-            
-            if (vResult.MemberNames.Contains("Phone"))
-            {
-                if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PhoneInvalid) ?? false)
+                if (vResult.MemberNames.Contains("Family"))
                 {
-                    result.Phone = PersonMatchResponse.QualityType.Invalid;
-
-                    // Remove from search query, if invalid
-                    spec.Phone = null;
+                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.FamilyNameRequired) ?? false)
+                    {
+                        result.Family = PersonMatchResponse.QualityType.NotProvided;
+                    }
+                    else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.FamilyNameInvalid) ?? false)
+                    {
+                        result.Family = PersonMatchResponse.QualityType.Invalid;
+                    }
                 }
             }
-            else if (string.IsNullOrEmpty(spec.Phone))
+
+            if (result.Birthdate == PersonMatchResponse.QualityType.Valid)
             {
-                result.Phone = PersonMatchResponse.QualityType.NotProvided;
-            }
-            
-            if (vResult.MemberNames.Contains("Email"))
-            {
-                if (vResult.ErrorMessage?.Equals(PersonValidationConstants.EmailInvalid) ?? false)
+                if (vResult.MemberNames.Contains("Birthdate"))
                 {
-                    result.Email = PersonMatchResponse.QualityType.Invalid;
-
-                    // Remove from search query, if invalid
-                    spec.Email = null;
+                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.BirthDateRequired) ?? false)
+                    {
+                        result.Birthdate = PersonMatchResponse.QualityType.NotProvided;
+                    }
+                    else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.BirthDateInvalid) ?? false)
+                    {
+                        result.Birthdate = PersonMatchResponse.QualityType.Invalid;
+                    }
                 }
             }
-            else if (string.IsNullOrEmpty(spec.Email))
+
+            if (result.Gender == PersonMatchResponse.QualityType.Valid)
             {
-                result.Email = PersonMatchResponse.QualityType.NotProvided;
-            }
-            
-            if (vResult.MemberNames.Contains("AddressPostalCode"))
-            {
-                if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PostCodeInvalid) ?? false)
+                if (vResult.MemberNames.Contains("Gender"))
                 {
-                    result.AddressPostalCode = PersonMatchResponse.QualityType.Invalid;
+                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GenderInvalid) ?? false)
+                    {
+                        result.Gender = PersonMatchResponse.QualityType.Invalid;
 
-                    // Remove from search query, if invalid
-                    spec.AddressPostalCode = null;
+                        // Remove from search query, if invalid
+                        spec.Gender = null;
+                    }
+                }
+                else if (string.IsNullOrEmpty(spec.Gender))
+                {
+                    result.Gender = PersonMatchResponse.QualityType.NotProvided;
                 }
             }
-            else if (string.IsNullOrEmpty(spec.AddressPostalCode))
+
+            if (result.Phone == PersonMatchResponse.QualityType.Valid)
             {
-                result.AddressPostalCode = PersonMatchResponse.QualityType.NotProvided;
+                if (vResult.MemberNames.Contains("Phone"))
+                {
+                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PhoneInvalid) ?? false)
+                    {
+                        result.Phone = PersonMatchResponse.QualityType.Invalid;
+
+                        // Remove from search query, if invalid
+                        spec.Phone = null;
+                    }
+                }
+                else if (string.IsNullOrEmpty(spec.Phone))
+                {
+                    result.Phone = PersonMatchResponse.QualityType.NotProvided;
+                }
+            }
+
+            if (result.Email == PersonMatchResponse.QualityType.Valid) {
+                if (vResult.MemberNames.Contains("Email"))
+                {
+                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.EmailInvalid) ?? false)
+                    {
+                        result.Email = PersonMatchResponse.QualityType.Invalid;
+
+                        // Remove from search query, if invalid
+                        spec.Email = null;
+                    }
+                }
+                else if (string.IsNullOrEmpty(spec.Email))
+                {
+                    result.Email = PersonMatchResponse.QualityType.NotProvided;
+                }
+            }
+
+            if (result.AddressPostalCode == PersonMatchResponse.QualityType.Valid)
+            {
+                if (vResult.MemberNames.Contains("AddressPostalCode"))
+                {
+                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PostCodeInvalid) ?? false)
+                    {
+                        result.AddressPostalCode = PersonMatchResponse.QualityType.Invalid;
+
+                        // Remove from search query, if invalid
+                        spec.AddressPostalCode = null;
+                    }
+                }
+                else if (string.IsNullOrEmpty(spec.AddressPostalCode))
+                {
+                    result.AddressPostalCode = PersonMatchResponse.QualityType.NotProvided;
+                }
             }
         }
         

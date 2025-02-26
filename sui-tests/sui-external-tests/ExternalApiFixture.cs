@@ -6,8 +6,6 @@ namespace ExternalApi.IntegrationTests;
 public sealed class ExternalApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
 	private readonly IHost _app;
-	public IResourceBuilder<RedisResource> Redis;
-	private string  _redisConnectionString;
 	public IResourceBuilder<WireMockServerResource> NhsAuthMockService { get; private set; }
 
 	public ExternalApiFixture()
@@ -21,8 +19,6 @@ public sealed class ExternalApiFixture : WebApplicationFactory<Program>, IAsyncL
 
 		NhsAuthMockService = appBuilder.AddWireMock("mock-auth-api", WireMockServerArguments.DefaultPort)
 		    .WithApiMappingBuilder(MockNhsFhirServer.SetupAsync);
-
-		Redis = appBuilder.AddRedis("redis");
 		
 		_app = appBuilder.Build();
 	}
@@ -33,9 +29,9 @@ public sealed class ExternalApiFixture : WebApplicationFactory<Program>, IAsyncL
         {
             config.AddInMemoryCollection(new Dictionary<string, string>
             {
-	            { $"ConnectionStrings:{Redis.Resource.Name}", _redisConnectionString },
                 { "NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT", $"{NhsAuthMockService.GetEndpoint("http").Url}/personal-demographics/FHIR/R4/" },
-				{ "NhsAuthConfig:NHS_DIGITAL_TOKEN_URL", $"{NhsAuthMockService.GetEndpoint("http").Url}/oauth2/token" }
+				{ "NhsAuthConfig:NHS_DIGITAL_TOKEN_URL", $"{NhsAuthMockService.GetEndpoint("http").Url}/oauth2/token" },
+				{ "NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES", "5" }
             }!);
         });
 
@@ -45,9 +41,7 @@ public sealed class ExternalApiFixture : WebApplicationFactory<Program>, IAsyncL
 	public async Task InitializeAsync()
     {
 	    await _app.StartAsync();
-
-		_redisConnectionString = await Redis.Resource.GetConnectionStringAsync() ?? throw new InvalidOperationException("Redis connection string is null");
-    }
+	}
 
 	public new async Task DisposeAsync()
 	{
@@ -62,9 +56,4 @@ public sealed class ExternalApiFixture : WebApplicationFactory<Program>, IAsyncL
 			_app.Dispose();
 		}
 	}
-
-	public string GetRedisConnectionString()
-    {
-        return _redisConnectionString;
-    }
 }
