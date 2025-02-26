@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SUI.Client.Core;
+using SUI.Client.Core.Integration;
 
 const string Name = "********** SUI CSV File Processor **********";
 var p = new string('*', Name.Length);
@@ -23,13 +24,17 @@ else
         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
         .Build();
 
+    var apiBaseAddress = config["MatchApiBaseAddress"] ?? throw new Exception("Config item 'MatchApiBaseAddress' not set");
     var mapping = config.GetSection("CsvMapping").Get<CsvMappingConfig>() ?? new CsvMappingConfig();
 
     var services = new ServiceCollection()
         .AddSingleton(mapping)
-        .AddSingleton(x=>new HttpClient() {  BaseAddress = new Uri("https://match.api") })
+        .AddSingleton(x => new HttpClient() { BaseAddress = new Uri(apiBaseAddress) })
+        .AddSingleton<IMatchPersonApiService, MatchPersonApiService>()
         .AddSingleton<IFileProcessor, FileProcessor>()
         .BuildServiceProvider();
 
-
+    await services.GetRequiredService<IFileProcessor>().ProcessCsvFileAsync(csvFilePath);
+    
+    Console.WriteLine("File processed.");
 }

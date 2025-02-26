@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Shared.Models;
 using SUI.Core.Domain;
@@ -99,8 +98,13 @@ public class MatchingService(
 
     private SearchQuery[] GetSearchQueries(PersonSpecification model)
     {
-        var dobRange = new[] { "ge" + model.BirthDate.AddMonths(-6).ToString("yyyy-MM-dd"), "le" + model.BirthDate.AddMonths(6).ToString("yyyy-MM-dd") };
-        var dob = new[] { "eq" + model.BirthDate.ToString("yyyy-MM-dd") };
+        if (!model.BirthDate.HasValue)
+        {
+            throw new InvalidOperationException("Birthdate is required for search queries");
+        }
+
+        var dobRange = new[] { "ge" + model.BirthDate.Value.AddMonths(-6).ToString("yyyy-MM-dd"), "le" + model.BirthDate.Value.AddMonths(6).ToString("yyyy-MM-dd") };
+        var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
 
         var queries = new List<SearchQuery>
         {
@@ -136,9 +140,9 @@ public class MatchingService(
         };
 
         // Only applicable if dob day is less than or equal to 12
-        if (model.BirthDate.Day <= 12) // 5. fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12.
+        if (model.BirthDate.Value.Day <= 12) // 5. fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12.
         {
-            var altDob = new DateTime(model.BirthDate.Year, model.BirthDate.Day, model.BirthDate.Month);
+            var altDob = new DateTime(model.BirthDate.Value.Year, model.BirthDate.Value.Day, model.BirthDate.Value.Month);
 
             queries.Add(new()
             {
@@ -163,7 +167,7 @@ public class MatchingService(
 
     public string FormatDob(DateTime dob) => dob.ToString("yyyy-MM-dd");
 
-    public PersonMatchResponse.DataQualityResult ToQualityResult(PersonSpecification spec, IEnumerable<ValidationResponse.ValidationResult> validationResults)
+    public static PersonMatchResponse.DataQualityResult ToQualityResult(PersonSpecification spec, IEnumerable<ValidationResponse.ValidationResult> validationResults)
     {
         var result = new PersonMatchResponse.DataQualityResult();
         

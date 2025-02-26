@@ -1,7 +1,7 @@
 ﻿using CsvHelper;
+using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
 using System.Globalization;
-using System.Net.Http.Json;
 
 namespace SUI.Client.Core;
 
@@ -10,13 +10,18 @@ public interface IFileProcessor
     Task ProcessCsvFileAsync(string filePath);
 }
 
-public class FileProcessor(CsvMappingConfig mapping, HttpClient httpClient) : IFileProcessor
+public class FileProcessor(CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : IFileProcessor
 {
     private readonly CsvMappingConfig _mappingConfig = mapping ?? new();
-    private readonly HttpClient _httpClient = httpClient;
+    private readonly IMatchPersonApiService _matchPersonApi = matchPersonApi;
 
     public async Task ProcessCsvFileAsync(string filePath)
     {
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("File not found", filePath);
+        }
+
         using var reader = new StreamReader(filePath);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         csv.Context.RegisterClassMap(new DynamicCsvMap(_mappingConfig));
@@ -34,11 +39,8 @@ public class FileProcessor(CsvMappingConfig mapping, HttpClient httpClient) : IF
             // todo: map to personspecification
         };
 
-        var response = await _httpClient.PostAsJsonAsync("api/endpoint", payload);
-        response.EnsureSuccessStatusCode();
-        var dto = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
-
-        if(dto != null)
+        var result = await _matchPersonApi.MatchPersonAsync(payload);
+        if(result != null)
         {
 
 
