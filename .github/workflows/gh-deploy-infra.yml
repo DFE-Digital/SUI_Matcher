@@ -1,18 +1,18 @@
-name: Azure Deployment
+name: Azure Infra Deployment
 
 on:
   workflow_dispatch:
     inputs:
-    environment:
-      description: The environment target for deployment
-      default: 'Integration'
-      type: choice
-      options:
-        - 'Integration'
-    version:
-      description: The version of the infrastructure to deploy
-      default: 'v0.0.1'
-      type: string
+      environment:
+        description: The environment target for deployment
+        default: 'Integration'
+        type: choice
+        options:
+          - 'Integration'
+      version:
+        description: The version of the infrastructure to deploy
+        default: 'v0.0.1'
+        type: string
 
 permissions:
   id-token: write
@@ -22,18 +22,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env: 
-      AZURE_ENV_NAME: ${{ github.event.inputs.environment }}"
+      AZURE_ENV_NAME: ${{ inputs.environment }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_LOCATION: "westeurope"
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-      APPLICATION_VERSION: ${{ github.event.inputs.version }}
+      APPLICATION_VERSION: ${{ inputs.version }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        ref: ${{ env.APPLICATION_VERSION }}
+        with:
+          ref: ${{ env.APPLICATION_VERSION }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
@@ -56,5 +57,5 @@ jobs:
         shell: pwsh
 
       - name: Provision Infrastructure
-        run: azd provision --no-prompt
+        run: azd provision --no-prompt --environment ${{ env.AZURE_ENV_NAME }}
         working-directory: app-host
