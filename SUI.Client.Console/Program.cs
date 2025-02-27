@@ -34,7 +34,7 @@ else
         .AddSingleton<IFileProcessor, FileProcessor>()
         .BuildServiceProvider();
 
-    await services.GetRequiredService<IFileProcessor>().ProcessCsvFileAsync(csvFilePath);
+    await services.GetRequiredService<IFileProcessor>().ProcessCsvFileAsync(csvFilePath, Path.GetDirectoryName(csvFilePath));
     
     Console.WriteLine("File processed.");
 }

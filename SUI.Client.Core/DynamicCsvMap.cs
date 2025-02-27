@@ -4,18 +4,18 @@ using SUI.Client.Core.Models;
 namespace SUI.Client.Core;
 
 
-public class DynamicCsvMap : ClassMap<CsvRowModel>
+public class DynamicCsvMap : ClassMap<MatchPersonPayload>
 {
     public DynamicCsvMap(CsvMappingConfig mappingConfig)
     {
-        var propertyMap = typeof(CsvRowModel).GetProperties()
+        var propertyMap = typeof(MatchPersonPayload).GetProperties()
             .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
 
         foreach (var mapping in mappingConfig.ColumnMappings)
         {
             if (propertyMap.TryGetValue(mapping.Value, out var propertyInfo))
             {
-                Map(typeof(CsvRowModel), propertyInfo).Name(mapping.Key);
+                Map(typeof(MatchPersonPayload), propertyInfo).Name(mapping.Key);
             }
         }
     }

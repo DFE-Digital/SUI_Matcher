@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using SUI.Client.Core;
+using System.Collections.Concurrent;
 
 namespace SUI.Client.Watcher;
 
@@ -7,15 +8,17 @@ public class Processor
     private readonly FileWatcherService _fileWatcherService;
     private readonly AppConfig _config;
     private readonly ILogger _logger;
+    private readonly IFileProcessor _fileProcessor;
     private readonly ConcurrentQueue<string> _fileQueue = new();
     private int _processedCount = 0;
     private int _errorCount = 0;
 
-    public Processor(FileWatcherService fileWatcherService, AppConfig config, ILogger logger)
+    public Processor(FileWatcherService fileWatcherService, AppConfig config, ILogger logger, IFileProcessor fileProcessor)
     {
         _fileWatcherService = fileWatcherService;
         _config = config;
         _logger = logger;
+        _fileProcessor = fileProcessor;
         Directory.CreateDirectory(_config.ProcessedDirectory);
         Directory.CreateDirectory(_config.LogDirectory);
         _fileWatcherService.FileDetected += (s, filePath) => _fileQueue.Enqueue(filePath);
@@ -31,7 +34,6 @@ public class Processor
                 try
                 {
                     await ProcessFileAsync(filePath);
-                    // Retry moving the file in case of transient errors.
                     await RetryAsync(async () =>
                     {
                         string destPath = Path.Combine(_config.ProcessedDirectory, Path.GetFileName(filePath));
@@ -54,8 +56,7 @@ public class Processor
 
     private async Task ProcessFileAsync(string filePath)
     {
-        // For example, asynchronously read and process CSV content here.
-        await Task.CompletedTask;
+        await _fileProcessor.ProcessCsvFileAsync(filePath, _config.ProcessedDirectory);
     }
 
     public void PrintStats(TextWriter output)

@@ -2,7 +2,7 @@
   "profiles": {
     "SUI.Client.Console": {
       "commandName": "Project",
-      "commandLineArgs": "test.csv"
+      "commandLineArgs": "test_success.csv"
     }
   }
 }

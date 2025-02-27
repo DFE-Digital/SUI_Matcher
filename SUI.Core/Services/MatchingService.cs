@@ -175,7 +175,7 @@ public class MatchingService(
         {
             if (result.Given == PersonMatchResponse.QualityType.Valid)
             {
-                if (vResult.MemberNames.Contains("Given"))
+                if (vResult.MemberNames.Contains("Given", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GivenNameRequired) ?? false)
                     {
@@ -190,7 +190,7 @@ public class MatchingService(
 
             if (result.Family == PersonMatchResponse.QualityType.Valid)
             {
-                if (vResult.MemberNames.Contains("Family"))
+                if (vResult.MemberNames.Contains("Family", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.FamilyNameRequired) ?? false)
                     {
@@ -205,7 +205,7 @@ public class MatchingService(
 
             if (result.Birthdate == PersonMatchResponse.QualityType.Valid)
             {
-                if (vResult.MemberNames.Contains("Birthdate"))
+                if (vResult.MemberNames.Contains("Birthdate", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.BirthDateRequired) ?? false)
                     {
@@ -220,7 +220,7 @@ public class MatchingService(
 
             if (result.Gender == PersonMatchResponse.QualityType.Valid)
             {
-                if (vResult.MemberNames.Contains("Gender"))
+                if (vResult.MemberNames.Contains("Gender", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GenderInvalid) ?? false)
                     {
@@ -238,7 +238,7 @@ public class MatchingService(
 
             if (result.Phone == PersonMatchResponse.QualityType.Valid)
             {
-                if (vResult.MemberNames.Contains("Phone"))
+                if (vResult.MemberNames.Contains("Phone", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PhoneInvalid) ?? false)
                     {
@@ -255,7 +255,7 @@ public class MatchingService(
             }
 
             if (result.Email == PersonMatchResponse.QualityType.Valid) {
-                if (vResult.MemberNames.Contains("Email"))
+                if (vResult.MemberNames.Contains("Email", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.EmailInvalid) ?? false)
                     {
@@ -273,7 +273,7 @@ public class MatchingService(
 
             if (result.AddressPostalCode == PersonMatchResponse.QualityType.Valid)
             {
-                if (vResult.MemberNames.Contains("AddressPostalCode"))
+                if (vResult.MemberNames.Contains("AddressPostalCode", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PostCodeInvalid) ?? false)
                     {

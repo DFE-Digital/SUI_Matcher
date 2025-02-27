@@ -29,9 +29,9 @@ public class PersonSpecification
     public string? Family { get; set; }
 
     [Required(ErrorMessage = PersonValidationConstants.BirthDateRequired)]
-    [DataType(DataType.DateTime, ErrorMessage = PersonValidationConstants.BirthDateInvalid)]
+    [DataType(DataType.Date, ErrorMessage = PersonValidationConstants.BirthDateInvalid)]
     [JsonPropertyName("birthdate")]
-    public DateTime? BirthDate { get; set; }
+    public DateOnly? BirthDate { get; set; }
 
     [AllowedValues("male", "female", "unknown", "other", null, ErrorMessage = PersonValidationConstants.GenderInvalid )]
     [JsonPropertyName("gender")]

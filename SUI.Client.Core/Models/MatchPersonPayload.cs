@@ -1,7 +1,6 @@
 ﻿namespace SUI.Client.Core.Models;
 
-
-public class CsvRowModel
+public class MatchPersonPayload
 {
     public string? Given { get; set; }
     public string? Family { get; set; }
@@ -11,4 +10,3 @@ public class CsvRowModel
     public string? Email { get; set; }
     public string? AddressPostalCode { get; set; }
 }
-

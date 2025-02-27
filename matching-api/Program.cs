@@ -1,4 +1,5 @@
 using MatchingApi;
+using Microsoft.AspNetCore.Http.Json;
 using Shared.Endpoint;
 using Shared.Exceptions;
 using SUI.Core.Endpoints;
@@ -34,6 +35,11 @@ builder.Services.AddApiVersioning(options =>
 });
 
 builder.Services.AddEndpoints(typeof(Program).Assembly);
+
+builder.Services.Configure<JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new CustomDateOnlyConverter());
+});
 
 var app = builder.Build();
 

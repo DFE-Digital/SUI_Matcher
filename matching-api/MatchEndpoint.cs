@@ -9,9 +9,9 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapPost("/matchperson", async (PersonSpecification? personSpecification) =>
+		app.MapPost("/matchperson", async (PersonSpecification? model) =>
 		{
-            if (personSpecification is null)
+            if (model is null)
             {
                 return Results.BadRequest(new ProblemDetails
                 {
@@ -20,10 +20,9 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
                 });
             }
 
-            var result = await matchingService.SearchAsync(personSpecification);
+            var result = await matchingService.SearchAsync(model);
 
             return result.Result?.MatchStatus == MatchStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
         });
     }
-
 }
