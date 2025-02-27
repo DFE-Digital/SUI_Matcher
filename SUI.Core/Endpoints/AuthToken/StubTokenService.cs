@@ -1,9 +1,12 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 
 namespace SUI.Core.Endpoints.AuthToken;
 
-public class StubTokenService(IConfiguration configuration) : TokenService(configuration)
+public class StubTokenService(
+    IConfiguration configuration, ILogger<StubTokenService> logger) : 
+    TokenService(configuration, logger)
 {
     private readonly IConfiguration _configuration = configuration;
 

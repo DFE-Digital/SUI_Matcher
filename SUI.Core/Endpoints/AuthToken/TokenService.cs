@@ -1,6 +1,7 @@
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace SUI.Core.Endpoints.AuthToken;
 
@@ -31,9 +32,12 @@ public class TokenService : ITokenService
     
     private string? _accessToken;
     private DateTimeOffset _accessTokenExpiration;
+    private readonly ILogger<TokenService> _logger;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService(IConfiguration configuration, ILogger<TokenService> logger)
     {
+        _logger = logger;
+        
         var keyVaultUri = new Uri(configuration["ConnectionStrings:secrets"]!);
         _secretClient = new SecretClient(keyVaultUri, new DefaultAzureCredential());
         _tokenUrl = configuration["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"]!;
@@ -51,9 +55,13 @@ public class TokenService : ITokenService
     {
         if (_accessToken != null && _accessTokenExpiration > DateTimeOffset.UtcNow)
         {
+            _logger.LogDebug("Found existing none expired access token found");
+            
             return _accessToken;
         }
         
+        _logger.LogDebug("Getting new access token from Nhs Digital oauth2 endpoint");
+            
         // Perform request to NHS auth endpoint
         var auth = new AuthClientCredentials(_tokenUrl, _privateKey, _clientId, _kid);
         _accessTokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_accountTokenExpiresInMinutes);
