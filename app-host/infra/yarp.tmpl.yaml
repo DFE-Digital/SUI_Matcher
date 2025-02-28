@@ -41,6 +41,8 @@ properties:
             value: http://matching-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
           - name: services__matching-api__https__0
             value: https://matching-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+          - name: ASPNETCORE_ENVIRONMENT
+            value: {{ .Env.AZURE_ENV_NAME }}
     scale:
       minReplicas: 1
 tags:
