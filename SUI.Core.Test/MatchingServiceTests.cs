@@ -27,7 +27,7 @@ public sealed class MatchingServiceTests
         {
             Given = PersonMatchResponse.QualityType.NotProvided,
             Family = PersonMatchResponse.QualityType.NotProvided,
-            Birthdate = PersonMatchResponse.QualityType.Valid,
+            Birthdate = PersonMatchResponse.QualityType.NotProvided,
             Gender = PersonMatchResponse.QualityType.NotProvided,
             Phone = PersonMatchResponse.QualityType.NotProvided,
             Email = PersonMatchResponse.QualityType.NotProvided,
