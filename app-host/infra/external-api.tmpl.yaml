@@ -42,6 +42,8 @@ properties:
             value: in_memory
           - name: ConnectionStrings__secrets
             secretRef: connectionstrings--secrets
+          - name: ASPNETCORE_ENVIRONMENT
+            value: {{ .Env.AZURE_ENV_NAME }}
     scale:
       minReplicas: 1
 tags:
