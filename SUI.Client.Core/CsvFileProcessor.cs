@@ -6,22 +6,22 @@ using System.Globalization;
 
 namespace SUI.Client.Core;
 
-public interface IFileProcessor
+public interface ICsvFileProcessor
 {
-    Task ProcessCsvFileAsync(string filePath, string outputPath);
+    Task<string> ProcessCsvFileAsync(string filePath, string outputPath);
 }
 
-public class FileProcessor(CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : IFileProcessor
+public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : ICsvFileProcessor
 {
     private readonly CsvMappingConfig _mappingConfig = mapping ?? new();
     private readonly IMatchPersonApiService _matchPersonApi = matchPersonApi;
 
-    public async Task ProcessCsvFileAsync(string filePath, string outputPath)
-    {
-        const string HeaderStatus = "SUI_Status";
-        const string HeaderScore = "SUI_Score";
-        const string HeaderNhsNo = "SUI_NHSNo";
+    public const string HeaderStatus = "SUI_Status";
+    public const string HeaderScore = "SUI_Score";
+    public const string HeaderNhsNo = "SUI_NHSNo";
 
+    public async Task<string> ProcessCsvFileAsync(string filePath, string outputPath)
+    {
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("File not found", filePath);
@@ -53,6 +53,8 @@ public class FileProcessor(CsvMappingConfig mapping, IMatchPersonApiService matc
 
         var outputFilePath = GetOutputFilePath(filePath, outputPath);
         await WriteCsvAsync(outputFilePath, headers, records);
+
+        return outputFilePath;
     }
 
     private static string GetOutputFilePath(string inputFilePath, string outputPath)

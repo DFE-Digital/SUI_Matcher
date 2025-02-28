@@ -1,62 +1,34 @@
-﻿using SUI.Client.Core;
-using SUI.Client.Watcher;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using SUI.Client.Core.Integration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using SUI.Client.Core;
+using SUI.Client.Core.Extensions;
+using SUI.Client.Watcher;
 
-const string Name = "********** SUI CSV File Watcher **********";
-var p = new string('*', Name.Length);
+Console.Out.WriteAppName("SUI CSV File Watcher");
+Rule.Assert(args.Length == 2, "Usage: suiw <watch_directory> <output_directory>");
 
-Console.WriteLine(p);
-Console.WriteLine(Name);
-Console.WriteLine(p);
-Console.WriteLine();
-
-if (args.Length < 2)
-{
-    Console.WriteLine("Usage: suiw <watch_directory> <output_directory>");
-    return;
-}
-
-var appConfig = new AppConfig
+var appConfig = new CsvWatcherConfig
 {
     IncomingDirectory = args[0],
     ProcessedDirectory = args[1]
 };
 
 var builder = Host.CreateDefaultBuilder();
-
-builder.ConfigureAppConfiguration((hostingContext, config) =>
-{
-    config.SetBasePath(AppContext.BaseDirectory);
-    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-});
-
+builder.ConfigureAppSettingsJsonFile();
 builder.ConfigureServices((hostContext, services) =>
 {
-    var apiBaseAddress = hostContext.Configuration["MatchApiBaseAddress"] ?? throw new Exception("Config item 'MatchApiBaseAddress' not set");
-    var mapping = hostContext.Configuration.GetSection("CsvMapping").Get<CsvMappingConfig>() ?? new CsvMappingConfig();
-
+    services.AddClientCore(hostContext.Configuration);
     services.AddSingleton(appConfig);
-    services.AddSingleton(mapping);
-    services.AddLogging(configure => configure.AddConsole());
-    services.AddSingleton(x => new HttpClient() { BaseAddress = new Uri(apiBaseAddress) });
-
-    services.AddSingleton<IFileProcessor, FileProcessor>();
-    services.AddSingleton<FileWatcherService>();
-    services.AddSingleton<Processor>();
-    services.AddSingleton<IMatchPersonApiService, MatchPersonApiService>();
-    services.AddSingleton<IFileProcessor, FileProcessor>();
+    services.AddLogging(configure => configure.AddConsole()); 
+    services.AddSingleton<CsvFileWatcherService>();
+    services.AddSingleton<CsvFileMonitor>();
 });
 
-
 var host = builder.Build();
-
-CancellationTokenSource cts = new();
-var processor = host.Services.GetRequiredService<Processor>();
-var processingTask = processor.StartAsync(CancellationToken.None);
+var cts = new CancellationTokenSource();
+var processor = host.Services.GetRequiredService<CsvFileMonitor>();
+var processingTask = processor.StartAsync(cts.Token);
 
 Console.WriteLine("File watcher started. Type 'q' to quit, 'stats' for statistics.");
 while (true)
@@ -74,3 +46,5 @@ while (true)
 }
 
 await processingTask;
+
+await host.StopAsync();

@@ -1,40 +1,25 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SUI.Client.Core;
-using SUI.Client.Core.Integration;
+using SUI.Client.Core.Extensions;
 
-const string Name = "********** SUI CSV File Processor **********";
-var p = new string('*', Name.Length);
+Console.Out.WriteAppName("SUI CSV File Processor");
+Rule.Assert(args.Length == 1, "Usage: suic <csv-file>");
+Rule.Assert(File.Exists(args[0]), $"File '{args[0]}' not found.");
 
-Console.WriteLine(p); 
-Console.WriteLine(Name);
-Console.WriteLine(p);
-Console.WriteLine();
-
-if (args.Length == 0)
+var builder = Host.CreateDefaultBuilder();
+builder.ConfigureAppSettingsJsonFile();
+builder.ConfigureServices((hostContext, services) =>
 {
-    Console.WriteLine("Usage: suic <csv-file>");
-}
-else
-{
-    var csvFilePath = args[0];
+    services.AddClientCore(hostContext.Configuration);
+});
 
-    var config = new ConfigurationBuilder()
-        .SetBasePath(AppContext.BaseDirectory)
-        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-        .Build();
+var host = builder.Build();
+var fileProcessor = host.Services.GetRequiredService<ICsvFileProcessor>();
+var inputFile = args[0];
+var outputDirectory = Path.GetDirectoryName(inputFile) ?? throw new Exception($"Directory name returned null for input: {inputFile}");
+var outputFile = await fileProcessor.ProcessCsvFileAsync(inputFile, outputDirectory);
 
-    var apiBaseAddress = config["MatchApiBaseAddress"] ?? throw new Exception("Config item 'MatchApiBaseAddress' not set");
-    var mapping = config.GetSection("CsvMapping").Get<CsvMappingConfig>() ?? new CsvMappingConfig();
+Console.WriteLine($"File processed; output={outputFile}");
 
-    var services = new ServiceCollection()
-        .AddSingleton(mapping)
-        .AddSingleton(x => new HttpClient() { BaseAddress = new Uri(apiBaseAddress) })
-        .AddSingleton<IMatchPersonApiService, MatchPersonApiService>()
-        .AddSingleton<IFileProcessor, FileProcessor>()
-        .BuildServiceProvider();
-
-    await services.GetRequiredService<IFileProcessor>().ProcessCsvFileAsync(csvFilePath, Path.GetDirectoryName(csvFilePath));
-    
-    Console.WriteLine("File processed.");
-}
+await host.StopAsync();

@@ -1,19 +1,24 @@
-﻿using SUI.Client.Core;
+﻿using Microsoft.Extensions.Logging;
+using SUI.Client.Core;
 using System.Collections.Concurrent;
 
 namespace SUI.Client.Watcher;
 
-public class Processor
+public class CsvFileMonitor
 {
-    private readonly FileWatcherService _fileWatcherService;
-    private readonly AppConfig _config;
-    private readonly ILogger _logger;
-    private readonly IFileProcessor _fileProcessor;
+    private readonly CsvFileWatcherService _fileWatcherService;
+    private readonly CsvWatcherConfig _config;
+    private readonly ILogger<CsvFileMonitor> _logger;
+    private readonly ICsvFileProcessor _fileProcessor;
     private readonly ConcurrentQueue<string> _fileQueue = new();
     private int _processedCount = 0;
     private int _errorCount = 0;
+    public int ProcessedCount => _processedCount;
+    public int ErrorCount => _errorCount;
+    public event EventHandler<FileProcessedResult>? Processed;
+    public FileProcessedResult? LastResult { get; private set; }
 
-    public Processor(FileWatcherService fileWatcherService, AppConfig config, ILogger logger, IFileProcessor fileProcessor)
+    public CsvFileMonitor(CsvFileWatcherService fileWatcherService, CsvWatcherConfig config, ILogger<CsvFileMonitor> logger, ICsvFileProcessor fileProcessor)
     {
         _fileWatcherService = fileWatcherService;
         _config = config;
@@ -29,35 +34,36 @@ public class Processor
         _fileWatcherService.Start();
         while (!cancellationToken.IsCancellationRequested)
         {
-            if (_fileQueue.TryDequeue(out string filePath))
+            if (_fileQueue.TryDequeue(out var filePath))
             {
                 try
                 {
-                    await ProcessFileAsync(filePath);
+                    var of = await ProcessFileAsync(filePath);
                     await RetryAsync(async () =>
                     {
                         string destPath = Path.Combine(_config.ProcessedDirectory, Path.GetFileName(filePath));
                         File.Move(filePath, destPath);
-                        _logger.Log($"File moved to Processed directory: {destPath}");
+                        _logger.LogInformation($"File moved to Processed directory: {destPath}");
                     }, _config.RetryCount, _config.RetryDelayMs);
 
                     Interlocked.Increment(ref _processedCount);
+                    LastResult = new FileProcessedResult(filePath, outputFile: of);
                 }
                 catch (Exception ex)
                 {
-                    _logger.Log($"Error processing file {filePath}: {ex.Message}");
+                    _logger.LogInformation($"Error processing file {filePath}: {ex.Message}");
                     Interlocked.Increment(ref _errorCount);
+                    LastResult = new FileProcessedResult(filePath, exception: ex);
                 }
+                Processed?.Invoke(this, LastResult);
             }
             await Task.Delay(_config.ProcessingDelayMs, cancellationToken);
         }
         _fileWatcherService.Stop();
     }
 
-    private async Task ProcessFileAsync(string filePath)
-    {
-        await _fileProcessor.ProcessCsvFileAsync(filePath, _config.ProcessedDirectory);
-    }
+    private async Task<string> ProcessFileAsync(string filePath) 
+        => await _fileProcessor.ProcessCsvFileAsync(filePath, _config.ProcessedDirectory);
 
     public void PrintStats(TextWriter output)
     {
@@ -79,7 +85,7 @@ public class Processor
                 attempts++;
                 if (attempts >= retryCount)
                     throw;
-                _logger.Log($"Retry attempt {attempts} failed: {ex.Message}. Retrying in {delayMs}ms.");
+                _logger.LogInformation($"Retry attempt {attempts} failed: {ex.Message}. Retrying in {delayMs}ms.");
                 await Task.Delay(delayMs);
             }
         }

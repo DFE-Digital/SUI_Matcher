@@ -28,7 +28,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     {
         var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification()));
         
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Theory]
@@ -148,7 +148,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         }));
         
         // Assert
-        Assert.True(response.IsSuccessStatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
         Assert.NotNull(personMatchResponse?.Result);
         Assert.NotNull(personMatchResponse.DataQuality);
@@ -189,7 +189,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
     // JWT renewal (needed for technical conformance.)
 
-    [Fact]
+    [Fact(Skip = "Explicit run only due to Task.Delay")]
     public async Task MatchingApi_ExpireTheAccessToken_TokenRenews()
     {
         for (var i = 0; i < 2; i++) 

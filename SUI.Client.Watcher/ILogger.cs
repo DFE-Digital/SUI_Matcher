@@ -1,6 +1,6 @@
-﻿namespace SUI.Client.Watcher;
+﻿//namespace SUI.Client.Watcher;
 
-public interface ILogger
-{
-    void Log(string message);
-}
+//public interface ILogger
+//{
+//    void Log(string message);
+//}

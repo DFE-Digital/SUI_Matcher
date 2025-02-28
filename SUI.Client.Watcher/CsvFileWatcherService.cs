@@ -2,19 +2,21 @@
 
 namespace SUI.Client.Watcher;
 
-public class FileWatcherService : IDisposable
+public class CsvFileWatcherService : IDisposable
 {
     private readonly FileSystemWatcher _watcher;
-    private readonly AppConfig _config;
+    private readonly CsvWatcherConfig _config;
     private readonly ILogger _logger;
     public event EventHandler<string>? FileDetected;
 
-    public FileWatcherService(AppConfig config, ILoggerFactory loggerFactory)
+    public int Count { get; private set; }
+
+    public CsvFileWatcherService(CsvWatcherConfig config, ILoggerFactory loggerFactory)
     {
         _config = config;
-        _logger = (ILogger) loggerFactory.CreateLogger<FileWatcherService>();
+        _logger = loggerFactory.CreateLogger<CsvFileWatcherService>();
         Directory.CreateDirectory(_config.IncomingDirectory);
-        _watcher = new FileSystemWatcher(_config.IncomingDirectory, _config.FileFilter)
+        _watcher = new FileSystemWatcher(_config.IncomingDirectory, "*.csv")
         {
             NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
         };
@@ -24,7 +26,8 @@ public class FileWatcherService : IDisposable
 
     private void OnCreated(object sender, FileSystemEventArgs e)
     {
-        _logger.Log($"New file detected: {Path.GetFileName(e.FullPath)}");
+        Count++;
+        _logger.LogInformation($"New file detected: {Path.GetFileName(e.FullPath)}");
         FileDetected?.Invoke(this, e.FullPath);
     }
 

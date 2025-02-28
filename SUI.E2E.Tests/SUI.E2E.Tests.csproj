@@ -1,0 +1,73 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireVersion)" />
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Aspire.Hosting.AppHost" />
+		<PackageReference Include="Aspire.Hosting.Testing" />
+		<PackageReference Include="FluentAssertions" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="WireMock.Net.Aspire" />
+		<PackageReference Include="xunit" />
+
+		<PackageReference Include="xunit.runner.visualstudio" />
+		<PackageReference Include="coverlet.collector" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="System.Net" />
+		<Using Include="Microsoft.Extensions.DependencyInjection" />
+		<Using Include="Aspire.Hosting.ApplicationModel" />
+		<Using Include="Aspire.Hosting.Testing" />
+		<Using Include="Xunit" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<ProjectReference Include="..\app-host\AppHost.csproj" />
+		<ProjectReference Include="..\shared\Shared\Shared.csproj" />
+		<ProjectReference Include="..\SUI.Client.Core\SUI.Client.Core.csproj" />
+		<ProjectReference Include="..\SUI.Client.Watcher\SUI.Client.Watcher.csproj" />
+		<ProjectReference Include="..\SUI.Core\SUI.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Resources\Csv\single_match_really_low_confidence.csv">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\Csv\test_fail_validation.csv">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\Csv\single_match_low_confidence.csv">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\Csv\single_match.csv">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\WireMockMappings\multi_match.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\WireMockMappings\no_match.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\WireMockMappings\single_match.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\WireMockMappings\single_match_low_confidence.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\WireMockMappings\single_match_really_low_confidence.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>
