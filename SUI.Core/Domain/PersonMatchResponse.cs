@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json.Serialization;
 
 namespace SUI.Core.Domain;
@@ -47,6 +48,30 @@ public class PersonMatchResponse
 
         [JsonPropertyName("gender")] 
         public QualityType Gender { get; set; } = QualityType.Valid;
+
+        public Dictionary<string, string> ToDictionary()
+        {
+            var jsonPropertyDict = new Dictionary<string, string>();
+
+            var properties = GetType().GetProperties();
+    
+            foreach (var property in properties)
+            {
+                var jsonPropertyAttribute = property.GetCustomAttribute<JsonPropertyNameAttribute>();
+
+                if (jsonPropertyAttribute == null) continue;
+			
+                var jsonPropertyName = jsonPropertyAttribute.Name;
+                var value = property.GetValue(this);
+
+                if (value is QualityType qualityType)
+                {
+                    jsonPropertyDict[jsonPropertyName] = qualityType.ToString();
+                }
+            }
+
+            return jsonPropertyDict;
+        }
     }
 
     public enum QualityType

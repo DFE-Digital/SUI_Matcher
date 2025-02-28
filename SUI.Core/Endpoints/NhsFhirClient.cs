@@ -46,17 +46,24 @@ public class NhsFhirClient(ITokenService tokenService,
         if (fhirClient.RequestHeaders != null)
         {
             var accessToken = await tokenService.GetBearerToken();
+            
+            logger.LogDebug("Retrieved Nhs Digital FHIR API access token");
+            
             fhirClient.RequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             fhirClient.RequestHeaders.Add("X-Request-ID", Guid.NewGuid().ToString());
         }
 
         try
         {
+            logger.LogDebug("Searching for an Nhs patient record");
+            
             // Search for a patient record
             var patient = await fhirClient.SearchAsync<Patient>(search);
 
             if (patient == null || patient.Entry.Count == 0)
             {
+                logger.LogDebug("No patient record found");
+                
                 return new SearchResult
                 {
                     Type = SearchResult.ResultType.Unmatched
@@ -65,6 +72,8 @@ public class NhsFhirClient(ITokenService tokenService,
 
             if (patient.Entry.Count == 1)
             {
+                logger.LogDebug("1 patient record found");
+                
                 return new SearchResult
                 {
                     Type = SearchResult.ResultType.Matched,
@@ -73,6 +82,8 @@ public class NhsFhirClient(ITokenService tokenService,
                 };
             }
 
+            logger.LogDebug("multiple patient records found");
+                
             return new SearchResult
             {
                 Type = SearchResult.ResultType.MultiMatched
@@ -80,7 +91,7 @@ public class NhsFhirClient(ITokenService tokenService,
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, ex.Message);
+            logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search");
 
             return new SearchResult
             {

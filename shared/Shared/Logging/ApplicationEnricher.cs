@@ -11,6 +11,11 @@ internal class ApplicationEnricher(IHttpContextAccessor httpContextAccessor) : I
 {
 	public void Enrich(IEnrichmentTagCollector collector)
 	{
+		if (Activity.Current?.GetTagItem("SearchId") is { } searchId)
+		{
+			collector.Add("SearchId", searchId);
+		}
+
 		collector.Add("MachineName", Environment.MachineName);
 
 		var httpContext = httpContextAccessor.HttpContext;
