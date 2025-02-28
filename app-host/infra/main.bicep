@@ -15,6 +15,9 @@ param principalId string = ''
 
 var tags = {
   'azd-env-name': environmentName
+  'Product': 'SUI'
+  'Environment': environmentName
+  'Service Offering': 'SUI'
 }
 
 module resources 'resources.bicep' = {
@@ -22,7 +25,6 @@ module resources 'resources.bicep' = {
   params: {
     location: location
     tags: tags
-    principalId: principalId
   }
 }
 
@@ -30,10 +32,9 @@ module secrets 'secrets/secrets.module.bicep' = {
   name: 'secrets'
   params: {
     location: location
-    principalId: resources.outputs.MANAGED_IDENTITY_PRINCIPAL_ID
-    principalType: 'ServicePrincipal'
   }
 }
+
 output MANAGED_IDENTITY_CLIENT_ID string = resources.outputs.MANAGED_IDENTITY_CLIENT_ID
 output MANAGED_IDENTITY_NAME string = resources.outputs.MANAGED_IDENTITY_NAME
 output AZURE_LOG_ANALYTICS_WORKSPACE_NAME string = resources.outputs.AZURE_LOG_ANALYTICS_WORKSPACE_NAME

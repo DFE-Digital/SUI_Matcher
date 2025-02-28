@@ -21,8 +21,6 @@ properties:
       - server: {{ .Env.AZURE_CONTAINER_REGISTRY_ENDPOINT }}
         identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
     secrets:
-      - name: connectionstrings--redis
-        value: redis:6379
       - name: connectionstrings--secrets
         value: '{{ .Env.SECRETS_VAULTURI }}'
   template:
@@ -42,16 +40,15 @@ properties:
             value: "true"
           - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY
             value: in_memory
-          - name: services__auth-api__http__0
-            value: http://auth-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-          - name: services__auth-api__https__0
-            value: https://auth-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-          - name: ConnectionStrings__redis
-            secretRef: connectionstrings--redis
           - name: ConnectionStrings__secrets
             secretRef: connectionstrings--secrets
+          - name: ASPNETCORE_ENVIRONMENT
+            value: {{ .Env.AZURE_ENV_NAME }}
     scale:
       minReplicas: 1
 tags:
   azd-service-name: external-api
   aspire-resource-name: external-api
+  Product: SUI
+  Environment: Integration
+  Service Offering: SUI

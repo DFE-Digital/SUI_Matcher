@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Shared.Models;
 using SUI.Core.Domain;
@@ -17,16 +20,20 @@ public class MatchingService(
     IValidationService validationService) : IMatchingService
 {
 	public async Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification)
-	{
-        logger.LogInformation("Validating the person data fields");
+    {
+        StoreUniqueSearchIdFor(personSpecification);
+        
+        logger.LogInformation("Searching for matching person");
         
         var validationResults = validationService.Validate(personSpecification);
 
         var dataQualityResult = ToQualityResult(personSpecification, validationResults.Results!);
         
+        logger.LogError($"Person data validation resulted in: {JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}");
+
         if (!HasMinDataRequirements(dataQualityResult))
         {
-            logger.LogError($"Multiple validation errors found: {JsonConvert.SerializeObject(dataQualityResult)}");
+            logger.LogError($"The minimized data requirements for a search weren't met, returning match status 'Error'");
 
             return new PersonMatchResponse
             {
@@ -39,6 +46,12 @@ public class MatchingService(
         }
         
         var result = await MatchAsync(personSpecification);
+
+        logger.LogInformation($"""
+                               The person match request resulted in match status '{result.Status.ToString()}' 
+                               at process stage ({result.ProcessStage}), and the data quality was 
+                               {JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}
+                               """);
 
         return new PersonMatchResponse
         {
@@ -61,7 +74,7 @@ public class MatchingService(
         {
             var query = queries[i];
             
-            logger.LogInformation($"Performing search query ({i}) again Nhs Fhir API");
+            logger.LogInformation($"Performing search query ({i}) against Nhs Fhir API");
             
             var searchResult = await nhsFhirClient.PerformSearch(query);
             if (searchResult != null)
@@ -78,20 +91,20 @@ public class MatchingService(
                         status = MatchStatus.PotentialMatch;
                     }
                     
-                    logger.LogInformation($"Search query ({i}) resulted in status '{status}'");
+                    logger.LogInformation($"Search query ({i}) resulted in status '{status.ToString()}'");
                     
                     return new MatchResult(searchResult, status, i); // single match with confidence score
                 }
                 else if (searchResult.Type == SearchResult.ResultType.MultiMatched)
                 {
-                    logger.LogInformation($"Search query ({i}) resulted in status '{MatchStatus.ManyMatch}'");
+                    logger.LogInformation($"Search query ({i}) resulted in status 'ManyMatch'");
                     
                     return new MatchResult(searchResult, MatchStatus.ManyMatch, i); // multiple matches
                 }
             }
         }
         
-        logger.LogInformation($"Search query ({queries.Length-1}) resulted in status '{MatchStatus.NoMatch}'");
+        logger.LogInformation($"Search query ({queries.Length-1}) resulted in status 'NoMatch'");
 
         return new MatchResult(MatchStatus.NoMatch);
     }
@@ -293,10 +306,30 @@ public class MatchingService(
         return result;
     }
     
-    public bool HasMinDataRequirements(PersonMatchResponse.DataQualityResult dataQualityResult)
+    private static void StoreUniqueSearchIdFor(PersonSpecification personSpecification)
     {
-        return dataQualityResult.Given == PersonMatchResponse.QualityType.Valid &&
-               dataQualityResult.Family == PersonMatchResponse.QualityType.Valid &&
-               dataQualityResult.Birthdate == PersonMatchResponse.QualityType.Valid;
+        using var md5 = MD5.Create();
+        byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(personSpecification));
+        byte[] hashBytes = md5.ComputeHash(bytes);
+            
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < hashBytes.Length; i++)
+        {
+            builder.Append(hashBytes[i].ToString("x2"));
+        }
+            
+        var hash = builder.ToString();
+        
+        Activity.Current?.SetTag("SearchId", hash);
+    }
+
+    private bool HasMinDataRequirements(PersonMatchResponse.DataQualityResult dataQualityResult)
+    {
+        return dataQualityResult is
+        {
+            Given: PersonMatchResponse.QualityType.Valid, 
+            Family: PersonMatchResponse.QualityType.Valid, 
+            Birthdate: PersonMatchResponse.QualityType.Valid
+        };
     }
 }
