@@ -1,10 +1,9 @@
-using MassTransit.Saga;
 using RestEase;
 using WireMock.Admin.Mappings;
 using WireMock.Client;
 using WireMock.Client.Builders;
 
-namespace AppHost.IntegrationTests;
+namespace SUI.E2E.Tests;
 
 public sealed class MockNhsFhirServer(string baseUrl)
 {
@@ -12,7 +11,6 @@ public sealed class MockNhsFhirServer(string baseUrl)
         RestClient.For<IWireMockAdminApi>(new Uri(baseUrl, UriKind.Absolute));
     public static async Task SetupAsync(AdminApiMappingBuilder builder)
     {
-        string GetFileText(string fileName) => File.ReadAllText(Path.Combine("WireMockMappings", fileName));
 
         builder.Given(b => b
             .WithRequest(request => request
@@ -39,7 +37,7 @@ public sealed class MockNhsFhirServer(string baseUrl)
             )
             .WithResponse(response => response
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
-                .WithBody(() => GetFileText("multi_match.json"))));
+                .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "multi_match.json")))));
 
         builder.Given(b => b
             .WithRequest(request => request
@@ -52,7 +50,7 @@ public sealed class MockNhsFhirServer(string baseUrl)
             )
             .WithResponse(response => response
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
-                .WithBody(() => GetFileText("no_match.json"))));
+                .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "no_match.json")))));
 
         builder.Given(b => b
             .WithRequest(request => request
@@ -67,7 +65,7 @@ public sealed class MockNhsFhirServer(string baseUrl)
             )
             .WithResponse(response => response
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
-                .WithBody(() => GetFileText("single_match.json"))));
+                .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "single_match.json")))));
         
         builder.Given(b => b
             .WithRequest(request => request
@@ -82,7 +80,7 @@ public sealed class MockNhsFhirServer(string baseUrl)
             )
             .WithResponse(response => response
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
-                .WithBody(() => GetFileText("single_match_low_confidence.json"))));
+                .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "single_match_low_confidence.json")))));
         
         builder.Given(b => b
             .WithRequest(request => request
@@ -97,7 +95,7 @@ public sealed class MockNhsFhirServer(string baseUrl)
             )
             .WithResponse(response => response
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
-                .WithBody(() => GetFileText("single_match_really_low_confidence.json"))));
+                .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "single_match_really_low_confidence.json")))));
 
 		await builder.BuildAndPostAsync();
 	}

@@ -27,7 +27,7 @@ public sealed class MatchingServiceTests
         {
             Given = PersonMatchResponse.QualityType.NotProvided,
             Family = PersonMatchResponse.QualityType.NotProvided,
-            Birthdate = PersonMatchResponse.QualityType.Valid,
+            Birthdate = PersonMatchResponse.QualityType.NotProvided,
             Gender = PersonMatchResponse.QualityType.NotProvided,
             Phone = PersonMatchResponse.QualityType.NotProvided,
             Email = PersonMatchResponse.QualityType.NotProvided,
@@ -40,7 +40,7 @@ public sealed class MatchingServiceTests
     [DataRow("2000-11-10", 4)] // swappable day/month in dob - so expect 6 search strategies
     public async Task MultpleQueryStrategiesWereUsed(string dob, int expectedSearchStrategiesUsed)
     {
-        var dateOfBirth = DateTime.Parse(dob);
+        var dateOfBirth = DateOnly.Parse(dob);
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
         var validationService = new ValidationService();
         var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
@@ -82,7 +82,7 @@ public sealed class MatchingServiceTests
         var model = new PersonSpecification
         {
             AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateTime(2000,11,11),
+            BirthDate = new DateOnly(2000,11,11),
             Email = "test@test.com",
             Family = "Smith",
             Given = "John",
@@ -116,7 +116,7 @@ public sealed class MatchingServiceTests
         var model = new PersonSpecification
         {
             AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateTime(2000, 11, 11),
+            BirthDate = new DateOnly(2000, 11, 11),
             Email = "test@test.com",
             Family = "Smith",
             Given = "John",
@@ -149,7 +149,7 @@ public sealed class MatchingServiceTests
         var model = new PersonSpecification
         {
             AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateTime(2000, 11, 11),
+            BirthDate = new DateOnly(2000, 11, 11),
             Email = "test@test.com",
             Family = "Smith",
             Given = "John",
@@ -181,7 +181,7 @@ public sealed class MatchingServiceTests
         var model = new PersonSpecification
         {
             AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateTime(2000, 11, 11),
+            BirthDate = new DateOnly(2000, 11, 11),
             Email = "test@test.com",
             Family = "Smith",
             Given = "John",

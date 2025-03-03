@@ -21,7 +21,7 @@ namespace SUI.Core.Tests
             {
                 Given = given,
                 Family = family,
-                BirthDate = Convert.ToDateTime(birthdate),
+                BirthDate = DateOnly.Parse(birthdate),
                 Phone = phone,
                 Email = email,
                 Gender = gender,

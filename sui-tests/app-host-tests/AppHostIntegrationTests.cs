@@ -28,7 +28,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     {
         var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification()));
         
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Theory]
@@ -50,7 +50,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         {
             Given = "OCTAVIA",
             Family = "CHISLETT",
-            BirthDate = Convert.ToDateTime("2008-09-20"),
+            BirthDate = DateOnly.Parse("2008-09-20"),
         }));
         
         // Assert
@@ -69,7 +69,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         {
             Given = "Hannah",
             Family = "Robinson",
-            BirthDate = Convert.ToDateTime("2005-10-15"),
+            BirthDate = DateOnly.Parse("2005-10-15"),
         }));
         
         // Assert
@@ -88,7 +88,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         {
             Given = "Joe",
             Family = "Robinson",
-            BirthDate = Convert.ToDateTime("2005-10-15"),
+            BirthDate = DateOnly.Parse("2005-10-15"),
         }));
         
         // Assert
@@ -105,7 +105,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         {
             Given = "OCTAVIAN",
             Family = "CHISLETTE",
-            BirthDate = Convert.ToDateTime("2008-09-21"),
+            BirthDate = DateOnly.Parse("2008-09-21"),
         }));
         
         // Assert
@@ -124,7 +124,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         {
             Given = "John",
             Family = "Doe",
-            BirthDate = Convert.ToDateTime("2010-01-01"),
+            BirthDate = DateOnly.Parse("2010-01-01"),
         }));
         
         // Assert
@@ -144,11 +144,11 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
         {
             Given = "",
-            BirthDate = Convert.ToDateTime("2010-01-01"),
+            BirthDate = DateOnly.Parse("2010-01-01"),
         }));
         
         // Assert
-        Assert.True(response.IsSuccessStatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
         Assert.NotNull(personMatchResponse?.Result);
         Assert.NotNull(personMatchResponse.DataQuality);
@@ -168,7 +168,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         {
             Given = "OCTAVIA",
             Family = "CHISLETT",
-            BirthDate = Convert.ToDateTime("2008-09-20"),
+            BirthDate = DateOnly.Parse("2008-09-20"),
             Email = "not an email",
             Gender = "car",
             Phone = "hello",
@@ -189,7 +189,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
     // JWT renewal (needed for technical conformance.)
 
-    [Fact]
+    [Fact(Skip = "Explicit run only due to Task.Delay")]
     public async Task MatchingApi_ExpireTheAccessToken_TokenRenews()
     {
         for (var i = 0; i < 2; i++) 
@@ -198,7 +198,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
             {
                 Given = "OCTAVIA",
                 Family = "CHISLETT",
-                BirthDate = Convert.ToDateTime("2008-09-20"),
+                BirthDate = DateOnly.Parse("2008-09-20"),
             }));
         }
 
@@ -212,7 +212,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         {
             Given = "OCTAVIA",
             Family = "CHISLETT",
-            BirthDate = Convert.ToDateTime("2008-09-20"),
+            BirthDate = DateOnly.Parse("2008-09-20"),
         }));
         
         // Confirms that a new token was requested
