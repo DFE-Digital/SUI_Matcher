@@ -118,7 +118,32 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-p
       componentType: 'AspireDashboard'
     }
   }
+}
 
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
+  name: '${environmentPrefix}${environmentName}sa01'
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+  }
+  tags: tags
+}
+
+resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2019-06-01' = {
+  name: '${environmentPrefix}-${environmentName}-blob-01'
+  parent: storageAccount
+}]
+
+resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-09-01' = {
+  name: '${environmentPrefix}-${environmentName}-container-01'
+  parent: blobServices
+  properties: {
+    publicAccess: 'None'
+  }
 }
 
 // resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {

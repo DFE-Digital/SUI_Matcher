@@ -1,0 +1,53 @@
+name: Deploy Bicep Files
+
+on:
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: 'Deployment environment'
+                required: true
+                default: 'Integration'
+            version:
+                description: 'Deployment version'
+                required: true
+                default: 'v0.0.14'
+            file:
+                description: 'File to deploy'
+                required: true
+                default: 'client'
+                type: choice
+                options:
+                    - client
+                    - firewall
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v2
+
+        - name: Set up Azure CLI
+          uses: azure/cli@v1
+
+        - name: Login to Azure
+          run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+        - name: Deploy Bicep files
+          run: |
+            FILE_PATH=""
+            if [ "${{ github.event.inputs.file }}" == "client" ]; then
+              FILE_PATH="SUI.Client.Watcher/infra/client.bicep"
+            elif [ "${{ github.event.inputs.file }}" == "firewall" ]; then
+              FILE_PATH="SUI.Client.Watcher/infra/firewall.bicep"
+            elif [ "${{ github.event.inputs.file }}" == "connect" ]; then
+              FILE_PATH="SUI.Client.Watcher/infra/connect.bicep"
+            fi
+
+            az deployment group create \
+                --resource-group <your-resource-group> \
+                --template-file $FILE_PATH \
+                --parameters @SUI.Client.Watcher/infra/parameters.json \
+                --parameters environment=${{ github.event.inputs.environment }} \
+                --parameters version=${{ github.event.inputs.version }}
