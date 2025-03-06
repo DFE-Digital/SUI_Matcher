@@ -15,6 +15,11 @@ on:
                 description: 'Environment'
                 required: true
                 default: 'Integration'
+
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
     build:
         runs-on: ubuntu-latest

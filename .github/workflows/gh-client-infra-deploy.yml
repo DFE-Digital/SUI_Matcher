@@ -12,6 +12,10 @@ on:
                 required: true
                 default: 'v0.0.14'
  
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
     deploy:
         runs-on: ubuntu-latest
