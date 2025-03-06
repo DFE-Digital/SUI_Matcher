@@ -1,4 +1,4 @@
-name: Deploy Bicep Files
+name: Deploy Client Infrastructure
 
 on:
     workflow_dispatch:
