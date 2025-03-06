@@ -1,0 +1,50 @@
+name: Deploy Bicep Files
+
+on:
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: 'Deployment environment'
+                required: true
+                default: 'Integration'
+            version:
+                description: 'Deployment version'
+                required: true
+                default: 'v0.0.14'
+ 
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        env: 
+            AZURE_ENV_NAME: ${{ inputs.environment }}
+            AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            AZURE_LOCATION: "westeurope"
+            AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+            CLIENT_VERSION: ${{ inputs.version }}
+            VM_USERNAME: ${{ secrets.VM_USERNAME }}
+            VM_PASSWORD: ${{ secrets.VM_PASSWORD }}
+
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v2
+          with:
+            ref: ${{ env.CLIENT_VERSION }}
+
+        - name: Set up Azure CLI
+          uses: azure/cli@v1
+
+        - name: Login to Azure
+          uses: azure/login@v2
+          with:
+            client-id: ${{ env.AZURE_CLIENT_ID }}
+            tenant-id: ${{ env.AZURE_TENANT_ID }}
+            subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+        - name: Deploy Bicep files for client environment
+          run: |
+            az deployment group create \
+                --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                --template-file SUI.Client.Watcher/infra/client.bicep \
+                --parameters @SUI.Client.Watcher/infra/main.parameters.json \

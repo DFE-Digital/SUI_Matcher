@@ -118,7 +118,33 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-p
       componentType: 'AspireDashboard'
     }
   }
+}
 
+// Another which doesn't like dashes in the name
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: '${environmentPrefix}${environmentName}sa01'
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+  }
+  tags: tags
+}
+
+resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
+  parent: storageAccount
+  name: 'default'
+}
+
+resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${environmentPrefix}-${environmentName}-container-01'
+  parent: blobServices
+  properties: {
+    publicAccess: 'None'
+  }
 }
 
 // resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
