@@ -10,6 +10,7 @@ on:
             blob_storage_location:
                 description: 'Blob storage location'
                 required: true
+                default: 's215d01-integration-container-01'
             environment:
                 description: 'Environment'
                 required: true
@@ -38,14 +39,11 @@ jobs:
           with:
             dotnet-version: '9.0.x'
 
-        - name: Restore dependencies
-          run: dotnet restore SUI.Client.Watcher
+        - name: Publish Client Watcher
+          run: dotnet publish SUI.Client.Watcher -r win-x64 --self-contained /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --configuration Release --output ./output
 
-        - name: Build
-          run: dotnet build SUI.Client.Watcher --configuration Release --output ./output
-
-        - name: Publish
-          run: dotnet publish SUI.Client.Watcher --configuration Release --output ./output
+        - name: Set up Azure CLI
+          uses: azure/cli@v1
 
         - name: Login to Azure
           uses: azure/login@v2
@@ -59,5 +57,4 @@ jobs:
             az storage blob upload-batch \
                 --destination ${{ env.BLOB_STORAGE_LOCATION }} \
                 --source ./output \
-                --pattern "*.dll" \
                 --pattern "*.exe"
