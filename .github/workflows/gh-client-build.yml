@@ -11,6 +11,10 @@ on:
                 description: 'Blob storage location'
                 required: true
                 default: 's215d01-integration-container-01'
+            storage_account:
+                description: 'Storage account'
+                required: true
+                default: 's215d01integrationsa01'
             environment:
                 description: 'Environment'
                 required: true
@@ -56,4 +60,4 @@ jobs:
 
         - name: Upload to Blob Storage
           run:
-            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --source ./output --pattern "*.exe"
+            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name --source ./output --pattern "*.exe"
