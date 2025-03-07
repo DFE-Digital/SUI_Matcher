@@ -43,7 +43,7 @@ jobs:
           run: dotnet publish SUI.Client.Watcher -r win-x64 --self-contained /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --configuration Release --output ./output
 
         - name: Set up Azure CLI
-          uses: azure/cli@v1
+          uses: azure/cli@v2
 
         - name: Login to Azure
           uses: azure/login@v2

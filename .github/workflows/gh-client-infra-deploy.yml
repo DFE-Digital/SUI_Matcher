@@ -33,7 +33,7 @@ jobs:
             ref: ${{ env.CLIENT_VERSION }}
 
         - name: Set up Azure CLI
-          uses: azure/cli@v1
+          uses: azure/cli@v2
 
         - name: Login to Azure
           uses: azure/login@v2
