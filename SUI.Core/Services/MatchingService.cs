@@ -47,11 +47,9 @@ public class MatchingService(
         
         var result = await MatchAsync(personSpecification);
 
-        logger.LogInformation($"""
-                               The person match request resulted in match status '{result.Status.ToString()}' 
-                               at process stage ({result.ProcessStage}), and the data quality was 
-                               {JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}
-                               """);
+        logger.LogInformation($"The person match request resulted in match status '{result.Status.ToString()}' " +
+                              $"at process stage ({result.ProcessStage}), and the data quality was " +
+                              $"{JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}");
 
         return new PersonMatchResponse
         {

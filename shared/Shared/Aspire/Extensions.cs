@@ -45,6 +45,9 @@ public static class Extensions
 		builder.Logging.EnableEnrichment();
 		builder.Services.AddLogEnricher<ApplicationEnricher>();
 
+		builder.Logging.AddConsole(options => options.FormatterName = "log4net")
+			.AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
+
 		builder.Logging.AddOpenTelemetry(logging =>
 		{
 			logging.IncludeFormattedMessage = true;
