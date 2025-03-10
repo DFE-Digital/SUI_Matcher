@@ -1,7 +1,7 @@
 ﻿using SUI.Core.Domain;
 using SUI.Core.Services;
 
-namespace SUI.Core.Tests
+namespace SUI.Test.Unit
 {
     [TestClass]
     public class ValidateServiceTest

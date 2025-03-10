@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using SUI.Client.Core;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 
-namespace SUI.Client.Watcher;
+namespace SUI.Client.Core.Watcher;
 
 public class CsvFileMonitor
 {
@@ -15,54 +15,74 @@ public class CsvFileMonitor
     private int _errorCount = 0;
     public int ProcessedCount => _processedCount;
     public int ErrorCount => _errorCount;
-    public event EventHandler<FileProcessedResult>? Processed;
-    public FileProcessedResult? LastResult { get; private set; }
+    public event EventHandler<FileProcessedEnvelope>? Processed;
 
-    public CsvFileMonitor(CsvFileWatcherService fileWatcherService, CsvWatcherConfig config, ILogger<CsvFileMonitor> logger, ICsvFileProcessor fileProcessor)
+    public FileProcessedEnvelope? LastOperation { get; private set; }
+
+    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new Exception("LastResult is null");
+
+    public ProcessCsvFileResult LastResult() => GetLastOperation().AssertSuccess();
+
+    public CsvFileMonitor(CsvFileWatcherService fileWatcherService, IOptions<CsvWatcherConfig> config, ILogger<CsvFileMonitor> logger, ICsvFileProcessor fileProcessor)
     {
         _fileWatcherService = fileWatcherService;
-        _config = config;
+        _config = config.Value;
         _logger = logger;
         _fileProcessor = fileProcessor;
         Directory.CreateDirectory(_config.ProcessedDirectory);
-        Directory.CreateDirectory(_config.LogDirectory);
         _fileWatcherService.FileDetected += (s, filePath) => _fileQueue.Enqueue(filePath);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _fileWatcherService.Start();
+        _logger.LogInformation("Started watching {directory}", _config.IncomingDirectory);
+        try
+        {
+            await ProcessInternalAsync(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            _logger.LogInformation("Cancelled. Stopping...");
+        }
+        _fileWatcherService.Stop();
+        _logger.LogInformation("Stopped watching {directory}", _config.IncomingDirectory);
+    }
+
+    private async Task ProcessInternalAsync(CancellationToken cancellationToken)
+    {
         while (!cancellationToken.IsCancellationRequested)
         {
             if (_fileQueue.TryDequeue(out var filePath))
             {
+                _logger.LogInformation("Discovered file: {fileName}", Path.GetFileName(filePath));
                 try
                 {
-                    var of = await ProcessFileAsync(filePath);
-                    await RetryAsync(async () =>
+                    var processCsvFileResult = await ProcessFileAsync(filePath);
+                    await RetryAsync(() =>
                     {
                         string destPath = Path.Combine(_config.ProcessedDirectory, Path.GetFileName(filePath));
                         File.Move(filePath, destPath);
-                        _logger.LogInformation($"File moved to Processed directory: {destPath}");
+                        _logger.LogInformation("File moved to Processed directory: {destPath}", destPath);
+                        Interlocked.Increment(ref _processedCount);
+                        return Task.CompletedTask;
                     }, _config.RetryCount, _config.RetryDelayMs);
 
-                    Interlocked.Increment(ref _processedCount);
-                    LastResult = new FileProcessedResult(filePath, outputFile: of);
+                    LastOperation = new FileProcessedEnvelope(filePath, result: processCsvFileResult);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogInformation($"Error processing file {filePath}: {ex.Message}");
                     Interlocked.Increment(ref _errorCount);
-                    LastResult = new FileProcessedResult(filePath, exception: ex);
+                    LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
-                Processed?.Invoke(this, LastResult);
+                Processed?.Invoke(this, LastOperation);
             }
             await Task.Delay(_config.ProcessingDelayMs, cancellationToken);
         }
-        _fileWatcherService.Stop();
     }
 
-    private async Task<string> ProcessFileAsync(string filePath) 
+    private async Task<ProcessCsvFileResult> ProcessFileAsync(string filePath) 
         => await _fileProcessor.ProcessCsvFileAsync(filePath, _config.ProcessedDirectory);
 
     public void PrintStats(TextWriter output)

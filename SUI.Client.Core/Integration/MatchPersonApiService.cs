@@ -1,4 +1,5 @@
 ﻿using SUI.Client.Core.Models;
+using SUI.Types;
 using System.Net.Http.Json;
 
 namespace SUI.Client.Core.Integration;

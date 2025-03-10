@@ -1,7 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
-namespace SUI.Client.Watcher;
+namespace SUI.Client.Core.Watcher;
 
+/// <summary>
+/// Wrapper for FileSystemWatcher
+/// </summary>
 public class CsvFileWatcherService : IDisposable
 {
     private readonly FileSystemWatcher _watcher;
@@ -11,9 +15,9 @@ public class CsvFileWatcherService : IDisposable
 
     public int Count { get; private set; }
 
-    public CsvFileWatcherService(CsvWatcherConfig config, ILoggerFactory loggerFactory)
+    public CsvFileWatcherService(IOptions<CsvWatcherConfig> config, ILoggerFactory loggerFactory)
     {
-        _config = config;
+        _config = config.Value;
         _logger = loggerFactory.CreateLogger<CsvFileWatcherService>();
         Directory.CreateDirectory(_config.IncomingDirectory);
         _watcher = new FileSystemWatcher(_config.IncomingDirectory, "*.csv")

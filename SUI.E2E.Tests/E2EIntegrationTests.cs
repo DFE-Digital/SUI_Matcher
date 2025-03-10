@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using SUI.Client.Core;
 using SUI.Client.Core.Integration;
-using SUI.Client.Watcher;
+using SUI.Client.Core.Watcher;
 using SUI.Core.Domain;
 using SUI.E2E.Tests.Util;
+using SUI.Types;
 using WireMock.Client;
 using Xunit.Abstractions;
 
@@ -69,8 +71,8 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
             ProcessedDirectory = _tempDirectoryFixture.ProcessedDirectoryPath,
         };
 
-        var watcher = new CsvFileWatcherService(appConfig, NullLoggerFactory.Instance);
-        var monitor = new CsvFileMonitor(watcher, appConfig, NullLogger<CsvFileMonitor>.Instance, fileProcessor);
+        var watcher = new CsvFileWatcherService(Options.Create(appConfig), NullLoggerFactory.Instance);
+        var monitor = new CsvFileMonitor(watcher, Options.Create(appConfig), NullLogger<CsvFileMonitor>.Instance, fileProcessor);
 
         var monitoringTask = monitor.StartAsync(cts.Token);
 
@@ -84,8 +86,8 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
 
         Assert.Equal(1, watcher.Count);
         Assert.Equal(1, monitor.ProcessedCount);
-        Assert.True(File.Exists(monitor.LastResult!.OutputFile));
-        var data = CsvFile.GetData(monitor.LastResult!.OutputFile);
+        Assert.True(File.Exists(monitor.LastOperation!.AssertSuccess().OutputCsvFile));
+        var data = CsvFile.GetData(monitor.LastOperation!.AssertSuccess().OutputCsvFile);
         Assert.Single(data.Records);
 
         var row = data.Records[0];
