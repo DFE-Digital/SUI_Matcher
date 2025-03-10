@@ -61,7 +61,7 @@ public class CsvFileMonitor
                     var processCsvFileResult = await ProcessFileAsync(filePath);
                     await RetryAsync(() =>
                     {
-                        string destPath = Path.Combine(_config.ProcessedDirectory, Path.GetFileName(filePath));
+                        string destPath = Path.Combine(processCsvFileResult.OutputDirectory, Path.GetFileName(filePath));
                         File.Move(filePath, destPath);
                         _logger.LogInformation("File moved to Processed directory: {destPath}", destPath);
                         Interlocked.Increment(ref _processedCount);

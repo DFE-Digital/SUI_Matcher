@@ -21,10 +21,15 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
     public const string HeaderScore = "SUI_Score";
     public const string HeaderNhsNo = "SUI_NHSNo";
 
-    public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string inputFilePath, string outputDirectory)
+    public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string inputFilePath, string baseOutputDirectory)
     {
         AssertFileExists(inputFilePath);
+
         var ts = GetTimestamp();
+
+        var outputDirectory = Path.Combine(baseOutputDirectory, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(inputFilePath)));
+        Directory.CreateDirectory(outputDirectory);
+
         var stats = new CsvProcessStats();
         var (headers, records) = await ReadCsvAsync(inputFilePath);
 
@@ -57,7 +62,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         var pdfReport = PdfReportGenerator.GenerateReport(stats, GetOutputFileName(ts, outputDirectory, "report.pdf"));
         string statsJsonFile = WriteStatsJsonFile(outputDirectory, ts, stats);
 
-        return new(outputFilePath, statsJsonFile, pdfReport, stats);
+        return new(outputFilePath, statsJsonFile, pdfReport, stats, outputDirectory);
     }
 
     private static string WriteStatsJsonFile(string outputDirectory, string ts, CsvProcessStats stats)
@@ -108,7 +113,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         return Path.Combine(outputDirectory, $"{filenameWithoutExt}_output_{timestamp}{extension}");
     }
 
-    private static string GetTimestamp() => $"_{DateTime.Now:yyyyMMdd_HHmmss}";
+    private static string GetTimestamp() => $"_{DateTime.Now:yyyyMMdd-HHmmss}";
 
     public static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(string filePath)
     {
