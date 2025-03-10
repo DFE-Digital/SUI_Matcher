@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Shared.Models;
 using SUI.Core.Endpoints.AuthToken;
 using System.Collections;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 
 namespace SUI.Core.Endpoints;
@@ -47,7 +48,7 @@ public class NhsFhirClient(ITokenService tokenService,
         {
             var accessToken = await tokenService.GetBearerToken();
             
-            logger.LogDebug("Retrieved Nhs Digital FHIR API access token");
+            logger.LogInformation("Retrieved Nhs Digital FHIR API access token");
             
             fhirClient.RequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             fhirClient.RequestHeaders.Add("X-Request-ID", Guid.NewGuid().ToString());
@@ -55,14 +56,14 @@ public class NhsFhirClient(ITokenService tokenService,
 
         try
         {
-            logger.LogDebug("Searching for an Nhs patient record");
+            logger.LogInformation("Searching for an Nhs patient record");
             
             // Search for a patient record
             var patient = await fhirClient.SearchAsync<Patient>(search);
 
             if (patient == null || patient.Entry.Count == 0)
             {
-                logger.LogDebug("No patient record found");
+                logger.LogInformation("No patient record found");
                 
                 return new SearchResult
                 {
@@ -72,7 +73,10 @@ public class NhsFhirClient(ITokenService tokenService,
 
             if (patient.Entry.Count == 1)
             {
-                logger.LogDebug("1 patient record found");
+                var birthDate = patient.Entry[0].Resource["birthDate"];
+                var gender = patient.Entry[0].Resource["gender"];
+                
+                logger.LogInformation($"1 patient record found: BirthDate={birthDate} Gender={gender}");
                 
                 return new SearchResult
                 {
@@ -82,7 +86,7 @@ public class NhsFhirClient(ITokenService tokenService,
                 };
             }
 
-            logger.LogDebug("multiple patient records found");
+            logger.LogInformation("multiple patient records found");
                 
             return new SearchResult
             {
