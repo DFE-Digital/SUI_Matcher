@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SUI.Client.Core.Integration;
+using SUI.Client.Core.Watcher;
 
 namespace SUI.Client.Core.Extensions;
+
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddClientCore(this IServiceCollection services, IConfiguration configuration)
@@ -14,6 +16,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(x => new HttpClient() { BaseAddress = new Uri(apiBaseAddress) });
         services.AddSingleton<ICsvFileProcessor, CsvFileProcessor>();
         services.AddSingleton<IMatchPersonApiService, MatchPersonApiService>();
+        services.AddSingleton<CsvFileWatcherService>();
+        services.AddSingleton<CsvFileMonitor>();
         return services;
     }
 }

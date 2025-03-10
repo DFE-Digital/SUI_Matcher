@@ -13,11 +13,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Bogus" />
     <PackageReference Include="Moq" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\shared\Shared\Shared.csproj" />
+    <ProjectReference Include="..\SUI.Client.Core\SUI.Client.Core.csproj" />
     <ProjectReference Include="..\SUI.Core\SUI.Core.csproj" />
   </ItemGroup>
 

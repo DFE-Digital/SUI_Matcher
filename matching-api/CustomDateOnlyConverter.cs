@@ -5,7 +5,9 @@ namespace MatchingApi;
 
 public class CustomDateOnlyConverter : JsonConverter<DateOnly?>
 {
-    private readonly string[] _formats = ["yyyyMMdd", "yyyy-MM-dd"];
+    
+
+    private readonly string[] _formats = [Constants.DateFormat, Constants.DateAltFormat];
 
     public override DateOnly? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

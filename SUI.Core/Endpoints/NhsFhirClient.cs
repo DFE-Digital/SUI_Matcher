@@ -60,48 +60,30 @@ public class NhsFhirClient(ITokenService tokenService,
             
             // Search for a patient record
             var patient = await fhirClient.SearchAsync<Patient>(search);
-
             if (patient == null || patient.Entry.Count == 0)
             {
                 logger.LogInformation("No patient record found");
-                
-                return new SearchResult
-                {
-                    Type = SearchResult.ResultType.Unmatched
-                };
-            }
 
-            if (patient.Entry.Count == 1)
+                return SearchResult.Unmatched();
+            }
+            else if (patient.Entry.Count == 1)
             {
                 var birthDate = patient.Entry[0].Resource["birthDate"];
                 var gender = patient.Entry[0].Resource["gender"];
                 
                 logger.LogInformation($"1 patient record found: BirthDate={birthDate} Gender={gender}");
-                
-                return new SearchResult
-                {
-                    Type = SearchResult.ResultType.Matched,
-                    NhsNumber = patient.Entry[0].Resource.Id,
-                    Score = patient.Entry[0].Search.Score
-                };
+
+                return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
             }
 
             logger.LogInformation("multiple patient records found");
-                
-            return new SearchResult
-            {
-                Type = SearchResult.ResultType.MultiMatched
-            };
+
+            return SearchResult.MultiMatched();
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search");
-
-            return new SearchResult
-            {
-                Type = SearchResult.ResultType.Error,
-                ErrorMessage = ex.Message
-            };
+            return SearchResult.Error(ex.Message);
         }
     }
 }
