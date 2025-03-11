@@ -1,4 +1,4 @@
-name: Build and Upload .NET Console App
+name: Build and Upload Client Watcher
 
 on:
     workflow_dispatch:
@@ -6,15 +6,24 @@ on:
             version:
                 description: 'Version number'
                 required: true
-                default: 'v0.0.14'
+                default: 'v0.0.15'
             blob_storage_location:
                 description: 'Blob storage location'
                 required: true
                 default: 's215d01-integration-container-01'
+            storage_account:
+                description: 'Storage account'
+                required: true
+                default: 's215d01integrationsa01'
             environment:
                 description: 'Environment'
                 required: true
                 default: 'Integration'
+
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
     build:
         runs-on: ubuntu-latest
@@ -27,10 +36,11 @@ jobs:
             AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
             CLIENT_VERSION: ${{ inputs.version }}
             BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location }}
+            STORAGE_ACCOUNT: ${{ inputs.storage_account }}
 
         steps:
         - name: Checkout repository
-          uses: actions/checkout@v2
+          uses: actions/checkout@v4
           with:
             ref: ${{ env.CLIENT_VERSION }}
 
@@ -40,10 +50,7 @@ jobs:
             dotnet-version: '9.0.x'
 
         - name: Publish Client Watcher
-          run: dotnet publish SUI.Client.Watcher -r win-x64 --self-contained /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --configuration Release --output ./output
-
-        - name: Set up Azure CLI
-          uses: azure/cli@v1
+          run: dotnet publish SUI.Client.Watcher -r win-x64 --self-contained /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --configuration Release --output ./output --version-suffix ${{ env.CLIENT_VERSION }}
 
         - name: Login to Azure
           uses: azure/login@v2
@@ -54,7 +61,4 @@ jobs:
 
         - name: Upload to Blob Storage
           run:
-            az storage blob upload-batch \
-                --destination ${{ env.BLOB_STORAGE_LOCATION }} \
-                --source ./output \
-                --pattern "*.exe"
+            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./output --pattern "*.exe"

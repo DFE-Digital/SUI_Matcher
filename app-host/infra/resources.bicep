@@ -96,7 +96,7 @@ resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
 }
 
 
-resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-preview' = {
+resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-preview' = {
   name: '${environmentPrefix}-${environmentName}-cae-01'
   location: location
   properties: {
@@ -107,6 +107,12 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-p
         sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
       }
     }
+    workloadProfiles: [
+      {
+        name: 'default'
+        workloadProfileType: 'Workload'
+      }
+    ]
     publicNetworkAccess: 'Disabled'
 
   }
