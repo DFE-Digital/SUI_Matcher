@@ -1,4 +1,4 @@
-name: Deploy Bicep Files
+name: Deploy Client Infrastructure
 
 on:
     workflow_dispatch:
@@ -10,8 +10,12 @@ on:
             version:
                 description: 'Deployment version'
                 required: true
-                default: 'v0.0.14'
+                default: 'v0.0.15'
  
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
     deploy:
         runs-on: ubuntu-latest
@@ -28,7 +32,7 @@ jobs:
 
         steps:
         - name: Checkout repository
-          uses: actions/checkout@v2
+          uses: actions/checkout@v4
           with:
             ref: ${{ env.CLIENT_VERSION }}
 
@@ -44,4 +48,4 @@ jobs:
             az deployment group create \
                 --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
                 --template-file SUI.Client.Watcher/infra/client.bicep \
-                --parameters @SUI.Client.Watcher/infra/main.parameters.json \
+                --parameters adminUsername="${{ env.VM_USERNAME }}" adminPassword="${{ env.VM_PASSWORD }}" \
