@@ -1,4 +1,4 @@
-﻿namespace SUI.Core.Domain;
+﻿namespace SUI.Types;
 
 public enum MatchStatus
 {

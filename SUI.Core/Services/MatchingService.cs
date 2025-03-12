@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Shared.Models;
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
+using SUI.Types;
 
 namespace SUI.Core.Services;
 
@@ -64,7 +65,7 @@ public class MatchingService(
         };
     }
 
-    private async Task<MatchResult> MatchAsync(PersonSpecification model)
+    private async Task<MatchResult2> MatchAsync(PersonSpecification model)
     {
         var queries = GetSearchQueries(model);
 
@@ -91,20 +92,20 @@ public class MatchingService(
                     
                     logger.LogInformation($"Search query ({i}) resulted in status '{status.ToString()}'");
                     
-                    return new MatchResult(searchResult, status, i); // single match with confidence score
+                    return new MatchResult2(searchResult, status, i); // single match with confidence score
                 }
                 else if (searchResult.Type == SearchResult.ResultType.MultiMatched)
                 {
                     logger.LogInformation($"Search query ({i}) resulted in status 'ManyMatch'");
                     
-                    return new MatchResult(searchResult, MatchStatus.ManyMatch, i); // multiple matches
+                    return new MatchResult2(searchResult, MatchStatus.ManyMatch, i); // multiple matches
                 }
             }
         }
         
         logger.LogInformation($"Search query ({queries.Length-1}) resulted in status 'NoMatch'");
 
-        return new MatchResult(MatchStatus.NoMatch);
+        return new MatchResult2(MatchStatus.NoMatch);
     }
 
     private SearchQuery[] GetSearchQueries(PersonSpecification model)
@@ -178,64 +179,64 @@ public class MatchingService(
 
     public string FormatDob(DateTime dob) => dob.ToString("yyyy-MM-dd");
 
-    public static PersonMatchResponse.DataQualityResult ToQualityResult(PersonSpecification spec, IEnumerable<ValidationResponse.ValidationResult> validationResults)
+    public static DataQualityResult ToQualityResult(PersonSpecification spec, IEnumerable<ValidationResponse.ValidationResult> validationResults)
     {
-        var result = new PersonMatchResponse.DataQualityResult();
+        var result = new DataQualityResult();
         
         foreach (var vResult in validationResults)
         {
-            if (result.Given == PersonMatchResponse.QualityType.Valid)
+            if (result.Given == QualityType.Valid)
             {
                 if (vResult.MemberNames.Contains("Given", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GivenNameRequired) ?? false)
                     {
-                        result.Given = PersonMatchResponse.QualityType.NotProvided;
+                        result.Given = QualityType.NotProvided;
                     }
                     else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GivenNameInvalid) ?? false)
                     {
-                        result.Given = PersonMatchResponse.QualityType.Invalid;
+                        result.Given = QualityType.Invalid;
                     }
                 }
             }
 
-            if (result.Family == PersonMatchResponse.QualityType.Valid)
+            if (result.Family == QualityType.Valid)
             {
                 if (vResult.MemberNames.Contains("Family", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.FamilyNameRequired) ?? false)
                     {
-                        result.Family = PersonMatchResponse.QualityType.NotProvided;
+                        result.Family = QualityType.NotProvided;
                     }
                     else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.FamilyNameInvalid) ?? false)
                     {
-                        result.Family = PersonMatchResponse.QualityType.Invalid;
+                        result.Family = QualityType.Invalid;
                     }
                 }
             }
 
-            if (result.Birthdate == PersonMatchResponse.QualityType.Valid)
+            if (result.Birthdate == QualityType.Valid)
             {
                 if (vResult.MemberNames.Contains("Birthdate", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.BirthDateRequired) ?? false)
                     {
-                        result.Birthdate = PersonMatchResponse.QualityType.NotProvided;
+                        result.Birthdate = QualityType.NotProvided;
                     }
                     else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.BirthDateInvalid) ?? false)
                     {
-                        result.Birthdate = PersonMatchResponse.QualityType.Invalid;
+                        result.Birthdate = QualityType.Invalid;
                     }
                 }
             }
 
-            if (result.Gender == PersonMatchResponse.QualityType.Valid)
+            if (result.Gender == QualityType.Valid)
             {
                 if (vResult.MemberNames.Contains("Gender", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GenderInvalid) ?? false)
                     {
-                        result.Gender = PersonMatchResponse.QualityType.Invalid;
+                        result.Gender = QualityType.Invalid;
 
                         // Remove from search query, if invalid
                         spec.Gender = null;
@@ -243,17 +244,17 @@ public class MatchingService(
                 }
                 else if (string.IsNullOrEmpty(spec.Gender))
                 {
-                    result.Gender = PersonMatchResponse.QualityType.NotProvided;
+                    result.Gender = QualityType.NotProvided;
                 }
             }
 
-            if (result.Phone == PersonMatchResponse.QualityType.Valid)
+            if (result.Phone == QualityType.Valid)
             {
                 if (vResult.MemberNames.Contains("Phone", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PhoneInvalid) ?? false)
                     {
-                        result.Phone = PersonMatchResponse.QualityType.Invalid;
+                        result.Phone = QualityType.Invalid;
 
                         // Remove from search query, if invalid
                         spec.Phone = null;
@@ -261,16 +262,16 @@ public class MatchingService(
                 }
                 else if (string.IsNullOrEmpty(spec.Phone))
                 {
-                    result.Phone = PersonMatchResponse.QualityType.NotProvided;
+                    result.Phone = QualityType.NotProvided;
                 }
             }
 
-            if (result.Email == PersonMatchResponse.QualityType.Valid) {
+            if (result.Email == QualityType.Valid) {
                 if (vResult.MemberNames.Contains("Email", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.EmailInvalid) ?? false)
                     {
-                        result.Email = PersonMatchResponse.QualityType.Invalid;
+                        result.Email = QualityType.Invalid;
 
                         // Remove from search query, if invalid
                         spec.Email = null;
@@ -278,17 +279,17 @@ public class MatchingService(
                 }
                 else if (string.IsNullOrEmpty(spec.Email))
                 {
-                    result.Email = PersonMatchResponse.QualityType.NotProvided;
+                    result.Email = QualityType.NotProvided;
                 }
             }
 
-            if (result.AddressPostalCode == PersonMatchResponse.QualityType.Valid)
+            if (result.AddressPostalCode == QualityType.Valid)
             {
                 if (vResult.MemberNames.Contains("AddressPostalCode", StringComparer.OrdinalIgnoreCase))
                 {
                     if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PostCodeInvalid) ?? false)
                     {
-                        result.AddressPostalCode = PersonMatchResponse.QualityType.Invalid;
+                        result.AddressPostalCode = QualityType.Invalid;
 
                         // Remove from search query, if invalid
                         spec.AddressPostalCode = null;
@@ -296,7 +297,7 @@ public class MatchingService(
                 }
                 else if (string.IsNullOrEmpty(spec.AddressPostalCode))
                 {
-                    result.AddressPostalCode = PersonMatchResponse.QualityType.NotProvided;
+                    result.AddressPostalCode = QualityType.NotProvided;
                 }
             }
         }
@@ -321,13 +322,13 @@ public class MatchingService(
         Activity.Current?.SetTag("SearchId", hash);
     }
 
-    private bool HasMinDataRequirements(PersonMatchResponse.DataQualityResult dataQualityResult)
+    private bool HasMinDataRequirements(DataQualityResult dataQualityResult)
     {
         return dataQualityResult is
         {
-            Given: PersonMatchResponse.QualityType.Valid, 
-            Family: PersonMatchResponse.QualityType.Valid, 
-            Birthdate: PersonMatchResponse.QualityType.Valid
+            Given: QualityType.Valid, 
+            Family: QualityType.Valid, 
+            Birthdate: QualityType.Valid
         };
     }
 }

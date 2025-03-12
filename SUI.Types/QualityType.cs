@@ -1,4 +1,4 @@
-﻿namespace SUI.Client.Core.Models;
+﻿namespace SUI.Types;
 
 public enum QualityType
 {

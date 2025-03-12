@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using SUI.Core.Domain;
+using SUI.Types;
 using WireMock.Client;
 
 namespace AppHost.IntegrationTests;
@@ -153,9 +154,9 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         Assert.NotNull(personMatchResponse?.Result);
         Assert.NotNull(personMatchResponse.DataQuality);
         Assert.Equal(MatchStatus.Error, personMatchResponse.Result.MatchStatus);
-        Assert.Equal(PersonMatchResponse.QualityType.NotProvided, personMatchResponse.DataQuality.Given);
-        Assert.Equal(PersonMatchResponse.QualityType.NotProvided, personMatchResponse.DataQuality.Family);
-        Assert.Equal(PersonMatchResponse.QualityType.Valid, personMatchResponse.DataQuality.Birthdate);
+        Assert.Equal(QualityType.NotProvided, personMatchResponse.DataQuality.Given);
+        Assert.Equal(QualityType.NotProvided, personMatchResponse.DataQuality.Family);
+        Assert.Equal(QualityType.Valid, personMatchResponse.DataQuality.Birthdate);
         
     }
 
@@ -181,10 +182,10 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.Match, personMatchResponse.Result.MatchStatus);
         Assert.NotNull(personMatchResponse.DataQuality);
-        Assert.Equal(PersonMatchResponse.QualityType.Invalid, personMatchResponse.DataQuality.Email);
-        Assert.Equal(PersonMatchResponse.QualityType.Invalid, personMatchResponse.DataQuality.Gender);
-        Assert.Equal(PersonMatchResponse.QualityType.Invalid, personMatchResponse.DataQuality.Phone);
-        Assert.Equal(PersonMatchResponse.QualityType.Invalid, personMatchResponse.DataQuality.AddressPostalCode);
+        Assert.Equal(QualityType.Invalid, personMatchResponse.DataQuality.Email);
+        Assert.Equal(QualityType.Invalid, personMatchResponse.DataQuality.Gender);
+        Assert.Equal(QualityType.Invalid, personMatchResponse.DataQuality.Phone);
+        Assert.Equal(QualityType.Invalid, personMatchResponse.DataQuality.AddressPostalCode);
     }
 
     // JWT renewal (needed for technical conformance.)

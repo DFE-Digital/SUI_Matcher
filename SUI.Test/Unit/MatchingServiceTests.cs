@@ -6,8 +6,9 @@ using Shared.Models;
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
+using SUI.Types;
 
-namespace SUI.Core.Test;
+namespace SUI.Test.Unit;
 
 [TestClass]
 public sealed class MatchingServiceTests
@@ -23,15 +24,15 @@ public sealed class MatchingServiceTests
 
         Assert.IsNotNull(result);
         Assert.AreEqual(MatchStatus.Error, result.Result!.MatchStatus);
-        Assert.AreEqual(JsonConvert.SerializeObject(new PersonMatchResponse.DataQualityResult
+        Assert.AreEqual(JsonConvert.SerializeObject(new DataQualityResult
         {
-            Given = PersonMatchResponse.QualityType.NotProvided,
-            Family = PersonMatchResponse.QualityType.NotProvided,
-            Birthdate = PersonMatchResponse.QualityType.NotProvided,
-            Gender = PersonMatchResponse.QualityType.NotProvided,
-            Phone = PersonMatchResponse.QualityType.NotProvided,
-            Email = PersonMatchResponse.QualityType.NotProvided,
-            AddressPostalCode = PersonMatchResponse.QualityType.NotProvided
+            Given = QualityType.NotProvided,
+            Family = QualityType.NotProvided,
+            Birthdate = QualityType.NotProvided,
+            Gender = QualityType.NotProvided,
+            Phone = QualityType.NotProvided,
+            Email = QualityType.NotProvided,
+            AddressPostalCode = QualityType.NotProvided
         }), JsonConvert.SerializeObject(result.DataQuality));
     }
 
