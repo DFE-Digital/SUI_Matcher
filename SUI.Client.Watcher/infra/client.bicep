@@ -66,7 +66,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_DS1_v2'
+      vmSize: 'Standard_DS2_v2'
     }
     osProfile: {
       computerName: '${environmentPrefix}-vm-01'

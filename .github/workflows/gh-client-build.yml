@@ -61,4 +61,4 @@ jobs:
 
         - name: Upload to Blob Storage
           run:
-            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./output --pattern "*.exe"
+            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./output --pattern "*.exe" --overwrite
