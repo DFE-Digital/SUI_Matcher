@@ -107,7 +107,7 @@
         "resourceType": "Patient"
       },
       "search": {
-        "score": 1
+        "score": #score#
       }
     }
   ],

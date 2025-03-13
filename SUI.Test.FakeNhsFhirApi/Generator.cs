@@ -1,6 +1,5 @@
 ﻿using Bogus;
 using CsvHelper;
-using CsvHelper.Configuration.Attributes;
 using System.Globalization;
 using System.Reflection;
 
@@ -8,60 +7,35 @@ namespace SUI.Test.FakeNhsFhirApi;
 
 public static class Generator
 {
-    private const string PlaceholderPhone = "#phone#";
+    public const string SearchApiUri = "/personal-demographics/FHIR/R4/Patient";
     private const string PlaceholderBirthDate = "#birthdate#";
     private const string PlaceholderFamily = "#family#";
-    private const string PlaceholderGiven = "#given#";
     private const string PlaceholderGender = "#gender#";
+    private const string PlaceholderGiven = "#given#";
     private const string PlaceholderNhsId = "#nhsid#";
     private const string PlaceholderNhsId1 = "#nhsid1#";
     private const string PlaceholderNhsId2 = "#nhsid2#";
-
-    public const string SearchApiUri = "/personal-demographics/FHIR/R4/Patient";
+    private const string PlaceholderPhone = "#phone#";
+    private const string PLaceholderScore = "#score#";
 
     public static FakeItem[] Generate(int count)
     {
         var singleMatchJsonTemplate = GetResourceText("single_match.json");
         var multiMatchJsonTemplate = GetResourceText("multi_match.json");
         var noMatchJsonTemplate = GetResourceText("no_match.json");
-        
-        var list = new List<FakeItem>();    
 
-        var f = new Faker();
-        for (int i = 0; i < count; i++)
-        {
-            var fakeItem = new FakeItem();
-            fakeItem.Person.Family = f.Name.LastName();
-            fakeItem.Person.Given = f.Name.FirstName();
-            fakeItem.Person.Dob = f.Date.BetweenDateOnly(new DateOnly(1995, 1, 1), new DateOnly(2016, 1, 1)).ToString("yyyy-MM-dd");
-            fakeItem.Person.NhsId = f.Random.AlphaNumeric(10).ToUpper();
-            fakeItem.Person.Email = f.Internet.Email();
-            fakeItem.Person.Phone = f.Phone.PhoneNumber("(01###) ### ###");
-            fakeItem.Person.Gender = f.Random.Bool() ? "male" : "female";
+        var faker = new Faker();
 
+        var singleMatchHighs = Enumerable.Range(0, CalcSubsetSize(count, 90)).Select(x => CreateFakeItem(singleMatchJsonTemplate, faker, "single_match (high)", faker.Random.Double(0.95, 1))).ToArray();
+        var singleMatchLows = Enumerable.Range(0, CalcSubsetSize(count, 5)).Select(x => CreateFakeItem(singleMatchJsonTemplate, faker, "single_match (low)", faker.Random.Double(0.85, 0.949999999))).ToArray();
+        var multiMatch = Enumerable.Range(0, CalcSubsetSize(count, 2)).Select(x => CreateFakeItem(multiMatchJsonTemplate, faker, "multi_match", 0)).ToArray();
+        var noMatch = Enumerable.Range(0, CalcSubsetSize(count, 3)).Select(x => CreateFakeItem(noMatchJsonTemplate, faker, "no_match", 0)).ToArray();
 
+        FakeItem[] fullset = [.. singleMatchHighs, .. singleMatchLows, .. multiMatch, .. noMatch];
 
-            var o = f.Random.Number(1, 3);
-            if (o == 1) // single match
-            {
-                fakeItem.MatchType = "single";
-                fakeItem.ResponseJson = MergeTemplate(singleMatchJsonTemplate, fakeItem.Person, f);
-            }
-            else if (o == 2) // multi
-            {
-                fakeItem.MatchType = "multi";
-                fakeItem.ResponseJson = MergeTemplate(multiMatchJsonTemplate, fakeItem.Person, f);
-            }
-            else // no match
-            {
-                fakeItem.MatchType = "none";
-                fakeItem.ResponseJson = noMatchJsonTemplate;
-            }
+        var randomized = new Randomizer().Shuffle(fullset).ToArray();
 
-            list.Add(fakeItem);
-        }
-
-        return [.. list];  
+        return randomized;
     }
 
     public static string GetResourceText(string name)
@@ -74,7 +48,7 @@ public static class Generator
         return content;
     }
 
-    public static string MergeTemplate(string template, FakePerson person, Faker faker)
+    public static string MergeTemplate(string template, FakeItem fakeItem, FakePerson person, Faker faker)
     {
         return template
             .Replace(PlaceholderGiven, person.Given)
@@ -84,57 +58,8 @@ public static class Generator
             .Replace(PlaceholderBirthDate, person.Dob)
             .Replace(PlaceholderNhsId, person.NhsId)
             .Replace(PlaceholderNhsId1, person.NhsId)
+            .Replace(PLaceholderScore, fakeItem.Score.ToString())
             .Replace(PlaceholderNhsId2, faker.Random.AlphaNumeric(10).ToUpper());
-    }
-
-    public static void WriteCsv<T>(List<T> records, string filename)
-    {
-        using var writer = new StreamWriter(filename);
-        using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        csv.WriteRecords(records);
-    }
-
-
-    public static void WriteTestData(string baseDirectory, FakeItem[] data, int port)
-    {
-        var @base = Path.Combine(baseDirectory, "sui-e2e");
-        ResetDirectory(@base);
-
-        var batches = SplitIntoRandomBatches(data.ToList(), 5, 35);
-
-        for (int i = 0; i < batches.Count; i++)
-        {
-            var batch = batches[i];
-            var dir = Path.Combine(@base, $"sample_{i}");
-            Directory.CreateDirectory(dir);
-            var baselineData = batch.Select(x => new
-            {
-                x.Person.Given,
-                x.Person.Family,
-                x.Person.Dob,
-                x.Person.Gender,
-                x.Person.Email,
-                x.Person.Phone,
-                __Expected_NHS_ID = x.Person.NhsId,
-                __Expected_Match_Type = x.MatchType,
-                __curl = $"curl \"http://localhost:{port}{SearchApiUri}?given={x.Person.Given}&family={x.Person.Family}&birthdate=eq{x.Person.Dob}\""
-
-            }).ToList();
-
-            var inputSampleData = batch.Select(x => x.Person).ToList();
-
-            WriteCsv(baselineData, Path.Combine(dir, $"baseline_{i}.csv"));
-            WriteCsv(inputSampleData, Path.Combine(dir, $"sample_input_{i}.csv"));
-        }
-    }
-
-    private static void ResetDirectory(string @base)
-    {
-        if (Directory.Exists(@base))
-        {
-            Directory.Delete(@base, true);
-        }
-        Directory.CreateDirectory(@base);
     }
 
     public static List<List<T>> SplitIntoRandomBatches<T>(List<T> items, int minBatchSize, int maxBatchSize)
@@ -160,38 +85,78 @@ public static class Generator
 
         return batches;
     }
-}
 
+    public static void WriteCsv<T>(List<T> records, string filename)
+    {
+        using var writer = new StreamWriter(filename);
+        using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        csv.WriteRecords(records);
+    }
 
-public class FakeItem
-{
-    public FakePerson Person { get; set; } = new();
-    public string ResponseJson { get; set; }
-    public string MatchType { get; set; }
+    public static void WriteTestData(string baseDirectory, FakeItem[] data, int port)
+    {
+        var @base = Path.Combine(baseDirectory, "sui-e2e");
+        ResetDirectory(@base);
 
-}
+        WriteBatch(port, @base, "full", [.. data]);
 
+        var batches = SplitIntoRandomBatches(data.ToList(), 5, 35);
+        for (int i = 0; i < batches.Count; i++)
+        {
+            var batch = batches[i];
+            WriteBatch(port, @base, i.ToString(), batch);
+        }
+    }
 
-public class FakePerson
-{
-    [Name("GivenName")]
-    public string Given { get; set; }
+    private static int CalcSubsetSize(int total, int percentage) => (int)Math.Floor(total * ((double)percentage / 100));
 
-    [Name("Surname")]
-    public string Family { get; set; }
+    private static FakeItem CreateFakeItem(string jsonTemplate, Faker faker, string matchType, double score)
+    {
+        var fakeItem = new FakeItem();
+        fakeItem.Person.Family = faker.Name.LastName();
+        fakeItem.Person.Given = faker.Name.FirstName();
+        fakeItem.Person.Dob = faker.Date.BetweenDateOnly(new DateOnly(1995, 1, 1), new DateOnly(2016, 1, 1)).ToString("yyyy-MM-dd");
+        fakeItem.Person.NhsId = faker.Random.AlphaNumeric(10).ToUpper();
+        fakeItem.Person.Email = faker.Internet.Email();
+        fakeItem.Person.Phone = faker.Phone.PhoneNumber("(01###) ### ###");
+        fakeItem.Person.Gender = faker.Random.Bool() ? "male" : "female";
+        fakeItem.MatchType = matchType;
+        fakeItem.Score = score;
 
-    [Name("DOB")]
-    public string Dob { get; set; }
+        fakeItem.ResponseJson = MergeTemplate(jsonTemplate, fakeItem, fakeItem.Person, faker);
 
-    [Name("Phone")]
-    public string Phone { get; set; }
+        return fakeItem;
+    }
+    private static void ResetDirectory(string @base)
+    {
+        if (Directory.Exists(@base))
+        {
+            Directory.Delete(@base, true);
+        }
+        Directory.CreateDirectory(@base);
+    }
 
-    [Name("Email")]
-    public string Email { get; set; }
+    private static void WriteBatch(int port, string @base, string suffix, List<FakeItem> batch)
+    {
+        var dir = Path.Combine(@base, $"sample_{suffix}");
+        Directory.CreateDirectory(dir);
+        var baselineData = batch.Select(x => new
+        {
+            x.Person.Given,
+            x.Person.Family,
+            x.Person.Dob,
+            x.Person.Gender,
+            x.Person.Email,
+            x.Person.Phone,
+            __Expected_NHS_ID = x.Person.NhsId,
+            __Expected_Match_Type = x.MatchType,
+            __Expected_Score = x.Score.ToString(),
+            __curl = $"curl \"http://localhost:{port}{SearchApiUri}?given={x.Person.Given}&family={x.Person.Family}&birthdate=eq{x.Person.Dob}\""
+        }).ToList();
 
-    [Ignore]
-    public string NhsId { get; set; }
+        var inputSampleData = batch.Select(x => x.Person).ToList();
 
-    [Name("Gender")]
-    public string Gender { get; set; }
+        WriteCsv(baselineData, Path.Combine(dir, $"baseline_{suffix}.csv"));
+        WriteCsv(inputSampleData, Path.Combine(dir, $"sample_input_{suffix}.csv"));
+    }
 }
