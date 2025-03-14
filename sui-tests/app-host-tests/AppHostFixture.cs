@@ -48,6 +48,10 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
 			.WithSwaggerUI().WaitFor(NhsAuthMockService);
 
 		applicationBuilder.AddProject<Projects.Yarp>("yarp")
+			.WithEnvironment(ctx =>
+			{
+				ctx.EnvironmentVariables["ConnectionStrings:secrets"] = "http://localhost:8080";
+			})
 			.WithReference(matchingApi).WaitFor(matchingApi).WaitFor(NhsAuthMockService);
 	}
 
