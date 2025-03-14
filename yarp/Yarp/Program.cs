@@ -1,6 +1,19 @@
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(kestrel =>
+{
+    kestrel.ListenAnyIP(443, portOptions =>
+    {
+        portOptions.UseHttps(h =>
+        {
+            h.UseLettuceEncrypt(kestrel.ApplicationServices);
+        });
+    });
+});
+
 builder.AddServiceDefaults();
+
+builder.Services.AddLettuceEncrypt();
 
 if (builder.Environment.IsDevelopment())
 {
