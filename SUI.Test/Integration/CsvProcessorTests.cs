@@ -23,61 +23,16 @@ public class CsvProcessorTests
 
     public TestContext TestContext { get; set; }
 
-    [TestMethod]
-    public async Task TestOneFileSingleMatch()
+    [TestCleanup]
+    public void Clean()
     {
-        var searchResult = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.98m, Type = SearchResult.ResultType.Matched };
-        var mockNhsApi = new Mock<INhsFhirClient>(MockBehavior.Loose);
-        mockNhsApi.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>())).Returns(() => Task.FromResult((SearchResult?)searchResult));
-        
-        var cts = new CancellationTokenSource();
-        var provider = Bootstrap(x =>
-        {
-            x.AddSingleton(mockNhsApi.Object);
-        });
-        var monitor = provider.GetRequiredService<CsvFileMonitor>();
-        var monitoringTask = monitor.StartAsync(cts.Token);
+        //_dir.Dispose();
+    }
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        var data = new D
-        {
-            [CsvMappingConfig.Defaults.GivenName] = "John",
-            [CsvMappingConfig.Defaults.Surname] = "Smith",
-            [CsvMappingConfig.Defaults.DOB] = "2000-04-01",
-            [CsvMappingConfig.Defaults.Email] = "test@test.com",
-        };
-
-        var list = new List<D> { data };
-        var headers = new HashSet<string>(data.Keys);
-        
-        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
-
-        monitor.Processed += (s, e) => tcs.SetResult();
-        await tcs.Task; // await processing of that file
-        cts.Cancel();   // cancel the task
-        await monitoringTask; // await cancellation
-
-        // ASSERTS
-        if(monitor.GetLastOperation().Exception!= null)
-        {
-            throw monitor.GetLastOperation().Exception!;
-        }
-
-
-        Assert.IsNull(monitor.GetLastOperation().Exception, monitor.GetLastOperation().Exception?.ToString() ?? "Exception occurred");
-        Assert.AreEqual(0, monitor.ErrorCount);
-        Assert.AreEqual(1, monitor.ProcessedCount);
-        Assert.IsTrue(File.Exists(monitor.LastResult().OutputCsvFile));
-        Assert.IsTrue(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.IsTrue(File.Exists(monitor.LastResult().ReportPdfFile));
-        Assert.IsNotNull(monitor.LastResult().Stats);
-
-        mockNhsApi.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Once(), "The PerformSearch method should have invoked ONCE");
-        var (_,records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
-        Assert.AreEqual(searchResult.NhsNumber, records.First()[CsvFileProcessor.HeaderNhsNo], "The NHS number doesn't match");
-        Assert.AreEqual(searchResult.Score.ToString(), records.First()[CsvFileProcessor.HeaderScore], "The score doesn't match");
-        Assert.AreEqual(MatchStatus.Match.ToString(), records.First()[CsvFileProcessor.HeaderStatus], "The score doesn't match");
+    [TestInitialize]
+    public void Init()
+    {
+        _dir = new TempDirectoryFixture();
     }
 
     [TestMethod]
@@ -111,15 +66,13 @@ public class CsvProcessorTests
                 [CsvMappingConfig.Defaults.Email] = f.Internet.Email(),
             }, SearchResult.Match("AAAAA333333", 0.87m)),
 
-
             new(new D
             {
                 [CsvMappingConfig.Defaults.GivenName] = f.Name.FirstName(),
                 [CsvMappingConfig.Defaults.Surname] = f.Name.LastName(),
                 [CsvMappingConfig.Defaults.DOB] = f.Date.BetweenDateOnly(new DateOnly(1990, 1, 1), new DateOnly(2020, 1, 1)).ToString(Constants.DateFormat),
                 [CsvMappingConfig.Defaults.Email] = f.Internet.Email(),
-            }, SearchResult.MultiMatched()), 
-
+            }, SearchResult.MultiMatched()),
 
             new(new D
             {
@@ -136,7 +89,6 @@ public class CsvProcessorTests
             mockNhsApi.Setup(x => x.PerformSearch(It.Is<SearchQuery>(y => y.Email == testDataItem.Data[CsvMappingConfig.Defaults.Email]))).Returns(() => Task.FromResult((SearchResult?)testDataItem.SearchResult));
         }
 
-
         // ACT
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(x =>
@@ -148,7 +100,6 @@ public class CsvProcessorTests
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        
         var data = testData.Select(x => x.Data).ToList();
         var headers = new HashSet<string>(data.First().Keys);
 
@@ -165,7 +116,6 @@ public class CsvProcessorTests
             throw monitor.GetLastOperation().Exception!;
         }
 
-
         Assert.IsNull(monitor.GetLastOperation().Exception, monitor.GetLastOperation().Exception?.ToString() ?? "Exception occurred");
         Assert.AreEqual(0, monitor.ErrorCount);
         Assert.AreEqual(1, monitor.ProcessedCount);
@@ -179,14 +129,61 @@ public class CsvProcessorTests
         Assert.IsNotNull(records);
     }
 
-    private class TestData(D data, SearchResult searchResult)
+    [TestMethod]
+    public async Task TestOneFileSingleMatch()
     {
-        public D Data { get; set; } = data;
-        public SearchResult SearchResult { get; set; } = searchResult;
+        var searchResult = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.98m, Type = SearchResult.ResultType.Matched };
+        var mockNhsApi = new Mock<INhsFhirClient>(MockBehavior.Loose);
+        mockNhsApi.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>())).Returns(() => Task.FromResult((SearchResult?)searchResult));
 
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(x =>
+        {
+            x.AddSingleton(mockNhsApi.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = new D
+        {
+            [CsvMappingConfig.Defaults.GivenName] = "John",
+            [CsvMappingConfig.Defaults.Surname] = "Smith",
+            [CsvMappingConfig.Defaults.DOB] = "2000-04-01",
+            [CsvMappingConfig.Defaults.Email] = "test@test.com",
+        };
+
+        var list = new List<D> { data };
+        var headers = new HashSet<string>(data.Keys);
+
+        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
+
+        monitor.Processed += (s, e) => tcs.SetResult();
+        await tcs.Task; // await processing of that file
+        cts.Cancel();   // cancel the task
+        await monitoringTask; // await cancellation
+
+        // ASSERTS
+        if (monitor.GetLastOperation().Exception != null)
+        {
+            throw monitor.GetLastOperation().Exception!;
+        }
+
+        Assert.IsNull(monitor.GetLastOperation().Exception, monitor.GetLastOperation().Exception?.ToString() ?? "Exception occurred");
+        Assert.AreEqual(0, monitor.ErrorCount);
+        Assert.AreEqual(1, monitor.ProcessedCount);
+        Assert.IsTrue(File.Exists(monitor.LastResult().OutputCsvFile));
+        Assert.IsTrue(File.Exists(monitor.LastResult().StatsJsonFile));
+        Assert.IsTrue(File.Exists(monitor.LastResult().ReportPdfFile));
+        Assert.IsNotNull(monitor.LastResult().Stats);
+
+        mockNhsApi.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Once(), "The PerformSearch method should have invoked ONCE");
+        var (_, records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+        Assert.AreEqual(searchResult.NhsNumber, records.First()[CsvFileProcessor.HeaderNhsNo], "The NHS number doesn't match");
+        Assert.AreEqual(searchResult.Score.ToString(), records.First()[CsvFileProcessor.HeaderScore], "The score doesn't match");
+        Assert.AreEqual(MatchStatus.Match.ToString(), records.First()[CsvFileProcessor.HeaderStatus], "The score doesn't match");
     }
-
-
     private ServiceProvider Bootstrap(Action<ServiceCollection>? configure = null)
     {
         var servicesCollection = new ServiceCollection();
@@ -206,26 +203,18 @@ public class CsvProcessorTests
 
         servicesCollection.AddClientCore(config);
         servicesCollection.AddSingleton<IMatchPersonApiService, MatchPersonServiceAdapter>(); // wires up the IMatchingService directly, without using http
-        
+
         // core domain deps
         servicesCollection.AddSingleton<IMatchingService, MatchingService>();
         servicesCollection.AddSingleton<IValidationService, ValidationService>();
-        
+
         configure?.Invoke(servicesCollection);
         return servicesCollection.BuildServiceProvider();
     }
 
-    [TestInitialize]
-    public void Init()
+    private class TestData(D data, SearchResult searchResult)
     {
-        _dir = new TempDirectoryFixture();
+        public D Data { get; set; } = data;
+        public SearchResult SearchResult { get; set; } = searchResult;
     }
-
-    [TestCleanup]
-    public void Clean()
-    {
-        //_dir.Dispose();
-    }
-
-
 }

@@ -127,6 +127,7 @@ public static class Generator
 
         return fakeItem;
     }
+
     private static void ResetDirectory(string @base)
     {
         if (Directory.Exists(@base))

@@ -1,5 +1,4 @@
-using AppHost;
-using Microsoft.Extensions.Hosting;
+DotNetEnv.Env.TraversePath().Load();
 
 var builder = DistributedApplication.CreateBuilder(args);
 
