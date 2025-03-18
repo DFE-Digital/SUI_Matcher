@@ -1,5 +1,14 @@
 var builder = WebApplication.CreateBuilder(args);
 
+if (!builder.Environment.IsDevelopment())
+{
+    builder.WebHost.ConfigureKestrel(kestrel =>
+    {
+        kestrel.ListenAnyIP(5443,
+            portOptions => { portOptions.UseHttps(h => { h.UseLettuceEncrypt(kestrel.ApplicationServices); }); });
+    });
+}
+
 builder.AddServiceDefaults();
 
 if (builder.Environment.IsDevelopment())
@@ -14,6 +23,12 @@ else
 {
     builder.Services.AddReverseProxy()
         .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+    
+    builder.Services.AddLettuceEncrypt()
+        .PersistCertificatesToAzureKeyVault(options =>
+        {
+            options.AzureKeyVaultEndpoint = builder.Configuration["ConnectionStrings:secrets"]!;
+        });
 }
 
 var app = builder.Build();

@@ -16,6 +16,7 @@ var matchingApi = builder.AddProject<Projects.Matching>("matching-api")
 						 .WithSwaggerUI();
 
 builder.AddProject<Projects.Yarp>("yarp")
-	   .WithReference(matchingApi).WaitFor(matchingApi);
+	.WithReference(secrets)
+	.WithReference(matchingApi).WaitFor(matchingApi);
 
 builder.Build().Run();
