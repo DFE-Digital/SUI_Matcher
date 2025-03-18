@@ -2,12 +2,6 @@
 
 public class TempDirectoryFixture
 {
-    public string BaseDirectoryPath { get; private set; } = null!;
-
-    public string IncomingDirectoryPath => Path.Combine(BaseDirectoryPath, "Incoming");
-
-    public string ProcessedDirectoryPath => Path.Combine(BaseDirectoryPath, "Processed");
-
     public TempDirectoryFixture()
     {
         var tempRoot = Path.GetTempPath();
@@ -19,6 +13,11 @@ public class TempDirectoryFixture
         Directory.CreateDirectory(ProcessedDirectoryPath);
     }
 
+    public string BaseDirectoryPath { get; private set; } = null!;
+
+    public string IncomingDirectoryPath => Path.Combine(BaseDirectoryPath, "Incoming");
+
+    public string ProcessedDirectoryPath => Path.Combine(BaseDirectoryPath, "Processed");
     public void Dispose()
     {
         Directory.Delete(BaseDirectoryPath, recursive: true);

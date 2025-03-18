@@ -6,6 +6,8 @@ using SUI.Core.Endpoints;
 using SUI.Core.Services;
 using System.Diagnostics.CodeAnalysis;
 
+DotNetEnv.Env.TraversePath().Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
