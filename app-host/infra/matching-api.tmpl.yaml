@@ -20,6 +20,9 @@ properties:
     registries:
       - server: {{ .Env.AZURE_CONTAINER_REGISTRY_ENDPOINT }}
         identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
+    secrets:
+      - name: appInsightsConnectionString
+        value: '{{ .Env.APPLICATION_INSIGHTS_CONNECTION_STRING }}'
   template:
     containers:
       - image: {{ .Image }}
@@ -43,6 +46,8 @@ properties:
             value: https://external-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
           - name: ASPNETCORE_ENVIRONMENT
             value: {{ .Env.AZURE_ENV_NAME}}
+          - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+            secretRef: appInsightsConnectionString
     scale:
       minReplicas: 1
 tags:
