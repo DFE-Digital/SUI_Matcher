@@ -23,7 +23,7 @@ properties:
     secrets:
       - name: connectionstrings--secrets
         value: '{{ .Env.SECRETS_VAULTURI }}'
-      - name: appInsightsConnectionString
+      - name: app-insights-connection-string
         value: '{{ .Env.APPLICATION_INSIGHTS_CONNECTION_STRING }}'
   template:
     containers:
@@ -47,7 +47,7 @@ properties:
           - name: ASPNETCORE_ENVIRONMENT
             value: {{ .Env.AZURE_ENV_NAME }}
           - name: APPLICATIONINSIGHTS_CONNECTION_STRING
-            secretRef: appInsightsConnectionString
+            secretRef: app-insights-connection-string
     scale:
       minReplicas: 1
 tags:
