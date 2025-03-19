@@ -155,6 +155,23 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
   }
 }
 
+
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: '${environmentPrefix}-${environmentName}-appinsights-01'
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    Flow_Type: 'Bluefield'
+    WorkspaceResourceId: logAnalyticsWorkspace.id
+  }
+  tags: tags
+}
+
+
+
+
+
 // resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
 //   name: '${environmentPrefix}-${environmentName}-pib-01'
 //   location: location
@@ -273,3 +290,5 @@ output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.name
 output AZURE_CONTAINER_APPS_ENVIRONMENT_NAME string = containerAppEnvironment.name
 output AZURE_CONTAINER_APPS_ENVIRONMENT_ID string = containerAppEnvironment.id
 output AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN string = containerAppEnvironment.properties.defaultDomain
+output APPLICATION_INSIGHTS_CONNECTION_STRING string = applicationInsights.properties.ConnectionString
+

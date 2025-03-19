@@ -37,6 +37,37 @@ public sealed class MatchingServiceTests
     }
 
     [TestMethod]
+    public async Task MultipleMatches()
+    {
+        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
+
+        nhsFhir.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult
+            {
+                Type = SearchResult.ResultType.MultiMatched
+            });
+
+        var validationService = new ValidationService();
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
+
+        var model = new PersonSpecification
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = new DateOnly(2000, 11, 11),
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        var result = await subj.SearchAsync(model);
+
+        Assert.IsNotNull(result);
+        Assert.AreEqual(MatchStatus.ManyMatch, result.Result!.MatchStatus);
+    }
+
+    [TestMethod]
     [DataRow("2000-11-16", 3)] // non-swappable day/month in dob - so expect 5 search strategies
     [DataRow("2000-11-10", 4)] // swappable day/month in dob - so expect 6 search strategies
     public async Task MultpleQueryStrategiesWereUsed(string dob, int expectedSearchStrategiesUsed)
@@ -65,17 +96,15 @@ public sealed class MatchingServiceTests
     }
 
     [TestMethod]
-    public async Task SingleConfirmedMatch()
+    public async Task NoMatch()
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
 
-        nhsFhir.Setup(x=>x.PerformSearch(It.IsAny<SearchQuery>()))
+        nhsFhir.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(new SearchResult
             {
-                Type = SearchResult.ResultType.Matched,
-                Score = 0.99m
+                Type = SearchResult.ResultType.Unmatched
             });
-
 
         var validationService = new ValidationService();
         var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
@@ -83,7 +112,7 @@ public sealed class MatchingServiceTests
         var model = new PersonSpecification
         {
             AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateOnly(2000,11,11),
+            BirthDate = new DateOnly(2000, 11, 11),
             Email = "test@test.com",
             Family = "Smith",
             Given = "John",
@@ -94,8 +123,7 @@ public sealed class MatchingServiceTests
         var result = await subj.SearchAsync(model);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.Match, result.Result!.MatchStatus);
-        Assert.AreEqual(0.99m, result.Result.Score);
+        Assert.AreEqual(MatchStatus.NoMatch, result.Result!.MatchStatus);
     }
 
     [TestMethod]
@@ -109,7 +137,6 @@ public sealed class MatchingServiceTests
                 Type = SearchResult.ResultType.Matched,
                 Score = 0.94m
             });
-
 
         var validationService = new ValidationService();
         var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
@@ -133,16 +160,16 @@ public sealed class MatchingServiceTests
     }
 
     [TestMethod]
-    public async Task MultipleMatches()
+    public async Task SingleConfirmedMatch()
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
 
         nhsFhir.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(new SearchResult
             {
-                Type = SearchResult.ResultType.MultiMatched
+                Type = SearchResult.ResultType.Matched,
+                Score = 0.99m
             });
-
 
         var validationService = new ValidationService();
         var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
@@ -161,41 +188,9 @@ public sealed class MatchingServiceTests
         var result = await subj.SearchAsync(model);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.ManyMatch, result.Result!.MatchStatus);
+        Assert.AreEqual(MatchStatus.Match, result.Result!.MatchStatus);
+        Assert.AreEqual(0.99m, result.Result.Score);
     }
-
-    [TestMethod]
-    public async Task NoMatch()
-    {
-        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
-
-        nhsFhir.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Unmatched
-            });
-
-
-        var validationService = new ValidationService();
-        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
-
-        var model = new PersonSpecification
-        {
-            AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateOnly(2000, 11, 11),
-            Email = "test@test.com",
-            Family = "Smith",
-            Given = "John",
-            Gender = "male",
-            Phone = "000000000",
-        };
-
-        var result = await subj.SearchAsync(model);
-
-        Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.NoMatch, result.Result!.MatchStatus);
-    }
-
     private ILogger<MatchingService> CreateLogger() =>
          new Logger<MatchingService>(new LoggerFactory());
 }

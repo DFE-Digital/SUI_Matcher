@@ -13,28 +13,31 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 
 namespace Microsoft.Extensions.Hosting;
 
 public static class Extensions
 {
-	public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
-	{
+    public static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddHealthChecks()
+            // Add a default liveness check to ensure app is responsive
+            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+
+        return builder;
+    }
+
+    public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
+    {
 		builder.ConfigureOpenTelemetry();
-
 		builder.AddDefaultHealthChecks();
-
 		builder.Services.AddHttpContextAccessor();
-
 		builder.Services.AddServiceDiscovery();
-
 		builder.Services.ConfigureHttpClientDefaults(http =>
 		{
-			// Turn on resilience by default
-			http.AddStandardResilienceHandler();
-
-			// Turn on service discovery by default
 			http.AddServiceDiscovery();
+			http.AddStandardResilienceHandler();
 		});
 
 		return builder;
@@ -44,17 +47,14 @@ public static class Extensions
 	{
 		builder.Logging.EnableEnrichment();
 		builder.Services.AddLogEnricher<ApplicationEnricher>();
-
-		builder.Logging.AddConsole(options => options.FormatterName = "log4net")
-			.AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
-
+		builder.Logging.AddConsole(options => options.FormatterName = "log4net").AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
 		builder.Logging.AddOpenTelemetry(logging =>
 		{
 			logging.IncludeFormattedMessage = true;
 			logging.IncludeScopes = true;
 		});
 
-		builder.Services.AddOpenTelemetry()
+        var openTelemetryBuilder = builder.Services.AddOpenTelemetry()
 			.WithMetrics(metrics =>
 			{
 				metrics.AddAspNetCoreInstrumentation()
@@ -74,13 +74,37 @@ public static class Extensions
 						.AddSource("Yarp.ReverseProxy");
 			});
 
+        if (!string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"])) // Only enable Azure Monitor / App Insights if the connection string is set
+		{
+			openTelemetryBuilder.UseAzureMonitor(x=>x.ConnectionString= "APPLICATIONINSIGHTS_CONNECTION_STRING");
+		}
+
 		builder.AddOpenTelemetryExporters();
 
 		return builder;
 	}
 
-	private static IHostApplicationBuilder AddOpenTelemetryExporters(this IHostApplicationBuilder builder)
-	{
+    public static WebApplication MapDefaultEndpoints(this WebApplication app)
+    {
+        // Adding health checks endpoints to applications in non-development environments has security implications.
+        // See https://aka.ms/dotnet/aspire/healthchecks for details before enabling these endpoints in non-development environments.
+        if (app.Environment.IsDevelopment())
+        {
+            // All health checks must pass for app to be considered ready to accept traffic after starting
+            app.MapHealthChecks("/health");
+
+            // Only health checks tagged with the "live" tag must pass for app to be considered alive
+            app.MapHealthChecks("/alive", new HealthCheckOptions
+            {
+                Predicate = r => r.Tags.Contains("live")
+            });
+        }
+
+        return app;
+    }
+
+    private static IHostApplicationBuilder AddOpenTelemetryExporters(this IHostApplicationBuilder builder)
+    {
 		var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
 
 		if (useOtlpExporter)
@@ -89,33 +113,5 @@ public static class Extensions
 		}
 
 		return builder;
-	}
-
-	public static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
-	{
-		builder.Services.AddHealthChecks()
-			// Add a default liveness check to ensure app is responsive
-			.AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
-
-		return builder;
-	}
-
-	public static WebApplication MapDefaultEndpoints(this WebApplication app)
-	{
-		// Adding health checks endpoints to applications in non-development environments has security implications.
-		// See https://aka.ms/dotnet/aspire/healthchecks for details before enabling these endpoints in non-development environments.
-		if (app.Environment.IsDevelopment())
-		{
-			// All health checks must pass for app to be considered ready to accept traffic after starting
-			app.MapHealthChecks("/health");
-
-			// Only health checks tagged with the "live" tag must pass for app to be considered alive
-			app.MapHealthChecks("/alive", new HealthCheckOptions
-			{
-				Predicate = r => r.Tags.Contains("live")
-			});
-		}
-
-		return app;
 	}
 }

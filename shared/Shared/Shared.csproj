@@ -3,6 +3,8 @@
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 		<PackageReference Include="Aspire.Hosting.Redis" />
+		<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
+		<PackageReference Include="DotNetEnv" />
 		<PackageReference Include="FluentValidation" />
 		<PackageReference Include="MediatR" />
 		<PackageReference Include="MassTransit" />
