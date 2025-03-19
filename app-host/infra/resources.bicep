@@ -69,6 +69,378 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
   tags: tags
 }
 
+param dashboard_name string = 'sui-pilot-dashboard'
+param log_analytics_workspace_id string = '${environmentPrefix}-${environmentName}-loganalytics-01'
+param log_analytics_workspace_external_id string = '/subscriptions/${subscription().id}/resourceGroups/${resourceGroup().id}/providers/microsoft.operationalinsights/workspaces/${log_analytics_workspace_id}'
+
+resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
+  name: dashboard_name
+  location: location
+  tags: {
+    'hidden-title': 'SUI Pilot Dashboard'
+    Environment: environmentName
+    Product: 'SUI'
+    'Service Offering': 'SUI'
+  }
+  properties: {
+    lenses: [
+      {
+        order: 0
+        parts: [
+          {
+            position: {
+              x: 0
+              y: 0
+              rowSpan: 4
+              colSpan: 6
+            }
+            metadata: {
+              inputs: [
+                {
+                  name: 'resourceTypeMode'
+                  isOptional: true
+                }
+                {
+                  name: 'ComponentId'
+                  isOptional: true
+                }
+                {
+                  name: 'Scope'
+                  value: {
+                    resourceIds: [
+                      log_analytics_workspace_external_id
+                    ]
+                  }
+                  isOptional: true
+                }
+                {
+                  name: 'Version'
+                  value: '2.0'
+                  isOptional: true
+                }
+                {
+                  name: 'TimeRange'
+                  value: 'P7D'
+                  isOptional: true
+                }
+                {
+                  name: 'DashboardId'
+                  isOptional: true
+                }
+                {
+                  name: 'DraftRequestParameters'
+                  isOptional: true
+                }
+                {
+                  name: 'Query'
+                  value: 'ContainerAppConsoleLogs_CL\n| where \n    Log_s has "resulted in match status \'Match\'" or \n    Log_s has "resulted in match status \'PotentialMatch\'" or \n    Log_s has "resulted in match status \'ManyMatch\'" or \n    Log_s has "resulted in match status \'NoMatch\'" or \n    Log_s has "returning match status \'Error\'"\n| extend MatchStatus = case(\n                           Log_s has "resulted in match status \'Match\'",\n                           "Match",\n                           Log_s has "resulted in match status \'PotentialMatch\'",\n                           "PotentialMatch",\n                           Log_s has "resulted in match status \'ManyMatch\'",\n                           "ManyMatch",    \n                           Log_s has "resulted in match status \'NoMatch\'",\n                           "NoMatch",    \n                           Log_s has "returning match status \'Error\'",\n                           "Error",\n                           "Other"\n                       )\n| summarize Count = count() by MatchStatus\n| render piechart\n\n'
+                  isOptional: true
+                }
+                {
+                  name: 'ControlType'
+                  value: 'FrameControlChart'
+                  isOptional: true
+                }
+                {
+                  name: 'SpecificChart'
+                  value: 'Pie'
+                  isOptional: true
+                }
+                {
+                  name: 'PartTitle'
+                  value: 'Analytics'
+                  isOptional: true
+                }
+                {
+                  name: 'PartSubTitle'
+                  value: log_analytics_workspace_id
+                  isOptional: true
+                }
+                {
+                  name: 'Dimensions'
+                  value: {
+                    xAxis: {
+                      name: 'MatchStatus'
+                      type: 'string'
+                    }
+                    yAxis: [
+                      {
+                        name: 'Count'
+                        type: 'long'
+                      }
+                    ]
+                    splitBy: []
+                    aggregation: 'Sum'
+                  }
+                  isOptional: true
+                }
+                {
+                  name: 'LegendOptions'
+                  value: {
+                    isEnabled: true
+                    position: 'Bottom'
+                  }
+                  isOptional: true
+                }
+                {
+                  name: 'IsQueryContainTimeRange'
+                  value: false
+                  isOptional: true
+                }
+              ]
+              type: 'Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart'
+              settings: {
+                content: {}
+              }
+            }
+          }
+          {
+            position: {
+              x: 0
+              y: 4
+              rowSpan: 4
+              colSpan: 6
+            }
+            metadata: {
+              inputs: [
+                {
+                  name: 'resourceTypeMode'
+                  isOptional: true
+                }
+                {
+                  name: 'ComponentId'
+                  isOptional: true
+                }
+                {
+                  name: 'Scope'
+                  value: {
+                    resourceIds: [
+                      log_analytics_workspace_external_id
+                    ]
+                  }
+                  isOptional: true
+                }
+                {
+                  name: 'Version'
+                  value: '2.0'
+                  isOptional: true
+                }
+                {
+                  name: 'TimeRange'
+                  value: 'P7D'
+                  isOptional: true
+                }
+                {
+                  name: 'DashboardId'
+                  isOptional: true
+                }
+                {
+                  name: 'DraftRequestParameters'
+                  isOptional: true
+                }
+                {
+                  name: 'Query'
+                  value: 'ContainerAppConsoleLogs_CL\n| where \n    Log_s has "resulted in match status \'Match\'" or \n    Log_s has "resulted in match status \'PotentialMatch\'" or \n    Log_s has "resulted in match status \'ManyMatch\'" or \n    Log_s has "resulted in match status \'NoMatch\'" or \n    Log_s has "returning match status \'Error\'"\n| extend MatchStatus = case(\n                           Log_s has "resulted in match status \'Match\'",\n                           "Match",\n                           Log_s has "resulted in match status \'PotentialMatch\'",\n                           "PotentialMatch",\n                           Log_s has "resulted in match status \'ManyMatch\'",\n                           "ManyMatch",    \n                           Log_s has "resulted in match status \'NoMatch\'",\n                           "NoMatch",    \n                           Log_s has "returning match status \'Error\'",\n                           "Error",\n                           "Other"\n                       )\n| summarize Count = count() by MatchStatus\n| render piechart\n\n'
+                  isOptional: true
+                }
+                {
+                  name: 'ControlType'
+                  value: 'FrameControlChart'
+                  isOptional: true
+                }
+                {
+                  name: 'SpecificChart'
+                  value: 'Pie'
+                  isOptional: true
+                }
+                {
+                  name: 'PartTitle'
+                  value: 'Analytics'
+                  isOptional: true
+                }
+                {
+                  name: 'PartSubTitle'
+                  value: log_analytics_workspace_id
+                  isOptional: true
+                }
+                {
+                  name: 'Dimensions'
+                  value: {
+                    xAxis: {
+                      name: 'MatchStatus'
+                      type: 'string'
+                    }
+                    yAxis: [
+                      {
+                        name: 'Count'
+                        type: 'long'
+                      }
+                    ]
+                    splitBy: []
+                    aggregation: 'Sum'
+                  }
+                  isOptional: true
+                }
+                {
+                  name: 'LegendOptions'
+                  value: {
+                    isEnabled: true
+                    position: 'Bottom'
+                  }
+                  isOptional: true
+                }
+                {
+                  name: 'IsQueryContainTimeRange'
+                  value: false
+                  isOptional: true
+                }
+              ]
+              type: 'Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart'
+              settings: {
+                content: {}
+              }
+            }
+          }
+          {
+            position: {
+              x: 6
+              y: 4
+              rowSpan: 4
+              colSpan: 7
+            }
+            metadata: {
+              inputs: [
+                {
+                  name: 'resourceTypeMode'
+                  isOptional: true
+                }
+                {
+                  name: 'ComponentId'
+                  isOptional: true
+                }
+                {
+                  name: 'Scope'
+                  value: {
+                    resourceIds: [
+                      log_analytics_workspace_external_id
+                    ]
+                  }
+                  isOptional: true
+                }
+                {
+                  name: 'Version'
+                  value: '2.0'
+                  isOptional: true
+                }
+                {
+                  name: 'TimeRange'
+                  value: 'P7D'
+                  isOptional: true
+                }
+                {
+                  name: 'DashboardId'
+                  isOptional: true
+                }
+                {
+                  name: 'DraftRequestParameters'
+                  isOptional: true
+                }
+                {
+                  name: 'Query'
+                  value: 'ContainerAppConsoleLogs_CL\n| where \n    Log_s has "resulted in match status \'Match\'" or \n    Log_s has "resulted in match status \'PotentialMatch\'" or \n    Log_s has "resulted in match status \'ManyMatch\'" or \n    Log_s has "resulted in match status \'NoMatch\'" or \n    Log_s has "returning match status \'Error\'"\n| extend MatchStatus = case(\n                           Log_s has "resulted in match status \'Match\'",\n                           "Match",\n                           Log_s has "resulted in match status \'PotentialMatch\'",\n                           "PotentialMatch",\n                           Log_s has "resulted in match status \'ManyMatch\'",\n                           "ManyMatch",    \n                           Log_s has "resulted in match status \'NoMatch\'",\n                           "NoMatch",    \n                           Log_s has "returning match status \'Error\'",\n                           "Error",\n                           "Other"\n                       )\n| summarize Count = count() by MatchStatus\n| render piechart\n\n'
+                  isOptional: true
+                }
+                {
+                  name: 'ControlType'
+                  value: 'FrameControlChart'
+                  isOptional: true
+                }
+                {
+                  name: 'SpecificChart'
+                  value: 'Pie'
+                  isOptional: true
+                }
+                {
+                  name: 'PartTitle'
+                  value: 'Analytics'
+                  isOptional: true
+                }
+                {
+                  name: 'PartSubTitle'
+                  value: log_analytics_workspace_id
+                  isOptional: true
+                }
+                {
+                  name: 'Dimensions'
+                  value: {
+                    xAxis: {
+                      name: 'MatchStatus'
+                      type: 'string'
+                    }
+                    yAxis: [
+                      {
+                        name: 'Count'
+                        type: 'long'
+                      }
+                    ]
+                    splitBy: []
+                    aggregation: 'Sum'
+                  }
+                  isOptional: true
+                }
+                {
+                  name: 'LegendOptions'
+                  value: {
+                    isEnabled: true
+                    position: 'Bottom'
+                  }
+                  isOptional: true
+                }
+                {
+                  name: 'IsQueryContainTimeRange'
+                  value: false
+                  isOptional: true
+                }
+              ]
+              type: 'Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart'
+              settings: {
+                content: {}
+              }
+            }
+          }
+        ]
+      }
+    ]
+    metadata: {
+      model: {
+        timeRange: {
+          value: {
+            relative: {
+              duration: 24
+              timeUnit: 1
+            }
+          }
+          type: 'MsPortalFx.Composition.Configuration.ValueTypes.TimeRange'
+        }
+        filterLocale: {
+          value: 'en-us'
+        }
+        filters: {
+          value: {
+            MsPortalFx_TimeRange: {
+              model: {
+                format: 'utc'
+                granularity: 'auto'
+                relative: '30d'
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
   name: '${environmentPrefix}-${environmentName}-vnet-cae-01'
   location: location
