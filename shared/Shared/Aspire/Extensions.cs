@@ -74,10 +74,10 @@ public static class Extensions
 						.AddSource("Yarp.ReverseProxy");
 			});
 
-        if (!string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"])) // Only enable Azure Monitor / App Insights if the connection string is set
-		{
-			openTelemetryBuilder.UseAzureMonitor(x=>x.ConnectionString= "APPLICATIONINSIGHTS_CONNECTION_STRING");
-		}
+  //      if (!string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"])) // Only enable Azure Monitor / App Insights if the connection string is set
+		//{
+		//	openTelemetryBuilder.UseAzureMonitor(x=>x.ConnectionString= "APPLICATIONINSIGHTS_CONNECTION_STRING");
+		//}
 
 		builder.AddOpenTelemetryExporters();
 
