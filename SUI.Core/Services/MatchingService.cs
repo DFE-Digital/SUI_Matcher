@@ -159,7 +159,7 @@ public class MatchingService(
 
         var dataQualityResult = ToQualityResult(personSpecification, validationResults.Results!);
 
-        logger.LogError($"Person data validation resulted in: {JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}");
+        logger.LogInformation($"Person data validation resulted in: {JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}");
 
         if (!HasMinDataRequirements(dataQualityResult))
         {

@@ -7,7 +7,7 @@ public class CustomDateOnlyConverter : JsonConverter<DateOnly?>
 {
     
 
-    private readonly string[] _formats = [Constants.DateFormat, Constants.DateAltFormat];
+    private readonly string[] _formats = [Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish];
 
     public override DateOnly? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

@@ -55,6 +55,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Types", "SUI.Types\SUI.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Test.FakeNhsFhirApi", "SUI.Test.FakeNhsFhirApi\SUI.Test.FakeNhsFhirApi.csproj", "{74B8B982-E54C-49A9-9963-3CD5EEAC57D7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Azure.BlobStorage.Container.Sync", "SUI.Azure.BlobStorage.Container.Sync\SUI.Azure.BlobStorage.Container.Sync.csproj", "{04778F18-2978-4714-ABF9-02A5104A0F08}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,10 @@ Global
 		{74B8B982-E54C-49A9-9963-3CD5EEAC57D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74B8B982-E54C-49A9-9963-3CD5EEAC57D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74B8B982-E54C-49A9-9963-3CD5EEAC57D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04778F18-2978-4714-ABF9-02A5104A0F08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04778F18-2978-4714-ABF9-02A5104A0F08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04778F18-2978-4714-ABF9-02A5104A0F08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04778F18-2978-4714-ABF9-02A5104A0F08}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -144,6 +150,7 @@ Global
 		{810704C0-195C-4AE8-9B71-7367090D17C8} = {6113130F-7A2B-42D0-9938-801D87FDCBD0}
 		{89481DE3-EB35-F200-1AFC-7097D97A86FF} = {6113130F-7A2B-42D0-9938-801D87FDCBD0}
 		{74B8B982-E54C-49A9-9963-3CD5EEAC57D7} = {6113130F-7A2B-42D0-9938-801D87FDCBD0}
+		{04778F18-2978-4714-ABF9-02A5104A0F08} = {810704C0-195C-4AE8-9B71-7367090D17C8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C3003BB3-31B7-4AFA-80BD-E3FB6FBC2CAD}

@@ -15,7 +15,7 @@ public class MatchPersonServiceAdapter(IMatchingService matchingService) : IMatc
             AddressPostalCode = payload.AddressPostalCode,
             Family = payload.Family,
             Gender = payload.Gender,
-            BirthDate = payload.BirthDate.ToDateOnly(Constants.DateFormat, Constants.DateAltFormat),
+            BirthDate = payload.BirthDate.ToDateOnly(Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish),
             Email = payload.Email,
             Given = payload.Given,
             Phone = payload.Phone,
