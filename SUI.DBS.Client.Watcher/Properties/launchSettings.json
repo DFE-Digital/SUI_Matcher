@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SUI.Client.Watcher": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\temp\\sui\\incoming\" \"C:\\temp\\sui\\incoming\\processed\" "
+    }
+  }
+}
