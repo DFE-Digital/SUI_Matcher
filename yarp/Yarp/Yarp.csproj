@@ -4,8 +4,6 @@
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
 		<PackageReference Include="DotNetEnv" />
 		<PackageReference Include="Yarp.ReverseProxy" />
-		<PackageReference Include="LettuceEncrypt" />
-		<PackageReference Include="LettuceEncrypt.Azure" />
 		<PackageReference Include="Microsoft.Extensions.ServiceDiscovery.Abstractions" />
 		<PackageReference Include="Microsoft.Extensions.ServiceDiscovery.Yarp" />
 		<PackageReference Include="Microsoft.Extensions.ServiceDiscovery" />

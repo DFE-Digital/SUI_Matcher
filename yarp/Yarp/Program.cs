@@ -16,14 +16,6 @@ else
 {
     builder.Services.AddReverseProxy()
         .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
-    
-    builder.WebHost.ConfigureKestrel(kestrel =>
-    {
-        kestrel.ListenAnyIP(5443,
-            portOptions => { portOptions.UseHttps(h => { h.UseLettuceEncrypt(kestrel.ApplicationServices); }); });
-    });
-    
-    builder.Services.AddLettuceEncrypt();
 }
 
 var app = builder.Build();
