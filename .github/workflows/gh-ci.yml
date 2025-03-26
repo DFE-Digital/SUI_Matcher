@@ -23,16 +23,23 @@ jobs:
 
       - name: Build
         run: dotnet build --no-restore
+      
+      - name: Install dotnet-reportgenerator-globaltool
+        run: dotnet tool install --global dotnet-coverage
 
       - name: Test
-        run: dotnet test --no-build --settings tests.runsettings --results-directory ./coverage
+        run: |
+          dotnet test --no-build --settings tests.runsettings --results-directory ./coverage
+          dotnet coverage merge --reports "coverage/**/coverage.cobertura.xml" -f cobertura -o coverage/coverage.xml
+
 
       - name: Publish coverage
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          filename: coverage/**/coverage.cobertura.xml
+          filename: coverage/coverage.xml
           badge: true
           format: markdown
+          hide_complexity: true
           output: both
       
       - name: Add Coverage PR Comment
