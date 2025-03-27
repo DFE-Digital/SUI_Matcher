@@ -487,6 +487,11 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
         maximumCount: 1
       }
     ]
+    peerTrafficConfiguration: {
+      encryption: {
+        enabled: true
+      }
+    }
     publicNetworkAccess: 'Disabled'
 
   }
