@@ -41,10 +41,12 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         {
             var payload = new MatchPersonPayload
             {
-                Given = record[_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Given)]],
-                Family = record[_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Family)]],
-                BirthDate = record[_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]],
-                Email = record[_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Email)]],
+                Given = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Given)]),
+                Family = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Family)]),
+                BirthDate = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
+                Email = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Email)]),
+                AddressPostalCode = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
+                Gender = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Gender)]),
             };
 
             var response = await _matchPersonApi.MatchPersonAsync(payload);

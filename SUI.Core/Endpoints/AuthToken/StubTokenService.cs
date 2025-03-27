@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 namespace SUI.Core.Endpoints.AuthToken;
 
 public class StubTokenService(
-    IConfiguration configuration, ILogger<StubTokenService> logger) : 
+    IConfiguration configuration, ILogger<StubTokenService> logger) :
     TokenService(configuration, logger)
 {
     private readonly IConfiguration _configuration = configuration;
@@ -26,6 +26,11 @@ public class StubTokenService(
                     {
                         privateKey = Convert.ToBase64String(rsa.ExportRSAPrivateKey());
                     }
+                }
+                else if (privateKey.StartsWith("file:"))
+                {
+                    privateKey = privateKey.Replace("file:", "");
+                    privateKey = File.ReadAllText(privateKey);
                 }
                 return await Task.FromResult(privateKey);
             default:

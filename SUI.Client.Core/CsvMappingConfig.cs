@@ -2,14 +2,17 @@
 
 namespace SUI.Client.Core;
 
+
 public class CsvMappingConfig
 {
     public static class Defaults
     {
-        public const string GivenName = nameof(GivenName);
-        public const string Surname = nameof(Surname);
-        public const string DOB = nameof(DOB);
-        public const string Email = nameof(Email);
+        public const string GivenName = "GivenName";
+        public const string Surname = "Surname";
+        public const string DOB = "DOB";
+        public const string Email = "Email";
+        public const string AddressPostalCode = "PostCode";
+        public const string Gender = "Gender";
     }
 
     public Dictionary<string, string> ColumnMappings { get; set; } = new Dictionary<string, string>
@@ -18,5 +21,7 @@ public class CsvMappingConfig
         [nameof(MatchPersonPayload.Family)] = Defaults.Surname,
         [nameof(MatchPersonPayload.BirthDate)] = Defaults.DOB,
         [nameof(MatchPersonPayload.Email)] = Defaults.Email,
+        [nameof(MatchPersonPayload.AddressPostalCode)] = Defaults.AddressPostalCode,
+        [nameof(MatchPersonPayload.Gender)] = Defaults.Gender,
     };
 }
