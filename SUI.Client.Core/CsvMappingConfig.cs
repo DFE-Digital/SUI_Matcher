@@ -2,16 +2,17 @@
 
 namespace SUI.Client.Core;
 
+
 public class CsvMappingConfig
 {
     public static class Defaults
     {
-        public const string GivenName = "GIVEN_NAME";
-        public const string Surname = "FAMILY_NAME";
+        public const string GivenName = "GivenName";
+        public const string Surname = "Surname";
         public const string DOB = "DOB";
-        public const string Email = "EMAIL";
-        public const string AddressPostalCode = "POST_CODE";
-        public const string Gender = "GENDER";
+        public const string Email = "Email";
+        public const string AddressPostalCode = "PostCode";
+        public const string Gender = "Gender";
     }
 
     public Dictionary<string, string> ColumnMappings { get; set; } = new Dictionary<string, string>
