@@ -14,7 +14,7 @@ properties:
         autoConfigureDataProtection: true
     ingress:
       external: true
-      targetPort: {{ targetPortOrDefault 5443 }}
+      targetPort: {{ targetPortOrDefault 8080 }}
       transport: http
       allowInsecure: false
     registries:
