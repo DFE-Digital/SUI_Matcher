@@ -1,0 +1,41 @@
+
+using System.Diagnostics;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Console;
+
+namespace SUI.DBS.Client.Core.Extensions.Logging;
+
+public class LogConsoleFormatter() : ConsoleFormatter("log4net")
+{
+    public override void Write<TState>(
+        in LogEntry<TState> logEntry,
+        IExternalScopeProvider? scopeProvider,
+        TextWriter textWriter)
+    {
+        string? message =
+            logEntry.Formatter?.Invoke(
+                logEntry.State, logEntry.Exception);
+
+        if (message is null)
+        {
+            return;
+        }
+
+        var searchId = Activity.Current?.GetTagItem("SearchId");
+
+        if (searchId is not null)
+        {
+            textWriter.Write($"[{logEntry.LogLevel}] [SearchId={searchId}] ");
+        }
+        else
+        {
+            textWriter.Write($"[{logEntry.LogLevel}] ");
+        }
+
+        textWriter.WriteLine(message);
+    }
+
+}
+
+public sealed class CustomOptions : ConsoleFormatterOptions;

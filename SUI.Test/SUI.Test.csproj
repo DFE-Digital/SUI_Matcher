@@ -20,7 +20,9 @@
   <ItemGroup>
     <ProjectReference Include="..\shared\Shared\Shared.csproj" />
     <ProjectReference Include="..\SUI.Client.Core\SUI.Client.Core.csproj" />
+    <ProjectReference Include="..\SUI.DBS.Client.Core\SUI.DBS.Client.Core.csproj" />
     <ProjectReference Include="..\SUI.Core\SUI.Core.csproj" />
+    <ProjectReference Include="..\SUI.DBS.Client.Core\SUI.DBS.Client.Core.csproj" />
   </ItemGroup>
 
 </Project>

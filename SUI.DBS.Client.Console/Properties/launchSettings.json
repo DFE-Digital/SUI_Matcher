@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SUI.DBS.Client.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "test_success.txt"
+    }
+  }
+}
