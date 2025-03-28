@@ -35,6 +35,15 @@ module secrets 'secrets/secrets.module.bicep' = {
   }
 }
 
+module monitoring 'monitoring.bicep' = {
+  name: 'monitoring'
+  params: {
+    location: location
+    turnOnAlerts: true
+    logAnalyticsWorkspaceId: resources.outputs.AZURE_LOG_ANALYTICS_WORKSPACE_ID
+  }
+}
+
 output MANAGED_IDENTITY_CLIENT_ID string = resources.outputs.MANAGED_IDENTITY_CLIENT_ID
 output MANAGED_IDENTITY_NAME string = resources.outputs.MANAGED_IDENTITY_NAME
 output AZURE_LOG_ANALYTICS_WORKSPACE_NAME string = resources.outputs.AZURE_LOG_ANALYTICS_WORKSPACE_NAME
