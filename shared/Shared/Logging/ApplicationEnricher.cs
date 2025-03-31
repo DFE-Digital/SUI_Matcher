@@ -7,7 +7,7 @@ namespace Shared.Logging;
 /// Ref: https://andrewlock.net/customising-the-new-telemetry-logging-source-generator/
 /// </summary>
 /// <param name="httpContextAccessor"></param>
-internal class ApplicationEnricher(IHttpContextAccessor httpContextAccessor) : ILogEnricher
+public class ApplicationEnricher(IHttpContextAccessor httpContextAccessor) : ILogEnricher
 {
 	public void Enrich(IEnrichmentTagCollector collector)
 	{
