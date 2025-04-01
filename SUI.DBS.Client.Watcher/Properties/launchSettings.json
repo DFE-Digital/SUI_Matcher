@@ -2,7 +2,10 @@
   "profiles": {
     "SUI.DBS.Client.Watcher": {
       "commandName": "Project",
-      "commandLineArgs": "\"/tmp/dbs/incoming\" \"/tmp/dbs/incoming/processed\" "
+      "commandLineArgs": "\"/tmp/dbs/incoming\" \"/tmp/dbs/incoming/processed\" ",
+      "environmentVariables": {
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=a;IngestionEndpoint=http://localhost/;LiveEndpoint=http://localhost/;ApplicationId=a"
+      }
     }
   }
 }
