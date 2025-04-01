@@ -2,7 +2,10 @@
   "profiles": {
     "SUI.DBS.Client.Console": {
       "commandName": "Project",
-      "commandLineArgs": "dbs_batch_search_sample.txt"
+      "commandLineArgs": "dbs_batch_search_sample.txt",
+      "environmentVariables": {
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=a;IngestionEndpoint=http://localhost/;LiveEndpoint=http://localhost/;ApplicationId=a"
+      }
     }
   }
 }

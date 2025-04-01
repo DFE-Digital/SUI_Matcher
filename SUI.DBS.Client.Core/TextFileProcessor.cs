@@ -31,6 +31,7 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
         var recordColumns = Enum.GetValues(typeof(RecordColumn)).Cast<RecordColumn>().ToArray();
 
+        var currentRow = 0;
         var recordCount = 0;
         var matches = 0;
         var noMatches = 0;
@@ -71,8 +72,10 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
                     ++noMatches;
                 }
                 
-                logger.LogInformation($"The DBS search resulted in match status '{(matched ? "Match" : "NoMatch")}'");
+                logger.LogInformation($"The DBS search for record on line '{currentRow}' resulted in match status '{(matched ? "Match" : "NoMatch")}'");
             }
+            
+            ++currentRow;
         }
             
         logger.LogInformation($"The DBS results file has {recordCount} records, batch search resulted in Match='{matches}' and NoMatch='{noMatches}'");

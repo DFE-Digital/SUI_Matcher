@@ -98,8 +98,8 @@ public class TxtProcessorTests
         Assert.AreEqual(0, monitor.ErrorCount);
         Assert.AreEqual(1, monitor.ProcessedCount);
         
-        Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS search resulted in match status 'Match'")));
-        Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS search resulted in match status 'NoMatch'")));
+        Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS search for record on line '1' resulted in match status 'Match'")));
+        Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS search for record on line '3' resulted in match status 'NoMatch'")));
         Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS results file has 2 records, batch search resulted in Match='1' and NoMatch='1'")));
     }
     
