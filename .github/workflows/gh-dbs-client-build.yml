@@ -1,4 +1,4 @@
-name: Build and Upload Client Watcher
+name: Build and Upload DBS Client Watcher
 
 on:
     workflow_dispatch:
@@ -37,7 +37,7 @@ jobs:
             CLIENT_VERSION: ${{ inputs.version }}
             BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location }}
             STORAGE_ACCOUNT: ${{ inputs.storage_account }}
-            APPLICATIONINSIGHTS_CONNECTION_STRING: ${{ env.APPLICATIONINSIGHTS_CONNECTION_STRING }}
+            APPLICATIONINSIGHTS_CONNECTION_STRING: ${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}
 
         steps:
         - name: Checkout repository
