@@ -3,8 +3,9 @@
 ## Setting up an API credential
 
 1. On the [NHS Developer site](https://onboarding.prod.api.platform.nhs.uk/), create a new developer account, if you do not yet have one.
-2. Create a new API, linked to `Personal Demographics Service - Application-Restricted (Integration Testing)`. You will need to give this a globally unique name.
-3. Generate a keypair, by running these commands (from [the NHS documentation](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication))
+2. Add a new application by going to environment access. Use the 'Integration test' and set yourself as the owner.
+3. Create a new API, linked to `Personal Demographics Service - Application-Restricted (Integration Testing)`. You will need to give this a globally unique name.
+4. Generate a keypair, by running these commands (from [the NHS documentation](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication))
     1. ```
        KID=test-1
        ```
@@ -37,10 +38,10 @@
          ]
        }' > $KID.json
        ```</pre>
-4. Upload the `test-1.json` file to your application's registration, on the 'Manage public key' page
-5. On the API portal, create a new API key, and copy the _Key_ value. You do not need the secret. Then run the following command, using your Key value between the quotation marks.
+5. Upload the `test-1.json` file to your application's registration, on the 'Manage public key' page
+6. On the API portal, create a new API key, and copy the _Key_ value. You do not need the secret. Then run the following command, using your Key value between the quotation marks.
     1. `API_KEY="IlmDF45AbP8Ao11pRtkK7tCoApApdABC"`
-5. Create the `.env` file to provide these secrets to the mocked Azure Secret Manager, by running the following commands:
+7. Create the `.env` file to provide these secrets to the mocked Azure Secret Manager, by running the following commands:
     1. `echo "export NhsAuthConfig__NHS_DIGITAL_PRIVATE_KEY=\"$(openssl rsa -in $KID.pem -traditional -out -)\"" > .env`
     2. `echo "export NhsAuthConfig__NHS_DIGITAL_KID=\"$KID\"" >> .env`
     3. `echo "export NhsAuthConfig__NHS_DIGITAL_CLIENT_ID=\"$API_KEY\"" >> .env`
