@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Shared.Models;
+using SUI.Types;
 
 namespace ExternalApi.IntegrationTests;
 
@@ -89,5 +89,38 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
         Assert.Equal(SearchResult.ResultType.MultiMatched, result!.Type);
         Assert.Null(result.NhsNumber);
         Assert.Null(result.ErrorMessage);
+    }
+    
+    [Fact]
+    public async Task Demographics_RetrievePatientsDemographics()
+    {
+        // Arrange
+        const string validNhsNumber = "9000000009";
+
+        // Act
+        var response = await _httpClient.GetAsync($"/api/v1/demographics/{validNhsNumber}");
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<DemographicResponse>();
+        
+        // Assert
+        Assert.NotNull(result?.Result);
+    }
+    
+    [Fact]
+    public async Task Demographics_ReturnsErrors_WhenNhsNumberIsInvalid()
+    {
+        // Arrange
+        const string invalidNhsNumber = "9000000012";
+        
+        // Act
+        var response = await _httpClient.GetAsync($"/api/v1/demographics/{invalidNhsNumber}");
+        response.EnsureSuccessStatusCode();
+
+        // Assert
+        var result = await response.Content.ReadFromJsonAsync<DemographicResponse>();
+        Assert.NotNull(result);
+        Assert.Null(result.Result);
+        Assert.NotNull(result.Errors);
     }
 }

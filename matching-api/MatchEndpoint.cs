@@ -25,5 +25,11 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
 
             return result.Result?.MatchStatus == MatchStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
         });
+        
+        app.MapGet("/demographics", async ([AsParameters]DemographicRequest request) =>
+        {
+            var result = await matchingService.GetDemographicsAsync(request);
+            return result is null ? Results.BadRequest(result) : Results.Ok(result);
+        });
     }
 }

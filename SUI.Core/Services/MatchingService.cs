@@ -13,6 +13,7 @@ namespace SUI.Core.Services;
 public interface IMatchingService
 {
     Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification);
+    Task<DemographicResponse?> GetDemographicsAsync(DemographicRequest nhsNumber);
 }
 
 public class MatchingService(
@@ -191,6 +192,28 @@ public class MatchingService(
                 ProcessStage = result.ProcessStage,
             },
             DataQuality = dataQualityResult
+        };
+    }
+
+    public async Task<DemographicResponse?> GetDemographicsAsync(DemographicRequest request)
+    {
+        logger.LogInformation("Searching for matching person by NHS number");
+
+        var validationResults = validationService.Validate(request);
+        
+        if (validationResults.Results?.Any() == true)
+        {
+            return new DemographicResponse
+            {
+                Errors = validationResults.Results.Select(r => r.ErrorMessage ?? "").ToList()
+            };
+        }
+        
+        var result = await nhsFhirClient.PerformSearchByNhsId(request.NhsNumber!);
+        return new DemographicResponse()
+        {
+            Result = result.Result,
+            Errors = result.ErrorMessage is null ? [] : [result.ErrorMessage]
         };
     }
 
