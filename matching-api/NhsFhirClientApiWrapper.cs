@@ -17,4 +17,12 @@ public class NhsFhirClientApiWrapper (HttpClient httpClient) : INhsFhirClient
         return await response.Content.ReadFromJsonAsync<SearchResult>();
     }
 
+    public async Task<PatientDemographicResult?> PerformSearchByNhsId(string nhsId)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/demographics/{nhsId}");
+        var response = await httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<PatientDemographicResult>();
+    }
 }

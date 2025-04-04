@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Shared.Models;
 using SUI.Core.Endpoints.AuthToken;
 using System.Collections;
-using System.Diagnostics;
 using System.Net.Http.Headers;
 
 namespace SUI.Core.Endpoints;
@@ -13,6 +12,7 @@ namespace SUI.Core.Endpoints;
 public interface INhsFhirClient
 {
     Task<SearchResult?> PerformSearch(SearchQuery query);
+    Task<PatientDemographicResult> PerformSearchByNhsId(string nhsId);
 }
 
 public class NhsFhirClient(ITokenService tokenService,
@@ -23,7 +23,7 @@ public class NhsFhirClient(ITokenService tokenService,
 
     public async Task<SearchResult?> PerformSearch(SearchQuery query)
     {
-        var fhirClient = new FhirClient(_baseUri);
+        var fhirClient = CreateFhirClient();
 
         var search = new SearchParams();
 
@@ -41,17 +41,6 @@ public class NhsFhirClient(ITokenService tokenService,
             {
                 search.Add(entry.Key, entry.Value.ToString()!);
             }
-        }
-
-        // Set the authorization header
-        if (fhirClient.RequestHeaders != null)
-        {
-            var accessToken = await tokenService.GetBearerToken();
-            
-            logger.LogInformation("Retrieved Nhs Digital FHIR API access token");
-            
-            fhirClient.RequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            fhirClient.RequestHeaders.Add("X-Request-ID", Guid.NewGuid().ToString());
         }
 
         try
@@ -85,5 +74,46 @@ public class NhsFhirClient(ITokenService tokenService,
             logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search");
             return SearchResult.Error(ex.Message);
         }
+    }
+
+    public async Task<PatientDemographicResult> PerformSearchByNhsId(string nhsId)
+    {
+        try
+        {
+            var fhirClient = CreateFhirClient();
+
+            var data = await fhirClient.ReadAsync<Patient>($"Patient/{nhsId}");
+
+            return new PatientDemographicResult()
+            {
+                Result = data
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID");
+            return new PatientDemographicResult()
+            {
+                ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID"
+            };
+        }
+    }
+    
+    private FhirClient CreateFhirClient()
+    {
+        var fhirClient = new FhirClient(_baseUri);
+        
+        // Set the authorization header
+        if (fhirClient.RequestHeaders != null)
+        {
+            var accessToken = tokenService.GetBearerToken().Result;
+            
+            logger.LogInformation("Retrieved Nhs Digital FHIR API access token");
+            
+            fhirClient.RequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            fhirClient.RequestHeaders.Add("X-Request-ID", Guid.NewGuid().ToString());
+        }
+
+        return fhirClient;
     }
 }
