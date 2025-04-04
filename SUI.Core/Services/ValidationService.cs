@@ -5,16 +5,16 @@ namespace SUI.Core.Services;
 
 public interface IValidationService
 {
-    ValidationResponse Validate(object personSpecification);
+    ValidationResponse Validate(object obj);
 }
 
 public class ValidationService : IValidationService
 {
-    public ValidationResponse Validate(object personSpecification)
+    public ValidationResponse Validate(object obj)
     {
         var validationResults = new List<ValidationResult>();
-        var validationContext = new ValidationContext(personSpecification, null, null);
-        Validator.TryValidateObject(personSpecification, validationContext, validationResults, true);
+        var validationContext = new ValidationContext(obj, null, null);
+        Validator.TryValidateObject(obj, validationContext, validationResults, true);
 
         var response = new ValidationResponse
         {
