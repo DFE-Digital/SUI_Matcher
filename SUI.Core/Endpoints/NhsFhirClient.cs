@@ -12,7 +12,7 @@ namespace SUI.Core.Endpoints;
 public interface INhsFhirClient
 {
     Task<SearchResult?> PerformSearch(SearchQuery query);
-    Task<PatientDemographicResult> PerformSearchByNhsId(string nhsId);
+    Task<DemographicResult> PerformSearchByNhsId(string nhsId);
 }
 
 public class NhsFhirClient(ITokenService tokenService,
@@ -76,15 +76,15 @@ public class NhsFhirClient(ITokenService tokenService,
         }
     }
 
-    public async Task<PatientDemographicResult> PerformSearchByNhsId(string nhsId)
+    public async Task<DemographicResult> PerformSearchByNhsId(string nhsId)
     {
         try
         {
             var fhirClient = CreateFhirClient();
 
-            var data = await fhirClient.ReadAsync<Patient>($"Patient/{nhsId}");
+            var data = await fhirClient.ReadAsync<Patient>(ResourceIdentity.Build("Patient", nhsId));
 
-            return new PatientDemographicResult()
+            return new DemographicResult()
             {
                 Result = data
             };
@@ -92,7 +92,7 @@ public class NhsFhirClient(ITokenService tokenService,
         catch (Exception ex)
         {
             logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID");
-            return new PatientDemographicResult()
+            return new DemographicResult()
             {
                 ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID"
             };
