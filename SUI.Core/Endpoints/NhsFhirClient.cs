@@ -49,25 +49,37 @@ public class NhsFhirClient(ITokenService tokenService,
             
             // Search for a patient record
             var patient = await fhirClient.SearchAsync<Patient>(search);
-            if (patient == null || patient.Entry.Count == 0)
+            
+            if (patient == null)
             {
-                logger.LogInformation("No patient record found");
+                if (fhirClient.LastBodyAsResource is OperationOutcome outcome && outcome.Issue.Count > 0 && 
+                    outcome.Issue[0].Code == OperationOutcome.IssueType.MultipleMatches)
+                {
+                    logger.LogInformation("multiple patient records found");
 
-                return SearchResult.Unmatched();
+                    return SearchResult.MultiMatched();
+                }
             }
-            else if (patient.Entry.Count == 1)
+            else
             {
-                var birthDate = patient.Entry[0].Resource["birthDate"];
-                var gender = patient.Entry[0].Resource["gender"];
+                if (patient.Entry.Count == 0)
+                {
+                    logger.LogInformation("No patient record found");
+
+                    return SearchResult.Unmatched();
+                }
+                else if (patient.Entry.Count == 1)
+                {
+                    var birthDate = patient.Entry[0].Resource["birthDate"];
+                    var gender = patient.Entry[0].Resource["gender"];
                 
-                logger.LogInformation($"1 patient record found: BirthDate={birthDate} Gender={gender}");
+                    logger.LogInformation($"1 patient record found: BirthDate={birthDate} Gender={gender}");
 
-                return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
+                    return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
+                }
             }
-
-            logger.LogInformation("multiple patient records found");
-
-            return SearchResult.MultiMatched();
+            
+            return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response");
         }
         catch (Exception ex)
         {
