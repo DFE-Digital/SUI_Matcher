@@ -1,11 +1,16 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Hl7.Fhir.Rest;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
+using SUI.Core.Endpoints.AuthToken;
 using Newtonsoft.Json;
 using Shared.Models;
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
 using SUI.Types;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SUI.Test.Unit;
 
@@ -190,6 +195,46 @@ public sealed class MatchingServiceTests
         Assert.AreEqual(MatchStatus.Match, result.Result!.MatchStatus);
         Assert.AreEqual(0.99m, result.Result.Score);
     }
+
+    [TestMethod]
+    public async Task SingleQuotesInGivenAndFamilyAreEscaped()
+    {
+        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
+
+        nhsFhir.Setup(x => x.PerformSearch(It.Is<SearchQuery>(q =>
+            q.Given.Contains("O'Connor") && q.Family.Contains("D'Angelo"))))
+            .ReturnsAsync(new SearchResult
+            {
+                Type = SearchResult.ResultType.Matched,
+                Score = 0.95m
+            });
+
+        var validationService = new ValidationService();
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
+
+        var model = new PersonSpecification
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = new DateOnly(2000, 11, 11),
+            Email = "test@test.com",
+            Family = "D'Angelo",
+            Given = "O'Connor",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        var result = await subj.SearchAsync(model);
+
+        Assert.IsNotNull(result);
+        Assert.AreEqual(MatchStatus.Match, result.Result!.MatchStatus);
+        Assert.AreEqual(0.95m, result.Result.Score);
+
+        // Verify that PerformSearch was called with the correct values
+        nhsFhir.Verify(x => x.PerformSearch(It.Is<SearchQuery>(q =>
+            q.Given.Contains("O'Connor") && q.Family.Contains("D'Angelo"))));
+    }
+    
+
     private ILogger<MatchingService> CreateLogger() =>
          new Logger<MatchingService>(new LoggerFactory());
 }
