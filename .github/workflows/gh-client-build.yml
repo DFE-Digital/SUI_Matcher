@@ -37,6 +37,7 @@ jobs:
             CLIENT_VERSION: ${{ inputs.version }}
             BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location }}
             STORAGE_ACCOUNT: ${{ inputs.storage_account }}
+            VN_NAME: ${{ inputs.virtual_mchine_name }}
 
         steps:
         - name: Checkout repository
@@ -62,3 +63,49 @@ jobs:
         - name: Upload to Blob Storage
           run:
             az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./output --pattern "*.exe" --overwrite
+          
+        - name: Use Serial Console to Download EXE from Blob Storage
+          run: |
+            az vm run-command invoke \
+              --command-id RunPowerShellScript \
+              --name ${{ env.VN_NAME }} \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --scripts @'
+
+              $connectionString = "DefaultEndpointsProtocol=https;AccountName=${{ secrets.STORAGE_ACCOUNT }};AccountKey=${{ secrets.STORAGE_ACCOUNT_KEY }};EndpointSuffix=core.windows.net"
+              $blobContainerName = "${{ env.BLOB_STORAGE_LOCATION }}"
+              $blobName = "suiw.exe"
+              $destinationPath = "C:\Users\AzCopy\suiw.exe"
+            
+              # Create Directory if doesn't exist
+              New-Item -ItemType Directory -Path "C:\Users\AzCopy"
+
+              # Install Azure CLI if not installed
+              Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
+              Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
+
+              # Download EXE file from Blob Storage
+              az storage blob download \
+                  --connection-string $connectionString \
+                  --container-name $blobContainerName \
+                  --name $blobName \
+                  --file $destinationPath
+
+              Write-Host "File downloaded to $destinationPath"
+
+              $blobName = "suic.exe"
+              $destinationPath = "C:\Users\AzCopy\suic.exe"
+
+              # Install Azure CLI if not installed
+              Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
+              Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
+
+              # Download EXE file from Blob Storage
+              az storage blob download \
+                  --connection-string $connectionString \
+                  --container-name $blobContainerName \
+                  --name $blobName \
+                  --file $destinationPath
+
+              Write-Host "File downloaded to $destinationPath"
+              '@
