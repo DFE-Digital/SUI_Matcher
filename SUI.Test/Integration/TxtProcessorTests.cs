@@ -109,10 +109,7 @@ public class TxtProcessorTests
         });
         
         var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["APPLICATIONINSIGHTS_CONNECTION_STRING"] = $"InstrumentationKey={Guid.NewGuid()};IngestionEndpoint=http://localhost/;LiveEndpoint=http://localhost/;ApplicationId=${Guid.NewGuid()}"
-            })
+            .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
         servicesCollection.AddClientCore(config);
         

@@ -6,7 +6,7 @@ on:
             version:
                 description: 'Version number'
                 required: true
-                default: 'v0.0.15'
+                default: 'v0.0.45'
             blob_storage_location:
                 description: 'Blob storage location'
                 required: true
@@ -15,6 +15,10 @@ on:
                 description: 'Storage account'
                 required: true
                 default: 's215d01integrationsa01'
+            virtual_machine_name:
+                description: 'Virtual Machine Name'
+                required: true
+                default: 's215d01-integration-vm-01'
             environment:
                 description: 'Environment'
                 required: true
@@ -37,12 +41,11 @@ jobs:
             CLIENT_VERSION: ${{ inputs.version }}
             BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location }}
             STORAGE_ACCOUNT: ${{ inputs.storage_account }}
+            VN_NAME: ${{ inputs.virtual_machine_name }}
 
         steps:
         - name: Checkout repository
           uses: actions/checkout@v4
-          with:
-            ref: ${{ env.CLIENT_VERSION }}
 
         - name: Setup .NET
           uses: actions/setup-dotnet@v4
@@ -51,6 +54,9 @@ jobs:
 
         - name: Publish Client Watcher
           run: dotnet publish SUI.Client.Watcher -r win-x64 --self-contained /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --configuration Release --output ./output --version-suffix ${{ env.CLIENT_VERSION }}
+
+        - name: Publish Client Console
+          run: dotnet publish SUI.Client.Console -r win-x64 --self-contained /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --configuration Release --output ./output --version-suffix ${{ env.CLIENT_VERSION }}
 
         - name: Login to Azure
           uses: azure/login@v2
@@ -62,3 +68,29 @@ jobs:
         - name: Upload to Blob Storage
           run:
             az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./output --pattern "*.exe" --overwrite
+          
+        - name: Use Serial Console to Download EXE from Blob Storage
+          run: |
+            az vm run-command invoke \
+              --command-id RunPowerShellScript \
+              --name ${{ env.VN_NAME }} \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --script '
+
+              $connectionString = "DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT }};AccountKey=${{ secrets.STORAGE_ACCOUNT_KEY }};EndpointSuffix=core.windows.net"
+              $blobContainerName = "${{ env.BLOB_STORAGE_LOCATION }}"
+              $blobName = "suiw.exe"
+              $destinationDir = "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}"
+              $destinationPath = "$destinationDir\$blobName"
+            
+              # Create Directory if does not exist
+              New-Item -ItemType Directory -Path "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}"
+
+              # Install Azure CLI if not installed
+              Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
+              Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
+            
+              az storage blob download-batch --connection-string $connectionString --destination $destinationDir --source $blobContainerName --pattern "sui*.exe" --overwrite true
+
+              Write-Host "SUI client EXE files downloaded"
+              '
