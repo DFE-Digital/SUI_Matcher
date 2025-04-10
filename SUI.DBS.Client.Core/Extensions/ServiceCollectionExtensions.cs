@@ -1,6 +1,4 @@
-﻿using Microsoft.ApplicationInsights.Channel;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shared.Logging;
@@ -16,13 +14,6 @@ public static class ServiceCollectionExtensions
         {
             builder.AddConsole(options => options.FormatterName = "log4net")
                 .AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
-            
-            var channel = new InMemoryChannel();
-            builder.Services.Configure<TelemetryConfiguration>(config => config.TelemetryChannel = channel);
-            builder.AddApplicationInsights(
-                configureTelemetryConfiguration: config => config.ConnectionString = configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"],
-                configureApplicationInsightsLoggerOptions: (options) => { }
-            );
         });
         
         services.AddSingleton<ITxtFileProcessor, TxtFileProcessor>();
