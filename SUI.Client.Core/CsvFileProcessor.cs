@@ -70,7 +70,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
     private static string WriteStatsJsonFile(string outputDirectory, string ts, CsvProcessStats stats)
     {
         var statsJsonFile = GetOutputFileName(ts, outputDirectory, "stats.json");
-        File.WriteAllText(Path.Combine(outputDirectory, GetOutputFileName(ts, outputDirectory, "stats.json")), JsonSerializer.Serialize(stats, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(GetOutputFileName(ts, outputDirectory, "stats.json"), JsonSerializer.Serialize(stats, new JsonSerializerOptions { WriteIndented = true }));
         return statsJsonFile;
     }
 
