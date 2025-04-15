@@ -3,20 +3,16 @@ using Microsoft.Extensions.Options;
 using SUI.Client.Core;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
-using SUI.Core.Domain;
 using SUI.E2E.Tests.Util;
 using SUI.Types;
 using WireMock.Client;
-using Xunit.Abstractions;
 
 namespace SUI.E2E.Tests;
 
-public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture tempDirectoryFixture, ITestOutputHelper testOutputHelper) : IClassFixture<AppHostFixture>, IClassFixture<TempDirectoryFixture>
+public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture tempDirectoryFixture) : IClassFixture<AppHostFixture>, IClassFixture<TempDirectoryFixture>
 {
     private readonly HttpClient _client = fixture.CreateHttpClient("yarp");
     private readonly IWireMockAdminApi _nhsAuthMockApi = fixture.NhsAuthMockApi();
-    private readonly AppHostFixture _fixture = fixture;
-    private readonly TempDirectoryFixture _tempDirectoryFixture = tempDirectoryFixture;
 
     [Fact]
     public async Task TestOneRowCsvSingleMatch()
@@ -54,6 +50,38 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
             Assert.Equal("9691292211", nhsNumber);
         });
     }
+    
+    [Fact]
+    public async Task ProcessCsvFileAsync_WritesToExpectedLocation_WhenUsingRelativePath()
+    {
+        // Arrange
+        var matchPersonApiService = new MatchPersonApiService(_client);
+        var mappingConfig = new CsvMappingConfig();
+        var fileProcessor = new CsvFileProcessor(mappingConfig, matchPersonApiService);
+
+        var inputFileName = "single_match.csv";
+        var inputFilePath = Path.Combine("Resources", "Csv", inputFileName); // Relative path
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        var outputDirectory = Path.Combine("TestOutput"); // Use a relative path for output
+        Directory.CreateDirectory(outputDirectory);
+
+        var expectedOutputDirectory = Path.Combine(outputDirectory, $"_{timestamp}__single_match");
+        var expectedOutputFilePath = Path.Combine(expectedOutputDirectory, "stats_output__" + timestamp + ".json");
+
+        // Act
+        await fileProcessor.ProcessCsvFileAsync(inputFilePath, outputDirectory);
+
+        // Assert
+        Assert.True(Directory.Exists(expectedOutputDirectory), "Output directory was not created.");
+        Assert.True(File.Exists(expectedOutputFilePath), "Output file was not created in the expected location.");
+
+        // Cleanup
+        if (Directory.Exists(expectedOutputDirectory))
+        {
+            Directory.Delete(expectedOutputDirectory, true);
+        }
+    }
 
 
     private async Task TestAsync(string inputFileName, Action<Dictionary<string, string>> assertions)
@@ -67,8 +95,8 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
 
         var appConfig = new CsvWatcherConfig()
         {
-            IncomingDirectory = _tempDirectoryFixture.IncomingDirectoryPath,
-            ProcessedDirectory = _tempDirectoryFixture.ProcessedDirectoryPath,
+            IncomingDirectory = tempDirectoryFixture.IncomingDirectoryPath,
+            ProcessedDirectory = tempDirectoryFixture.ProcessedDirectoryPath,
         };
 
         var watcher = new CsvFileWatcherService(Options.Create(appConfig), NullLoggerFactory.Instance);
@@ -97,6 +125,7 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
 
     }
 
+    
 
 }
 

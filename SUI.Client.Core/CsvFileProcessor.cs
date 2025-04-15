@@ -14,18 +14,18 @@ public interface ICsvFileProcessor
 
 public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : ICsvFileProcessor
 {
-    private readonly CsvMappingConfig _mappingConfig = mapping ?? new();
-    private readonly IMatchPersonApiService _matchPersonApi = matchPersonApi;
-
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderScore = "SUI_Score";
     public const string HeaderNhsNo = "SUI_NHSNo";
 
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string inputFilePath, string baseOutputDirectory)
     {
-        AssertFileExists(inputFilePath);
+        if (!File.Exists(inputFilePath))
+        {
+            throw new FileNotFoundException("File not found", inputFilePath);
+        }
 
-        var ts = GetTimestamp();
+        var ts = $"_{DateTime.Now:yyyyMMdd-HHmmss}";
 
         var outputDirectory = Path.Combine(baseOutputDirectory, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(inputFilePath)));
         Directory.CreateDirectory(outputDirectory);
@@ -41,15 +41,15 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         {
             var payload = new MatchPersonPayload
             {
-                Given = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Given)]),
-                Family = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Family)]),
-                BirthDate = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
-                Email = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Email)]),
-                AddressPostalCode = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
-                Gender = record.GetValueOrDefault(_mappingConfig.ColumnMappings[nameof(MatchPersonPayload.Gender)]),
+                Given = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
+                Family = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Family)]),
+                BirthDate = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
+                Email = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
+                AddressPostalCode = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
+                Gender = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]),
             };
 
-            var response = await _matchPersonApi.MatchPersonAsync(payload);
+            var response = await matchPersonApi.MatchPersonAsync(payload);
 
             record[HeaderStatus] = response?.Result?.MatchStatus.ToString() ?? "-";
             record[HeaderScore] = response?.Result?.Score.ToString() ?? "-";
@@ -62,24 +62,16 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         await WriteCsvAsync(outputFilePath, headers, records);
 
         var pdfReport = PdfReportGenerator.GenerateReport(stats, GetOutputFileName(ts, outputDirectory, "report.pdf"));
-        string statsJsonFile = WriteStatsJsonFile(outputDirectory, ts, stats);
+        var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, stats);
 
-        return new(outputFilePath, statsJsonFile, pdfReport, stats, outputDirectory);
+        return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
     }
 
     private static string WriteStatsJsonFile(string outputDirectory, string ts, CsvProcessStats stats)
     {
-        var statsJsonFile = GetOutputFileName(ts, outputDirectory, "stats.json");
-        File.WriteAllText(Path.Combine(outputDirectory, GetOutputFileName(ts, outputDirectory, "stats.json")), JsonSerializer.Serialize(stats, new JsonSerializerOptions { WriteIndented = true }));
-        return statsJsonFile;
-    }
-
-    private static void AssertFileExists(string inputFilePath)
-    {
-        if (!File.Exists(inputFilePath))
-        {
-            throw new FileNotFoundException("File not found", inputFilePath);
-        }
+        var statsJsonFileName = GetOutputFileName(ts, outputDirectory, "stats.json");
+        File.WriteAllText(statsJsonFileName, JsonSerializer.Serialize(stats, new JsonSerializerOptions { WriteIndented = true }));
+        return statsJsonFileName;
     }
 
     private static void RecordStats(CsvProcessStats stats, Types.PersonMatchResponse? response)
@@ -108,14 +100,12 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         }
     }
 
-    public static string GetOutputFileName(string timestamp, string outputDirectory, string fileName)
+    private static string GetOutputFileName(string timestamp, string outputDirectory, string fileName)
     {
         var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
         var extension = Path.GetExtension(fileName);
         return Path.Combine(outputDirectory, $"{filenameWithoutExt}_output_{timestamp}{extension}");
     }
-
-    private static string GetTimestamp() => $"_{DateTime.Now:yyyyMMdd-HHmmss}";
 
     public static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(string filePath)
     {
@@ -158,8 +148,8 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
     /// </summary>
     public static async Task<string> WriteCsvAsync(string fileName, HashSet<string> headers, List<Dictionary<string, string>> records)
     {
-        using var writer = new StreamWriter(fileName);
-        using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
+        await using var writer = new StreamWriter(fileName);
+        await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
         
         foreach (var header in headers)
         {
@@ -172,7 +162,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         {
             foreach (var header in headers)
             {
-                csv.WriteField(record.TryGetValue(header, out string? value) ? value : "");
+                csv.WriteField(record.GetValueOrDefault(header, ""));
             }
             await csv.NextRecordAsync();
         }
@@ -180,3 +170,4 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         return fileName;
     }
 }
+
