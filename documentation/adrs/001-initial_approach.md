@@ -14,11 +14,11 @@ Make some high level decisions about the project. The decisions will guide how t
 
 ### Decisions
 
-Language: C#
-Runtime: dotnet v9
-Framework: Aspire
-Hosting: Azure
-Code Repository and CI: Github
+- Language: C#
+- Runtime: dotnet v9
+- Framework: Aspire
+- Hosting: Azure
+- Code Repository and CI: Github
 
 ### Consequences
 
