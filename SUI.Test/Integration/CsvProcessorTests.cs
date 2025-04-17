@@ -189,10 +189,6 @@ public class CsvProcessorTests
         var servicesCollection = new ServiceCollection();
         servicesCollection.AddLogging(b => b.AddDebug().AddProvider(new TestContextLoggerProvider(TestContext)));
         var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["MatchApiBaseAddress"] = "http://localhost"
-            })
             .Build();
 
         servicesCollection.Configure<CsvWatcherConfig>(x =>
@@ -201,7 +197,7 @@ public class CsvProcessorTests
             x.ProcessedDirectory = _dir.ProcessedDirectoryPath;
         });
 
-        servicesCollection.AddClientCore(config);
+        servicesCollection.AddClientCore(config, "http://localhost");
         servicesCollection.AddSingleton<IMatchPersonApiService, MatchPersonServiceAdapter>(); // wires up the IMatchingService directly, without using http
 
         // core domain deps

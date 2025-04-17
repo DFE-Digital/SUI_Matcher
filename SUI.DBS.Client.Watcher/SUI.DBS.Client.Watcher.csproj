@@ -6,6 +6,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AssemblyName>dbsw</AssemblyName>
+        <Title>SUI DBS Client Watcher</Title>
+        <Company>Department for Education</Company>
+        <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
+        <PackageId>DFE.SUI.DBS.Client.Watcher</PackageId>
     </PropertyGroup>
 
     <ItemGroup>

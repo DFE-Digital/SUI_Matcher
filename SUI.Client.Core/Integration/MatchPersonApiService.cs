@@ -11,11 +11,10 @@ public interface IMatchPersonApiService
 
 public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiService
 {
-    private readonly HttpClient _httpClient = httpClient;
 
     public async Task<PersonMatchResponse?> MatchPersonAsync(MatchPersonPayload payload)
     {
-        var response = await _httpClient.PostAsJsonAsync("/matching/api/v1/matchperson", payload);
+        var response = await httpClient.PostAsJsonAsync("/matching/api/v1/matchperson", payload);
         var dto = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
         return dto;
     }
