@@ -25,4 +25,10 @@
     <ProjectReference Include="..\SUI.DBS.Client.Core\SUI.DBS.Client.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Smoke\dbs_batch_search_responses.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
