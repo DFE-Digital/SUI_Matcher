@@ -6,13 +6,15 @@ using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Watcher;
 
 Console.Out.WriteAppName("SUI CSV File Watcher");
-Rule.Assert(args.Length == 2, "Usage: suiw <watch_directory> <output_directory>");
+Rule.Assert(args.Length == 3, "Usage: suiw <watch_directory> <output_directory> <matching_service_uri>");
+Rule.Assert(Uri.IsWellFormedUriString(args[2], UriKind.Absolute), "Invalid URL format for matching service URL.");
+var matchApiBaseAddress = args[2];
 
 var builder = Host.CreateDefaultBuilder();
 builder.ConfigureAppSettingsJsonFile();
 builder.ConfigureServices((hostContext, services) =>
 {
-    services.AddClientCore(hostContext.Configuration);
+    services.AddClientCore(hostContext.Configuration, matchApiBaseAddress);
     services.AddLogging(configure => configure.AddConsole());
     services.Configure<CsvWatcherConfig>(x => 
     {
