@@ -178,6 +178,8 @@ public class MatchingService(
 
         var result = await MatchAsync(personSpecification);
 
+        LogMatchCompletion(personSpecification, result.Status);
+
         logger.LogInformation("The person match request resulted in match status '{Status}' " +
                               "at process stage ({ProcessStage}), and the data quality was " +
                               "{QualityResult}", 
@@ -218,6 +220,42 @@ public class MatchingService(
             Result = result.Result,
             Errors = result.ErrorMessage is null ? [] : [result.ErrorMessage]
         };
+    }
+    
+    private static string GetAgeGroup(DateOnly birthDate)
+    {
+        var dateOnlyNow = DateOnly.FromDateTime(DateTime.Now);
+        var age = dateOnlyNow.Year - birthDate.Year;
+        if (dateOnlyNow.DayOfYear < birthDate.DayOfYear)
+        {
+            age--;
+        }
+        
+        return age switch
+        {
+            < 1 => "Less than 1 year",
+            <= 3 => "1-3 years",
+            <= 7 => "4-7 years",
+            <= 11 => "8-11 years",
+            <= 15 => "12-15 years",
+            <= 18 => "16-18 years",
+            _ => "Over 18 years"
+        };
+    }
+
+    private void LogMatchCompletion(PersonSpecification personSpecification, MatchStatus matchStatus)
+    {
+        var ageGroup = personSpecification.BirthDate.HasValue 
+            ? GetAgeGroup(personSpecification.BirthDate.Value) 
+            : "Unknown";
+            
+        logger.LogInformation(
+            "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
+            matchStatus,
+            ageGroup,
+            personSpecification.Gender ?? "Unknown",
+            personSpecification.AddressPostalCode ?? "Unknown"
+        );
     }
 
     private static void StoreUniqueSearchIdFor(PersonSpecification personSpecification)
