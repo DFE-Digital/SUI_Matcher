@@ -160,11 +160,11 @@ public class MatchingService(
 
         var dataQualityResult = ToQualityResult(personSpecification, validationResults.Results!);
 
-        logger.LogInformation($"Person data validation resulted in: {JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}");
+        logger.LogInformation("Person data validation resulted in: {QualityResult}", JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
 
         if (!HasMinDataRequirements(dataQualityResult))
         {
-            logger.LogError($"The minimized data requirements for a search weren't met, returning match status 'Error'");
+            logger.LogError("The minimized data requirements for a search weren't met, returning match status 'Error'");
 
             return new PersonMatchResponse
             {
@@ -178,13 +178,16 @@ public class MatchingService(
 
         var result = await MatchAsync(personSpecification);
 
-        logger.LogInformation($"The person match request resulted in match status '{result.Status.ToString()}' " +
-                              $"at process stage ({result.ProcessStage}), and the data quality was " +
-                              $"{JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}");
+        logger.LogInformation("The person match request resulted in match status '{Status}' " +
+                              "at process stage ({ProcessStage}), and the data quality was " +
+                              "{QualityResult}", 
+            result.Status.ToString(),
+            result.ProcessStage,
+            JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
 
         return new PersonMatchResponse
         {
-            Result = new()
+            Result = new MatchResult
             {
                 MatchStatus = result.Status,
                 Score = result.Result?.Score,
