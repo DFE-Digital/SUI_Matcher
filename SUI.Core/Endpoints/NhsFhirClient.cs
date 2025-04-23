@@ -6,6 +6,7 @@ using Shared.Models;
 using SUI.Core.Endpoints.AuthToken;
 using System.Collections;
 using System.Net.Http.Headers;
+using SUI.Core.Services;
 
 namespace SUI.Core.Endpoints;
 
@@ -46,13 +47,13 @@ public class NhsFhirClient(ITokenService tokenService,
         try
         {
             logger.LogInformation("Searching for an Nhs patient record");
-            
+
             // Search for a patient record
             var patient = await fhirClient.SearchAsync<Patient>(search);
-            
+
             if (patient == null)
             {
-                if (fhirClient.LastBodyAsResource is OperationOutcome outcome && outcome.Issue.Count > 0 && 
+                if (fhirClient.LastBodyAsResource is OperationOutcome outcome && outcome.Issue.Count > 0 &&
                     outcome.Issue[0].Code == OperationOutcome.IssueType.MultipleMatches)
                 {
                     logger.LogInformation("multiple patient records found");
@@ -68,17 +69,19 @@ public class NhsFhirClient(ITokenService tokenService,
 
                     return SearchResult.Unmatched();
                 }
-                else if (patient.Entry.Count == 1)
+
+                if (patient.Entry.Count == 1)
                 {
-                    var birthDate = patient.Entry[0].Resource["birthDate"];
-                    var gender = patient.Entry[0].Resource["gender"];
-                
-                    logger.LogInformation($"1 patient record found: BirthDate={birthDate} Gender={gender}");
+                    var birthDate = patient.Entry[0].Resource["birthDate"].ToString();
+                    var gender = patient.Entry[0].Resource["gender"].ToString();
+
+                    logger.LogInformation("1 patient record found: BirthDate={BirthDate} Gender={Gender}", birthDate, gender);
+                    LogInputAndPdsDifferences(query, (Patient)patient.Entry[0].Resource);
 
                     return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
                 }
             }
-            
+
             return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response");
         }
         catch (Exception ex)
@@ -110,22 +113,33 @@ public class NhsFhirClient(ITokenService tokenService,
             };
         }
     }
-    
+
     private FhirClient CreateFhirClient()
     {
         var fhirClient = new FhirClient(_baseUri);
-        
+
         // Set the authorization header
         if (fhirClient.RequestHeaders != null)
         {
             var accessToken = tokenService.GetBearerToken().Result;
-            
+
             logger.LogInformation("Retrieved Nhs Digital FHIR API access token");
-            
+
             fhirClient.RequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             fhirClient.RequestHeaders.Add("X-Request-ID", Guid.NewGuid().ToString());
         }
 
         return fhirClient;
+    }
+    
+    private void LogInputAndPdsDifferences(SearchQuery query, Patient patient)
+    {
+        var differentFields = FieldComparerService.ComparePatientFields(query, patient);
+        
+        logger.LogInformation(
+            "[PDS_DATA_DIFF] NotUsed: {MissingFields}, Different: {DifferentFields}",
+            query.EmptyFields(),
+            differentFields
+        );
     }
 }

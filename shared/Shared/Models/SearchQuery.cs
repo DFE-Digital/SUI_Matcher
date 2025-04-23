@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using Shared.Attributes;
 
 namespace Shared.Models;
 
@@ -19,39 +20,71 @@ public sealed class SearchQuery
 	[JsonPropertyName("_max-results")]
 	public bool? MaxResults { get; set; }
 
+	[CheckEmpty]
 	[RegularExpression(DateQueryRegex, ErrorMessage = "Incorrect format.")]
 	[JsonPropertyName("death-date")]
 	public string[]? DeathDate { get; set; }
 	
+	[CheckEmpty]
 	[JsonPropertyName("address-postalcode")]
 	public string? AddressPostalcode { get; set; }
 	
+	[CheckEmpty]
 	[JsonPropertyName("address-postcode")]
 	public string? AddressPostcode { get; set; }
 	
+	[CheckEmpty]
 	[JsonPropertyName("general-practitioner")]
 	public string? GeneralPractitioner { get; set; }
 	
+	[CheckEmpty]
 	[JsonPropertyName("family")]
 	public string? Family { get; set; }
 	
+	[CheckEmpty]
 	[JsonPropertyName("given")]
 	public string[]? Given { get; set; }
 	
+	[CheckEmpty]
 	[RegularExpression("male||female||other||unknown", ErrorMessage = "Incorrect format.")]
 	[JsonPropertyName("gender")]
 	public string? Gender { get; set; }
 	
+	[CheckEmpty]
 	[EmailAddress]
 	[JsonPropertyName("email")]
 	public string? Email { get; set; }
 	
+	[CheckEmpty]
 	[JsonPropertyName("phone")]
 	public string? Phone { get; set; }
 	
+	[CheckEmpty]
 	[RegularExpression(DateQueryRegex, ErrorMessage = "Incorrect format.")]
 	[JsonPropertyName("birthdate")]
 	public string[]? Birthdate { get; set; }
+
+	public string[] EmptyFields()
+	{
+		var emptyFields = new List<string>();
+
+		var properties = GetType().GetProperties();
+
+		foreach (var property in properties)
+		{
+			if (property.GetCustomAttribute<CheckEmptyAttribute>() == null) continue;
+			
+			var value = property.GetValue(this);
+
+			if (value == null || (value is string str && string.IsNullOrEmpty(str)) ||
+			    value is Array { Length: 0 })
+			{
+				emptyFields.Add(property.Name);
+			}
+		}
+
+		return emptyFields.ToArray();
+	}
 	
 	public Dictionary<string, object> ToDictionary()
 	{
@@ -83,5 +116,5 @@ public sealed class SearchQuery
 		male,
 		other,
 		unknown
-	} 
+	}
 }
