@@ -11,7 +11,7 @@ public class ApplicationEnricher(IHttpContextAccessor httpContextAccessor) : ILo
 {
 	public void Enrich(IEnrichmentTagCollector collector)
 	{
-		if (Activity.Current?.GetTagItem("SearchId") is { } searchId)
+		if (Activity.Current?.GetBaggageItem("SearchId") is { } searchId)
 		{
 			collector.Add("SearchId", searchId);
 		}
