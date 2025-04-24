@@ -103,9 +103,10 @@ async Task SyncToLocalAsync()
     {
         var localFilePath = Path.Combine(localFolderPath, blobItem.Name.Replace("/", "\\"));
         var localDirectory = Path.GetDirectoryName(localFilePath);
+        
         if (!Directory.Exists(localDirectory))
         {
-            Directory.CreateDirectory(localDirectory);
+            Directory.CreateDirectory(localDirectory!);
         }
         if (!File.Exists(localFilePath))
         {

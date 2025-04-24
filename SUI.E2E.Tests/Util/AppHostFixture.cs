@@ -1,15 +1,13 @@
-using Aspire.Hosting.Testing;
 using FluentAssertions.Primitives;
 using Microsoft.Extensions.Hosting;
 using WireMock.Admin.Requests;
 using WireMock.Client;
-using WireMock.Server;
 
-namespace SUI.E2E.Tests;
+namespace SUI.E2E.Tests.Util;
 
 public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Projects.AppHost)), IAsyncLifetime {
 	private DistributedApplication? _app;
-	public IResourceBuilder<WireMockServerResource> NhsAuthMockService { get; private set; }
+	private IResourceBuilder<WireMockServerResource> NhsAuthMockService { get; set; } = null!;
 
 	protected override void OnBuilderCreating(DistributedApplicationOptions applicationOptions, HostApplicationBuilderSettings hostOptions)
 	{
@@ -101,7 +99,7 @@ public class WireMockReceivedAssertions(IList<LogEntryModel> logEntryModels)
 	protected override string Identifier => "wiremockadminapi";
 }
 
-public partial class WireMockAssertions(IList<LogEntryModel> logEntryModels, int? callsCount = 1)
+public class WireMockAssertions(IList<LogEntryModel> logEntryModels, int? callsCount = 1)
 {
 	public void AtPath(string path)
 	{

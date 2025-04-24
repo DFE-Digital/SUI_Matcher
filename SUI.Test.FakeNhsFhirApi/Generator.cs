@@ -7,7 +7,7 @@ namespace SUI.Test.FakeNhsFhirApi;
 
 public static class Generator
 {
-    public const string SearchApiUri = "/personal-demographics/FHIR/R4/Patient";
+    public const string PlaceholderSearchApiUri = "/personal-demographics/FHIR/R4/Patient";
     private const string PlaceholderBirthDate = "#birthdate#";
     private const string PlaceholderFamily = "#family#";
     private const string PlaceholderGender = "#gender#";
@@ -38,17 +38,17 @@ public static class Generator
         return randomized;
     }
 
-    public static string GetResourceText(string name)
+    private static string GetResourceText(string name)
     {
         var assembly = Assembly.GetExecutingAssembly();
-        using Stream stream = assembly.GetManifestResourceStream($"{nameof(SUI)}.{nameof(Test)}.{nameof(FakeNhsFhirApi)}.Resources.{name}")
-                              ?? throw new InvalidOperationException("Resource not found.");
-        using StreamReader reader = new StreamReader(stream);
+        using var stream = assembly.GetManifestResourceStream($"{nameof(SUI)}.{nameof(Test)}.{nameof(FakeNhsFhirApi)}.Resources.{name}")
+                           ?? throw new InvalidOperationException("Resource not found.");
+        using var reader = new StreamReader(stream);
         var content = reader.ReadToEnd();
         return content;
     }
 
-    public static string MergeTemplate(string template, FakeItem fakeItem, FakePerson person, Faker faker)
+    private static string MergeTemplate(string template, FakeItem fakeItem, FakePerson person, Faker faker)
     {
         return template
             .Replace(PlaceholderGiven, person.Given)
@@ -58,11 +58,11 @@ public static class Generator
             .Replace(PlaceholderBirthDate, person.Dob)
             .Replace(PlaceholderNhsId, person.NhsId)
             .Replace(PlaceholderNhsId1, person.NhsId)
-            .Replace(PLaceholderScore, fakeItem.Score.ToString())
+            .Replace(PLaceholderScore, fakeItem.Score.ToString(CultureInfo.InvariantCulture))
             .Replace(PlaceholderNhsId2, faker.Random.AlphaNumeric(10).ToUpper());
     }
 
-    public static List<List<T>> SplitIntoRandomBatches<T>(List<T> items, int minBatchSize, int maxBatchSize)
+    private static List<List<T>> SplitIntoRandomBatches<T>(List<T> items, int minBatchSize, int maxBatchSize)
     {
         if (items == null || items.Count == 0)
             throw new ArgumentException("The list cannot be null or empty.");
@@ -73,10 +73,10 @@ public static class Generator
         var shuffledItems = items.OrderBy(_ => random.Next()).ToList(); // Shuffle the list randomly
         var batches = new List<List<T>>();
 
-        int index = 0;
+        var index = 0;
         while (index < shuffledItems.Count)
         {
-            int batchSize = random.Next(minBatchSize, maxBatchSize + 1);
+            var batchSize = random.Next(minBatchSize, maxBatchSize + 1);
             batchSize = Math.Min(batchSize, shuffledItems.Count - index); // Ensure we don't go out of bounds
 
             batches.Add(shuffledItems.GetRange(index, batchSize));
@@ -86,7 +86,7 @@ public static class Generator
         return batches;
     }
 
-    public static void WriteCsv<T>(List<T> records, string filename)
+    private static void WriteCsv<T>(List<T> records, string filename)
     {
         using var writer = new StreamWriter(filename);
         using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
@@ -101,7 +101,7 @@ public static class Generator
         WriteBatch(port, @base, "full", [.. data]);
 
         var batches = SplitIntoRandomBatches(data.ToList(), 5, 35);
-        for (int i = 0; i < batches.Count; i++)
+        for (var i = 0; i < batches.Count; i++)
         {
             var batch = batches[i];
             WriteBatch(port, @base, i.ToString(), batch);
@@ -112,16 +112,21 @@ public static class Generator
 
     private static FakeItem CreateFakeItem(string jsonTemplate, Faker faker, string matchType, double score)
     {
-        var fakeItem = new FakeItem();
-        fakeItem.Person.Family = faker.Name.LastName();
-        fakeItem.Person.Given = faker.Name.FirstName();
-        fakeItem.Person.Dob = faker.Date.BetweenDateOnly(new DateOnly(1995, 1, 1), new DateOnly(2016, 1, 1)).ToString("yyyy-MM-dd");
-        fakeItem.Person.NhsId = faker.Random.AlphaNumeric(10).ToUpper();
-        fakeItem.Person.Email = faker.Internet.Email();
-        fakeItem.Person.Phone = faker.Phone.PhoneNumber("(01###) ### ###");
-        fakeItem.Person.Gender = faker.Random.Bool() ? "male" : "female";
-        fakeItem.MatchType = matchType;
-        fakeItem.Score = score;
+        var fakeItem = new FakeItem
+        {
+            Person =
+            {
+                Family = faker.Name.LastName(),
+                Given = faker.Name.FirstName(),
+                Dob = faker.Date.BetweenDateOnly(new DateOnly(1995, 1, 1), new DateOnly(2016, 1, 1)).ToString("yyyy-MM-dd"),
+                NhsId = faker.Random.AlphaNumeric(10).ToUpper(),
+                Email = faker.Internet.Email(),
+                Phone = faker.Phone.PhoneNumber("(01###) ### ###"),
+                Gender = faker.Random.Bool() ? "male" : "female"
+            },
+            MatchType = matchType,
+            Score = score
+        };
 
         fakeItem.ResponseJson = MergeTemplate(jsonTemplate, fakeItem, fakeItem.Person, faker);
 
@@ -152,7 +157,7 @@ public static class Generator
             __Expected_NHS_ID = x.Person.NhsId,
             __Expected_Match_Type = x.MatchType,
             __Expected_Score = x.Score.ToString(),
-            __curl = $"curl \"http://localhost:{port}{SearchApiUri}?given={x.Person.Given}&family={x.Person.Family}&birthdate=eq{x.Person.Dob}\""
+            __curl = $"curl \"http://localhost:{port}{PlaceholderSearchApiUri}?given={x.Person.Given}&family={x.Person.Family}&birthdate=eq{x.Person.Dob}\""
         }).ToList();
 
         var inputSampleData = batch.Select(x => x.Person).ToList();

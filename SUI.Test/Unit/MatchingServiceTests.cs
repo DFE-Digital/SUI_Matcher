@@ -1,17 +1,12 @@
-﻿using Hl7.Fhir.Rest;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Moq;
-using SUI.Core.Endpoints.AuthToken;
 using Newtonsoft.Json;
 using Shared.Models;
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
 using SUI.Types;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace SUI.Test.Unit;
 
@@ -203,7 +198,7 @@ public sealed class MatchingServiceTests
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
 
         nhsFhir.Setup(x => x.PerformSearch(It.Is<SearchQuery>(q =>
-            q.Given.Contains("O'Connor") && q.Family.Contains("D'Angelo"))))
+            q.Given!.Contains("O'Connor") && q.Family!.Contains("D'Angelo"))))
             .ReturnsAsync(new SearchResult
             {
                 Type = SearchResult.ResultType.Matched,
@@ -232,7 +227,7 @@ public sealed class MatchingServiceTests
 
         // Verify that PerformSearch was called with the correct values
         nhsFhir.Verify(x => x.PerformSearch(It.Is<SearchQuery>(q =>
-            q.Given.Contains("O'Connor") && q.Family.Contains("D'Angelo"))));
+            q.Given!.Contains("O'Connor") && q.Family!.Contains("D'Angelo"))));
     }
 
     [TestMethod]

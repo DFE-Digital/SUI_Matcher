@@ -285,12 +285,14 @@ public class MatchingService(
         var dobRange = new[] { "ge" + model.BirthDate.Value.AddMonths(-6).ToString("yyyy-MM-dd"), "le" + model.BirthDate.Value.AddMonths(6).ToString("yyyy-MM-dd") };
         var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
 
+        var modelName = model.Given is not null ? new[] { model.Given } : null;
+        
         var queries = new List<SearchQuery>
         {
             new() // exact search
             {
                 ExactMatch = true,
-                Given = [model.Given],
+                Given = modelName,
                 Family = model.Family,
                 Email = model.Email,
                 Gender = model.Gender,
@@ -301,7 +303,7 @@ public class MatchingService(
             new() // 1. fuzzy search with given name, family name and DOB.
             {
                 FuzzyMatch = true,
-                Given = [model.Given],
+                Given = modelName,
                 Family = model.Family,
                 Email = model.Email,
                 Gender = model.Gender,
@@ -312,7 +314,7 @@ public class MatchingService(
             new() // 2. fuzzy search with given name, family name and DOB range 6 months either side of given date.
             {
                 FuzzyMatch = true,
-                Given = [model.Given],
+                Given = modelName,
                 Family = model.Family,
                 Birthdate = dobRange,
             },
@@ -326,7 +328,7 @@ public class MatchingService(
             queries.Add(new()
             {
                 FuzzyMatch = true,
-                Given = [model.Given],
+                Given = modelName,
                 Family = model.Family,
                 Email = model.Email,
                 Gender = model.Gender,

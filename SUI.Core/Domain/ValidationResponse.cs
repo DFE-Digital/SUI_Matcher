@@ -2,11 +2,11 @@ namespace SUI.Core.Domain;
 
 public class ValidationResponse
 {
-    public IEnumerable<ValidationResult>? Results { get; set; }
+    public IEnumerable<ValidationResult>? Results { get; init; }
 
     public class ValidationResult
     {
-        public IEnumerable<string> MemberNames { get; set; }
-        public string? ErrorMessage { get; set; }
+        public required IEnumerable<string> MemberNames { get; init; } = [];
+        public string? ErrorMessage { get; init; }
     }
 }
