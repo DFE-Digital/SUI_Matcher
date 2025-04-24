@@ -14,7 +14,7 @@ public interface ITokenService
 
 public class TokenService : ITokenService
 {
-    public static class NhsDigitalKeyConstants
+    protected static class NhsDigitalKeyConstants
     {
         public const string ClientId = "nhs-digital-client-id";
         public const string PrivateKey = "nhs-digital-private-key";
@@ -22,13 +22,13 @@ public class TokenService : ITokenService
         public const int AccountTokenExpiresInMinutes = 5;
     }
 
-    // Keyvault Client
+    // Key vault Client
     private readonly SecretClient _secretClient;
     private readonly string _tokenUrl;
     private readonly int _accountTokenExpiresInMinutes;
-    private string _privateKey;
-    private string _clientId;
-    private string _kid;
+    private string? _privateKey ;
+    private string? _clientId;
+    private string? _kid;
     
     private string? _accessToken;
     private DateTimeOffset _accessTokenExpiration;
@@ -53,6 +53,11 @@ public class TokenService : ITokenService
 
     public async Task<string> GetBearerToken()
     {
+        if (_privateKey == null || _clientId == null || _kid == null)
+        {
+            throw new Exception("Token service not initialised");
+        }
+        
         if (_accessToken != null && _accessTokenExpiration > DateTimeOffset.UtcNow)
         {
             _logger.LogDebug("Found existing none expired access token found");
@@ -63,7 +68,7 @@ public class TokenService : ITokenService
         _logger.LogDebug("Getting new access token from Nhs Digital oauth2 endpoint");
             
         // Perform request to NHS auth endpoint
-        var auth = new AuthClientCredentials(_tokenUrl, _privateKey, _clientId, _kid);
+        var auth = new AuthClientCredentials(_tokenUrl, _privateKey!, _clientId!, _kid!);
         _accessTokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_accountTokenExpiresInMinutes);
         _accessToken = await auth.AccessToken(_accountTokenExpiresInMinutes) ?? 
                           throw new Exception("Failed to get access token");

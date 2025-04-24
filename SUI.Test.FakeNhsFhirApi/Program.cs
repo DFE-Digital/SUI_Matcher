@@ -31,7 +31,7 @@ foreach (var item in data)
     server.Given(
             Request.Create()
                 .UsingGet()
-                .WithPath(Generator.SearchApiUri)
+                .WithPath(Generator.PlaceholderSearchApiUri)
                 .WithParam("given", true, item.Person.Given)
                 .WithParam("family", true, item.Person.Family)
                 .WithParam("birthdate", true, string.Concat("eq", item.Person.Dob))

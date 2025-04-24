@@ -15,7 +15,10 @@ public class TestContextLoggerProvider : ILoggerProvider
 
     public ILogger CreateLogger(string categoryName) => new TestContextLogger(_testContext, categoryName, _logMessages);
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 
     private class TestContextLogger : ILogger
     {
@@ -30,11 +33,11 @@ public class TestContextLoggerProvider : ILoggerProvider
             _logMessages = logMessages ?? new();
         }
 
-        public IDisposable? BeginScope<TState>(TState state) => null;
+        IDisposable? ILogger.BeginScope<TState>(TState state) => null;
 
-        public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel) => true;
+        public bool IsEnabled(LogLevel logLevel) => true;
 
-        public void Log<TState>(Microsoft.Extensions.Logging.LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             _testContext.WriteLine($"[{logLevel}] {_categoryName}: {formatter(state, exception)}");
             

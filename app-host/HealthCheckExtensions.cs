@@ -17,11 +17,11 @@ public static class Extensions
 		Action<UriHealthCheckOptions>? configure = null)
 		where T : IResourceWithEndpoints
 	{
-		return builder.WithAnnotation(new HealthCheckAnnotation(async (resource, ct) =>
+		return builder.WithAnnotation(new HealthCheckAnnotation((resource, ct) =>
 		{
 			if (resource is not IResourceWithEndpoints resourceWithEndpoints)
 			{
-				return null;
+				return Task.FromResult<IHealthCheck?>(null);
 			}
 
 			var endpoint = endpointName is null
@@ -32,17 +32,17 @@ public static class Extensions
 
 			if (url is null)
 			{
-				return null;
+				return Task.FromResult<IHealthCheck?>(null);
 			}
 
 			var options = new UriHealthCheckOptions();
 
-			options.AddUri(new(new(url), path));
+			options.AddUri(new Uri(new Uri(url), path));
 
 			configure?.Invoke(options);
 
 			var client = new HttpClient();
-			return new UriHealthCheck(options, () => client);
+			return Task.FromResult<IHealthCheck?>(new UriHealthCheck(options, () => client));
 		}));
 	}
 }
@@ -53,14 +53,14 @@ public class HealthCheckAnnotation(Func<IResource, CancellationToken, Task<IHeal
 
 	public static HealthCheckAnnotation Create(Func<string, IHealthCheck> connectionStringFactory)
 	{
-		return new(async (resource, token) =>
+		return new HealthCheckAnnotation(async (resource, token) =>
 		{
 			if (resource is not IResourceWithConnectionString c)
 			{
 				return null;
 			}
 
-			if (await c.GetConnectionStringAsync(token) is not string cs)
+			if (await c.GetConnectionStringAsync(token) is not { } cs)
 			{
 				return null;
 			}
