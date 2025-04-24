@@ -10,6 +10,7 @@ using SUI.Core.Endpoints;
 using SUI.Core.Services;
 using SUI.Types;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace SUI.Test.Unit;
@@ -232,6 +233,54 @@ public sealed class MatchingServiceTests
         // Verify that PerformSearch was called with the correct values
         nhsFhir.Verify(x => x.PerformSearch(It.Is<SearchQuery>(q =>
             q.Given.Contains("O'Connor") && q.Family.Contains("D'Angelo"))));
+    }
+
+    [TestMethod]
+    public async Task ShouldLogPersonSpecificationAndResultStatus_WithMatchCompletedForAggregate()
+    {
+        // Arrange
+        var mockLogger = new Mock<ILogger<MatchingService>>();
+        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
+        var validationService = new ValidationService();
+        var subj = new MatchingService(mockLogger.Object, nhsFhir.Object, validationService);
+        
+        var eighteenYearsAgo = DateTime.UtcNow.AddYears(-18); 
+
+        var model = new PersonSpecification
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = new DateOnly(eighteenYearsAgo.Year, eighteenYearsAgo.Month, eighteenYearsAgo.Day),
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        nhsFhir.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult
+            {
+                Type = SearchResult.ResultType.Matched,
+                Score = 0.99m
+            });
+        
+        using var activity = new Activity("TestActivity");
+        activity.Start();
+
+        // Act
+        await subj.SearchAsync(model);
+
+        // Assert
+        mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("[MATCH_COMPLETED]") &&
+                                              v.ToString()!.Contains("MatchStatus: Match") &&
+                                              v.ToString()!.Contains("AgeGroup: 16-18 years") &&
+                                              v.ToString()!.Contains("Gender: male") &&
+                                              v.ToString()!.Contains("Postcode: TQ12 5HH")),
+                null,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
     }
     
 
