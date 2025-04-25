@@ -25,7 +25,7 @@ public class LogConsoleFormatter : ConsoleFormatter
             return;
         }
 
-        var searchId = Activity.Current?.GetTagItem("SearchId");
+        var searchId = Activity.Current?.GetBaggageItem("SearchId");
 
         if (searchId is not null)
         {

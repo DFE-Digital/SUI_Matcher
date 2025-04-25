@@ -272,7 +272,7 @@ public class MatchingService(
 
         var hash = builder.ToString();
 
-        Activity.Current?.SetTag("SearchId", hash);
+        Activity.Current?.SetBaggage("SearchId", hash);
     }
 
     private SearchQuery[] GetSearchQueries(PersonSpecification model)

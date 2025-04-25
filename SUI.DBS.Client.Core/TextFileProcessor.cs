@@ -102,7 +102,7 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
         var hash = builder.ToString();
 
-        Activity.Current?.SetTag("SearchId", hash);
+        Activity.Current?.SetBaggage("SearchId", hash);
     }
 
     
