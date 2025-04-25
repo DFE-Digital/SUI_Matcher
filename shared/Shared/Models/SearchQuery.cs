@@ -19,23 +19,10 @@ public sealed class SearchQuery
 	
 	[JsonPropertyName("_max-results")]
 	public bool? MaxResults { get; set; }
-
-	[CheckEmpty]
-	[RegularExpression(DateQueryRegex, ErrorMessage = "Incorrect format.")]
-	[JsonPropertyName("death-date")]
-	public string[]? DeathDate { get; set; }
 	
 	[CheckEmpty]
 	[JsonPropertyName("address-postalcode")]
 	public string? AddressPostalcode { get; set; }
-	
-	[CheckEmpty]
-	[JsonPropertyName("address-postcode")]
-	public string? AddressPostcode { get; set; }
-	
-	[CheckEmpty]
-	[JsonPropertyName("general-practitioner")]
-	public string? GeneralPractitioner { get; set; }
 	
 	[CheckEmpty]
 	[JsonPropertyName("family")]
