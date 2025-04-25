@@ -63,19 +63,14 @@ public class NhsFhirClient(ITokenService tokenService,
             }
             else
             {
+                logger.LogInformation("{EntryCount} patient record(s) found", patient.Entry.Count);
                 if (patient.Entry.Count == 0)
                 {
-                    logger.LogInformation("No patient record found");
-
                     return SearchResult.Unmatched();
                 }
 
                 if (patient.Entry.Count == 1)
                 {
-                    var birthDate = patient.Entry[0].Resource["birthDate"].ToString();
-                    var gender = patient.Entry[0].Resource["gender"].ToString();
-
-                    logger.LogInformation("1 patient record found: BirthDate={BirthDate} Gender={Gender}", birthDate, gender);
                     LogInputAndPdsDifferences(query, (Patient)patient.Entry[0].Resource);
 
                     return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
