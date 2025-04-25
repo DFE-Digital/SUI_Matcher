@@ -160,11 +160,11 @@ public class MatchingService(
 
         var dataQualityResult = ToQualityResult(personSpecification, validationResults.Results!);
 
-        logger.LogInformation($"Person data validation resulted in: {JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}");
+        logger.LogInformation("Person data validation resulted in: {QualityResult}", JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
 
         if (!HasMinDataRequirements(dataQualityResult))
         {
-            logger.LogError($"The minimized data requirements for a search weren't met, returning match status 'Error'");
+            logger.LogError("The minimized data requirements for a search weren't met, returning match status 'Error'");
 
             return new PersonMatchResponse
             {
@@ -178,13 +178,18 @@ public class MatchingService(
 
         var result = await MatchAsync(personSpecification);
 
-        logger.LogInformation($"The person match request resulted in match status '{result.Status.ToString()}' " +
-                              $"at process stage ({result.ProcessStage}), and the data quality was " +
-                              $"{JsonConvert.SerializeObject(dataQualityResult.ToDictionary())}");
+        LogMatchCompletion(personSpecification, result.Status);
+
+        logger.LogInformation("The person match request resulted in match status '{Status}' " +
+                              "at process stage ({ProcessStage}), and the data quality was " +
+                              "{QualityResult}", 
+            result.Status.ToString(),
+            result.ProcessStage,
+            JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
 
         return new PersonMatchResponse
         {
-            Result = new()
+            Result = new MatchResult
             {
                 MatchStatus = result.Status,
                 Score = result.Result?.Score,
@@ -216,6 +221,42 @@ public class MatchingService(
             Errors = result.ErrorMessage is null ? [] : [result.ErrorMessage]
         };
     }
+    
+    private static string GetAgeGroup(DateOnly birthDate)
+    {
+        var dateOnlyNow = DateOnly.FromDateTime(DateTime.Now);
+        var age = dateOnlyNow.Year - birthDate.Year;
+        if (dateOnlyNow.DayOfYear < birthDate.DayOfYear)
+        {
+            age--;
+        }
+        
+        return age switch
+        {
+            < 1 => "Less than 1 year",
+            <= 3 => "1-3 years",
+            <= 7 => "4-7 years",
+            <= 11 => "8-11 years",
+            <= 15 => "12-15 years",
+            <= 18 => "16-18 years",
+            _ => "Over 18 years"
+        };
+    }
+
+    private void LogMatchCompletion(PersonSpecification personSpecification, MatchStatus matchStatus)
+    {
+        var ageGroup = personSpecification.BirthDate.HasValue 
+            ? GetAgeGroup(personSpecification.BirthDate.Value) 
+            : "Unknown";
+            
+        logger.LogInformation(
+            "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
+            matchStatus,
+            ageGroup,
+            personSpecification.Gender ?? "Unknown",
+            personSpecification.AddressPostalCode ?? "Unknown"
+        );
+    }
 
     private static void StoreUniqueSearchIdFor(PersonSpecification personSpecification)
     {
@@ -244,12 +285,14 @@ public class MatchingService(
         var dobRange = new[] { "ge" + model.BirthDate.Value.AddMonths(-6).ToString("yyyy-MM-dd"), "le" + model.BirthDate.Value.AddMonths(6).ToString("yyyy-MM-dd") };
         var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
 
+        var modelName = model.Given is not null ? new[] { model.Given } : null;
+        
         var queries = new List<SearchQuery>
         {
             new() // exact search
             {
                 ExactMatch = true,
-                Given = [model.Given],
+                Given = modelName,
                 Family = model.Family,
                 Email = model.Email,
                 Gender = model.Gender,
@@ -260,7 +303,7 @@ public class MatchingService(
             new() // 1. fuzzy search with given name, family name and DOB.
             {
                 FuzzyMatch = true,
-                Given = [model.Given],
+                Given = modelName,
                 Family = model.Family,
                 Email = model.Email,
                 Gender = model.Gender,
@@ -271,7 +314,7 @@ public class MatchingService(
             new() // 2. fuzzy search with given name, family name and DOB range 6 months either side of given date.
             {
                 FuzzyMatch = true,
-                Given = [model.Given],
+                Given = modelName,
                 Family = model.Family,
                 Birthdate = dobRange,
             },
@@ -285,7 +328,7 @@ public class MatchingService(
             queries.Add(new()
             {
                 FuzzyMatch = true,
-                Given = [model.Given],
+                Given = modelName,
                 Family = model.Family,
                 Email = model.Email,
                 Gender = model.Gender,

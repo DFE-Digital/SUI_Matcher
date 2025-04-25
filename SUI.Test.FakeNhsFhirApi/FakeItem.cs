@@ -2,8 +2,8 @@
 
 public class FakeItem
 {
-    public string MatchType { get; set; }
+    public required string MatchType { get; set; }
     public FakePerson Person { get; set; } = new();
-    public string ResponseJson { get; set; }
+    public string ResponseJson { get; set; } = null!;
     public double Score { get; set; }
 }

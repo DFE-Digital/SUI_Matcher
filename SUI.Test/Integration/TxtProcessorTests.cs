@@ -1,26 +1,20 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moq;
-using Shared.Models;
 using SUI.DBS.Client.Core;
 using SUI.DBS.Client.Core.Extensions;
 using SUI.DBS.Client.Core.Watcher;
 using SUI.Core;
-using SUI.Core.Endpoints;
-using SUI.Core.Services;
-using SUI.Test.Integration.Adapters;
-using SUI.Types;
-using D = System.Collections.Generic.Dictionary<int, string>;
+using ColumnMapping = System.Collections.Generic.Dictionary<int, string>;
 
 namespace SUI.Test.Integration;
 
 [TestClass]
 public class TxtProcessorTests
 {
-    private TempDirectoryFixture _dir;
+    private TempDirectoryFixture _dir = null!;
 
-    public TestContext TestContext { get; set; }
+    public required TestContext TestContext { get; set; }
 
     [TestCleanup]
     public void Clean()
@@ -41,9 +35,9 @@ public class TxtProcessorTests
         var f = new Bogus.Faker("en_GB");
         var testData = new List<TestData>
         {
-            new(new D()),
+            new(new ColumnMapping()),
             
-            new(new D
+            new(new ColumnMapping
             {
                 [(int) RecordColumn.Given] = f.Name.FirstName(),
                 [(int) RecordColumn.Family] = f.Name.LastName(),
@@ -53,9 +47,9 @@ public class TxtProcessorTests
                 [(int) RecordColumn.NhsNumber] = f.Random.Long().ToString(),
             }),
 
-            new(new D()),
+            new(new ColumnMapping()),
 
-            new(new D
+            new(new ColumnMapping
             {
                 [(int) RecordColumn.Given] = f.Name.FirstName(),
                 [(int) RecordColumn.Family] = f.Name.LastName(),
@@ -65,7 +59,7 @@ public class TxtProcessorTests
                 [(int) RecordColumn.NhsNumber] = "",
             }),
 
-            new(new D()),
+            new(new ColumnMapping()),
         };
 
         // ACT
@@ -83,9 +77,9 @@ public class TxtProcessorTests
 
         await WriteTxtAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00002.txt"), data);
 
-        monitor.Processed += (s, e) => tcs.SetResult();
+        monitor.Processed += (_, _) => tcs.SetResult();
         await tcs.Task; // await processing of that file
-        cts.Cancel();   // cancel the task
+        await cts.CancelAsync();   // cancel the task
         await monitoringTask; // await cancellation
 
         // ASSERTS
@@ -130,7 +124,7 @@ public class TxtProcessorTests
 
         public string[] Record { get; set; }
 
-        public TestData(D partial)
+        public TestData(ColumnMapping partial)
         {
             var stringArray = new string[61];
 
@@ -141,15 +135,13 @@ public class TxtProcessorTests
             Record = stringArray;
         }
     }
-    
-    public static async Task<string> WriteTxtAsync(string fileName, List<string[]> records)
+
+    private static async Task WriteTxtAsync(string fileName, List<string[]> records)
     {
         await using var writer = new StreamWriter(fileName);
         foreach (var record in records)
         {
             await writer.WriteLineAsync(string.Join(",", record.Select(item => $"\"{item}\"")));
         }
-
-        return fileName;
     }
 }

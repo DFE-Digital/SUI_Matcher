@@ -19,9 +19,9 @@ namespace SUI.Test.Integration;
 [TestClass]
 public class CsvProcessorTests
 {
-    private TempDirectoryFixture _dir;
+    private TempDirectoryFixture _dir = null!;
 
-    public TestContext TestContext { get; set; }
+    public required TestContext TestContext { get; set; }
 
     [TestCleanup]
     public void Clean()
@@ -105,9 +105,9 @@ public class CsvProcessorTests
 
         await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00002.csv"), headers, data);
 
-        monitor.Processed += (s, e) => tcs.SetResult();
+        monitor.Processed += (_, _) => tcs.SetResult();
         await tcs.Task; // await processing of that file
-        cts.Cancel();   // cancel the task
+        await cts.CancelAsync();   // cancel the task
         await monitoringTask; // await cancellation
 
         // ASSERTS
@@ -159,9 +159,9 @@ public class CsvProcessorTests
 
         await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
 
-        monitor.Processed += (s, e) => tcs.SetResult();
+        monitor.Processed += (_, _) => tcs.SetResult();
         await tcs.Task; // await processing of that file
-        cts.Cancel();   // cancel the task
+        await cts.CancelAsync();   // cancel the task
         await monitoringTask; // await cancellation
 
         // ASSERTS
@@ -182,7 +182,7 @@ public class CsvProcessorTests
         var (_, records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
         Assert.AreEqual(searchResult.NhsNumber, records.First()[CsvFileProcessor.HeaderNhsNo], "The NHS number doesn't match");
         Assert.AreEqual(searchResult.Score.ToString(), records.First()[CsvFileProcessor.HeaderScore], "The score doesn't match");
-        Assert.AreEqual(MatchStatus.Match.ToString(), records.First()[CsvFileProcessor.HeaderStatus], "The score doesn't match");
+        Assert.AreEqual(nameof(MatchStatus.Match), records.First()[CsvFileProcessor.HeaderStatus], "The score doesn't match");
     }
     private ServiceProvider Bootstrap(Action<ServiceCollection>? configure = null)
     {
