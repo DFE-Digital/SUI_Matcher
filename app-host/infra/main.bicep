@@ -6,6 +6,10 @@ targetScope = 'resourceGroup'
 param environmentName string
 
 @minLength(1)
+@description('The prefix used for all deployed resources')
+param environmentPrefix string
+
+@minLength(1)
 @description('The location used for all deployed resources')
 param location string
 
@@ -22,8 +26,8 @@ param turnOnAlerts bool = true
 
 var tags = {
   'azd-env-name': environmentName
-  'Product': 'SUI'
-  'Environment': environmentName
+  Product: 'SUI'
+  Environment: environmentName
   'Service Offering': 'SUI'
 }
 
@@ -32,6 +36,8 @@ module resources 'resources.bicep' = {
   params: {
     location: location
     tags: tags
+    environmentPrefix: environmentPrefix
+    environmentName: environmentName
   }
 }
 

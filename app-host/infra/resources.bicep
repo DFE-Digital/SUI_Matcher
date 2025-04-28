@@ -11,10 +11,10 @@ param containerAppEnvSubnet string = '192.168.0.0/26'
 param containerAppFirewallSubnet string = '192.168.0.64/26'
 
 @description('environmentName')
-param environmentName string = 'integration'
+param environmentName string
 
 @description('environmentPrefix')
-param environmentPrefix string = 's215d01'
+param environmentPrefix string
 
 @description('Tags that will be applied to all resources')
 param tags object = {}
