@@ -19,6 +19,9 @@ param environmentPrefix string
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
+@description('Workspace log analytics external id')
+param logAnalyticsWorkspaceId string
+
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: '${environmentPrefix}-${environmentName}-mi-01'
   location: location
@@ -546,13 +549,13 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientConsoleAppLogsRule'
-param workspaces_s215d01_integration_loganalytics_01_externalid string = '/subscriptions/8fc7ea96-7305-492f-85f7-09069bb8fd29/resourceGroups/s215d01-integration/providers/Microsoft.OperationalInsights/workspaces/s215d01-integration-loganalytics-01'
+param workspaces_loganalytics_externalid string = logAnalyticsWorkspaceId
 
 resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
-  location: 'westeurope'
+  location: location
   tags: {
-    Environment: 'Dev'
+    Environment: environmentName
     Product: 'SUI'
     'Service Offering': 'SUI'
   }
@@ -579,7 +582,7 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
             'Custom-Json-DbsClientConsoleAppLogs_CL'
           ]
           filePatterns: [
-            'C:\\Users\\AzCopy\\s215d01-integration-container-01\\*.log'
+            'C:\\Users\\AzCopy\\${environmentPrefix}-${toLower(environmentName)}-container-01\\*.log'
           ]
           format: 'json'
           name: 'Custom-Json-DbsClientConsoleAppLog'
@@ -589,7 +592,7 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
     destinations: {
       logAnalytics: [
         {
-          workspaceResourceId: workspaces_s215d01_integration_loganalytics_01_externalid
+          workspaceResourceId: workspaces_loganalytics_externalid
           name: 'la-479495940'
         }
       ]

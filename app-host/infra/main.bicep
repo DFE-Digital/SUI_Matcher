@@ -23,6 +23,9 @@ param monitoringActionGroupEmail string
 @description('Turn on monitoring alerts')
 param turnOnAlerts bool = true
 
+@description('Workspace log analytics external id')
+param logAnalyticsWorkspaceId string
+
 
 var tags = {
   'azd-env-name': environmentName
@@ -39,6 +42,7 @@ module resources 'resources.bicep' = {
     tags: tags
     environmentPrefix: environmentPrefix
     environmentName: environmentName
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
   }
 }
 

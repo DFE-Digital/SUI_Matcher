@@ -29,6 +29,7 @@ jobs:
       AZURE_LOCATION: "westeurope"
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
       APPLICATION_VERSION: ${{ inputs.version }}
+      AZURE_LOG_ANALYTICS_WORKSPACE_ID: '/subscriptions/8fc7ea96-7305-492f-85f7-09069bb8fd29/resourceGroups/s215d01-integration/providers/Microsoft.OperationalInsights/workspaces/s215d01-integration-loganalytics-01'
 
     steps:
       - name: Checkout

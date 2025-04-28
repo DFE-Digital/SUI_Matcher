@@ -10,6 +10,9 @@
       },
       "location": {
         "value": "${AZURE_LOCATION}"
+      },
+      "logAnalyticsWorkspaceId": {
+        "value": "${AZURE_LOG_ANALYTICS_WORKSPACE_ID}"
       }
     }
   }
