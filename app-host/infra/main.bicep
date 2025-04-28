@@ -28,6 +28,7 @@ var tags = {
   'azd-env-name': environmentName
   Product: 'SUI'
   Environment: environmentName
+  EnvironmentPrefix: environmentPrefix
   'Service Offering': 'SUI'
 }
 
