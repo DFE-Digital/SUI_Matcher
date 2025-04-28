@@ -13,6 +13,12 @@ on:
         description: The version of the infrastructure to deploy
         default: 'v0.0.1'
         type: string
+      environnment_prefix:
+        description: The prefix for the environment
+        default: 's215d01'
+        options:
+          - 's215d01'
+        type: string
 
 permissions:
   id-token: write
@@ -23,13 +29,16 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       AZURE_ENV_NAME: ${{ inputs.environment }}
+      AZURE_ENV_PREFIX: ${{ inputs.environnment_prefix }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_LOCATION: "westeurope"
+      AZURE_LOCATION: 'westeurope'
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
       APPLICATION_VERSION: ${{ inputs.version }}
       AZURE_LOG_ANALYTICS_WORKSPACE_ID: '/subscriptions/8fc7ea96-7305-492f-85f7-09069bb8fd29/resourceGroups/s215d01-integration/providers/Microsoft.OperationalInsights/workspaces/s215d01-integration-loganalytics-01'
+      AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
+      AZURE_TURN_ON_ALERTS: true
 
     steps:
       - name: Checkout
