@@ -2,113 +2,170 @@ name: Smoke Test Deployed Apps
 
 on:
   workflow_dispatch:
-    inputs:
-      blob_storage_location:
-        description: 'Blob storage location'
-        required: true
-        default: 's215d01-integration-container-01'
-      storage_account:
-        description: 'Storage account'
-        required: true
-        default: 's215d01integrationsa01'
-      virtual_machine_name:
-        description: 'Virtual Machine Name'
-        required: true
-        default: 's215d01-integration-vm-01'
-      environment:
-        description: 'Environment'
-        required: true
-        default: 'Integration'
+     inputs:
+       blob_storage_location:
+         description: 'Blob storage location'
+         required: true
+         default: 's215d01-integration-container-01'
+       storage_account:
+         description: 'Storage account'
+         required: true
+         default: 's215d01integrationsa01'
+       virtual_machine_name:
+         description: 'Virtual Machine Name'
+         required: true
+         default: 's215d01-integration-vm-01'
+       environment:
+         description: 'Environment'
+         required: true
+         default: 'Integration'
   workflow_run:
     workflows: ["Azure App Deployment", "Build and Upload Client Watcher", "Build and Upload DBS Client Watcher"]
     types:
       - completed
+  schedule:
+    - cron: "0 3 * * *"  # Runs daily at 3:00 AM UTC
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      AZURE_ENV_NAME: ${{ inputs.environment }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_LOCATION: "westeurope"
-      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-      CLIENT_VERSION: ${{ inputs.version }}
-      BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location }}
-      STORAGE_ACCOUNT: ${{ inputs.storage_account }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ env.CLIENT_VERSION }}
+    build:
+        runs-on: ubuntu-latest
+        env: 
+            AZURE_ENV_NAME: ${{ inputs.environment }}
+            AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            AZURE_LOCATION: "westeurope"
+            AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+            CLIENT_VERSION: ${{ inputs.version }}
+            BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location }}
+            STORAGE_ACCOUNT: ${{ inputs.storage_account }}
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v3
+          with:
+            ref: ${{ env.CLIENT_VERSION }}
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
-          tenant-id: ${{ env.AZURE_TENANT_ID }}
-          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+        - name: Setup .NET
+          uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: '9.0.x'
 
-      - name: Set Azure Subscription
-        run: |
-          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        - name: Login to Azure
+          uses: azure/login@v2
+          with:
+            client-id: ${{ env.AZURE_CLIENT_ID }}
+            tenant-id: ${{ env.AZURE_TENANT_ID }}
+            subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Determine triggering upstream workflow
-        id: detect_workflow
-        run: echo "triggered_workflow=${{ github.event.workflow }}" >> $GITHUB_ENV
+        - name: Set Azure Subscription
+          run: |
+            az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Upload Test Files to Blob Storage
-        run:
-          az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./SUI.Test/Smoke --pattern "*.txt" --overwrite
-          az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./SUI.Test/Smoke --pattern "*.csv" --overwrite
+        - name: Determine triggering upstream workflow
+          id: detect_workflow
+          run: echo "triggered_workflow=${{ github.event.workflow }}" >> $GITHUB_ENV
 
-      - name: Smoke Test DBS Client (.exe)
-        #if: env.triggered_workflow == 'Build and Upload Client Watcher'
-        run: |
-          az vm run-command invoke \
-            --command-id RunPowerShellScript \
-            --name ${{ secrets.VM_NAME }} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --script '
-          
-            $connectionString = "DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT }};AccountKey=${{ secrets.STORAGE_ACCOUNT_KEY }};EndpointSuffix=core.windows.net"
-            $blobContainerName = "${{ env.BLOB_STORAGE_LOCATION }}"
-            $blobName = "dbs_batch_search_responses.txt"
-            $destinationPath = "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed\dbs_batch_search_responses.txt"
-          
-            # Create Directory if does not exist
-            New-Item -ItemType Directory -Path "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed"
-          
-            # Install Azure CLI if not installed
-            Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
-            Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
-          
-            # Download Txt file from Blob Storage
-            az storage blob download --connection-string $connectionString --container-name $blobContainerName --name $blobName --file $destinationPath
-          
-            # Execute Smoke Test
-            .\dbsc.exe unprocessed\dbs_batch_search_responses.txt
-            '
+        - name: Upload TXT Files to Blob Storage
+          run:
+            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./SUI.Test/Smoke --pattern "*.txt" --overwrite
+              
+        - name: Upload CSV Files to Blob Storage
+          run:
+            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./SUI.Test/Smoke --pattern "*.csv" --overwrite
+            
+        - name: Smoke Test DBS Client (.exe)
+          if: env.triggered_workflow == 'Build and Upload Client Watcher'
+          run: |
+            az vm run-command invoke \
+              --command-id RunPowerShellScript \
+              --name ${{ secrets.VM_NAME }} \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --script '
+            
+              $connectionString = "DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT }};AccountKey=${{ secrets.STORAGE_ACCOUNT_KEY }};EndpointSuffix=core.windows.net"
+              $blobContainerName = "${{ env.BLOB_STORAGE_LOCATION }}"
+              $blobName = "dbs_batch_search_responses.txt"
+              $destinationPath = "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed\dbs_batch_search_responses.txt"
+            
+              # Create Directory if does not exist
+              New-Item -ItemType Directory -Path "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed"
 
-      - name: Smoke Test SUI Client (.exe)
-        if: env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload DBS Client Watcher'
-        run: |
-          az vm run-command invoke \
-            --command-id RunPowerShellScript \
-            --name ${{ secrets.VM_NAME }} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --script '
-            # Execute Smoke Test
-            .\suic.exe unprocessed\sui_batch_search_queries.csv
-            '
+              # Install Azure CLI if not installed
+              Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
+              Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
+
+              # Download Txt file from Blob Storage
+              az storage blob download --connection-string $connectionString --container-name $blobContainerName --name $blobName --file $destinationPath
+            
+              cd C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}
+            
+              # Execute Smoke Test
+              $logContent = .\dbsc.exe $destinationPath
+            
+              # assert smoke test was successful
+              if ($logContent -match "The DBS results file has 7 records, batch search resulted in Match=\'3\' and NoMatch=\'4\'")
+              {
+                Write-Output "Smoke Test Passed"
+                exit 0 # Exit with a non-zero status code
+              }
+              else
+              {
+                Write-Error "Smoke Test Failed"
+                exit 1 # Exit with a zero status code
+              }
+              '
+            
+        - name: Smoke Test SUI Client (.exe)
+          if: env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload DBS Client Watcher'
+          run: |
+            az vm run-command invoke \
+              --command-id RunPowerShellScript \
+              --name ${{ secrets.VM_NAME }} \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --script '
+            
+              $connectionString = "DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT }};AccountKey=${{ secrets.STORAGE_ACCOUNT_KEY }};EndpointSuffix=core.windows.net"
+              $blobContainerName = "${{ env.BLOB_STORAGE_LOCATION }}"
+              $blobName = "sui_batch_search_queries.csv"
+              $destinationPath = "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed\sui_batch_search_queries.csv"
+            
+              # Create Directory if does not exist
+              New-Item -ItemType Directory -Path "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed"
+
+              # Install Azure CLI if not installed
+              Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
+              Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
+
+              # Download Txt file from Blob Storage
+              az storage blob download --connection-string $connectionString --container-name $blobContainerName --name $blobName --file $destinationPath
+            
+              cd C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}
+            
+              $json_data = @(
+                [PSCustomObject]@{
+                  MatchApiBaseAddress = "${{ secrets.AZURE_SUI_SERVER_URL }}"
+                }
+              )
+  
+              $json_data | ConvertTo-Json | Out-File -FilePath ".\appsettings.json"
+
+              # Execute Smoke Test
+              $logContent = .\suic.exe $destinationPath
+            
+              # assert smoke test was successful
+              if ($logContent -match "File processed; output=SUI.Client.Core.ProcessCsvFileResult")
+              {
+                Write-Output "Smoke Test Passed"
+                exit 0 # Exit with a non-zero status code
+              }
+              else
+              {
+                Write-Error "Smoke Test Failed"
+                exit 1 # Exit with a zero status code
+              }
+              '

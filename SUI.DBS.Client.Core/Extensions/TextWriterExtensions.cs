@@ -10,6 +10,7 @@ public static class TextWriterExtensions
         output.WriteLine(p);
         output.WriteLine(n);
         output.WriteLine(p);
+        output.WriteLine("Current Directory: " + Directory.GetCurrentDirectory());
         output.WriteLine();
         output.WriteLine();
     }

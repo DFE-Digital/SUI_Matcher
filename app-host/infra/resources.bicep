@@ -545,6 +545,69 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   tags: tags
 }
 
+param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientConsoleAppLogsRule'
+param workspaces_s215d01_integration_loganalytics_01_externalid string = '/subscriptions/8fc7ea96-7305-492f-85f7-09069bb8fd29/resourceGroups/s215d01-integration/providers/Microsoft.OperationalInsights/workspaces/s215d01-integration-loganalytics-01'
+
+resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
+  name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
+  location: 'westeurope'
+  tags: {
+    Environment: 'Dev'
+    Product: 'SUI'
+    'Service Offering': 'SUI'
+  }
+  kind: 'Windows'
+  properties: {
+    streamDeclarations: {
+      'Custom-Json-DbsClientConsoleAppLogs_CL': {
+        columns: [
+          {
+            name: 'TimeGenerated'
+            type: 'datetime'
+          }
+          {
+            name: 'Message'
+            type: 'string'
+          }
+        ]
+      }
+    }
+    dataSources: {
+      logFiles: [
+        {
+          streams: [
+            'Custom-Json-DbsClientConsoleAppLogs_CL'
+          ]
+          filePatterns: [
+            'C:\\Users\\AzCopy\\s215d01-integration-container-01\\*.log'
+          ]
+          format: 'json'
+          name: 'Custom-Json-DbsClientConsoleAppLog'
+        }
+      ]
+    }
+    destinations: {
+      logAnalytics: [
+        {
+          workspaceResourceId: workspaces_s215d01_integration_loganalytics_01_externalid
+          name: 'la-479495940'
+        }
+      ]
+    }
+    dataFlows: [
+      {
+        streams: [
+          'Custom-Json-DbsClientConsoleAppLogs_CL'
+        ]
+        destinations: [
+          'la-479495940'
+        ]
+        transformKql: 'source'
+        outputStream: 'Custom-DbsClientConsoleAppLogs_CL'
+      }
+    ]
+  }
+}
 
 
 

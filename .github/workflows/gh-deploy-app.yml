@@ -1,6 +1,9 @@
 name: Azure App Deployment
 
 on:
+  push:
+    branches:
+      - main # automatically runs after a merge to main
   workflow_dispatch:
     inputs:
       environment:
@@ -12,6 +15,7 @@ on:
       version:
         description: The version of the infrastructure to deploy
         type: string
+        required: false
 
 permissions:
   id-token: write
@@ -27,9 +31,25 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_LOCATION: "westeurope"
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-      APPLICATION_VERSION: ${{ inputs.version }}
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Check if input version is empty
+        id: check-version
+        run: |
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            echo "No input version provided. Fetching latest tag."
+            git fetch --tags
+            latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+            echo "Latest tag: $latest_tag"
+            echo "APPLICATION_VERSION=$latest_tag" >> $GITHUB_ENV
+          else
+            echo "Using input version: ${{ github.event.inputs.version }}"
+            echo "APPLICATION_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          fi
+            
       - name: Checkout
         uses: actions/checkout@v4
         with:
