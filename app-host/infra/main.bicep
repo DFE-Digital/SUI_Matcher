@@ -12,6 +12,13 @@ param location string
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
+@minLength(1)
+@description('The email address to be used for monitoring alerts')
+param monitoringActionGroupEmail string
+
+@description('Turn on monitoring alerts')
+param turnOnAlerts bool = true
+
 
 var tags = {
   'azd-env-name': environmentName
@@ -39,8 +46,9 @@ module monitoring 'monitoring.bicep' = {
   name: 'monitoring'
   params: {
     location: location
-    turnOnAlerts: true
+    turnOnAlerts: turnOnAlerts
     logAnalyticsWorkspaceId: resources.outputs.AZURE_LOG_ANALYTICS_WORKSPACE_ID
+    actionGroupEmail: monitoringActionGroupEmail
   }
 }
 

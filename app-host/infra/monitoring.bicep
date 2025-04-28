@@ -4,8 +4,8 @@ param actionGroupName string = 'On-Call Team'
 param turnOnAlerts bool = true
 param location string = resourceGroup().location
 param logAnalyticsWorkspaceId string
+param actionGroupEmail string
 
-var actionGroupEmail = 'daniel1.murray@education.gov.uk'
 var containers = [
   'external-api'
   'matching-api'
