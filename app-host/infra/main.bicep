@@ -46,6 +46,7 @@ module secrets 'secrets/secrets.module.bicep' = {
   name: 'secrets'
   params: {
     location: location
+    environmentName: environmentName
     environmentPrefix: environmentPrefix
   }
 }
