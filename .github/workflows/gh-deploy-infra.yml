@@ -20,8 +20,6 @@ on:
       environnment_prefix:
         description: The prefix for the environment
         default: 's215d01'
-        options:
-          - 's215d01'
         type: string
 
 permissions:
