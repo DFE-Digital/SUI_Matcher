@@ -6,17 +6,29 @@ targetScope = 'resourceGroup'
 param environmentName string
 
 @minLength(1)
+@description('The prefix used for all deployed resources')
+param environmentPrefix string
+
+@minLength(1)
 @description('The location used for all deployed resources')
 param location string
 
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
+@minLength(1)
+@description('The email address to be used for monitoring alerts')
+param monitoringActionGroupEmail string
+
+@description('Turn on monitoring alerts')
+param turnOnAlerts bool = true
+
 
 var tags = {
   'azd-env-name': environmentName
-  'Product': 'SUI'
-  'Environment': environmentName
+  Product: 'SUI'
+  Environment: environmentName
+  EnvironmentPrefix: environmentPrefix
   'Service Offering': 'SUI'
 }
 
@@ -25,6 +37,8 @@ module resources 'resources.bicep' = {
   params: {
     location: location
     tags: tags
+    environmentPrefix: environmentPrefix
+    environmentName: environmentName
   }
 }
 
@@ -32,6 +46,8 @@ module secrets 'secrets/secrets.module.bicep' = {
   name: 'secrets'
   params: {
     location: location
+    environmentName: environmentName
+    environmentPrefix: environmentPrefix
   }
 }
 
@@ -39,8 +55,9 @@ module monitoring 'monitoring.bicep' = {
   name: 'monitoring'
   params: {
     location: location
-    turnOnAlerts: true
+    turnOnAlerts: turnOnAlerts
     logAnalyticsWorkspaceId: resources.outputs.AZURE_LOG_ANALYTICS_WORKSPACE_ID
+    actionGroupEmail: monitoringActionGroupEmail
   }
 }
 

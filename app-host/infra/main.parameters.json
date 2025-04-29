@@ -8,8 +8,20 @@
       "environmentName": {
         "value": "${AZURE_ENV_NAME}"
       },
+      "envPrefix": {
+        "value": "${AZURE_ENV_PREFIX}"
+      },
       "location": {
         "value": "${AZURE_LOCATION}"
+      },
+      "logAnalyticsWorkspaceId": {
+        "value": "${AZURE_LOG_ANALYTICS_WORKSPACE_ID}"
+      },
+      "monitoringActionGroupEmail": {
+        "value": "${AZURE_MONITORING_ACTION_GROUP_EMAIL}"
+      },
+      "turnOnAlerts": {
+        "value": "${AZURE_TURN_ON_ALERTING}"
       }
     }
   }

@@ -11,10 +11,10 @@ param containerAppEnvSubnet string = '192.168.0.0/26'
 param containerAppFirewallSubnet string = '192.168.0.64/26'
 
 @description('environmentName')
-param environmentName string = 'integration'
+param environmentName string
 
 @description('environmentPrefix')
-param environmentPrefix string = 's215d01'
+param environmentPrefix string
 
 @description('Tags that will be applied to all resources')
 param tags object = {}
@@ -546,13 +546,12 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientConsoleAppLogsRule'
-param workspaces_s215d01_integration_loganalytics_01_externalid string = '/subscriptions/8fc7ea96-7305-492f-85f7-09069bb8fd29/resourceGroups/s215d01-integration/providers/Microsoft.OperationalInsights/workspaces/s215d01-integration-loganalytics-01'
 
 resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
-  location: 'westeurope'
+  location: location
   tags: {
-    Environment: 'Dev'
+    Environment: environmentName
     Product: 'SUI'
     'Service Offering': 'SUI'
   }
@@ -579,7 +578,7 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
             'Custom-Json-DbsClientConsoleAppLogs_CL'
           ]
           filePatterns: [
-            'C:\\Users\\AzCopy\\s215d01-integration-container-01\\*.log'
+            'C:\\Users\\AzCopy\\${environmentPrefix}-${toLower(environmentName)}-container-01\\*.log'
           ]
           format: 'json'
           name: 'Custom-Json-DbsClientConsoleAppLog'
@@ -589,7 +588,7 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
     destinations: {
       logAnalytics: [
         {
-          workspaceResourceId: workspaces_s215d01_integration_loganalytics_01_externalid
+          workspaceResourceId: logAnalyticsWorkspace.id
           name: 'la-479495940'
         }
       ]

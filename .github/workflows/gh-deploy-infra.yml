@@ -9,9 +9,19 @@ on:
         type: choice
         options:
           - 'Integration'
+      what_if:
+        description: Run bicep what-if to check for changes
+        default: true
+        type: boolean
       version:
         description: The version of the infrastructure to deploy
         default: 'v0.0.1'
+        type: string
+      environnment_prefix:
+        description: The prefix for the environment
+        default: 's215d01'
+        options:
+          - 's215d01'
         type: string
 
 permissions:
@@ -23,12 +33,15 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       AZURE_ENV_NAME: ${{ inputs.environment }}
+      AZURE_ENV_PREFIX: ${{ inputs.environnment_prefix }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_LOCATION: "westeurope"
+      AZURE_LOCATION: 'westeurope'
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
       APPLICATION_VERSION: ${{ inputs.version }}
+      AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
+      AZURE_TURN_ON_ALERTS: true
 
     steps:
       - name: Checkout
@@ -46,6 +59,12 @@ jobs:
 
       - name: Install .NET Aspire workload
         run: dotnet workload install aspire
+        
+      - name: Ensure Azure CLI is installed
+        run: |
+          if ! command -v az &> /dev/null; then
+            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+          fi
 
       - name: Log in with Azure (Federated Credentials)
         if: ${{ env.AZURE_CLIENT_ID != '' }}
@@ -55,7 +74,18 @@ jobs:
             --federated-credential-provider "github" `
             --tenant-id "$Env:AZURE_TENANT_ID"
         shell: pwsh
+        
+      - name: Run Bicep What-If
+        if: ${{ inputs.what_if == true }}
+        run: |
+          az deployment group what-if `
+            --resource-group "$Env:AZURE_RESOURCE_GROUP" `
+            --template-file main.bicep `
+            --parameters @main.parameters.json
+        working-directory: app-host
+        shell: pwsh
 
       - name: Provision Infrastructure
+        if: ${{ inputs.what_if == false }}
         run: azd provision --no-prompt --environment ${{ env.AZURE_ENV_NAME }}
         working-directory: app-host
