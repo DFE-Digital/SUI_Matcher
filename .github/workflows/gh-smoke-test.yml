@@ -19,8 +19,18 @@ on:
          description: 'Environment'
          required: true
          default: 'Integration'
+       after_workflow:
+         description: 'Trigger specific smoke test workflow'
+         type: choice
+         required: true
+         default: 'Azure App Deployment'
+         options:
+           - "Azure App Deployment"
+           - "Build and Upload Client Watcher"
+           - "Build and Upload DBS Response Logger Watcher"
+         
   workflow_run:
-    workflows: ["Azure App Deployment", "Build and Upload Client Watcher", "Build and Upload DBS Client Watcher"]
+    workflows: ["Azure App Deployment", "Build and Upload Client Watcher", "Build and Upload DBS Response Logger Watcher"]
     types:
       - completed
   schedule:
@@ -34,19 +44,35 @@ jobs:
     build:
         runs-on: ubuntu-latest
         env: 
-            AZURE_ENV_NAME: ${{ inputs.environment }}
+            AZURE_ENV_NAME: ${{ inputs.environment || 'Integration' }}
             AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
             AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
             AZURE_LOCATION: "westeurope"
             AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-            CLIENT_VERSION: ${{ inputs.version }}
-            BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location }}
-            STORAGE_ACCOUNT: ${{ inputs.storage_account }}
+            BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location || 's215d01-integration-container-01' }}
+            STORAGE_ACCOUNT: ${{ inputs.storage_account || 's215d01integrationsa01' }}
 
         steps:
-        - name: Checkout code
-          uses: actions/checkout@v3
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Use version inputted or find latest tag
+          id: check-version
+          run: |
+            if [ -z "${{ github.event.inputs.version }}" ]; then
+              echo "No input version provided. Fetching latest tag."
+              git fetch --tags
+              latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+              echo "Latest tag: $latest_tag"
+              echo "CLIENT_VERSION=$latest_tag" >> $GITHUB_ENV
+            else
+              echo "Using input version: ${{ github.event.inputs.version }}"
+              echo "CLIENT_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+            fi
+
+        - name: Checkout
+          uses: actions/checkout@v4
           with:
             ref: ${{ env.CLIENT_VERSION }}
 
@@ -68,7 +94,14 @@ jobs:
 
         - name: Determine triggering upstream workflow
           id: detect_workflow
-          run: echo "triggered_workflow=${{ github.event.workflow }}" >> $GITHUB_ENV
+          run: |
+            if [ -z "${{ github.event.inputs.after_workflow }}" ]; then
+              echo "triggered_workflow=${{ github.event.inputs.after_workflow }}" >> $GITHUB_ENV
+            elif [ "${{ github.event_name == 'schedule' }}" == "true" ]; then
+              echo "cron_run='true'" >> $GITHUB_ENV
+            else
+              echo "triggered_workflow=${{ github.event.workflow || 'Azure App Deployment' }}" >> $GITHUB_ENV
+            fi
 
         - name: Upload TXT Files to Blob Storage
           run:
@@ -78,8 +111,8 @@ jobs:
           run:
             az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./SUI.Test/Smoke --pattern "*.csv" --overwrite
             
-        - name: Smoke Test DBS Client (.exe)
-          if: env.triggered_workflow == 'Build and Upload Client Watcher'
+        - name: Smoke Test DBS Response Logger (.exe)
+          if: ((env.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (env.cron_run == 'true'))
           run: |
             az vm run-command invoke \
               --command-id RunPowerShellScript \
@@ -121,7 +154,7 @@ jobs:
               '
             
         - name: Smoke Test SUI Client (.exe)
-          if: env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload DBS Client Watcher'
+          if: ((env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload Client Watcher') || (env.cron_run == 'true'))
           run: |
             az vm run-command invoke \
               --command-id RunPowerShellScript \

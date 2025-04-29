@@ -119,7 +119,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
 }
 
-resource virtualMachines_s215d01_integration_vm_01_name_Microsoft_Insights_VMDiagnosticsSettings 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' = {
+resource vm_diagnostics_settings 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' = {
   parent: vm
   name: 'Microsoft.Insights.VMDiagnosticsSettings'
   location: 'westeurope'
