@@ -19,9 +19,6 @@ param environmentPrefix string
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
-@description('Workspace log analytics external id')
-param logAnalyticsWorkspaceId string
-
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: '${environmentPrefix}-${environmentName}-mi-01'
   location: location
@@ -549,7 +546,6 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientConsoleAppLogsRule'
-param workspaces_loganalytics_externalid string = logAnalyticsWorkspaceId
 
 resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
@@ -592,7 +588,7 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
     destinations: {
       logAnalytics: [
         {
-          workspaceResourceId: workspaces_loganalytics_externalid
+          workspaceResourceId: logAnalyticsWorkspace.id
           name: 'la-479495940'
         }
       ]
