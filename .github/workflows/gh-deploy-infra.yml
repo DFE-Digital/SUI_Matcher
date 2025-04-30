@@ -44,8 +44,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ env.APPLICATION_VERSION }}
+#        with:
+#          ref: ${{ env.APPLICATION_VERSION }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
