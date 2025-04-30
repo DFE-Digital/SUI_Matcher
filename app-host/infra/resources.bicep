@@ -549,66 +549,66 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
 
 param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientConsoleAppLogsRule'
 
-resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
-  name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
-  location: location
-  tags: {
-    Environment: lowercaseEnvironmentName
-    Product: 'SUI'
-    'Service Offering': 'SUI'
-  }
-  kind: 'Windows'
-  properties: {
-    streamDeclarations: {
-      'Custom-DbsClientConsoleAppLogs_CL': {
-        columns: [
-          {
-            name: 'TimeGenerated'
-            type: 'datetime'
-          }
-          {
-            name: 'Message'
-            type: 'string'
-          }
-        ]
-      }
-    }
-    dataSources: {
-      logFiles: [
-        {
-          streams: [
-            'Custom-DbsClientConsoleAppLogs_CL'
-          ]
-          filePatterns: [
-            'C:\\Users\\AzCopy\\${environmentPrefix}-${lowercaseEnvironmentName}-container-01\\*.log'
-          ]
-          format: 'json'
-          name: 'Custom-DbsClientConsoleAppLog'
-        }
-      ]
-    }
-    destinations: {
-      logAnalytics: [
-        {
-          workspaceResourceId: logAnalyticsWorkspace.id
-          name: 'la-479495940'
-        }
-      ]
-    }
-    dataFlows: [
-      {
-        streams: [
-          'Custom-DbsClientConsoleAppLogs_CL'
-        ]
-        destinations: [
-          'la-479495940'
-        ]
-        transformKql: 'source'
-        outputStream: 'Custom-DbsClientConsoleAppLogs_CL'
-      }
-    ]
-  }
-}
+// resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
+//   name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
+//   location: location
+//   tags: {
+//     Environment: lowercaseEnvironmentName
+//     Product: 'SUI'
+//     'Service Offering': 'SUI'
+//   }
+//   kind: 'Windows'
+//   properties: {
+//     streamDeclarations: {
+//       'Custom-DbsClientConsoleAppLogs_CL': {
+//         columns: [
+//           {
+//             name: 'TimeGenerated'
+//             type: 'datetime'
+//           }
+//           {
+//             name: 'Message'
+//             type: 'string'
+//           }
+//         ]
+//       }
+//     }
+//     dataSources: {
+//       logFiles: [
+//         {
+//           streams: [
+//             'Custom-DbsClientConsoleAppLogs_CL'
+//           ]
+//           filePatterns: [
+//             'C:\\Users\\AzCopy\\${environmentPrefix}-${lowercaseEnvironmentName}-container-01\\*.log'
+//           ]
+//           format: 'json'
+//           name: 'Custom-DbsClientConsoleAppLog'
+//         }
+//       ]
+//     }
+//     destinations: {
+//       logAnalytics: [
+//         {
+//           workspaceResourceId: logAnalyticsWorkspace.id
+//           name: 'la-479495940'
+//         }
+//       ]
+//     }
+//     dataFlows: [
+//       {
+//         streams: [
+//           'Custom-DbsClientConsoleAppLogs_CL'
+//         ]
+//         destinations: [
+//           'la-479495940'
+//         ]
+//         transformKql: 'source'
+//         outputStream: 'Custom-DbsClientConsoleAppLogs_CL'
+//       }
+//     ]
+//   }
+// }
 
 
 
