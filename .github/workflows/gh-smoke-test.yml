@@ -54,6 +54,17 @@ jobs:
             STORAGE_ACCOUNT: ${{ inputs.storage_account || 's215d01integrationsa01' }}
 
         steps:
+        - name: Determine triggering upstream workflow
+          id: detect_workflow
+          run: |
+            if [ "${{ github.event.inputs.after_workflow }}" != "" ]; then
+              echo "triggered_workflow=${{ github.event.inputs.after_workflow }}" >> $GITHUB_ENV
+            elif [ "${{ github.event_name == 'schedule' }}" == "true" ]; then
+              echo "cron_run='true'" >> $GITHUB_ENV
+            else
+              echo "triggered_workflow=${{ github.event.workflow.name || 'Azure App Deployment' }}" >> $GITHUB_ENV
+            fi
+            
         - name: Checkout
           uses: actions/checkout@v4
 
@@ -91,17 +102,6 @@ jobs:
         - name: Set Azure Subscription
           run: |
             az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-        - name: Determine triggering upstream workflow
-          id: detect_workflow
-          run: |
-            if [ "${{ github.event.inputs.after_workflow }}" != "" ]; then
-              echo "triggered_workflow=${{ github.event.inputs.after_workflow }}" >> $GITHUB_ENV
-            elif [ "${{ github.event_name == 'schedule' }}" == "true" ]; then
-              echo "cron_run='true'" >> $GITHUB_ENV
-            else
-              echo "triggered_workflow=${{ github.event.workflow || 'Azure App Deployment' }}" >> $GITHUB_ENV
-            fi
 
         - name: Upload TXT Files to Blob Storage
           run:
