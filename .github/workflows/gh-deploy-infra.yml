@@ -86,7 +86,7 @@ jobs:
           subscription: ${{ env.AZURE_SUBSCRIPTION_ID }}
           resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
           templateFile: app-host/infra/main.bicep
-          parametersFile: "@app-host/infra/main.parameters.json"
+          parametersFile: "app-host/infra/main.parameters.json"
 
       - name: Provision Infrastructure
         if: ${{ inputs.what_if == false }}
