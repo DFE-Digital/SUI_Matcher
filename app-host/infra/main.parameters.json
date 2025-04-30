@@ -8,7 +8,7 @@
       "environmentName": {
         "value": "${AZURE_ENV_NAME}"
       },
-      "envPrefix": {
+      "environmentPrefix": {
         "value": "${AZURE_ENV_PREFIX}"
       },
       "location": {
