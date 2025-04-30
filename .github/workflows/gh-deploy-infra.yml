@@ -79,7 +79,7 @@ jobs:
           az deployment group what-if `
             --resource-group "$Env:AZURE_RESOURCE_GROUP" `
             --template-file main.bicep `
-            --parameters @main.parameters.json
+            --parameters "@main.parameters.json"
         working-directory: app-host
         shell: pwsh
 
