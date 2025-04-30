@@ -81,13 +81,12 @@ jobs:
         
       - name: Run Bicep What-If
         if: ${{ inputs.what_if == true }}
-        run: |
-          az deployment group what-if `
-            --resource-group "$Env:AZURE_RESOURCE_GROUP" `
-            --template-file infra/main.bicep `
-            --parameters "@infra/main.parameters.json"
-        working-directory: app-host
-        shell: pwsh
+        uses: Azure/deployment-what-if-action@v1.0.0
+        with:
+          subscription: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          templateFile: app-host/infra/main.bicep
+          parametersFile: "@app-host/infra/main.parameters.json"
 
       - name: Provision Infrastructure
         if: ${{ inputs.what_if == false }}
