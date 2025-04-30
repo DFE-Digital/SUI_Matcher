@@ -13,9 +13,6 @@ param environmentPrefix string
 @description('The location used for all deployed resources')
 param location string
 
-@description('Id of the user or app to assign application roles')
-param principalId string = ''
-
 @minLength(1)
 @description('The email address to be used for monitoring alerts')
 param monitoringActionGroupEmail string
