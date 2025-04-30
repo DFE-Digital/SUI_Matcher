@@ -19,15 +19,17 @@ param environmentPrefix string
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
+var lowercaseEnvironmentName = toLower(environmentName)
+
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: '${environmentPrefix}-${environmentName}-mi-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-mi-01'
   location: location
   tags: tags
 }
 
 // The below resource can only contain alpha numeric characters - facepalm!
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: '${environmentPrefix}${environmentName}acr01'
+  name: '${environmentPrefix}${lowercaseEnvironmentName}acr01'
   location: location
   sku: {
     name: 'Basic'
@@ -36,7 +38,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
 }
 
 resource infraIpGroup 'Microsoft.Network/ipGroups@2022-01-01' = {
-  name: '${environmentPrefix}${environmentName}-ipg-01'
+  name: '${environmentPrefix}${lowercaseEnvironmentName}-ipg-01'
   location: location
   properties: {
     ipAddresses: [
@@ -59,7 +61,7 @@ resource infraIpGroup 'Microsoft.Network/ipGroups@2022-01-01' = {
 // Cannot add role assignments due to policies
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: '${environmentPrefix}-${environmentName}-loganalytics-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-loganalytics-01'
   location: location
   properties: {
     sku: {
@@ -70,7 +72,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
 }
 
 param dashboard_name string = 'sui-pilot-dashboard'
-param log_analytics_workspace_id string = '${environmentPrefix}-${environmentName}-loganalytics-01'
+param log_analytics_workspace_id string = '${environmentPrefix}-${toLower(environmentName)}-loganalytics-01'
 param log_analytics_workspace_external_id string = '/subscriptions/${subscription().id}/resourceGroups/${resourceGroup().id}/providers/microsoft.operationalinsights/workspaces/${log_analytics_workspace_id}'
 
 resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
@@ -78,7 +80,7 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
   location: location
   tags: {
     'hidden-title': 'SUI Pilot Dashboard'
-    Environment: environmentName
+    Environment: lowercaseEnvironmentName
     Product: 'SUI'
     'Service Offering': 'SUI'
   }
@@ -442,7 +444,7 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
 }
 
 resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
-  name: '${environmentPrefix}-${environmentName}-vnet-cae-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-vnet-cae-01'
   location: location
   properties: {
     addressSpace: {
@@ -452,13 +454,13 @@ resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
     }
     subnets: [
       {
-        name: '${environmentPrefix}-${environmentName}-subnet-cae-01'
+        name: '${environmentPrefix}-${lowercaseEnvironmentName}-subnet-cae-01'
         properties: {
           addressPrefix: containerAppEnvSubnet
         }
       }
       {
-        name: '${environmentPrefix}-${environmentName}-vnet-fw-01'
+        name: '${environmentPrefix}-${lowercaseEnvironmentName}-vnet-fw-01'
         properties: {
           addressPrefix: containerAppFirewallSubnet
         }
@@ -469,7 +471,7 @@ resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
 
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-preview' = {
-  name: '${environmentPrefix}-${environmentName}-cae-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-cae-01'
   location: location
   properties: {
     appLogsConfiguration: {
@@ -498,7 +500,7 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
   tags: tags
 
   resource aspireDashboard 'dotNetComponents' = {
-    name: '${environmentPrefix}-${environmentName}-dashboard-01'
+    name: '${environmentPrefix}-${lowercaseEnvironmentName}-dashboard-01'
     properties: {
       componentType: 'AspireDashboard'
     }
@@ -507,7 +509,7 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
 
 // Another which doesn't like dashes in the name
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: '${environmentPrefix}${environmentName}sa01'
+  name: '${environmentPrefix}${lowercaseEnvironmentName}sa01'
   location: location
   sku: {
     name: 'Standard_LRS'
@@ -525,7 +527,7 @@ resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01
 }
 
 resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: '${environmentPrefix}-${environmentName}-container-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-container-01'
   parent: blobServices
   properties: {
     publicAccess: 'None'
@@ -534,7 +536,7 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
 
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: '${environmentPrefix}-${environmentName}-appinsights-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-appinsights-01'
   location: location
   kind: 'web'
   properties: {
@@ -547,66 +549,66 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
 
 param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientConsoleAppLogsRule'
 
-resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
-  name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
-  location: location
-  tags: {
-    Environment: environmentName
-    Product: 'SUI'
-    'Service Offering': 'SUI'
-  }
-  kind: 'Windows'
-  properties: {
-    streamDeclarations: {
-      'Custom-Json-DbsClientConsoleAppLogs_CL': {
-        columns: [
-          {
-            name: 'TimeGenerated'
-            type: 'datetime'
-          }
-          {
-            name: 'Message'
-            type: 'string'
-          }
-        ]
-      }
-    }
-    dataSources: {
-      logFiles: [
-        {
-          streams: [
-            'Custom-Json-DbsClientConsoleAppLogs_CL'
-          ]
-          filePatterns: [
-            'C:\\Users\\AzCopy\\${environmentPrefix}-${toLower(environmentName)}-container-01\\*.log'
-          ]
-          format: 'json'
-          name: 'Custom-Json-DbsClientConsoleAppLog'
-        }
-      ]
-    }
-    destinations: {
-      logAnalytics: [
-        {
-          workspaceResourceId: logAnalyticsWorkspace.id
-          name: 'la-479495940'
-        }
-      ]
-    }
-    dataFlows: [
-      {
-        streams: [
-          'Custom-Json-DbsClientConsoleAppLogs_CL'
-        ]
-        destinations: [
-          'la-479495940'
-        ]
-        transformKql: 'source'
-        outputStream: 'Custom-DbsClientConsoleAppLogs_CL'
-      }
-    ]
-  }
-}
+// resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
+//   name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
+//   location: location
+//   tags: {
+//     Environment: lowercaseEnvironmentName
+//     Product: 'SUI'
+//     'Service Offering': 'SUI'
+//   }
+//   kind: 'Windows'
+//   properties: {
+//     streamDeclarations: {
+//       'Custom-DbsClientConsoleAppLogs_CL': {
+//         columns: [
+//           {
+//             name: 'TimeGenerated'
+//             type: 'datetime'
+//           }
+//           {
+//             name: 'Message'
+//             type: 'string'
+//           }
+//         ]
+//       }
+//     }
+//     dataSources: {
+//       logFiles: [
+//         {
+//           streams: [
+//             'Custom-DbsClientConsoleAppLogs_CL'
+//           ]
+//           filePatterns: [
+//             'C:\\Users\\AzCopy\\${environmentPrefix}-${lowercaseEnvironmentName}-container-01\\*.log'
+//           ]
+//           format: 'json'
+//           name: 'Custom-DbsClientConsoleAppLog'
+//         }
+//       ]
+//     }
+//     destinations: {
+//       logAnalytics: [
+//         {
+//           workspaceResourceId: logAnalyticsWorkspace.id
+//           name: 'la-479495940'
+//         }
+//       ]
+//     }
+//     dataFlows: [
+//       {
+//         streams: [
+//           'Custom-DbsClientConsoleAppLogs_CL'
+//         ]
+//         destinations: [
+//           'la-479495940'
+//         ]
+//         transformKql: 'source'
+//         outputStream: 'Custom-DbsClientConsoleAppLogs_CL'
+//       }
+//     ]
+//   }
+// }
 
 
 
