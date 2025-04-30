@@ -16,7 +16,7 @@ on:
         description: The version of the infrastructure to deploy (if empty the latest version is use)
         type: string
         required: false
-      environnment_prefix:
+      environment_prefix:
         description: The prefix for the environment
         default: 's215d01'
         type: string
@@ -30,15 +30,13 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       AZURE_ENV_NAME: ${{ inputs.environment || 'Integration' }}
-      AZURE_ENV_PREFIX: ${{ inputs.environnment_prefix }}
+      AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_LOCATION: "westeurope"
+      AZURE_LOCATION: 'westeurope'
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
       AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
-      AZURE_TURN_ON_ALERTS: true
-      
 
     steps:
       - name: Checkout
@@ -82,14 +80,6 @@ jobs:
             --federated-credential-provider "github" `
             --tenant-id "$Env:AZURE_TENANT_ID"
         shell: pwsh
-        
-      - name: Set azd custom environment variables
-        run: |
-          azd env set AZURE_ENV_PREFIX "$Env:AZURE_ENV_PREFIX"
-          azd env set AZURE_MONITORING_ACTION_GROUP_EMAIL "$Env:AZURE_MONITORING_ACTION_GROUP_EMAIL"
-          azd env set AZURE_TURN_ON_ALERTS "$Env:AZURE_TURN_ON_ALERTS"
-        shell: pwsh
-        working-directory: app-host
 
       - name: Refresh azd env (pulls latest infrastructure provision)
         run: azd env refresh --no-prompt
