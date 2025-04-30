@@ -16,9 +16,6 @@
       },
       "monitoringActionGroupEmail": {
         "value": "${AZURE_MONITORING_ACTION_GROUP_EMAIL}"
-      },
-      "turnOnAlerts": {
-        "value": "${AZURE_TURN_ON_ALERTS}"
       }
     }
   }
