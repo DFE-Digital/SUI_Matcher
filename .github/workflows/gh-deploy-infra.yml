@@ -86,7 +86,8 @@ jobs:
           subscription: ${{ env.AZURE_SUBSCRIPTION_ID }}
           resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
           templateFile: app-host/infra/main.bicep
-          parametersFile: "app-host/infra/main.parameters.json"
+#          parametersFile: "app-host/infra/main.parameters.json"
+          additionalParameters: envrionmentName="${{ env.AZURE_ENV_NAME }}" envrionmentPrefix="${{ env.AZURE_ENV_PREFIX }}" location="${{ env.AZURE_LOCATION }}" applicationVersion="${{ env.APPLICATION_VERSION }}" monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}"
 
       - name: Provision Infrastructure
         if: ${{ inputs.what_if == false }}
