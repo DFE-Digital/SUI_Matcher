@@ -39,7 +39,7 @@ jobs:
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
       APPLICATION_VERSION: ${{ inputs.version }}
       AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
-      AZURE_TURN_ON_ALERTS: true
+      AZURE_TURN_ON_ALERTING: true
 
     steps:
       - name: Checkout
