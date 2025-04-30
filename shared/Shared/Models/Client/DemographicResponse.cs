@@ -1,4 +1,4 @@
-namespace SUI.Types;
+namespace Shared.Models.Client;
 
 public class DemographicResponse
 {

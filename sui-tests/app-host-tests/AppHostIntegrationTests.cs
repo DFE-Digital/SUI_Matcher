@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using SUI.Core.Domain;
-using SUI.Types;
+using Shared.Models.Client;
 using WireMock.Client;
 
 namespace AppHost.IntegrationTests;

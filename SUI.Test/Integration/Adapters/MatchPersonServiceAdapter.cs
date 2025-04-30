@@ -2,7 +2,7 @@
 using SUI.Client.Core.Models;
 using SUI.Core;
 using SUI.Core.Services;
-using SUI.Types;
+using Shared.Models.Client;
 
 namespace SUI.Test.Integration.Adapters;
 

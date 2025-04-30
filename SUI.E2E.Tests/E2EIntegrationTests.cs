@@ -4,7 +4,7 @@ using SUI.Client.Core;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
 using SUI.E2E.Tests.Util;
-using SUI.Types;
+using Shared.Models.Client;
 using WireMock.Client;
 
 namespace SUI.E2E.Tests;
