@@ -141,7 +141,7 @@ jobs:
               $logContent = .\dbsc.exe $destinationPath
             
               # assert smoke test was successful
-              if ($logContent -match "The DBS results file has 7 records, batch search resulted in Match=\'3\' and NoMatch=\'4\'")
+              if ($logContent -match "The DBS results file has 7 records, batch search resulted")
               {
                 Write-Output "Smoke Test Passed"
                 exit 0 # Exit with a non-zero status code

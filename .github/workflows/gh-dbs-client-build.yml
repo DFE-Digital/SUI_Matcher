@@ -6,7 +6,6 @@ on:
             version:
                 description: 'Version number (if empty the latest version is use)'
                 required: false
-                default: 'v0.0.45'
             blob_storage_location:
                 description: 'Blob storage location'
                 required: true
