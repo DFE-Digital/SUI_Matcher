@@ -560,7 +560,7 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
   kind: 'Windows'
   properties: {
     streamDeclarations: {
-      'DbsClientConsoleAppLogs_CL': {
+      'Custom-J-DbsClientConsoleAppLogs_CL': {
         columns: [
           {
             name: 'TimeGenerated'
@@ -577,13 +577,13 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
       logFiles: [
         {
           streams: [
-            'DbsClientConsoleAppLogs_CL'
+            'Custom-J-DbsClientConsoleAppLogs_CL'
           ]
           filePatterns: [
             'C:\\Users\\AzCopy\\${environmentPrefix}-${lowercaseEnvironmentName}-container-01\\*.log'
           ]
           format: 'json'
-          name: 'DbsClientConsoleAppLog'
+          name: 'Custom-J-DbsClientConsoleAppLog'
         }
       ]
     }
@@ -598,13 +598,13 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
     dataFlows: [
       {
         streams: [
-          'DbsClientConsoleAppLogs_CL'
+          'Custom-J-DbsClientConsoleAppLogs_CL'
         ]
         destinations: [
           'la-479495940'
         ]
         transformKql: 'source'
-        outputStream: 'DbsClientConsoleAppLogs_CL'
+        outputStream: 'Custom-J-DbsClientConsoleAppLogs_CL'
       }
     ]
   }
