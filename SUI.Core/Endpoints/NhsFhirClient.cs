@@ -6,6 +6,7 @@ using Shared.Models;
 using SUI.Core.Endpoints.AuthToken;
 using System.Collections;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using SUI.Core.Services;
 
 namespace SUI.Core.Endpoints;
@@ -133,8 +134,8 @@ public class NhsFhirClient(ITokenService tokenService,
         
         logger.LogInformation(
             "[PDS_DATA_DIFF] NotUsed: {MissingFields}, Different: {DifferentFields}",
-            query.EmptyFields(),
-            differentFields
+            JsonSerializer.Serialize(query.EmptyFields()),
+            JsonSerializer.Serialize(differentFields)
         );
     }
 }
