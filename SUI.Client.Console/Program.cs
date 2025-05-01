@@ -11,7 +11,8 @@ var builder = Host.CreateDefaultBuilder();
 builder.ConfigureAppSettingsJsonFile();
 builder.ConfigureServices((hostContext, services) =>
 {
-    services.AddClientCore(hostContext.Configuration);
+    var matchingUrl = hostContext.Configuration["MatchApiBaseAddress"] ?? throw new Exception("Config item 'MatchApiBaseAddress' not set");
+    services.AddClientCore(hostContext.Configuration, matchingUrl!);
 });
 
 var host = builder.Build();
