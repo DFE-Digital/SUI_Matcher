@@ -14,9 +14,9 @@ on:
         default: true
         type: boolean
       version:
-        description: The version of the infrastructure to deploy
-        default: 'v0.0.1'
+        description: The version of the infrastructure to provision (defaults to branch)
         type: string
+        required: false
       environment_prefix:
         description: The prefix for the environment
         default: 's215d01'
@@ -41,10 +41,15 @@ jobs:
       AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
 
     steps:
-      - name: Checkout
+      - name: Checkout (version)
         uses: actions/checkout@v4
-#        with:
-#          ref: ${{ env.APPLICATION_VERSION }}
+        if: ${{ github.event.inputs.version != '' }}
+        with:
+          ref: ${{ env.APPLICATION_VERSION }}
+
+      - name: Checkout (branch)
+        uses: actions/checkout@v4
+        if: ${{ github.event.inputs.version == '' }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
