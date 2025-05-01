@@ -60,7 +60,7 @@ jobs:
             if [ "${{ github.event.inputs.after_workflow }}" != "" ]; then
               echo "triggered_workflow=${{ github.event.inputs.after_workflow }}" >> $GITHUB_ENV
             elif [ "${{ github.event_name == 'schedule' }}" == "true" ]; then
-              echo "cron_run='true'" >> $GITHUB_ENV
+              echo "cron_run=true" >> $GITHUB_ENV
             else
               echo "triggered_workflow=${{ github.event.workflow.name || 'Azure App Deployment' }}" >> $GITHUB_ENV
             fi
