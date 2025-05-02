@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SUI.Types;
+namespace Shared.Models.Client;
 
 public class MatchResult
 {

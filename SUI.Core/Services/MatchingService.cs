@@ -4,9 +4,10 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Shared.Models;
+using Shared.Models.Client;
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
-using SUI.Types;
+using Shared.Models.Client;
 
 namespace SUI.Core.Services;
 

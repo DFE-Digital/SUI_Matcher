@@ -4,6 +4,9 @@ using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
 using System.Globalization;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Shared.Models;
+using ClientTypes = Shared.Models.Client;
 
 namespace SUI.Client.Core;
 
@@ -74,27 +77,27 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         return statsJsonFileName;
     }
 
-    private static void RecordStats(CsvProcessStats stats, Types.PersonMatchResponse? response)
+    private static void RecordStats(CsvProcessStats stats, ClientTypes.PersonMatchResponse? response)
     {
         stats.Count++;
         switch (response?.Result?.MatchStatus)
         {
-            case Types.MatchStatus.Match:
+            case ClientTypes.MatchStatus.Match:
                 stats.CountMatched++;
                 break;
 
-            case Types.MatchStatus.ManyMatch:
+            case ClientTypes.MatchStatus.ManyMatch:
                 stats.CountManyMatch++;
                 break;
 
-            case Types.MatchStatus.NoMatch:
+            case ClientTypes.MatchStatus.NoMatch:
                 stats.CountNoMatch++;
                 break;
 
-            case Types.MatchStatus.PotentialMatch:
+            case ClientTypes.MatchStatus.PotentialMatch:
                 stats.CountPotentialMatch++;
                 break;
-            case Types.MatchStatus.Error:
+            case ClientTypes.MatchStatus.Error:
                 stats.ErroredCount++;
                 break;
         }

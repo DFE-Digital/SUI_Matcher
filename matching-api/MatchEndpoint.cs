@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Shared.Endpoint;
 using SUI.Core.Domain;
 using SUI.Core.Services;
-using SUI.Types;
+using Shared.Models.Client;
 
 namespace MatchingApi;
 

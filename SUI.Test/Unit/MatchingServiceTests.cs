@@ -5,8 +5,9 @@ using Shared.Models;
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
-using SUI.Types;
+using Shared.Models.Client;
 using System.Diagnostics;
+using Shared.Models.Client;
 
 namespace SUI.Test.Unit;
 

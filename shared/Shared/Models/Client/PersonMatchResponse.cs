@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
+using Shared.Models.Client;
 
-namespace SUI.Types;
+namespace Shared.Models.Client;
 
 public class PersonMatchResponse
 {

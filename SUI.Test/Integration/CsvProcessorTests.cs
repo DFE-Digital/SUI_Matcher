@@ -11,7 +11,7 @@ using SUI.Core;
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
 using SUI.Test.Integration.Adapters;
-using SUI.Types;
+using Shared.Models.Client;
 using D = System.Collections.Generic.Dictionary<string, string>;
 
 namespace SUI.Test.Integration;

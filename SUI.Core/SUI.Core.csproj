@@ -19,7 +19,6 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\shared\Shared\Shared.csproj" />
-	  <ProjectReference Include="..\SUI.Types\SUI.Types.csproj" />
 	</ItemGroup>
 
 </Project>

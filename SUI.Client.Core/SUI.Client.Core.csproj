@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SUI.Types\SUI.Types.csproj" />
+    <ProjectReference Include="..\shared\Shared\Shared.csproj" />
   </ItemGroup>
 
 </Project>

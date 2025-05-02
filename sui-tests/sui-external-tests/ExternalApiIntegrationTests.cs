@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using Shared.Models;
-using SUI.Types;
+using Shared.Models.Client;
 
 namespace ExternalApi.IntegrationTests;
 
