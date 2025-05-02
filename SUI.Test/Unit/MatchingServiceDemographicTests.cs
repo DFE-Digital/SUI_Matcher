@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Logging.Abstractions;
+
 using Moq;
+
 using Shared.Models;
+
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
@@ -11,14 +14,14 @@ namespace SUI.Test.Unit;
 public class MatchingServiceDemographicTests
 {
     private readonly ValidationService _validationService = new();
-    
+
     [TestMethod]
     public async Task ShouldReturnDemographics()
     {
         // Arrange
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
         nhsFhir.Setup(x => x.PerformSearchByNhsId("1234567890"))
-            .ReturnsAsync(new DemographicResult() {Result = new {Id = "1234567890"}});
+            .ReturnsAsync(new DemographicResult() { Result = new { Id = "1234567890" } });
         var sut = new MatchingService(NullLogger<MatchingService>.Instance, nhsFhir.Object, _validationService);
 
         var request = new DemographicRequest
@@ -51,7 +54,7 @@ public class MatchingServiceDemographicTests
 
         // Act
         var result = await sut.GetDemographicsAsync(request);
-        
+
         // Assert
         Assert.IsNotNull(result);
         Assert.IsNull(result.Result);

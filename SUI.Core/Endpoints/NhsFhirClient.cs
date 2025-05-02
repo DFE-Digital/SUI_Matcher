@@ -1,12 +1,16 @@
-using Hl7.Fhir.Model;
-using Hl7.Fhir.Rest;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Shared.Models;
-using SUI.Core.Endpoints.AuthToken;
 using System.Collections;
 using System.Net.Http.Headers;
 using System.Text.Json;
+
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+
+using Shared.Models;
+
+using SUI.Core.Endpoints.AuthToken;
 using SUI.Core.Services;
 
 namespace SUI.Core.Endpoints;
@@ -127,11 +131,11 @@ public class NhsFhirClient(ITokenService tokenService,
 
         return fhirClient;
     }
-    
+
     private void LogInputAndPdsDifferences(SearchQuery query, Patient patient)
     {
         var differentFields = FieldComparerService.ComparePatientFields(query, patient);
-        
+
         logger.LogInformation(
             "[PDS_DATA_DIFF] NotUsed: {MissingFields}, Different: {DifferentFields}",
             JsonSerializer.Serialize(query.EmptyFields()),

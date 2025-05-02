@@ -16,4 +16,3 @@ public class MatchResult
     [JsonPropertyName("score")]
     public decimal? Score { get; set; }
 }
-

@@ -8,5 +8,5 @@ public class PersonMatchResponse
     public MatchResult? Result { get; set; }
 
     [JsonPropertyName("dataQuality")]
-    public DataQualityResult? DataQuality { get; set; }    
+    public DataQualityResult? DataQuality { get; set; }
 }

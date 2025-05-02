@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+
 using SUI.Client.Core;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
 using SUI.E2E.Tests.Util;
 using SUI.Types;
+
 using WireMock.Client;
 
 namespace SUI.E2E.Tests;
@@ -50,7 +52,7 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
             Assert.Equal("9691292211", nhsNumber);
         });
     }
-    
+
     [Fact]
     public async Task ProcessCsvFileAsync_WritesToExpectedLocation_WhenUsingRelativePath()
     {
@@ -125,7 +127,6 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
 
     }
 
-    
+
 
 }
-

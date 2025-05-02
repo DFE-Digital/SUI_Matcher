@@ -1,5 +1,6 @@
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -26,10 +27,10 @@ public class TokenService : ITokenService
     private readonly SecretClient _secretClient;
     private readonly string _tokenUrl;
     private readonly int _accountTokenExpiresInMinutes;
-    private string? _privateKey ;
+    private string? _privateKey;
     private string? _clientId;
     private string? _kid;
-    
+
     private string? _accessToken;
     private DateTimeOffset _accessTokenExpiration;
     private readonly ILogger<TokenService> _logger;
@@ -37,11 +38,11 @@ public class TokenService : ITokenService
     public TokenService(IConfiguration configuration, ILogger<TokenService> logger)
     {
         _logger = logger;
-        
+
         var keyVaultUri = new Uri(configuration["ConnectionStrings:secrets"]!);
         _secretClient = new SecretClient(keyVaultUri, new DefaultAzureCredential());
         _tokenUrl = configuration["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"]!;
-        
+
         var parsed = int.TryParse(configuration["NhsAuthConfig:NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES"],
             out _accountTokenExpiresInMinutes);
 
@@ -57,22 +58,22 @@ public class TokenService : ITokenService
         {
             throw new Exception("Token service not initialised");
         }
-        
+
         if (_accessToken != null && _accessTokenExpiration > DateTimeOffset.UtcNow)
         {
             _logger.LogDebug("Found existing none expired access token found");
-            
+
             return _accessToken;
         }
-        
+
         _logger.LogDebug("Getting new access token from Nhs Digital oauth2 endpoint");
-            
+
         // Perform request to NHS auth endpoint
         var auth = new AuthClientCredentials(_tokenUrl, _privateKey!, _clientId!, _kid!);
         _accessTokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_accountTokenExpiresInMinutes);
-        _accessToken = await auth.AccessToken(_accountTokenExpiresInMinutes) ?? 
+        _accessToken = await auth.AccessToken(_accountTokenExpiresInMinutes) ??
                           throw new Exception("Failed to get access token");
-        
+
         return _accessToken;
     }
 

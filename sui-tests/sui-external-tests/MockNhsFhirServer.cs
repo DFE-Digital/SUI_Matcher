@@ -1,7 +1,9 @@
 using RestEase;
+
 using WireMock.Admin.Mappings;
 using WireMock.Client;
 using WireMock.Client.Builders;
+
 using Yarp.ReverseProxy.Configuration;
 
 namespace ExternalApi.IntegrationTests;
@@ -20,12 +22,13 @@ public sealed class MockNhsFhirServer(string baseUrl)
             )
             .WithResponse(response => response
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
-                .WithBodyAsJson(() => new {
-                        access_token = "12312321321321"
+                .WithBodyAsJson(() => new
+                {
+                    access_token = "12312321321321"
                 }
             )
         ));
-        
+
         builder.Given(b => b
             .WithRequest(request => request
                 .UsingGet()
@@ -67,7 +70,7 @@ public sealed class MockNhsFhirServer(string baseUrl)
             .WithResponse(response => response
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
                 .WithBody(() => File.ReadAllText("WireMockMappings/single_match.json"))));
-        
+
         builder.Given(b => b.WithRequest(r =>
         {
             r.UsingGet()
@@ -75,7 +78,7 @@ public sealed class MockNhsFhirServer(string baseUrl)
         })
         .WithResponse(response => response.WithHeaders(h => h.Add("Content-Type", "application/json"))
             .WithBody(() => File.ReadAllText("WireMockMappings/single_patient_demographic.json"))));
-        
+
         builder.Given(b => b.WithRequest(r =>
             {
                 r.UsingGet()
@@ -84,8 +87,8 @@ public sealed class MockNhsFhirServer(string baseUrl)
             .WithResponse(response => response.WithHeaders(h => h.Add("Content-Type", "application/json"))
                 .WithStatusCode(400)));
 
-		await builder.BuildAndPostAsync();
-	}
+        await builder.BuildAndPostAsync();
+    }
 
     private static ParamModel ParamMatch(string name, string value)
     {

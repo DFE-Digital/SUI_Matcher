@@ -1,6 +1,8 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+
 using Microsoft.Extensions.Logging;
+
 using Serilog;
 
 Console.WriteLine("SUI E2E Blob Container File Sync");
@@ -103,7 +105,7 @@ async Task SyncToLocalAsync()
     {
         var localFilePath = Path.Combine(localFolderPath, blobItem.Name.Replace("/", "\\"));
         var localDirectory = Path.GetDirectoryName(localFilePath);
-        
+
         if (!Directory.Exists(localDirectory))
         {
             Directory.CreateDirectory(localDirectory!);

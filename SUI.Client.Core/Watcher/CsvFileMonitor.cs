@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Concurrent;
+
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Collections.Concurrent;
 
 namespace SUI.Client.Core.Watcher;
 
@@ -82,7 +83,7 @@ public class CsvFileMonitor
         }
     }
 
-    private async Task<ProcessCsvFileResult> ProcessFileAsync(string filePath) 
+    private async Task<ProcessCsvFileResult> ProcessFileAsync(string filePath)
         => await _fileProcessor.ProcessCsvFileAsync(filePath, _config.ProcessedDirectory);
 
     public void PrintStats(TextWriter output)

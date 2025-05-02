@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using SUI.DBS.Client.Core;
 using SUI.DBS.Client.Core.Extensions;
 using SUI.DBS.Client.Core.Watcher;
@@ -13,7 +14,7 @@ builder.ConfigureAppSettingsJsonFile();
 builder.ConfigureServices((hostContext, services) =>
 {
     services.AddClientCore(hostContext.Configuration);
-    services.Configure<TxtWatcherConfig>(x => 
+    services.Configure<TxtWatcherConfig>(x =>
     {
         x.IncomingDirectory = args[0];
         x.ProcessedDirectory = args[1];

@@ -1,5 +1,6 @@
-﻿using SUI.Core.Domain;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+
+using SUI.Core.Domain;
 
 namespace SUI.Core.Services;
 

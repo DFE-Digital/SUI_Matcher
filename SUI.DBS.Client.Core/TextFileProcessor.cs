@@ -2,8 +2,11 @@
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using SUI.DBS.Client.Core.Models;
 
 namespace SUI.DBS.Client.Core;
@@ -26,11 +29,11 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
     public async Task ProcessFileAsync(string filePath)
     {
         using var activity = new Activity("ProcessDbsTxtFile");
-        
+
         activity.Start();
-        
+
         AssertFileExists(filePath);
-            
+
         string[] lines = await File.ReadAllLinesAsync(filePath);
 
         var recordColumns = Enum.GetValues(typeof(RecordColumn)).Cast<RecordColumn>().ToArray();
@@ -39,7 +42,7 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
         var recordCount = 0;
         var matches = 0;
         var noMatches = 0;
-            
+
         // Use foreach loop to process each line
         foreach (string line in lines)
         {
@@ -48,18 +51,18 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
             if (recordData.Any(x => !string.IsNullOrWhiteSpace(x)))
             {
                 ++recordCount;
-                    
+
                 var result = new MatchPersonResult();
-                    
+
                 foreach (var recordColumn in recordColumns)
                 {
                     var fieldName = recordColumn.ToString();
-                        
+
                     var field = typeof(MatchPersonResult).GetField($"<{fieldName}>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance);
 
                     if (field != null)
                     {
-                        field.SetValue(result, recordData[(int) recordColumn]);
+                        field.SetValue(result, recordData[(int)recordColumn]);
                     }
                 }
 
@@ -75,18 +78,18 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
                 {
                     ++noMatches;
                 }
-                    
+
                 logger.LogInformation($"The DBS search for record on line '{currentRow}' resulted in match status '{(matched ? "Match" : "NoMatch")}'");
             }
-                
+
             ++currentRow;
         }
-                
+
         logger.LogInformation($"The DBS results file has {recordCount} records, batch search resulted in Match='{matches}' and NoMatch='{noMatches}'");
-            
+
         activity.Stop();
     }
-    
+
     private static void StoreUniqueSearchIdFor(MatchPersonResult matchPersonResult)
     {
         using var md5 = MD5.Create();
@@ -94,7 +97,7 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
         byte[] hashBytes = md5.ComputeHash(bytes);
 
         StringBuilder builder = new StringBuilder();
-        
+
         foreach (var t in hashBytes)
         {
             builder.Append(t.ToString("x2"));
@@ -105,5 +108,5 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
         Activity.Current?.SetBaggage("SearchId", hash);
     }
 
-    
+
 }

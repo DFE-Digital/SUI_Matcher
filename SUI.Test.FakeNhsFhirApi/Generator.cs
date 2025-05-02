@@ -1,7 +1,9 @@
-﻿using Bogus;
-using CsvHelper;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Reflection;
+
+using Bogus;
+
+using CsvHelper;
 
 namespace SUI.Test.FakeNhsFhirApi;
 

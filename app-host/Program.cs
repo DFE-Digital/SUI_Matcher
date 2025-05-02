@@ -7,15 +7,15 @@ var secrets = builder.ExecutionContext.IsPublishMode
     : builder.AddConnectionString("secrets");
 
 var externalApi = builder.AddProject<Projects.External>("external-api")
-					     .WithReference(secrets)
-					     .WithSwaggerUI();
+                         .WithReference(secrets)
+                         .WithSwaggerUI();
 
 var matchingApi = builder.AddProject<Projects.Matching>("matching-api")
-						 .WithReference(externalApi)
-						 .WithSwaggerUI();
+                         .WithReference(externalApi)
+                         .WithSwaggerUI();
 
 builder.AddProject<Projects.Yarp>("yarp")
-	.WithReference(secrets)
-	.WithReference(matchingApi).WaitFor(matchingApi);
+    .WithReference(secrets)
+    .WithReference(matchingApi).WaitFor(matchingApi);
 
 builder.Build().Run();

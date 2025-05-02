@@ -1,4 +1,5 @@
 using Hl7.Fhir.Model;
+
 using Shared.Models;
 
 namespace SUI.Core.Services;
@@ -23,7 +24,7 @@ public static class FieldComparerService
 
         var email = patient.Telecom.FirstOrDefault(x => x.System == ContactPoint.ContactPointSystem.Email)?.Value;
         CompareField(query.Email, email, nameof(SearchQuery.Email), differentFields);
-        
+
         var phone = patient.Telecom.FirstOrDefault(x => x.System == ContactPoint.ContactPointSystem.Phone)?.Value;
         CompareField(query.Phone, phone, nameof(SearchQuery.Phone), differentFields);
 

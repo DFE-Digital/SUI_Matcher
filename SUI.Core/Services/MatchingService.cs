@@ -1,9 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using Shared.Models;
+
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
 using SUI.Types;
@@ -182,7 +186,7 @@ public class MatchingService(
 
         logger.LogInformation("The person match request resulted in match status '{Status}' " +
                               "at process stage ({ProcessStage}), and the data quality was " +
-                              "{QualityResult}", 
+                              "{QualityResult}",
             result.Status.ToString(),
             result.ProcessStage,
             JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
@@ -205,7 +209,7 @@ public class MatchingService(
         logger.LogInformation("Searching for matching person by NHS number");
 
         var validationResults = validationService.Validate(request);
-        
+
         if (validationResults.Results?.Any() == true)
         {
             return new DemographicResponse
@@ -213,7 +217,7 @@ public class MatchingService(
                 Errors = validationResults.Results.Select(r => r.ErrorMessage ?? "").ToList()
             };
         }
-        
+
         var result = await nhsFhirClient.PerformSearchByNhsId(request.NhsNumber!);
         return new DemographicResponse()
         {
@@ -221,7 +225,7 @@ public class MatchingService(
             Errors = result.ErrorMessage is null ? [] : [result.ErrorMessage]
         };
     }
-    
+
     private static string GetAgeGroup(DateOnly birthDate)
     {
         var dateOnlyNow = DateOnly.FromDateTime(DateTime.Now);
@@ -230,7 +234,7 @@ public class MatchingService(
         {
             age--;
         }
-        
+
         return age switch
         {
             < 1 => "Less than 1 year",
@@ -245,10 +249,10 @@ public class MatchingService(
 
     private void LogMatchCompletion(PersonSpecification personSpecification, MatchStatus matchStatus)
     {
-        var ageGroup = personSpecification.BirthDate.HasValue 
-            ? GetAgeGroup(personSpecification.BirthDate.Value) 
+        var ageGroup = personSpecification.BirthDate.HasValue
+            ? GetAgeGroup(personSpecification.BirthDate.Value)
             : "Unknown";
-            
+
         logger.LogInformation(
             "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
             matchStatus,
@@ -286,7 +290,7 @@ public class MatchingService(
         var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
 
         var modelName = model.Given is not null ? new[] { model.Given } : null;
-        
+
         var queries = new List<SearchQuery>
         {
             new() // exact search

@@ -1,10 +1,14 @@
+using System.Diagnostics.CodeAnalysis;
+
 using MatchingApi;
+
 using Microsoft.AspNetCore.Http.Json;
+
 using Shared.Endpoint;
 using Shared.Exceptions;
+
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
-using System.Diagnostics.CodeAnalysis;
 
 DotNetEnv.Env.TraversePath().Load();
 
@@ -22,18 +26,18 @@ builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
 
 builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(
-	static client => client.BaseAddress = new("https+http://external-api"));
+    static client => client.BaseAddress = new("https+http://external-api"));
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiVersioning(options =>
 {
-	options.DefaultApiVersion = new ApiVersion(1);
-	options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    options.DefaultApiVersion = new ApiVersion(1);
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
 }).AddApiExplorer(options =>
 {
-	options.GroupNameFormat = "'v'V";
-	options.SubstituteApiVersionInUrl = true;
+    options.GroupNameFormat = "'v'V";
+    options.SubstituteApiVersionInUrl = true;
 });
 
 builder.Services.AddEndpoints(typeof(Program).Assembly);
@@ -46,13 +50,13 @@ builder.Services.Configure<JsonOptions>(options =>
 var app = builder.Build();
 
 var apiVersionSet = app.NewApiVersionSet()
-	.HasApiVersion(new ApiVersion(1))
-	.ReportApiVersions()
-	.Build();
+    .HasApiVersion(new ApiVersion(1))
+    .ReportApiVersions()
+    .Build();
 
 var versionedGroup = app
-	.MapGroup("api/v{version:apiVersion}")
-	.WithApiVersionSet(apiVersionSet);
+    .MapGroup("api/v{version:apiVersion}")
+    .WithApiVersionSet(apiVersionSet);
 
 app.UseExceptionHandler();
 

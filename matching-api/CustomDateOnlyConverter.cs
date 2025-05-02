@@ -1,11 +1,12 @@
-﻿using SUI.Core;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+
+using SUI.Core;
 
 namespace MatchingApi;
 
 public class CustomDateOnlyConverter : JsonConverter<DateOnly?>
 {
-    
+
 
     private readonly string[] _formats = [Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish];
 

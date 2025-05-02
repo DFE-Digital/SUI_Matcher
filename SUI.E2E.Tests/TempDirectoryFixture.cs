@@ -27,4 +27,3 @@ public class TempDirectoryFixture : IAsyncLifetime
         return Task.CompletedTask;
     }
 }
-

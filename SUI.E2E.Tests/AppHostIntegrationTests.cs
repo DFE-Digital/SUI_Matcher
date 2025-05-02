@@ -16,7 +16,7 @@
 //        _client = fixture.CreateHttpClient("yarp");
 //        _nhsAuthMockApi = fixture.NhsAuthMockApi();
 //    }
-    
+
 //    public static IEnumerable<object[]> GetEndpoints()
 //    {
 //        yield return ["matching-api", "/health"];
@@ -27,7 +27,7 @@
 //    public async Task AppHostRunsCleanly()
 //    {
 //        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification()));
-        
+
 //        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 //    }
 
@@ -40,7 +40,7 @@
 
 //        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 //    }
-    
+
 //    // Single Match with high confidence score (>95%, Confirmed match)
 
 //    [Fact]
@@ -52,7 +52,7 @@
 //            Family = "CHISLETT",
 //            BirthDate = DateOnly.Parse("2008-09-20"),
 //        }));
-        
+
 //        // Assert
 //        Assert.True(response.IsSuccessStatusCode);
 //        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -61,7 +61,7 @@
 //    }
 
 //    // Single Match with low confidence (<95%, Candidate Match)
-    
+
 //    [Fact]
 //    public async Task MatchingApi_SingleMatchWithLowConfidence()
 //    {
@@ -71,7 +71,7 @@
 //            Family = "Robinson",
 //            BirthDate = DateOnly.Parse("2005-10-15"),
 //        }));
-        
+
 //        // Assert
 //        Assert.True(response.IsSuccessStatusCode);
 //        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -80,7 +80,7 @@
 //    }
 
 //    // Single Match with really low confidence (<85%, Candidate Match)
-    
+
 //    [Fact]
 //    public async Task MatchingApi_SingleMatchWithReallyLowConfidence()
 //    {
@@ -90,14 +90,14 @@
 //            Family = "Robinson",
 //            BirthDate = DateOnly.Parse("2005-10-15"),
 //        }));
-        
+
 //        // Assert
 //        Assert.True(response.IsSuccessStatusCode);
 //        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
 //        Assert.NotNull(personMatchResponse?.Result);
 //        Assert.Equal(MatchStatus.NoMatch, personMatchResponse.Result.MatchStatus);
 //    }
-    
+
 //    [Fact]
 //    public async Task MatchingApi_NoMatch()
 //    {
@@ -107,7 +107,7 @@
 //            Family = "CHISLETTE",
 //            BirthDate = DateOnly.Parse("2008-09-21"),
 //        }));
-        
+
 //        // Assert
 //        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 //        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -116,7 +116,7 @@
 //    }
 
 //    // Multiple Matches
-    
+
 //    [Fact]
 //    public async Task MatchingApi_ManyMatch()
 //    {
@@ -126,18 +126,18 @@
 //            Family = "Doe",
 //            BirthDate = DateOnly.Parse("2010-01-01"),
 //        }));
-        
+
 //        // Assert
 //        Assert.True(response.IsSuccessStatusCode);
 //        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
 //        Assert.NotNull(personMatchResponse?.Result);
 //        Assert.Equal(MatchStatus.ManyMatch, personMatchResponse.Result.MatchStatus);
 //    }
-    
+
 //    // No match with additional conditions
 
 //    // Client supplies incorrect data and gets error
-    
+
 //    [Fact]
 //    public async Task MatchingApi_InvalidSearchData_ErrorResponse()
 //    {
@@ -146,7 +146,7 @@
 //            Given = "",
 //            BirthDate = DateOnly.Parse("2010-01-01"),
 //        }));
-        
+
 //        // Assert
 //        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 //        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -156,7 +156,7 @@
 //        Assert.Equal(PersonMatchResponse.QualityType.NotProvided, personMatchResponse.DataQuality.Given);
 //        Assert.Equal(PersonMatchResponse.QualityType.NotProvided, personMatchResponse.DataQuality.Family);
 //        Assert.Equal(PersonMatchResponse.QualityType.Valid, personMatchResponse.DataQuality.Birthdate);
-        
+
 //    }
 
 //    // Client supplies enough data to get a match, but some invalid fields
@@ -174,7 +174,7 @@
 //            Phone = "hello",
 //            AddressPostalCode = "12@24"
 //        }));
-        
+
 //        // Assert
 //        Assert.True(response.IsSuccessStatusCode);
 //        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -205,16 +205,16 @@
 //        // Confirms that the access token is cached
 //        (await _nhsAuthMockApi.Should()).HaveReceived(1).Calls()
 //            .AtPath("/oauth2/token");
-        
+
 //        await Task.Delay(TimeSpan.FromMinutes(1));
-        
+
 //        await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
 //        {
 //            Given = "OCTAVIA",
 //            Family = "CHISLETT",
 //            BirthDate = DateOnly.Parse("2008-09-20"),
 //        }));
-        
+
 //        // Confirms that a new token was requested
 //        (await _nhsAuthMockApi.Should()).HaveReceived(2).Calls()
 //            .AtPath("/oauth2/token");

@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Shared.Endpoint;
 using Shared.Exceptions;
+
 using SUI.Core.Endpoints;
 using SUI.Core.Endpoints.AuthToken;
-using System.Diagnostics.CodeAnalysis;
 
 DotNetEnv.Env.TraversePath().Load();
 
@@ -12,11 +14,11 @@ builder.AddServiceDefaults();
 
 if (builder.Environment.IsDevelopment())
 {
-	builder.Services.AddSingleton<ITokenService, StubTokenService>();
+    builder.Services.AddSingleton<ITokenService, StubTokenService>();
 }
 else
 {
-	builder.Services.AddSingleton<ITokenService, TokenService>();
+    builder.Services.AddSingleton<ITokenService, TokenService>();
 }
 
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClient>();
@@ -31,12 +33,12 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiVersioning(options =>
 {
-	options.DefaultApiVersion = new ApiVersion(1);
-	options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    options.DefaultApiVersion = new ApiVersion(1);
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
 }).AddApiExplorer(options =>
 {
-	options.GroupNameFormat = "'v'V";
-	options.SubstituteApiVersionInUrl = true;
+    options.GroupNameFormat = "'v'V";
+    options.SubstituteApiVersionInUrl = true;
 });
 
 builder.Services.AddEndpoints(typeof(Program).Assembly);
@@ -44,13 +46,13 @@ builder.Services.AddEndpoints(typeof(Program).Assembly);
 var app = builder.Build();
 
 var apiVersionSet = app.NewApiVersionSet()
-	.HasApiVersion(new ApiVersion(1))
-	.ReportApiVersions()
-	.Build();
+    .HasApiVersion(new ApiVersion(1))
+    .ReportApiVersions()
+    .Build();
 
 var versionedGroup = app
-	.MapGroup("api/v{version:apiVersion}")
-	.WithApiVersionSet(apiVersionSet);
+    .MapGroup("api/v{version:apiVersion}")
+    .WithApiVersionSet(apiVersionSet);
 
 app.UseExceptionHandler();
 
@@ -62,8 +64,8 @@ app.MapOpenApi();
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
-	var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
-	await tokenService.Initialise();
+    var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+    await tokenService.Initialise();
 }
 
 app.Run();

@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Microsoft.Extensions.Logging;
 
 namespace Shared.Logging;
@@ -6,7 +7,7 @@ namespace Shared.Logging;
 public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 {
     private readonly JsonFileLogger _logger = new(filePath, nameof(JsonFileLoggerProvider));
-    
+
     public ILogger CreateLogger(string categoryName) => _logger;
 
     public void Dispose()
@@ -16,7 +17,7 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 
     private class JsonFileLogger : ILogger
     {
-        public IDisposable? BeginScope<TState>(TState state) => null;
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
 
         public bool IsEnabled(LogLevel logLevel) => true;
 
@@ -26,11 +27,11 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
         public JsonFileLogger(string logFilePath, string categoryName)
         {
             var timeStamp = $"{DateTime.Now:yyyy-MM-dd}";
-            
+
             if (logFilePath.EndsWith(".json"))
             {
                 logFilePath = logFilePath.Replace(".json", $"-{timeStamp}.log");
-            } 
+            }
             else if (logFilePath.EndsWith(".log"))
             {
                 logFilePath = logFilePath.Replace(".log", $"-{timeStamp}.log");
@@ -39,14 +40,14 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
             {
                 logFilePath += $"-{timeStamp}.log";
             }
-            
+
             _logFileWriter = new StreamWriter(logFilePath, append: true);
             _logFileWriter.AutoFlush = true;
             _categoryName = categoryName;
-            
+
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             var logEntry = new
             {
@@ -58,10 +59,10 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
             };
 
             var logJson = JsonSerializer.Serialize(logEntry);
-            
+
             _logFileWriter.WriteLine(logJson);
         }
-        
+
         public void Close()
         {
             _logFileWriter.Close();

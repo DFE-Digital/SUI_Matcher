@@ -1,25 +1,28 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
+
 using MatchingApi;
+
+using Microsoft.AspNetCore.Mvc.Testing;
+
 using SUI.Core.Domain;
 
 namespace MatchingApi.IntegrationTests;
 
 public sealed class MatchingTest : IClassFixture<WebApplicationFactory<Program>>
 {
-	private readonly WebApplicationFactory<Program> _webApplicationFactory;
-	private readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web);
+    private readonly WebApplicationFactory<Program> _webApplicationFactory;
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web);
 
-	public MatchingTest(WebApplicationFactory<Program> factory)
-	{
-		_webApplicationFactory = factory;
-	}
+    public MatchingTest(WebApplicationFactory<Program> factory)
+    {
+        _webApplicationFactory = factory;
+    }
 
-	private HttpClient CreateHttpClient()
-	{
-		return _webApplicationFactory.CreateDefaultClient();
-	}
+    private HttpClient CreateHttpClient()
+    {
+        return _webApplicationFactory.CreateDefaultClient();
+    }
 
     /*
 	 

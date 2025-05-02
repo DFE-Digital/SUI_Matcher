@@ -20,7 +20,7 @@ public class AuthClientCredentials
     public async Task<string?> AccessToken(int expInMinutes = 1)
     {
         var jwt = _jwtHandler.GenerateJwt(expInMinutes);
-               
+
         var values = new Dictionary<string, string>
         {
             {"grant_type", "client_credentials"},
@@ -30,9 +30,9 @@ public class AuthClientCredentials
         var content = new FormUrlEncodedContent(values);
 
         Console.WriteLine("Requesting token from " + _tokenUrl);
-        
+
         var response = await _client.PostAsync(_tokenUrl, content);
-        
+
         if (response.StatusCode != HttpStatusCode.OK)
         {
             throw new Exception("Authentication failed. \n" + response.Content);
@@ -40,8 +40,8 @@ public class AuthClientCredentials
 
         var resBody = await response.Content.ReadAsStringAsync();
         var parsed = JsonNode.Parse(resBody);
-        
+
         return parsed?["access_token"]?.ToString();
-    
+
     }
 }

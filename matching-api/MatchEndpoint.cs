@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+
 using Shared.Endpoint;
+
 using SUI.Core.Domain;
 using SUI.Core.Services;
 using SUI.Types;
@@ -8,10 +10,10 @@ namespace MatchingApi;
 
 public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
 {
-	public void MapEndpoint(IEndpointRouteBuilder app)
-	{
-		app.MapPost("/matchperson", async (PersonSpecification? model) =>
-		{
+    public void MapEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapPost("/matchperson", async (PersonSpecification? model) =>
+        {
             if (model is null)
             {
                 return Results.BadRequest(new ProblemDetails
@@ -25,8 +27,8 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
 
             return result.Result?.MatchStatus == MatchStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
         });
-        
-        app.MapGet("/demographics", async ([AsParameters]DemographicRequest request) =>
+
+        app.MapGet("/demographics", async ([AsParameters] DemographicRequest request) =>
         {
             var result = await matchingService.GetDemographicsAsync(request);
             return result is null ? Results.BadRequest(result) : Results.Ok(result);

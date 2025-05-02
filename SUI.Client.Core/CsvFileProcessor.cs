@@ -1,9 +1,11 @@
-﻿using CsvHelper;
+﻿using System.Globalization;
+using System.Text.Json;
+
+using CsvHelper;
 using CsvHelper.Configuration;
+
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
-using System.Globalization;
-using System.Text.Json;
 
 namespace SUI.Client.Core;
 
@@ -150,7 +152,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
     {
         await using var writer = new StreamWriter(fileName);
         await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
-        
+
         foreach (var header in headers)
         {
             csv.WriteField(header);
@@ -170,4 +172,3 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         return fileName;
     }
 }
-
