@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using SUI.Core.Util;
 
 namespace SUI.Core.Domain;
 
@@ -33,6 +34,7 @@ public class PersonSpecification
     [JsonPropertyName("birthdate")]
     public DateOnly? BirthDate { get; set; }
 
+    [JsonConverter(typeof(GenderToLowercaseConverter))]
     [AllowedValues("male", "female", "unknown", "other", null, ErrorMessage = PersonValidationConstants.GenderInvalid )]
     [JsonPropertyName("gender")]
     public string? Gender { get; set; }
