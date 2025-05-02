@@ -1,6 +1,7 @@
-﻿using CsvHelper.Configuration;
+﻿using System.Globalization;
+
 using CsvHelper;
-using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace SUI.E2E.Tests.Util;
 

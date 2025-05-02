@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Shared.Logging;
+
 using SUI.DBS.Client.Core.Watcher;
 
 namespace SUI.DBS.Client.Core.Extensions;
@@ -16,7 +18,7 @@ public static class ServiceCollectionExtensions
                 .AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
             builder.AddProvider(new JsonFileLoggerProvider(Path.Combine(Directory.GetCurrentDirectory(), "logs.json")));
         });
-        
+
         services.AddSingleton<ITxtFileProcessor, TxtFileProcessor>();
         services.AddSingleton<TxtFileWatcherService>();
         services.AddSingleton<TxtFileMonitor>();

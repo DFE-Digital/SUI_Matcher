@@ -1,5 +1,4 @@
-﻿using Shared.Logging;
-using Shared.OpenTelemetry;
+﻿using Azure.Monitor.OpenTelemetry.AspNetCore;
 
 using MassTransit.Logging;
 using MassTransit.Monitoring;
@@ -13,7 +12,9 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using Azure.Monitor.OpenTelemetry.AspNetCore;
+
+using Shared.Logging;
+using Shared.OpenTelemetry;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -30,59 +31,59 @@ public static class Extensions
 
     public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
     {
-		builder.ConfigureOpenTelemetry();
-		builder.AddDefaultHealthChecks();
-		builder.Services.AddHttpContextAccessor();
-		builder.Services.AddServiceDiscovery();
-		builder.Services.ConfigureHttpClientDefaults(http =>
-		{
-			http.AddServiceDiscovery();
-			http.AddStandardResilienceHandler();
-		});
+        builder.ConfigureOpenTelemetry();
+        builder.AddDefaultHealthChecks();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddServiceDiscovery();
+        builder.Services.ConfigureHttpClientDefaults(http =>
+        {
+            http.AddServiceDiscovery();
+            http.AddStandardResilienceHandler();
+        });
 
-		return builder;
-	}
+        return builder;
+    }
 
-	public static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
-	{
-		builder.Logging.EnableEnrichment();
-		builder.Services.AddLogEnricher<ApplicationEnricher>();
-		builder.Logging.AddConsole(options => options.FormatterName = "log4net").AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
-		builder.Logging.AddOpenTelemetry(logging =>
-		{
-			logging.IncludeFormattedMessage = true;
-			logging.IncludeScopes = true;
-		});
+    public static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
+    {
+        builder.Logging.EnableEnrichment();
+        builder.Services.AddLogEnricher<ApplicationEnricher>();
+        builder.Logging.AddConsole(options => options.FormatterName = "log4net").AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
+        builder.Logging.AddOpenTelemetry(logging =>
+        {
+            logging.IncludeFormattedMessage = true;
+            logging.IncludeScopes = true;
+        });
 
         var openTelemetryBuilder = builder.Services.AddOpenTelemetry()
-			.WithMetrics(metrics =>
-			{
-				metrics.AddAspNetCoreInstrumentation()
-					.AddHttpClientInstrumentation()
-					.AddRuntimeInstrumentation()
-					.AddMeter(InstrumentationOptions.MeterName)
-					.AddMeter("Marten")
-					.AddMeter(ActivitySourceProvider.DefaultSourceName);
-			})
-			.WithTracing(tracing =>
-			{
-				tracing.AddAspNetCoreInstrumentation()
-						.AddHttpClientInstrumentation()
-						.AddSource(DiagnosticHeaders.DefaultListenerName)
-						.AddSource("Marten")
-						.AddSource(ActivitySourceProvider.DefaultSourceName)
-						.AddSource("Yarp.ReverseProxy");
-			});
+            .WithMetrics(metrics =>
+            {
+                metrics.AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRuntimeInstrumentation()
+                    .AddMeter(InstrumentationOptions.MeterName)
+                    .AddMeter("Marten")
+                    .AddMeter(ActivitySourceProvider.DefaultSourceName);
+            })
+            .WithTracing(tracing =>
+            {
+                tracing.AddAspNetCoreInstrumentation()
+                        .AddHttpClientInstrumentation()
+                        .AddSource(DiagnosticHeaders.DefaultListenerName)
+                        .AddSource("Marten")
+                        .AddSource(ActivitySourceProvider.DefaultSourceName)
+                        .AddSource("Yarp.ReverseProxy");
+            });
 
         if (!string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"])) // Only enable Azure Monitor / App Insights if the connection string is set
-		{
-			openTelemetryBuilder.UseAzureMonitor(x=>x.ConnectionString=builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
-		}
+        {
+            openTelemetryBuilder.UseAzureMonitor(x => x.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
+        }
 
-		builder.AddOpenTelemetryExporters();
+        builder.AddOpenTelemetryExporters();
 
-		return builder;
-	}
+        return builder;
+    }
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
@@ -105,13 +106,13 @@ public static class Extensions
 
     private static IHostApplicationBuilder AddOpenTelemetryExporters(this IHostApplicationBuilder builder)
     {
-		var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
+        var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
 
-		if (useOtlpExporter)
-		{
-			builder.Services.AddOpenTelemetry().UseOtlpExporter();
-		}
+        if (useOtlpExporter)
+        {
+            builder.Services.AddOpenTelemetry().UseOtlpExporter();
+        }
 
-		return builder;
-	}
+        return builder;
+    }
 }

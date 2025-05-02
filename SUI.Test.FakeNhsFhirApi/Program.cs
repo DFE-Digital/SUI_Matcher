@@ -1,4 +1,5 @@
 ﻿using SUI.Test.FakeNhsFhirApi;
+
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
@@ -16,12 +17,13 @@ var data = Generator.Generate(100);
 Generator.WriteTestData(baseDirectory, data, port);
 Console.WriteLine($"Written fake data to: {baseDirectory}");
 
-IResponseBuilder CreateResponse(string json) => Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody(json);
+static IResponseBuilder CreateResponse(string json) => Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody(json);
 
 // oauth
 server
     .Given(Request.Create().UsingPost().WithPath("/oauth2/token"))
-    .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBodyAsJson(new {
+    .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBodyAsJson(new
+    {
         access_token = "12312321321321"
     }));
 

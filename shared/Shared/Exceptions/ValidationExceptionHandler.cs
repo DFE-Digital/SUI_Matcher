@@ -1,42 +1,42 @@
-﻿using Shared.OpenTelemetry;
-
-using Microsoft.AspNetCore.Diagnostics;
+﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
+using Shared.OpenTelemetry;
 
 namespace Shared.Exceptions;
 
 public class ValidationExceptionHandler(ILogger<ValidationExceptionHandler> logger) : IExceptionHandler
 {
-	public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
-	{
-		if (exception is not ValidationException validationException)
-		{
-			return false;
-		}
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    {
+        if (exception is not ValidationException validationException)
+        {
+            return false;
+        }
 
-		logger.LogError(
-			validationException, "Exception occurred: {Message}", validationException.Message);
+        logger.LogError(
+            validationException, "Exception occurred: {Message}", validationException.Message);
 
-		var problemDetails = new ProblemDetails
-		{
-			Status = StatusCodes.Status400BadRequest,
-			Type = "ValidationFailure",
-			Title = "Validation error",
-			Detail = "One or more validation errors has occurred"
-		};
+        var problemDetails = new ProblemDetails
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Type = "ValidationFailure",
+            Title = "Validation error",
+            Detail = "One or more validation errors has occurred"
+        };
 
-		if (validationException.Errors is not null)
-		{
-			problemDetails.Extensions["errors"] = validationException.Errors;
-		}
+        if (validationException.Errors is not null)
+        {
+            problemDetails.Extensions["errors"] = validationException.Errors;
+        }
 
-		httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+        httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
 
-		await httpContext.Response
-			.WriteAsJsonAsync(problemDetails, cancellationToken);
+        await httpContext.Response
+            .WriteAsJsonAsync(problemDetails, cancellationToken);
 
-		return true;
-	}
+        return true;
+    }
 }

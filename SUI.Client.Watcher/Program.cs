@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using SUI.Client.Core;
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Watcher;
@@ -16,7 +17,7 @@ builder.ConfigureServices((hostContext, services) =>
 {
     services.AddClientCore(hostContext.Configuration, matchApiBaseAddress);
     services.AddLogging(configure => configure.AddConsole());
-    services.Configure<CsvWatcherConfig>(x => 
+    services.Configure<CsvWatcherConfig>(x =>
     {
         x.IncomingDirectory = args[0];
         x.ProcessedDirectory = args[1];

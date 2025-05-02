@@ -1,4 +1,5 @@
 ﻿using Shared.Models;
+
 using SUI.Types;
 
 namespace SUI.Core.Domain;

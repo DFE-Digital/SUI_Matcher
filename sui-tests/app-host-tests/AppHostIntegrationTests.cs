@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
+
 using SUI.Core.Domain;
 using SUI.Types;
+
 using WireMock.Client;
 
 namespace AppHost.IntegrationTests;
@@ -17,7 +19,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         _client = fixture.CreateHttpClient("yarp");
         _nhsAuthMockApi = fixture.NhsAuthMockApi();
     }
-    
+
     public static IEnumerable<object[]> GetEndpoints()
     {
         yield return ["matching-api", "/health"];
@@ -28,7 +30,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     public async Task AppHostRunsCleanly()
     {
         var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification()));
-        
+
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -41,7 +43,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
-    
+
     // Single Match with high confidence score (>95%, Confirmed match)
 
     [Fact]
@@ -53,7 +55,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
             Family = "CHISLETT",
             BirthDate = DateOnly.Parse("2008-09-20"),
         }));
-        
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -62,7 +64,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     }
 
     // Single Match with low confidence (<95%, Candidate Match)
-    
+
     [Fact]
     public async Task MatchingApi_SingleMatchWithLowConfidence()
     {
@@ -72,7 +74,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
             Family = "Robinson",
             BirthDate = DateOnly.Parse("2005-10-15"),
         }));
-        
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -81,7 +83,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     }
 
     // Single Match with really low confidence (<85%, Candidate Match)
-    
+
     [Fact]
     public async Task MatchingApi_SingleMatchWithReallyLowConfidence()
     {
@@ -91,14 +93,14 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
             Family = "Robinson",
             BirthDate = DateOnly.Parse("2005-10-15"),
         }));
-        
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.NoMatch, personMatchResponse.Result.MatchStatus);
     }
-    
+
     [Fact]
     public async Task MatchingApi_NoMatch()
     {
@@ -108,7 +110,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
             Family = "CHISLETTE",
             BirthDate = DateOnly.Parse("2008-09-21"),
         }));
-        
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -117,7 +119,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     }
 
     // Multiple Matches
-    
+
     [Fact]
     public async Task MatchingApi_ManyMatch()
     {
@@ -127,18 +129,18 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
             Family = "Doe",
             BirthDate = DateOnly.Parse("2010-01-01"),
         }));
-        
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.ManyMatch, personMatchResponse.Result.MatchStatus);
     }
-    
+
     // No match with additional conditions
 
     // Client supplies incorrect data and gets error
-    
+
     [Fact]
     public async Task MatchingApi_InvalidSearchData_ErrorResponse()
     {
@@ -147,7 +149,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
             Given = "",
             BirthDate = DateOnly.Parse("2010-01-01"),
         }));
-        
+
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -157,7 +159,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         Assert.Equal(QualityType.NotProvided, personMatchResponse.DataQuality.Given);
         Assert.Equal(QualityType.NotProvided, personMatchResponse.DataQuality.Family);
         Assert.Equal(QualityType.Valid, personMatchResponse.DataQuality.Birthdate);
-        
+
     }
 
     // Client supplies enough data to get a match, but some invalid fields
@@ -175,7 +177,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
             Phone = "hello",
             AddressPostalCode = "12@24"
         }));
-        
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
@@ -193,7 +195,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact(Skip = "Explicit run only due to Task.Delay")]
     public async Task MatchingApi_ExpireTheAccessToken_TokenRenews()
     {
-        for (var i = 0; i < 2; i++) 
+        for (var i = 0; i < 2; i++)
         {
             await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
             {
@@ -206,16 +208,16 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         // Confirms that the access token is cached
         (await _nhsAuthMockApi.Should()).HaveReceived(1).Calls()
             .AtPath("/oauth2/token");
-        
+
         await Task.Delay(TimeSpan.FromMinutes(1));
-        
+
         await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
         {
             Given = "OCTAVIA",
             Family = "CHISLETT",
             BirthDate = DateOnly.Parse("2008-09-20"),
         }));
-        
+
         // Confirms that a new token was requested
         (await _nhsAuthMockApi.Should()).HaveReceived(2).Calls()
             .AtPath("/oauth2/token");

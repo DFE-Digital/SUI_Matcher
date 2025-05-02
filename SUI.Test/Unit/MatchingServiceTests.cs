@@ -1,12 +1,17 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+
+using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Newtonsoft.Json;
+
 using Shared.Models;
+
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
 using SUI.Types;
-using System.Diagnostics;
 
 namespace SUI.Test.Unit;
 
@@ -238,8 +243,8 @@ public sealed class MatchingServiceTests
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
         var validationService = new ValidationService();
         var subj = new MatchingService(mockLogger.Object, nhsFhir.Object, validationService);
-        
-        var eighteenYearsAgo = DateTime.UtcNow.AddYears(-18); 
+
+        var eighteenYearsAgo = DateTime.UtcNow.AddYears(-18);
 
         var model = new PersonSpecification
         {
@@ -258,7 +263,7 @@ public sealed class MatchingServiceTests
                 Type = SearchResult.ResultType.Matched,
                 Score = 0.99m
             });
-        
+
         using var activity = new Activity("TestActivity");
         activity.Start();
 
@@ -277,7 +282,7 @@ public sealed class MatchingServiceTests
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
     }
-    
+
 
     private ILogger<MatchingService> CreateLogger() =>
          new Logger<MatchingService>(new LoggerFactory());

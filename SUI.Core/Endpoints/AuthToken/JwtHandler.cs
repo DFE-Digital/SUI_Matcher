@@ -1,8 +1,10 @@
-using IdentityModel;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+
+using IdentityModel;
+
+using Microsoft.IdentityModel.Tokens;
 
 namespace SUI.Core.Endpoints.AuthToken;
 
@@ -16,7 +18,7 @@ public class JwtHandler
     {
         _audience = audience;
         _clientId = clientId;
-        
+
         if (keyOrPfx.Length > 0)
         {
             _signingCredentials = FromPrivateKey(keyOrPfx, kid);
@@ -29,8 +31,8 @@ public class JwtHandler
 
     public string GenerateJwt(int expInMinutes = 1)
     {
-        
-        var now = DateTime.UtcNow; 
+
+        var now = DateTime.UtcNow;
         var token = new JwtSecurityToken(
             _clientId,
             _audience,
@@ -43,7 +45,7 @@ public class JwtHandler
             now.AddMinutes(expInMinutes),
             _signingCredentials
         );
-        
+
         var tokenHandler = new JwtSecurityTokenHandler();
 
         return tokenHandler.WriteToken(token);
@@ -54,10 +56,10 @@ public class JwtHandler
         privateKey = privateKey.Replace("-----BEGIN RSA PRIVATE KEY-----", "");
         privateKey = privateKey.Replace("-----END RSA PRIVATE KEY-----", "");
         var keyBytes = Convert.FromBase64String(privateKey);
-        
+
         var rsa = RSA.Create();
         rsa.ImportRSAPrivateKey(keyBytes, out _);
-        
+
         var rsaSecurityKey = new RsaSecurityKey(rsa)
         {
             KeyId = kid

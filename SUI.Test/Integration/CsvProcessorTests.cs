@@ -1,8 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shared.Models;
+
 using SUI.Client.Core;
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Integration;
@@ -12,6 +15,7 @@ using SUI.Core.Endpoints;
 using SUI.Core.Services;
 using SUI.Test.Integration.Adapters;
 using SUI.Types;
+
 using D = System.Collections.Generic.Dictionary<string, string>;
 
 namespace SUI.Test.Integration;

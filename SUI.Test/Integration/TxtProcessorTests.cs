@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
+using SUI.Core;
 using SUI.DBS.Client.Core;
 using SUI.DBS.Client.Core.Extensions;
 using SUI.DBS.Client.Core.Watcher;
-using SUI.Core;
+
 using ColumnMapping = System.Collections.Generic.Dictionary<int, string>;
 
 namespace SUI.Test.Integration;
@@ -36,7 +38,7 @@ public class TxtProcessorTests
         var testData = new List<TestData>
         {
             new(new ColumnMapping()),
-            
+
             new(new ColumnMapping
             {
                 [(int) RecordColumn.Given] = f.Name.FirstName(),
@@ -64,9 +66,9 @@ public class TxtProcessorTests
 
         // ACT
         var cts = new CancellationTokenSource();
-        
+
         var logMessages = new List<string>();
-        
+
         var provider = Bootstrap(logMessages);
         var monitor = provider.GetRequiredService<TxtFileMonitor>();
         var monitoringTask = monitor.StartAsync(cts.Token);
@@ -91,28 +93,28 @@ public class TxtProcessorTests
         Assert.IsNull(monitor.GetLastOperation().Exception, monitor.GetLastOperation().Exception?.ToString() ?? "Exception occurred");
         Assert.AreEqual(0, monitor.ErrorCount);
         Assert.AreEqual(1, monitor.ProcessedCount);
-        
+
         Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS search for record on line '1' resulted in match status 'Match'")));
         Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS search for record on line '3' resulted in match status 'NoMatch'")));
         Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS results file has 2 records, batch search resulted in Match='1' and NoMatch='1'")));
     }
-    
+
     private ServiceProvider Bootstrap(List<string> logMessages)
     {
         var servicesCollection = new ServiceCollection();
         servicesCollection.AddLogging(b => b.AddDebug().AddProvider(new TestContextLoggerProvider(TestContext, logMessages)));
-        
+
         servicesCollection.Configure<TxtWatcherConfig>(x =>
         {
             x.IncomingDirectory = _dir.IncomingDirectoryPath;
             x.ProcessedDirectory = _dir.ProcessedDirectoryPath;
         });
-        
+
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
         servicesCollection.AddClientCore(config);
-        
+
         return servicesCollection.BuildServiceProvider();
     }
 

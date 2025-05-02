@@ -7,11 +7,11 @@ public class GenderToLowercaseConverter : JsonConverter<string?>
 {
     public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return reader.GetString()?.ToLower(); // Convert input to lowercase
+        return reader.GetString()?.ToLower() ?? string.Empty; // Convert input to lowercase and handle null
     }
 
     public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(value?.ToLower()); // Convert output to uppercase
+        writer.WriteStringValue(value?.ToLower()); // Convert output to lowercase
     }
 }

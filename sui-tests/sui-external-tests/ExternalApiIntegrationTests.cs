@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
+
 using Shared.Models;
+
 using SUI.Types;
 
 namespace ExternalApi.IntegrationTests;
@@ -18,7 +20,7 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
     {
         // Arrange
         var httpClient = _httpClient;
-        
+
         var query = new SearchQuery()
         {
             FuzzyMatch = true,
@@ -26,25 +28,25 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
             Given = ["OCTAVIA"],
             Birthdate = ["eq2008-09-20"]
         };
-        
+
         // Act
         var response = await httpClient.PostAsJsonAsync("/api/v1/search", query);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<SearchResult>();
-        
+
         // Assert
         Assert.Equal(SearchResult.ResultType.Matched, result!.Type);
         Assert.NotNull(result.NhsNumber);
         Assert.Null(result.ErrorMessage);
     }
-    
+
     [Fact]
     public async Task Search_RetrieveNoMatchingPatient()
     {
         // Arrange
         var httpClient = _httpClient;
-        
+
         var query = new SearchQuery()
         {
             FuzzyMatch = true,
@@ -52,25 +54,25 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
             Given = ["OCTAVIAN"],
             Birthdate = ["eq2008-09-21"]
         };
-        
+
         // Act
         var response = await httpClient.PostAsJsonAsync("/api/v1/search", query);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<SearchResult>();
-        
+
         // Assert
         Assert.Equal(SearchResult.ResultType.Unmatched, result!.Type);
         Assert.Null(result.NhsNumber);
         Assert.Null(result.ErrorMessage);
     }
-    
+
     [Fact]
     public async Task Search_RetrieveMultipleMatchingPatients()
     {
         // Arrange
         var httpClient = _httpClient;
-        
+
         var query = new SearchQuery()
         {
             FuzzyMatch = true,
@@ -78,19 +80,19 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
             Given = ["OCTAVIA"],
             Birthdate = ["ge2008-09-21"]
         };
-        
+
         // Act
         var response = await httpClient.PostAsJsonAsync("/api/v1/search", query);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<SearchResult>();
-        
+
         // Assert
         Assert.Equal(SearchResult.ResultType.MultiMatched, result!.Type);
         Assert.Null(result.NhsNumber);
         Assert.Null(result.ErrorMessage);
     }
-    
+
     [Fact]
     public async Task Demographics_RetrievePatientsDemographics()
     {
@@ -102,17 +104,17 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<DemographicResponse>();
-        
+
         // Assert
         Assert.NotNull(result?.Result);
     }
-    
+
     [Fact]
     public async Task Demographics_ReturnsErrors_WhenNhsNumberIsInvalid()
     {
         // Arrange
         const string invalidNhsNumber = "9000000012";
-        
+
         // Act
         var response = await _httpClient.GetAsync($"/api/v1/demographics/{invalidNhsNumber}");
         response.EnsureSuccessStatusCode();

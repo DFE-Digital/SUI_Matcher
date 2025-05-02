@@ -1,6 +1,7 @@
 ﻿using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 
@@ -38,7 +39,7 @@ public class PdfReportGenerator
                             header.Cell().Text("Value").Bold();
                         });
 
-                        
+
 
                         for (int i = 0; i < categories.Length; i++)
                         {
@@ -64,7 +65,7 @@ public class PdfReportGenerator
 
     private static string GenerateBarChart(string[] categories, double[] values)
     {
-        var model = new PlotModel { Title = "Bar Chart", Padding = new OxyThickness(30,30,30,30) };
+        var model = new PlotModel { Title = "Bar Chart", Padding = new OxyThickness(30, 30, 30, 30) };
         var barSeries = new BarSeries { LabelPlacement = LabelPlacement.Inside, LabelFormatString = "{0}" };
 
         for (int i = 0; i < values.Length; i++)
@@ -78,7 +79,7 @@ public class PdfReportGenerator
             Position = AxisPosition.Left,
             ItemsSource = categories,
             IsTickCentered = true,
-            
+
         });
         model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Count" });
 

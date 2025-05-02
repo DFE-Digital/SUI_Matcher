@@ -1,5 +1,7 @@
 using Hl7.Fhir.Model;
+
 using Shared.Models;
+
 using SUI.Core.Services;
 
 namespace SUI.Test.Unit.Core.Services;
@@ -47,7 +49,7 @@ public class FieldComparerServiceTests
         CollectionAssert.DoesNotContain(differences, nameof(SearchQuery.Family));
         CollectionAssert.DoesNotContain(differences, nameof(SearchQuery.Email));
     }
-    
+
     [TestMethod]
     public void ShouldIdentifyBirthdateAsTheSame()
     {

@@ -1,16 +1,18 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+
 using SUI.Core.Util;
 
 namespace SUI.Core.Domain;
 
-public static class PersonValidationConstants {
-    public const string GivenNameRequired = "Given name is required"; 
-    public const string GivenNameInvalid = "Given name cannot be greater than 20 characters"; 
-    public const string FamilyNameRequired = "Family name is required"; 
-    public const string FamilyNameInvalid = "Family name cannot be greater than 20 characters"; 
-    public const string BirthDateRequired = "Date of birth is required"; 
-    public const string BirthDateInvalid = "Invalid date of birth"; 
+public static class PersonValidationConstants
+{
+    public const string GivenNameRequired = "Given name is required";
+    public const string GivenNameInvalid = "Given name cannot be greater than 20 characters";
+    public const string FamilyNameRequired = "Family name is required";
+    public const string FamilyNameInvalid = "Family name cannot be greater than 20 characters";
+    public const string BirthDateRequired = "Date of birth is required";
+    public const string BirthDateInvalid = "Invalid date of birth";
     public const string GenderInvalid = "Gender has to match FHIR standards";
     public const string PhoneInvalid = "Invalid phone number.";
     public const string EmailInvalid = "Invalid email address.";
@@ -35,7 +37,7 @@ public class PersonSpecification
     public DateOnly? BirthDate { get; set; }
 
     [JsonConverter(typeof(GenderToLowercaseConverter))]
-    [AllowedValues("male", "female", "unknown", "other", null, ErrorMessage = PersonValidationConstants.GenderInvalid )]
+    [AllowedValues("male", "female", "unknown", "other", null, ErrorMessage = PersonValidationConstants.GenderInvalid)]
     [JsonPropertyName("gender")]
     public string? Gender { get; set; }
 

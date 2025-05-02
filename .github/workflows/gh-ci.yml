@@ -21,8 +21,11 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Format code
+        run: dotnet format --verify-no-changes --verbosity diagnostic
+
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build --no-restore -WarnAsError
       
       - name: Install dotnet-reportgenerator-globaltool
         run: dotnet tool install --global dotnet-coverage

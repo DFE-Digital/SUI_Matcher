@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Concurrent;
+
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Collections.Concurrent;
 
 namespace SUI.DBS.Client.Core.Watcher;
 
@@ -79,13 +80,13 @@ public class TxtFileMonitor
             await Task.Delay(_config.ProcessingDelayMs, cancellationToken);
         }
     }
-    
+
     public void PrintStats(TextWriter output)
     {
         output.WriteLine($"Processed Count: {_processedCount}, Error Count: {_errorCount}");
     }
 
-    private async Task ProcessFileAsync(string filePath) 
+    private async Task ProcessFileAsync(string filePath)
         => await _fileProcessor.ProcessFileAsync(filePath);
 
     private async Task RetryAsync(Func<Task> action, int retryCount, int delayMs)

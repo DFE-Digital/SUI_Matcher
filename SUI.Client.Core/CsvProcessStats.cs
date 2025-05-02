@@ -32,5 +32,3 @@ public class CsvProcessStats
     public double ManyMatchPercentage => _manyMatchPercentage.Value;
     public double NoMatchPercentage => _noMatchPercentage.Value;
 }
-
-

@@ -1,9 +1,10 @@
 using Shared.Models;
+
 using SUI.Core.Endpoints;
 
 namespace MatchingApi;
 
-public class NhsFhirClientApiWrapper (HttpClient httpClient) : INhsFhirClient
+public class NhsFhirClientApiWrapper(HttpClient httpClient) : INhsFhirClient
 {
     public async Task<SearchResult?> PerformSearch(SearchQuery searchQuery)
     {
@@ -24,7 +25,7 @@ public class NhsFhirClientApiWrapper (HttpClient httpClient) : INhsFhirClient
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<DemographicResult>();
-        
+
         if (result == null)
         {
             throw new InvalidOperationException("Failed to deserialize DemographicResult from the response.");

@@ -40,7 +40,7 @@ public class TestContextLoggerProvider : ILoggerProvider
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             _testContext.WriteLine($"[{logLevel}] {_categoryName}: {formatter(state, exception)}");
-            
+
             _logMessages.Add($"{formatter(state, exception)}");
         }
     }

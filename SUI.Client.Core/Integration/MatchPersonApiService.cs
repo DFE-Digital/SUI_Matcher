@@ -1,6 +1,7 @@
-﻿using SUI.Client.Core.Models;
+﻿using System.Net.Http.Json;
+
+using SUI.Client.Core.Models;
 using SUI.Types;
-using System.Net.Http.Json;
 
 namespace SUI.Client.Core.Integration;
 
