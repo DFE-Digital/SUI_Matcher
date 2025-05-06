@@ -2,8 +2,6 @@ using System.Net.Http.Json;
 
 using Shared.Models;
 
-using SUI.Types;
-
 namespace ExternalApi.IntegrationTests;
 
 public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>

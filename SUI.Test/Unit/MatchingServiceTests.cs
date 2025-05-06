@@ -11,7 +11,6 @@ using Shared.Models;
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
-using SUI.Types;
 
 namespace SUI.Test.Unit;
 

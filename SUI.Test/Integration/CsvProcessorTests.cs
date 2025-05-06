@@ -14,7 +14,6 @@ using SUI.Core;
 using SUI.Core.Endpoints;
 using SUI.Core.Services;
 using SUI.Test.Integration.Adapters;
-using SUI.Types;
 
 using D = System.Collections.Generic.Dictionary<string, string>;
 

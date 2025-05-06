@@ -31,8 +31,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\app-host\AppHost.csproj" />
-        <ProjectReference Include="..\..\shared\Shared\Shared.csproj" />
+        <ProjectReference Include="..\..\src\app-host\AppHost.csproj" />
+        <ProjectReference Include="..\..\src\Shared\Shared.csproj" />
         <ProjectReference Include="..\..\SUI.Core\SUI.Core.csproj" />
     </ItemGroup>
 
