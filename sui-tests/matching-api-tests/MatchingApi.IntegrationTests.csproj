@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-	<ProjectReference Include="..\..\matching-api\Matching.csproj" IsAspireProjectResource="false" />
+	<ProjectReference Include="..\..\src\matching-api\Matching.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
   <ItemGroup>

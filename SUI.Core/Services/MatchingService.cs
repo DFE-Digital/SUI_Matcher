@@ -10,7 +10,6 @@ using Shared.Models;
 
 using SUI.Core.Domain;
 using SUI.Core.Endpoints;
-using SUI.Types;
 
 namespace SUI.Core.Services;
 

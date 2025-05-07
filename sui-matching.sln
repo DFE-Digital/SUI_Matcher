@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matching", "matching-api\Matching.csproj", "{1E1B0C85-DB1F-485E-8B5A-CE03E9977029}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matching", "src\matching-api\Matching.csproj", "{1E1B0C85-DB1F-485E-8B5A-CE03E9977029}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppHost", "app-host\AppHost.csproj", "{EB61218A-CF80-4389-9C6A-D6AA5C205E95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppHost", "src\app-host\AppHost.csproj", "{EB61218A-CF80-4389-9C6A-D6AA5C205E95}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{140D0842-3BBC-4339-9C75-331FD9CB50F8}"
 	ProjectSection(SolutionItems) = preProject
@@ -19,15 +19,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		tests.runsettings = tests.runsettings
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "shared\Shared\Shared.csproj", "{46796FD1-9AC2-498D-8535-D9E57286AA2F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "src\Shared\Shared.csproj", "{46796FD1-9AC2-498D-8535-D9E57286AA2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp", "yarp\Yarp\Yarp.csproj", "{B64CA4AA-AE04-4C84-AADE-704FDA69F06E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp", "src\Yarp\Yarp.csproj", "{B64CA4AA-AE04-4C84-AADE-704FDA69F06E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppHost.IntegrationTests", "sui-tests\app-host-tests\AppHost.IntegrationTests.csproj", "{D80E6F3D-BF63-4F8D-B83A-6841CC5F3D2A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingApi.IntegrationTests", "sui-tests\matching-api-tests\MatchingApi.IntegrationTests.csproj", "{98A16972-5E73-4DEE-B247-35B8A77A60DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "External", "external-api\External.csproj", "{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "External", "src\external-api\External.csproj", "{64A53CE4-A747-4944-8CFD-56F0A7FFC9D6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExternalApi.IntegrationTests", "sui-tests\sui-external-tests\ExternalApi.IntegrationTests.csproj", "{2440D760-54E0-4647-9EFB-9DC0BE4DA86F}"
 EndProject
@@ -39,11 +39,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Core", "SUI.Core\SUI.Co
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{985A8CD1-C091-4B79-A5FA-D483B5DC38CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Client.Core", "SUI.Client.Core\SUI.Client.Core.csproj", "{54AF3157-D8BD-4273-B9B4-8F87292419F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Client.Core", "src\tools\client\SUI.Client.Core\SUI.Client.Core.csproj", "{54AF3157-D8BD-4273-B9B4-8F87292419F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Client.Console", "SUI.Client.Console\SUI.Client.Console.csproj", "{29217CCF-B321-7281-B9E9-C96ACDA27754}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Client.Console", "src\tools\client\SUI.Client.Console\SUI.Client.Console.csproj", "{29217CCF-B321-7281-B9E9-C96ACDA27754}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Client.Watcher", "SUI.Client.Watcher\SUI.Client.Watcher.csproj", "{FCF62331-5270-39CF-E2CB-496CB13F4090}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Client.Watcher", "src\tools\client\SUI.Client.Watcher\SUI.Client.Watcher.csproj", "{FCF62331-5270-39CF-E2CB-496CB13F4090}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.E2E.Tests", "SUI.E2E.Tests\SUI.E2E.Tests.csproj", "{1D7CBFA0-1550-4DDB-A38A-B8D5AC5D9EF2}"
 EndProject
@@ -51,17 +51,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "E2E", "E2E", "{810704C0-195
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Test", "SUI.Test\SUI.Test.csproj", "{89481DE3-EB35-F200-1AFC-7097D97A86FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Types", "SUI.Types\SUI.Types.csproj", "{B38A332B-F0AB-45B3-80D5-BA4A504519EF}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Test.FakeNhsFhirApi", "SUI.Test.FakeNhsFhirApi\SUI.Test.FakeNhsFhirApi.csproj", "{74B8B982-E54C-49A9-9963-3CD5EEAC57D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.DBS.Client.Core", "SUI.DBS.Client.Core\SUI.DBS.Client.Core.csproj", "{C2C00189-7E7F-4515-B06A-D1F24B355C1C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.DBS.Client.Core", "src\tools\dbs-response-logger\SUI.DBS.Client.Core\SUI.DBS.Client.Core.csproj", "{C2C00189-7E7F-4515-B06A-D1F24B355C1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Azure.BlobStorage.Container.Sync", "SUI.Azure.BlobStorage.Container.Sync\SUI.Azure.BlobStorage.Container.Sync.csproj", "{04778F18-2978-4714-ABF9-02A5104A0F08}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Azure.BlobStorage.Container.Sync", "src\tools\SUI.Azure.BlobStorage.Container.Sync\SUI.Azure.BlobStorage.Container.Sync.csproj", "{04778F18-2978-4714-ABF9-02A5104A0F08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.DBS.Client.Console", "SUI.DBS.Client.Console\SUI.DBS.Client.Console.csproj", "{9D3264D5-2D68-4176-9A57-7B3213C7EE86}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.DBS.Client.Console", "src\tools\dbs-response-logger\SUI.DBS.Client.Console\SUI.DBS.Client.Console.csproj", "{9D3264D5-2D68-4176-9A57-7B3213C7EE86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.DBS.Client.Watcher", "SUI.DBS.Client.Watcher\SUI.DBS.Client.Watcher.csproj", "{4EF4CD9C-08CA-41A0-95B7-B22B902DD76F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.DBS.Client.Watcher", "src\tools\dbs-response-logger\SUI.DBS.Client.Watcher\SUI.DBS.Client.Watcher.csproj", "{4EF4CD9C-08CA-41A0-95B7-B22B902DD76F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,10 +123,6 @@ Global
 		{89481DE3-EB35-F200-1AFC-7097D97A86FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89481DE3-EB35-F200-1AFC-7097D97A86FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89481DE3-EB35-F200-1AFC-7097D97A86FF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B38A332B-F0AB-45B3-80D5-BA4A504519EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B38A332B-F0AB-45B3-80D5-BA4A504519EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B38A332B-F0AB-45B3-80D5-BA4A504519EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B38A332B-F0AB-45B3-80D5-BA4A504519EF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{74B8B982-E54C-49A9-9963-3CD5EEAC57D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{74B8B982-E54C-49A9-9963-3CD5EEAC57D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74B8B982-E54C-49A9-9963-3CD5EEAC57D7}.Release|Any CPU.ActiveCfg = Release|Any CPU

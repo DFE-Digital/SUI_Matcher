@@ -1,8 +1,9 @@
-﻿using SUI.Client.Core.Integration;
+﻿using Shared.Models;
+
+using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
 using SUI.Core;
 using SUI.Core.Services;
-using SUI.Types;
 
 namespace SUI.Test.Integration.Adapters;
 

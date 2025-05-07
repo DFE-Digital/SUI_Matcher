@@ -1,11 +1,12 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
+using Shared.Models;
+
 using SUI.Client.Core;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
 using SUI.E2E.Tests.Util;
-using SUI.Types;
 
 using WireMock.Client;
 

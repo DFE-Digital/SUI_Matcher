@@ -1,7 +1,8 @@
 using System.Net.Http.Json;
 
+using Shared.Models;
+
 using SUI.Core.Domain;
-using SUI.Types;
 
 using WireMock.Client;
 
