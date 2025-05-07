@@ -277,7 +277,7 @@ public sealed class MatchingServiceTests
                                               v.ToString()!.Contains("MatchStatus: Match") &&
                                               v.ToString()!.Contains("AgeGroup: 16-18 years") &&
                                               v.ToString()!.Contains("Gender: male") &&
-                                              v.ToString()!.Contains("Postcode: TQ12")),
+                                              v.ToString()!.Contains("Postcode: TQ12 5HH")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
     }
