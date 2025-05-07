@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -79,7 +80,17 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
                     ++noMatches;
                 }
 
-                logger.LogInformation($"The DBS search for record on line '{currentRow}' resulted in match status '{(matched ? "Match" : "NoMatch")}'");
+                var ageGroup = !string.IsNullOrWhiteSpace(result.BirthDate)
+                    ? GetAgeGroup(ToDateOnly(result.BirthDate)!.Value)
+                    : "Unknown";
+
+                logger.LogInformation(
+                    "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
+                    matched ? "Match" : "NoMatch",
+                    ageGroup,
+                    ToGender(result.Gender),
+                    ToPostCode(result.PostCode)
+                );
             }
 
             ++currentRow;
@@ -88,6 +99,35 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
         logger.LogInformation($"The DBS results file has {recordCount} records, batch search resulted in Match='{matches}' and NoMatch='{noMatches}'");
 
         activity.Stop();
+    }
+
+    public static DateOnly? ToDateOnly(string? value)
+        => !string.IsNullOrWhiteSpace(value) && DateOnly.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) ? date : null;
+
+    public static string ToGender(string? value)
+        => !string.IsNullOrWhiteSpace(value) ? (value == "1" ? "Male" : "Female") : "Unknown";
+
+    public static string ToPostCode(string? value)
+        => !string.IsNullOrWhiteSpace(value) ? value : "Unknown";
+    public static string GetAgeGroup(DateOnly birthDate)
+    {
+        var dateOnlyNow = DateOnly.FromDateTime(DateTime.Now);
+        var age = dateOnlyNow.Year - birthDate.Year;
+        if (dateOnlyNow.DayOfYear < birthDate.DayOfYear)
+        {
+            age--;
+        }
+
+        return age switch
+        {
+            < 1 => "Less than 1 year",
+            <= 3 => "1-3 years",
+            <= 7 => "4-7 years",
+            <= 11 => "8-11 years",
+            <= 15 => "12-15 years",
+            <= 18 => "16-18 years",
+            _ => "Over 18 years"
+        };
     }
 
     private static void StoreUniqueSearchIdFor(MatchPersonResult matchPersonResult)
