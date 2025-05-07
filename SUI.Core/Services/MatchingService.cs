@@ -252,14 +252,12 @@ public class MatchingService(
             ? GetAgeGroup(personSpecification.BirthDate.Value)
             : "Unknown";
 
-        var postCode = personSpecification.AddressPostalCode?.Split(' ').FirstOrDefault() ?? "Unknown";
-
         logger.LogInformation(
             "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
             matchStatus,
             ageGroup,
             personSpecification.Gender ?? "Unknown",
-            postCode
+            personSpecification.AddressPostalCode ?? "Unknown"
         );
     }
 
