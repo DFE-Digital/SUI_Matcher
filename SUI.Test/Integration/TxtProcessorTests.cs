@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Data;
+using System.Globalization;
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -94,10 +97,22 @@ public class TxtProcessorTests
         Assert.AreEqual(0, monitor.ErrorCount);
         Assert.AreEqual(1, monitor.ProcessedCount);
 
-        Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS search for record on line '1' resulted in match status 'Match'")));
-        Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS search for record on line '3' resulted in match status 'NoMatch'")));
-        Assert.AreEqual(1, logMessages.Count(x => x.Contains($"The DBS results file has 2 records, batch search resulted in Match='1' and NoMatch='1'")));
+        Assert.AreEqual(1, logMessages.Count(x => x.Contains($"[MATCH_COMPLETED] MatchStatus: Match, AgeGroup: {GetAgeRange(testData[1])}, Gender: {GetGender(testData[1])}, Postcode: {GetPostCode(testData[1])}")));
+        Assert.AreEqual(1, logMessages.Count(x => x.Contains("The DBS results file has 2 records, batch search resulted in Match='1' and NoMatch='1'")));
     }
+
+    private static string GetPostCode(TestData recordData)
+        => TxtFileProcessor.ToPostCode(recordData.Record[(int)RecordColumn.PostCode]);
+
+    private static string GetGender(TestData recordData)
+        => TxtFileProcessor.ToGender(recordData.Record[(int)RecordColumn.Gender]);
+
+    private static string GetAgeRange(TestData recordData)
+        => TxtFileProcessor.GetAgeGroup(ToDateOnly(recordData.Record[(int)RecordColumn.BirthDate])!.Value);
+
+    private static DateOnly? ToDateOnly(string value)
+        => DateOnly.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) ? date : null;
+
 
     private ServiceProvider Bootstrap(List<string> logMessages)
     {

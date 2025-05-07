@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.Logging;
 
@@ -49,14 +51,40 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            var logEntry = new
+            string message = formatter(state, exception);
+
+            var searchId = Activity.Current?.GetBaggageItem("SearchId");
+
+            if (searchId is not null)
             {
-                TimeStamp = DateTime.Now,
-                LogLevel = logLevel.ToString(),
-                Category = _categoryName,
-                Message = formatter(state, exception),
-                Exception = exception?.ToString()
+                message = $"[{logLevel}] [SearchId={searchId}] " + message;
+            }
+            else
+            {
+                message = $"[{logLevel}] " + message;
+            }
+
+            var logEntry = new Dictionary<string, object?>
+            {
+                { "TimeStamp", DateTime.Now },
+                { "LogLevel", logLevel.ToString() },
+                { "Category", _categoryName },
+                { "Message", message },
+                { "Exception", exception?.ToString() }
             };
+
+            if (state is IEnumerable<KeyValuePair<string, object?>> formattedLogValues)
+            {
+                foreach (var item in formattedLogValues)
+                {
+                    Console.WriteLine(item.Key + ": " + item.Value);
+
+                    if (Regex.IsMatch(item.Key, @"^\w+$"))
+                    {
+                        logEntry[item.Key] = item.Value;
+                    }
+                }
+            }
 
             var logJson = JsonSerializer.Serialize(logEntry);
 
