@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <LangVersion>default</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.AppHost" />
+        <PackageReference Include="Aspire.Hosting.Testing" />
+        <PackageReference Include="FluentAssertions" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="WireMock.Net.Aspire" />
+        <PackageReference Include="xunit" />
+        
+        <PackageReference Include="xunit.runner.visualstudio" />
+        <PackageReference Include="coverlet.collector" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="System.Net"/>
+        <Using Include="Microsoft.Extensions.DependencyInjection"/>
+        <Using Include="Aspire.Hosting.ApplicationModel"/>
+        <Using Include="Aspire.Hosting.Testing" />
+        <Using Include="Xunit"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\app-host\AppHost.csproj" />
+        <ProjectReference Include="..\..\src\matching-api\Matching.csproj" IsAspireProjectResource="false" />
+        <ProjectReference Include="..\..\src\external-api\External.csproj" IsAspireProjectResource="false" />
+        <ProjectReference Include="..\..\src\Shared\Shared.csproj" />
+        <ProjectReference Include="..\..\SUI.Core\SUI.Core.csproj" />
+        <ProjectReference Include="..\..\src\tools\client\SUI.Client.Core\SUI.Client.Core.csproj" />
+        <ProjectReference Include="..\..\src\tools\client\SUI.Client.Watcher\SUI.Client.Watcher.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="WireMockMappings\**\*.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="TestResults\" />
+    </ItemGroup>
+
+</Project>

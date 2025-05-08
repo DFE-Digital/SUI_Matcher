@@ -71,9 +71,11 @@ jobs:
 
         - name: Publish DBS Response Logger Watcher
           run: dotnet publish SUI.DBS.Client.Watcher -r win-x64 --self-contained /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --configuration Release --output ./output --version-suffix ${{ env.CLIENT_VERSION }}
+          working-directory: src/tools/dbs-response-logger
 
         - name: Publish DBS Response Logger Console
           run: dotnet publish SUI.DBS.Client.Console -r win-x64 --self-contained /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --configuration Release --output ./output --version-suffix ${{ env.CLIENT_VERSION }}
+          working-directory: src/tools/dbs-response-logger
 
         - name: Login to Azure
           uses: azure/login@v2
@@ -84,7 +86,7 @@ jobs:
 
         - name: Upload to Blob Storage
           run:
-            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./output --pattern "*.exe" --overwrite
+            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./src/tools/dbs-response-logger/output --pattern "*.exe" --overwrite
           
         - name: Use Serial Console to Download EXE from Blob Storage
           run: |
