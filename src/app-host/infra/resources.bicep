@@ -485,7 +485,10 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
       }
     }
     publicNetworkAccess: 'Disabled'
-
+    vnetConfiguration: {
+      infrastructureSubnetId: '${caevnets.id}/subnets/${environmentPrefix}-${lowercaseEnvironmentName}-subnet-cae-01'
+      internal: true
+    }
   }
   tags: tags
 
