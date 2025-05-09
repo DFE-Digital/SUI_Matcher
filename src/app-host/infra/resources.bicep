@@ -37,16 +37,6 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
   tags: tags
 }
 
-resource infraIpGroup 'Microsoft.Network/ipGroups@2022-01-01' = {
-  name: '${environmentPrefix}${lowercaseEnvironmentName}-ipg-01'
-  location: location
-  properties: {
-    ipAddresses: [
-      containerAppEnvSubnet
-      containerAppFirewallSubnet
-    ]
-  }
-}
 
 // resource caeMiRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 //   name: guid(containerRegistry.id, managedIdentity.id, subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d'))
@@ -608,115 +598,6 @@ param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientCo
 //       }
 //     ]
 //   }
-// }
-
-
-
-
-// resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
-//   name: '${environmentPrefix}-${environmentName}-pib-01'
-//   location: location
-//   tags: tags
-//   sku: {
-//     name: 'Standard'
-//   }
-//   properties: {
-//     publicIPAllocationMethod: 'static'
-//     publicIPAddressVersion: 'IPv4'
-//   }
-// }
-// Cannot create IPs due to policies
-
-// resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01'= {
-//   name: '${environmentPrefix}-${environmentName}-fwp-01'
-//   location: location
-//   properties: {
-//     threatIntelMode: 'Alert'
-//   }
-//   tags: tags
-// }
-
-// resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
-//   parent: firewallPolicy
-//   name: 'DefaultApplicationRuleCollectionGroup'
-//   properties: {
-//     priority: 300
-//     ruleCollections: [
-//       {
-//         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-//         action: {
-//           type: 'Allow'
-//         }
-//         name: 'Global-rules-arc'
-//         priority: 300
-//         rules: [
-//           {
-//             ruleType: 'ApplicationRule'
-//             name: 'global-rule-01'
-//             protocols: [
-//               {
-//                 protocolType: 'Https'
-//                 port: 443
-//               }
-//             ]
-//             targetFqdns: [
-//               'int.api.service.nhs.uk'
-//             ]
-//             terminateTLS: false
-//             sourceIpGroups: [
-//               infraIpGroup.id
-//             ]
-//           }
-//         ]
-//       }
-//     ]
-//   }
-// }
-
-// resource fireWall 'Microsoft.Network/azureFirewalls@2021-03-01' = {
-//   name: '${environmentPrefix}-${environmentName}-fw-01'
-//   location: location
-//   dependsOn: [
-//     containerAppEnvironment
-//     applicationRuleCollectionGroup
-//   ]
-//   properties: {
-//     ipConfigurations: [{
-//       name: 'fw-ip-config-01'
-//       properties: {
-//         publicIPAddress: {
-//           id: publicIP.id
-//         }
-//         subnet: {
-//           id: caevnets.properties.subnets[1].id
-//         }
-//       }
-//     }]
-//     firewallPolicy: {
-//       id: firewallPolicy.id
-//     }
-//   }
-//   tags: tags
-// }
-
-// resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
-//   location: location
-//   name: '${environmentPrefix}-${environmentName}-rt-01'
-//   properties: {
-//     disableBgpRoutePropagation: true
-//     routes: [
-//       {
-//         name: '${environmentPrefix}-${environmentName}-internet'
-//         properties: {
-//           addressPrefix: '0.0.0.0/0'
-//           nextHopIpAddress: fireWall.properties.ipConfigurations[0].properties.privateIPAddress
-//           nextHopType: 'Internet'
-//         }
-//         type: 'string'
-//       }
-//     ]
-//   }
-//   tags: tags
 // }
 
 
