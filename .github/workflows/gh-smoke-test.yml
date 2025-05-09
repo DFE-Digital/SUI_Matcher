@@ -105,11 +105,11 @@ jobs:
 
         - name: Upload TXT Files to Blob Storage
           run:
-            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./SUI.Test/Smoke --pattern "*.txt" --overwrite
+            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./tests/E2E.Tests/Resources/Smoke --pattern "*.txt" --overwrite
               
         - name: Upload CSV Files to Blob Storage
           run:
-            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./SUI.Test/Smoke --pattern "*.csv" --overwrite
+            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./tests/E2E.Tests/Resources/Smoke --pattern "*.csv" --overwrite
             
         - name: Smoke Test DBS Response Logger (.exe)
           if: ((env.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (env.cron_run == 'true'))

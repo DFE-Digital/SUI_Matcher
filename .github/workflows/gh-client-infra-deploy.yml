@@ -47,5 +47,5 @@ jobs:
           run: |
             az deployment group create \
                 --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-                --template-file SUI.Client.Watcher/infra/client.bicep \
+                --template-file src/tools/client/SUI.Client.Watcher/infra/client.bicep \
                 --parameters adminUsername="${{ env.VM_USERNAME }}" adminPassword="${{ env.VM_PASSWORD }}" \
