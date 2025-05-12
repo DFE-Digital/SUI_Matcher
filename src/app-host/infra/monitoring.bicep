@@ -6,6 +6,10 @@ param location string = resourceGroup().location
 param logAnalyticsWorkspaceId string
 param actionGroupEmail string
 
+param externalApiId string
+param matchingApiId string
+param yarpId string
+
 var containers = [
   'external-api'
   'matching-api'
@@ -28,103 +32,113 @@ resource supportTeamActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-prev
   }
 }
 
-resource CpuAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [for container in containers: if (turnOnAlerts) {
-  name: '${container}-cpu-alert'
-  location: 'global'
-  properties: {
-    description: 'CPU usage alert for ${container}'
-    severity: 2 // Medium severity
-    enabled: true
-    scopes: [
-      resourceId('Microsoft.App/containerApps', container)
-    ]
-    evaluationFrequency: 'PT1M'
-    windowSize: 'PT5M'
-    criteria: {
-      allOf: [
+resource CpuAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [
+  for container in containers: if (turnOnAlerts) {
+    name: '${container}-cpu-alert'
+    location: 'global'
+    properties: {
+      description: 'CPU usage alert for ${container}'
+      severity: 2 // Medium severity
+      enabled: true
+      scopes: [
+        resourceId('Microsoft.App/containerApps', container)
+        externalApiId
+        matchingApiId
+        yarpId
+      ]
+      evaluationFrequency: 'PT1M'
+      windowSize: 'PT5M'
+      criteria: {
+        allOf: [
+          {
+            name: 'HighCPU'
+            metricName: 'CpuPercentage'
+            operator: 'GreaterThan'
+            threshold: 80
+            timeAggregation: 'Average'
+            criterionType: 'StaticThresholdCriterion'
+          }
+          {
+            name: 'MediumCPU'
+            metricName: 'CpuPercentage'
+            operator: 'GreaterThan'
+            threshold: 60
+            timeAggregation: 'Average'
+            criterionType: 'StaticThresholdCriterion'
+          }
+          {
+            name: 'LowCPU'
+            metricName: 'CpuPercentage'
+            operator: 'GreaterThan'
+            threshold: 40
+            timeAggregation: 'Average'
+            criterionType: 'StaticThresholdCriterion'
+          }
+        ]
+        'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      }
+      actions: [
         {
-          name: 'HighCPU'
-          metricName: 'CpuPercentage'
-          operator: 'GreaterThan'
-          threshold: 80
-          timeAggregation: 'Average'
-          criterionType: 'StaticThresholdCriterion'
-        }
-        {
-          name: 'MediumCPU'
-          metricName: 'CpuPercentage'
-          operator: 'GreaterThan'
-          threshold: 60
-          timeAggregation: 'Average'
-          criterionType: 'StaticThresholdCriterion'
-        }
-        {
-          name: 'LowCPU'
-          metricName: 'CpuPercentage'
-          operator: 'GreaterThan'
-          threshold: 40
-          timeAggregation: 'Average'
-          criterionType: 'StaticThresholdCriterion'
+          actionGroupId: supportTeamActionGroup.id
         }
       ]
-      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
     }
-    actions: [
-      {
-        actionGroupId: supportTeamActionGroup.id
-      }
-    ]
   }
-}]
+]
 
-resource MemoryAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [for container in containers: if (turnOnAlerts) {
-  name: '${container}-memory-alert'
-  location: 'global'
-  properties: {
-    description: 'Memory usage alert for ${container}'
-    severity: 2 // Medium severity
-    enabled: true
-    scopes: [
-      resourceId('Microsoft.App/containerApps', container)
-    ]
-    evaluationFrequency: 'PT1M'
-    windowSize: 'PT5M'
-    criteria: {
-      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
-      allOf: [
+resource MemoryAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [
+  for container in containers: if (turnOnAlerts) {
+    name: '${container}-memory-alert'
+    location: 'global'
+    properties: {
+      description: 'Memory usage alert for ${container}'
+      severity: 2 // Medium severity
+      enabled: true
+      scopes: [
+        resourceId('Microsoft.App/containerApps', container)
+        externalApiId
+        matchingApiId
+        yarpId
+      ]
+      evaluationFrequency: 'PT1M'
+      windowSize: 'PT5M'
+      criteria: {
+        'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+        allOf: [
+          {
+            name: 'HighMemory'
+            metricName: 'MemoryPercentage'
+            operator: 'GreaterThan'
+            threshold: 80
+            timeAggregation: 'Average'
+            criterionType: 'StaticThresholdCriterion'
+          }
+          {
+            name: 'MediumMemory'
+            metricName: 'MemoryPercentage'
+            operator: 'GreaterThan'
+            threshold: 60
+            timeAggregation: 'Average'
+            criterionType: 'StaticThresholdCriterion'
+          }
+          {
+            name: 'LowMemory'
+            metricName: 'MemoryPercentage'
+            operator: 'GreaterThan'
+            threshold: 40
+            timeAggregation: 'Average'
+            criterionType: 'StaticThresholdCriterion'
+          }
+        ]
+      }
+      actions: [
         {
-          name: 'HighMemory'
-          metricName: 'MemoryPercentage'
-          operator: 'GreaterThan'
-          threshold: 80
-          timeAggregation: 'Average'
-          criterionType: 'StaticThresholdCriterion'
-        }
-        {
-          name: 'MediumMemory'
-          metricName: 'MemoryPercentage'
-          operator: 'GreaterThan'
-          threshold: 60
-          timeAggregation: 'Average'
-          criterionType: 'StaticThresholdCriterion'
-        }
-        {
-          name: 'LowMemory'
-          metricName: 'MemoryPercentage'
-          operator: 'GreaterThan'
-          threshold: 40
-          timeAggregation: 'Average'
-          criterionType: 'StaticThresholdCriterion'
+          actionGroupId: supportTeamActionGroup.id
         }
       ]
     }
-    actions: [
-      {
-        actionGroupId: supportTeamActionGroup.id
-      }
-    ]
   }
-}]
+]
 
 resource ErrorLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = if (turnOnAlerts) {
   name: 'Error-Log-Alert'
@@ -147,7 +161,7 @@ resource ErrorLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-previ
       ]
     }
     actions: {
-        actionGroups: [supportTeamActionGroup.id]
+      actionGroups: [supportTeamActionGroup.id]
     }
     severity: 2 // Medium severity
     scopes: [
