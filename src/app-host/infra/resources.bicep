@@ -2,7 +2,7 @@
 param location string = resourceGroup().location
 
 @description('The address prefix for the virtual network')
-param containerAppVnet string = '192.168.0.0/25'
+param containerAppVnet string = '192.168.0.0/24'
 
 @description('Container App environment subnet')
 param containerAppEnvSubnet string = '192.168.0.0/26'
@@ -36,7 +36,6 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
   }
   tags: tags
 }
-
 
 // resource caeMiRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 //   name: guid(containerRegistry.id, managedIdentity.id, subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d'))
@@ -447,6 +446,14 @@ resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
         name: '${environmentPrefix}-${lowercaseEnvironmentName}-subnet-cae-01'
         properties: {
           addressPrefix: containerAppEnvSubnet
+          delegations: [
+            {
+              name: 'Microsoft.App.environments'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
         }
       }
       {
@@ -458,7 +465,6 @@ resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
     ]
   }
 }
-
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-preview' = {
   name: '${environmentPrefix}-${lowercaseEnvironmentName}-cae-01'
@@ -526,7 +532,6 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
     publicAccess: 'None'
   }
 }
-
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${environmentPrefix}-${lowercaseEnvironmentName}-appinsights-01'
@@ -603,7 +608,6 @@ param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientCo
 //   }
 // }
 
-
 output MANAGED_IDENTITY_CLIENT_ID string = managedIdentity.properties.clientId
 output MANAGED_IDENTITY_NAME string = managedIdentity.name
 output MANAGED_IDENTITY_PRINCIPAL_ID string = managedIdentity.properties.principalId
@@ -616,4 +620,3 @@ output AZURE_CONTAINER_APPS_ENVIRONMENT_NAME string = containerAppEnvironment.na
 output AZURE_CONTAINER_APPS_ENVIRONMENT_ID string = containerAppEnvironment.id
 output AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN string = containerAppEnvironment.properties.defaultDomain
 output APPLICATION_INSIGHTS_CONNECTION_STRING string = applicationInsights.properties.ConnectionString
-
