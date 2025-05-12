@@ -10,10 +10,19 @@ param externalApiId string
 param matchingApiId string
 param yarpId string
 
-var containers = [
-  'external-api'
-  'matching-api'
-  'yarp'
+var containerResources = [
+  {
+    name: 'external-api'
+    id: externalApiId
+  }
+  {
+    name: 'matching-api'
+    id: matchingApiId
+  }
+  {
+    name: 'yarp'
+    id: yarpId
+  }
 ]
 
 resource supportTeamActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-preview' = {
@@ -33,18 +42,15 @@ resource supportTeamActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-prev
 }
 
 resource CpuAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [
-  for container in containers: if (turnOnAlerts) {
-    name: '${container}-cpu-alert'
+  for container in containerResources: if (turnOnAlerts) {
+    name: '${container.name}-cpu-alert'
     location: 'global'
     properties: {
       description: 'CPU usage alert for ${container}'
       severity: 2 // Medium severity
       enabled: true
       scopes: [
-        resourceId('Microsoft.App/containerApps', container)
-        externalApiId
-        matchingApiId
-        yarpId
+        container.id
       ]
       evaluationFrequency: 'PT1M'
       windowSize: 'PT5M'
@@ -87,18 +93,15 @@ resource CpuAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [
 ]
 
 resource MemoryAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [
-  for container in containers: if (turnOnAlerts) {
-    name: '${container}-memory-alert'
+  for container in containerResources: if (turnOnAlerts) {
+    name: '${container.name}-memory-alert'
     location: 'global'
     properties: {
       description: 'Memory usage alert for ${container}'
       severity: 2 // Medium severity
       enabled: true
       scopes: [
-        resourceId('Microsoft.App/containerApps', container)
-        externalApiId
-        matchingApiId
-        yarpId
+        container.id
       ]
       evaluationFrequency: 'PT1M'
       windowSize: 'PT5M'
