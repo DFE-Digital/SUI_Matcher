@@ -82,8 +82,8 @@ jobs:
         shell: pwsh
 
       - name: Refresh azd env (pulls latest infrastructure provision)
-        run: | 
-          cat app-host/.env
+        run: |
+          azd env get-values
           azd env refresh --no-prompt 
         working-directory: src/app-host
 
