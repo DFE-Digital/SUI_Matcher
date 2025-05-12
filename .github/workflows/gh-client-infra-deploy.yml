@@ -59,7 +59,7 @@ jobs:
           with:
             subscription: ${{ env.AZURE_SUBSCRIPTION_ID }}
             resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
-            templateFile: src/app-host/infra/main.bicep
+            templateFile: src/tools/client/SUI.Client.Watcher/infra/client.bicep
             additionalParameters: adminUsername="${{ env.VM_USERNAME }}" adminPassword="${{ env.VM_PASSWORD }}"
 
         - name: Deploy Bicep files for client environment
