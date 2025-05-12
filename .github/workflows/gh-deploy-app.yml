@@ -84,9 +84,10 @@ jobs:
       - name: Refresh azd env (pulls latest infrastructure provision)
         run: |
           azd env refresh --debug --no-prompt
-          cat .azure/Integration/.env
         working-directory: src/app-host
 
       - name: Deploy Application
-        run: azd deploy --debug --no-prompt
+        run: | 
+          azd up --debug --no-prompt
+          cat .azure/Integration/.env
         working-directory: src/app-host
