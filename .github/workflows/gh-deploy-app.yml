@@ -83,8 +83,7 @@ jobs:
 
       - name: Refresh azd env (pulls latest infrastructure provision)
         run: |
-          azd env get-values
-          azd env refresh --no-prompt 
+          azd env refresh --debug --no-prompt
         working-directory: src/app-host
 
       - name: Deploy Application
