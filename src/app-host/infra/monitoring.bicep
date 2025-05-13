@@ -46,7 +46,7 @@ resource CpuAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [
     name: '${container.name}-cpu-alert'
     location: 'global'
     properties: {
-      description: 'CPU usage alert for ${container}'
+      description: 'CPU usage alert for ${container.name}'
       severity: 2 // Medium severity
       enabled: true
       scopes: [
@@ -97,7 +97,7 @@ resource MemoryAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [
     name: '${container.name}-memory-alert'
     location: 'global'
     properties: {
-      description: 'Memory usage alert for ${container}'
+      description: 'Memory usage alert for ${container.name}'
       severity: 2 // Medium severity
       enabled: true
       scopes: [
