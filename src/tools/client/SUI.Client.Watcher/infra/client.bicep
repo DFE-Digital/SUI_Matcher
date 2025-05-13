@@ -24,13 +24,13 @@ param location string = resourceGroup().location
 param extensions_Microsoft_Insights_VMDiagnosticsSettings_xmlCfg string
 
 @secure()
-param extensions_Microsoft_Insights_VMDiagnosticsSettings_storageAccountName string
+param storageAccountName string
 
 @secure()
-param extensions_Microsoft_Insights_VMDiagnosticsSettings_storageAccountKey string
+param storageAccountKey string
 
 @secure()
-param extensions_Microsoft_Insights_VMDiagnosticsSettings_storageAccountEndPoint string
+param storageAccountEndPoint string
 
 @description('Tags for the resources')
 param paramTags object = {
@@ -137,13 +137,13 @@ resource vm_diagnostics_settings 'Microsoft.Compute/virtualMachines/extensions@2
     type: 'IaaSDiagnostics'
     typeHandlerVersion: '1.5'
     settings: {
-      StorageAccount: '${environmentPrefix}integrationsa01'
+      StorageAccount: '${environmentPrefix}${storageAccountName}'
       xmlCfg: extensions_Microsoft_Insights_VMDiagnosticsSettings_xmlCfg
     }
     protectedSettings: {
-      storageAccountName: extensions_Microsoft_Insights_VMDiagnosticsSettings_storageAccountName
-      storageAccountKey: extensions_Microsoft_Insights_VMDiagnosticsSettings_storageAccountKey
-      storageAccountEndPoint: extensions_Microsoft_Insights_VMDiagnosticsSettings_storageAccountEndPoint
+      storageAccountName: '${environmentPrefix}${storageAccountName}'
+      storageAccountKey: storageAccountKey
+      storageAccountEndPoint: storageAccountEndPoint
     }
   }
 }
