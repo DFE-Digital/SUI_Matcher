@@ -59,7 +59,7 @@ module externalApi 'container-apps/containerapps.module.bicep' = {
     managedIdentityClientId: resources.outputs.MANAGED_IDENTITY_CLIENT_ID
     azureEnvName: environmentName
     // Hard coded for now, until we can publish the image to the registry first
-    imageName: '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io/app-host/external-api-integration:latest'
+    imageName: '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io/app-host/external-api-integration'
     appName: 'external-api'
   }
 }
@@ -76,7 +76,7 @@ module matchingApi 'container-apps/containerapps.module.bicep' = {
     managedIdentityClientId: resources.outputs.MANAGED_IDENTITY_CLIENT_ID
     azureEnvName: environmentName
     // Hard coded for now, until we can publish the image to the registry first
-    imageName: '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io/app-host/matching-api-integration:latest'
+    imageName: '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io/app-host/matching-api-integration'
     appName: 'matching-api'
     extraEnvVars: [
       {
@@ -103,7 +103,7 @@ module yarp 'container-apps/containerapps.module.bicep' = {
     managedIdentityClientId: resources.outputs.MANAGED_IDENTITY_CLIENT_ID
     azureEnvName: environmentName
     // Hard coded for now, until we can publish the image to the registry first
-    imageName: '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io/app-host/yarp-integration:latest'
+    imageName: '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io/app-host/yarp-integration'
     appName: 'yarp'
     extraEnvVars: [
       {
