@@ -58,7 +58,6 @@ module externalApi 'container-apps/containerapps.module.bicep' = {
     applicationInsightsConnectionString: resources.outputs.APPLICATION_INSIGHTS_CONNECTION_STRING
     managedIdentityClientId: resources.outputs.MANAGED_IDENTITY_CLIENT_ID
     azureEnvName: environmentName
-    // Hard coded for now, until we can publish the image to the registry first
     imageName: 'external-api-integration'
     appName: 'external-api'
   }

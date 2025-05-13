@@ -1,7 +1,7 @@
 param actionGroupName string = 'On-Call Team'
 // To handle the fact that bicep does not deploy the apps so the containers won't exist
 // until after the first deployment. So this needs to be a phased approach to monitoring.
-param turnOnAlerts bool = true
+param turnOnAlerts bool = false
 param location string = resourceGroup().location
 param logAnalyticsWorkspaceId string
 param actionGroupEmail string
