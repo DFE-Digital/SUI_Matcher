@@ -60,7 +60,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-02-02-preview' = {
     template: {
       containers: [
         {
-          image: imageName
+          image: '${azureContainerRegistryEndpoint}/app-host/${imageName}'
           name: appName
           env: [
             {
