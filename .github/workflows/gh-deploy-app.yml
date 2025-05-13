@@ -42,24 +42,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-#      - name: Use version inputted or find latest tag
-#        id: check-version
-#        run: |
-#          if [ -z "${{ github.event.inputs.version }}" ]; then
-#            echo "No input version provided. Fetching latest tag."
-#            git fetch --tags
-#            latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-#            echo "Latest tag: $latest_tag"
-#            echo "APPLICATION_VERSION=$latest_tag" >> $GITHUB_ENV
-#          else
-#            echo "Using input version: ${{ github.event.inputs.version }}"
-#            echo "APPLICATION_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-#          fi
-#            
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#        with:
-#          ref: ${{ env.APPLICATION_VERSION }}
+      - name: Use version inputted or find latest tag
+        id: check-version
+        run: |
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            echo "No input version provided. Fetching latest tag."
+            git fetch --tags
+            latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+            echo "Latest tag: $latest_tag"
+            echo "APPLICATION_VERSION=$latest_tag" >> $GITHUB_ENV
+          else
+            echo "Using input version: ${{ github.event.inputs.version }}"
+            echo "APPLICATION_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.APPLICATION_VERSION }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
