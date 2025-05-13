@@ -58,8 +58,8 @@ jobs:
           /d:sonar.dotnet.excludeTestProjects=true \
           /d:sonar.scanner.scanAll=false
 
-          - name: Restore dependencies
-          run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
   
       - name: Format code
         run: dotnet format --verify-no-changes --verbosity diagnostic
