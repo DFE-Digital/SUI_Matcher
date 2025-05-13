@@ -20,18 +20,6 @@ param subnetRange string = '192.168.0.128/26'
 
 param location string = resourceGroup().location
 
-@secure()
-param extensions_Microsoft_Insights_VMDiagnosticsSettings_xmlCfg string
-
-@secure()
-param storageAccountName string
-
-@secure()
-param storageAccountKey string
-
-@secure()
-param storageAccountEndPoint string
-
 @description('Tags for the resources')
 param paramTags object = {
   Product: 'SUI'
@@ -126,27 +114,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
 }
 
-resource vm_diagnostics_settings 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' = {
-  parent: vm
-  name: 'Microsoft.Insights.VMDiagnosticsSettings'
-  location: 'westeurope'
-  tags: paramTags
-  properties: {
-    autoUpgradeMinorVersion: true
-    publisher: 'Microsoft.Azure.Diagnostics'
-    type: 'IaaSDiagnostics'
-    typeHandlerVersion: '1.5'
-    settings: {
-      StorageAccount: '${environmentPrefix}${storageAccountName}'
-      xmlCfg: extensions_Microsoft_Insights_VMDiagnosticsSettings_xmlCfg
-    }
-    protectedSettings: {
-      storageAccountName: '${environmentPrefix}${storageAccountName}'
-      storageAccountKey: storageAccountKey
-      storageAccountEndPoint: storageAccountEndPoint
-    }
-  }
-}
 
 param virtualNetworks_vnetfw_name string = '${environmentPrefix}-vnetfw-01'
 
