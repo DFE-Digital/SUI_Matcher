@@ -1,8 +1,8 @@
+using ExternalApi.Services;
+
 using Hl7.Fhir.Model;
 
 using Shared.Models;
-
-using SUI.Core.Services;
 
 namespace Unit.Tests.Client;
 

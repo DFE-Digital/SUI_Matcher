@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using OpenTelemetry;
@@ -16,7 +17,7 @@ using OpenTelemetry.Trace;
 using Shared.Logging;
 using Shared.OpenTelemetry;
 
-namespace Microsoft.Extensions.Hosting;
+namespace Shared.Aspire;
 
 public static class Extensions
 {

@@ -1,12 +1,11 @@
+using MatchingApi.Services;
+
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
+using Shared.Endpoint;
 using Shared.Models;
-
-using SUI.Core.Domain;
-using SUI.Core.Endpoints;
-using SUI.Core.Services;
 
 namespace Unit.Tests.Matching;
 

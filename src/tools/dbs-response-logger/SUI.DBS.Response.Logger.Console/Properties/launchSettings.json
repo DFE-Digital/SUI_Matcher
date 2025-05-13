@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SUI.DBS.Response.Logger.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "dbs_batch_search_sample.txt"
+    }
+  }
+}

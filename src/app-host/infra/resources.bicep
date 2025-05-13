@@ -37,18 +37,6 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
   tags: tags
 }
 
-// resource caeMiRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-//   name: guid(containerRegistry.id, managedIdentity.id, subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d'))
-//   scope: containerRegistry
-//   properties: {
-//     principalId: managedIdentity.properties.principalId
-//     principalType: 'ServicePrincipal'
-//     roleDefinitionId:  subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
-//   }
-// }
-// Arc pull to be added to MI after deploy AcrPull
-// Cannot add role assignments due to policies
-
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: '${environmentPrefix}-${lowercaseEnvironmentName}-loganalytics-01'
   location: location
@@ -545,68 +533,91 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   tags: tags
 }
 
+resource loganalyticsDbsConsoleApplogs 'Microsoft.OperationalInsights/workspaces/tables@2025-02-01' = {
+  parent: logAnalyticsWorkspace
+  name: 'DbsClientConsoleApplogs_CL'
+  properties: {
+    totalRetentionInDays: 30
+    plan: 'Analytics'
+    schema: {
+      name: 'DbsClientConsoleApplogs_CL'
+      columns: [
+        {
+          name: 'Message'
+          type: 'string'
+        }
+        {
+          name: 'TimeGenerated'
+          type: 'datetime'
+        }
+      ]
+    }
+    retentionInDays: 30
+  }
+}
+
 param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientConsoleAppLogsRule'
 
-// resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
-//   name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
-//   location: location
-//   tags: {
-//     Environment: lowercaseEnvironmentName
-//     Product: 'SUI'
-//     'Service Offering': 'SUI'
-//   }
-//   kind: 'Windows'
-//   properties: {
-//     streamDeclarations: {
-//       'Custom-DbsClientConsoleAppLogs_CL': {
-//         columns: [
-//           {
-//             name: 'TimeGenerated'
-//             type: 'datetime'
-//           }
-//           {
-//             name: 'Message'
-//             type: 'string'
-//           }
-//         ]
-//       }
-//     }
-//     dataSources: {
-//       logFiles: [
-//         {
-//           streams: [
-//             'Custom-DbsClientConsoleAppLogs_CL'
-//           ]
-//           filePatterns: [
-//             'C:\\Users\\AzCopy\\${environmentPrefix}-${lowercaseEnvironmentName}-container-01\\*.log'
-//           ]
-//           format: 'json'
-//           name: 'Custom-DbsClientConsoleAppLog'
-//         }
-//       ]
-//     }
-//     destinations: {
-//       logAnalytics: [
-//         {
-//           workspaceResourceId: logAnalyticsWorkspace.id
-//           name: 'la-479495940'
-//         }
-//       ]
-//     }
-//     dataFlows: [
-//       {
-//         streams: [
-//           'Custom-DbsClientConsoleAppLogs_CL'
-//         ]
-//         destinations: [
-//           'la-479495940'
-//         ]
-//         transformKql: 'source'
-//         outputStream: 'Custom-DbsClientConsoleAppLogs_CL'
-//       }
-//     ]
-//   }
-// }
+resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
+  name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
+  location: location
+  tags: {
+    Environment: lowercaseEnvironmentName
+    Product: 'SUI'
+    'Service Offering': 'SUI'
+  }
+  kind: 'Windows'
+  properties: {
+    streamDeclarations: {
+      'Custom-DbsClientConsoleAppLogs_CL': {
+        columns: [
+          {
+            name: 'TimeGenerated'
+            type: 'datetime'
+          }
+          {
+            name: 'Message'
+            type: 'string'
+          }
+        ]
+      }
+    }
+    dataSources: {
+      logFiles: [
+        {
+          streams: [
+            'DbsConsoleAppLogs_CL'
+          ]
+          filePatterns: [
+            'C:\\Users\\AzCopy\\${environmentPrefix}-${lowercaseEnvironmentName}-container-01\\*.log'
+          ]
+          format: 'json'
+          name: 'DbsConsoleAppLog'
+        }
+      ]
+    }
+    destinations: {
+      logAnalytics: [
+        {
+          workspaceResourceId: logAnalyticsWorkspace.id
+          name: 'la-479495940'
+        }
+      ]
+    }
+    dataFlows: [
+      {
+        streams: [
+          'DbsConsoleAppLogs_CL'
+        ]
+        destinations: [
+          'la-479495940'
+        ]
+        transformKql: 'source'
+        outputStream: 'DbsConsoleAppLogs_CL'
+      }
+    ]
+  }
+}
 
 output MANAGED_IDENTITY_CLIENT_ID string = managedIdentity.properties.clientId
 output MANAGED_IDENTITY_NAME string = managedIdentity.name

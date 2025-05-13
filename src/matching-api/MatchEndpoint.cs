@@ -3,9 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Shared.Endpoint;
 using Shared.Models;
 
-using SUI.Core.Domain;
-using SUI.Core.Services;
-
 namespace MatchingApi;
 
 public class MatchEndpoint(IMatchingService matchingService) : IEndpoint

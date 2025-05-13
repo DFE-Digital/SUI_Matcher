@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-using SUI.Core;
+using Shared.Util;
 
 namespace MatchingApi;
 

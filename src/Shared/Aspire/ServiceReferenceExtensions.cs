@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace System.Net.Http;
+namespace Shared.Aspire;
 
 public static class ServiceReferenceExtensions
 {

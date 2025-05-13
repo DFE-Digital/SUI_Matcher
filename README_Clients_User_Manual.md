@@ -17,7 +17,7 @@ dotnet tool install --global DFE.SUI.Client.Watcher
 For the DBS Client Watcher:
 
 ```bash
-dotnet tool install --global DFE.SUI.DBS.Client.Watcher
+dotnet tool install --global DFE.SUI.DBS.Response.Logger.Watcher
 ```
 
 ## Running the watcher tool
@@ -41,7 +41,7 @@ Add a `--version <version>` parameter to the command to install a specific versi
 dotnet tool update --global DFE.SUI.Client.Watcher
 ```
 ```bash
-dotnet tool update --global DFE.SUI.DBS.Client.Watcher
+dotnet tool update --global DFE.SUI.DBS.Response.Logger.Watcher
 ```
 
 ## Uninstall the tools
@@ -51,5 +51,5 @@ To uninstall the tools, you can use the following command:
 dotnet tool uninstall --global DFE.SUI.Client.Watcher
 ```
 ```bash
-dotnet tool uninstall --global DFE.SUI.DBS.Client.Watcher
+dotnet tool uninstall --global DFE.SUI.DBS.Response.Logger.Watcher
 ```

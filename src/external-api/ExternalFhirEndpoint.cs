@@ -1,8 +1,6 @@
 using Shared.Endpoint;
 using Shared.Models;
 
-using SUI.Core.Endpoints;
-
 namespace ExternalApi;
 
 public class ExternalFhirEndpoint(INhsFhirClient fhirClient) : IEndpoint

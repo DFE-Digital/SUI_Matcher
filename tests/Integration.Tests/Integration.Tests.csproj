@@ -35,7 +35,6 @@
         <ProjectReference Include="..\..\src\matching-api\Matching.csproj" IsAspireProjectResource="false" />
         <ProjectReference Include="..\..\src\external-api\External.csproj" IsAspireProjectResource="false" />
         <ProjectReference Include="..\..\src\Shared\Shared.csproj" />
-        <ProjectReference Include="..\..\SUI.Core\SUI.Core.csproj" />
         <ProjectReference Include="..\..\src\tools\client\SUI.Client.Core\SUI.Client.Core.csproj" />
         <ProjectReference Include="..\..\src\tools\client\SUI.Client.Watcher\SUI.Client.Watcher.csproj" />
     </ItemGroup>

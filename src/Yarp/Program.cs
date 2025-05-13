@@ -1,3 +1,5 @@
+using Shared.Aspire;
+
 DotNetEnv.Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
