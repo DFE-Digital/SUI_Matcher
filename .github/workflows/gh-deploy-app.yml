@@ -55,7 +55,7 @@ jobs:
             echo "Using input version: ${{ github.event.inputs.version }}"
             echo "APPLICATION_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
           fi
-            
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -82,12 +82,9 @@ jobs:
         shell: pwsh
 
       - name: Refresh azd env (pulls latest infrastructure provision)
-        run: |
-          azd env refresh --debug --no-prompt
+        run: azd env refresh --no-prompt
         working-directory: src/app-host
 
       - name: Deploy Application
-        run: | 
-          azd up --debug --no-prompt
-          cat .azure/Integration/.env
+        run: azd deploy --no-prompt
         working-directory: src/app-host

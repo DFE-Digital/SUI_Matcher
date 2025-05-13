@@ -53,17 +53,22 @@ jobs:
             tenant-id: ${{ env.AZURE_TENANT_ID }}
             subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
             
-        - name: Run Bicep What-If
-          if: ${{ inputs.what_if == true }}
-          uses: Azure/deployment-what-if-action@v1.0.0
-          with:
-            subscription: ${{ env.AZURE_SUBSCRIPTION_ID }}
-            resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
-            templateFile: src/tools/client/SUI.Client.Watcher/infra/client.bicep
-            additionalParameters: adminUsername="${{ env.VM_USERNAME }}" adminPassword="${{ env.VM_PASSWORD }}"
+#        - name: Run Bicep What-If
+#          if: ${{ inputs.what_if == true }}
+#          uses: Azure/deployment-what-if-action@v1.0.0
+#          with:
+#            subscription: ${{ env.AZURE_SUBSCRIPTION_ID }}
+#            resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
+#            templateFile: src/tools/client/SUI.Client.Watcher/infra/client.bicep
+#            additionalParameters: adminUsername="${{ env.VM_USERNAME }}" \
+#              adminPassword="${{ env.VM_PASSWORD }}" \
+#              extensions_Microsoft_Insights_VMDiagnosticsSettings_storageAccountEndPoint="${{ secrets.STORAGE_ACCOUNT_ENDPOINT }}" \
+#              extensions_Microsoft_Insights_VMDiagnosticsSettings_storageAccountKey="${{ secrets.STORAGE_ACCOUNT_KEY }}" \
+#              extensions_Microsoft_Insights_VMDiagnosticsSettings_storageAccountName="${{ secrets.STORAGE_ACCOUNT_NAME }}" \
+#              extensions_Microsoft_Insights_VMDiagnosticsSettings_xmlCfg="${{ secrets.XML_CONFIGURATION }}"
 
         - name: Deploy Bicep files for client environment
-          if: ${{ inputs.what_if == false }}
+          #   if: ${{ inputs.what_if == false }}
           run: |
             az deployment group create \
                 --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \

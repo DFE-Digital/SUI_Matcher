@@ -18,7 +18,7 @@ param location string
 param monitoringActionGroupEmail string
 
 @description('Turn on monitoring alerts')
-param turnOnAlerts bool = true
+param turnOnAlerts bool = false
 
 var tags = {
   'azd-env-name': environmentName
@@ -46,79 +46,7 @@ module secrets 'secrets/secrets.module.bicep' = {
     environmentPrefix: environmentPrefix
   }
 }
-
-module externalApi 'container-apps/containerapps.module.bicep' = {
-  name: 'externalApi'
-  params: {
-    location: location
-    azureContainerRegistryManagedIdentityId: resources.outputs.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID
-    azureContainerAppsEnvironmentId: resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_ID
-    azureContainerRegistryEndpoint: resources.outputs.AZURE_CONTAINER_REGISTRY_ENDPOINT
-    secretsVaultUri: secrets.outputs.vaultUri
-    applicationInsightsConnectionString: resources.outputs.APPLICATION_INSIGHTS_CONNECTION_STRING
-    managedIdentityClientId: resources.outputs.MANAGED_IDENTITY_CLIENT_ID
-    azureEnvName: environmentName
-    // Hard coded for now, until we can publish the image to the registry first
-    imageName: '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io/app-host/external-api-integration:latest'
-    appName: 'external-api'
-  }
-}
-
-module matchingApi 'container-apps/containerapps.module.bicep' = {
-  name: 'matchingApi'
-  params: {
-    location: location
-    azureContainerRegistryManagedIdentityId: resources.outputs.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID
-    azureContainerAppsEnvironmentId: resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_ID
-    azureContainerRegistryEndpoint: resources.outputs.AZURE_CONTAINER_REGISTRY_ENDPOINT
-    secretsVaultUri: secrets.outputs.vaultUri
-    applicationInsightsConnectionString: resources.outputs.APPLICATION_INSIGHTS_CONNECTION_STRING
-    managedIdentityClientId: resources.outputs.MANAGED_IDENTITY_CLIENT_ID
-    azureEnvName: environmentName
-    // Hard coded for now, until we can publish the image to the registry first
-    imageName: '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io/app-host/matching-api-integration:latest'
-    appName: 'matching-api'
-    extraEnvVars: [
-      {
-        name: 'services__external-api__http__0'
-        value: 'http://external-api.internal.${resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}'
-      }
-      {
-        name: 'services__external-api__https__0'
-        value: 'https://external-api.internal.${resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}'
-      }
-    ]
-  }
-}
-
-module yarp 'container-apps/containerapps.module.bicep' = {
-  name: 'yarp'
-  params: {
-    location: location
-    azureContainerRegistryManagedIdentityId: resources.outputs.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID
-    azureContainerAppsEnvironmentId: resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_ID
-    azureContainerRegistryEndpoint: resources.outputs.AZURE_CONTAINER_REGISTRY_ENDPOINT
-    secretsVaultUri: secrets.outputs.vaultUri
-    applicationInsightsConnectionString: resources.outputs.APPLICATION_INSIGHTS_CONNECTION_STRING
-    managedIdentityClientId: resources.outputs.MANAGED_IDENTITY_CLIENT_ID
-    azureEnvName: environmentName
-    // Hard coded for now, until we can publish the image to the registry first
-    imageName: '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io/app-host/yarp-integration:latest'
-    appName: 'yarp'
-    extraEnvVars: [
-      {
-        name: 'services__matching-api__http__0'
-        value: 'http://matching-api.internal.${resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}'
-      }
-      {
-        name: 'services__matching-api__https__0'
-        value: 'https://matching-api.internal.${resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}'
-      }
-    ]
-  }
-}
-    
-
+   
 module monitoring 'monitoring.bicep' = {
   name: 'monitoring'
   params: {
@@ -126,11 +54,6 @@ module monitoring 'monitoring.bicep' = {
     turnOnAlerts: turnOnAlerts
     logAnalyticsWorkspaceId: resources.outputs.AZURE_LOG_ANALYTICS_WORKSPACE_ID
     actionGroupEmail: monitoringActionGroupEmail
-    
-    // Implicit dependency on the container apps
-    externalApiId: externalApi.outputs.id
-    matchingApiId: matchingApi.outputs.id
-    yarpId: yarp.outputs.id
   }
 }
 
