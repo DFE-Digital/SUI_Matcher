@@ -60,8 +60,7 @@ jobs:
             subscription: ${{ env.AZURE_SUBSCRIPTION_ID }}
             resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
             templateFile: src/tools/client/SUI.Client.Watcher/infra/client.bicep
-            additionalParameters: adminUsername="${{ env.VM_USERNAME }}" \
-              adminPassword="${{ env.VM_PASSWORD }}" \
+            additionalParameters: adminUsername="${{ env.VM_USERNAME }}" adminPassword="${{ env.VM_PASSWORD }}"
 
         - name: Deploy Bicep files for client environment
           if: ${{ inputs.what_if == false }}
