@@ -1,10 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 
+using ExternalApi.Services;
+
+using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
-
-using SUI.Core.Endpoints;
-using SUI.Core.Endpoints.AuthToken;
 
 DotNetEnv.Env.TraversePath().Load();
 

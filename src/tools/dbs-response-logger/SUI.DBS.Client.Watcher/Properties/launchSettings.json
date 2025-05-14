@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "SUI.DBS.Client.Watcher": {
-      "commandName": "Project",
-      "commandLineArgs": "\"/tmp/dbs/incoming\" \"/tmp/dbs/incoming/processed\" "
-    }
-  }
-}

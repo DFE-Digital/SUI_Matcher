@@ -14,14 +14,16 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" />
+    <PackageReference Include="Hl7.Fhir.R4" />
     <PackageReference Include="Moq" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\external-api\External.csproj" />
+    <ProjectReference Include="..\..\src\matching-api\Matching.csproj" />
     <ProjectReference Include="..\..\src\Shared\Shared.csproj" />
     <ProjectReference Include="..\..\src\tools\client\SUI.Client.Core\SUI.Client.Core.csproj" />
-    <ProjectReference Include="..\..\src\tools\dbs-response-logger\SUI.DBS.Client.Core\SUI.DBS.Client.Core.csproj" />
-    <ProjectReference Include="..\..\SUI.Core\SUI.Core.csproj" />
+    <ProjectReference Include="..\..\src\tools\dbs-response-logger\SUI.DBS.Response.Logger.Core\SUI.DBS.Response.Logger.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

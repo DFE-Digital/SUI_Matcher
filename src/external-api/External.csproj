@@ -21,7 +21,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Shared.csproj" />
-		<ProjectReference Include="..\..\SUI.Core\SUI.Core.csproj" />
 	</ItemGroup>
 
 </Project>

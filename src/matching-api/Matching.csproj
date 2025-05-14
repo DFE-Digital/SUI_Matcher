@@ -14,11 +14,11 @@
 		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
 		<PackageReference Include="Asp.Versioning.Http" />
 		<PackageReference Include="FluentValidation.AspNetCore" />
+		<PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Shared.csproj" />
-		<ProjectReference Include="..\..\SUI.Core\SUI.Core.csproj" />
 	</ItemGroup>
 
 </Project>

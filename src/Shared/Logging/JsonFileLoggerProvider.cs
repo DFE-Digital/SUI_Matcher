@@ -77,8 +77,6 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
             {
                 foreach (var item in formattedLogValues)
                 {
-                    Console.WriteLine(item.Key + ": " + item.Value);
-
                     if (Regex.IsMatch(item.Key, @"^\w+$"))
                     {
                         logEntry[item.Key] = item.Value;

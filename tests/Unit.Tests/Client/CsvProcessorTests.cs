@@ -1,18 +1,19 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MatchingApi.Services;
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Moq;
 
+using Shared.Endpoint;
 using Shared.Models;
+using Shared.Util;
 
 using SUI.Client.Core;
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
-using SUI.Core;
-using SUI.Core.Endpoints;
-using SUI.Core.Services;
 
 using Unit.Tests.Util;
 using Unit.Tests.Util.Adapters;

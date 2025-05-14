@@ -4,10 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-using SUI.Core;
-using SUI.DBS.Client.Core;
-using SUI.DBS.Client.Core.Extensions;
-using SUI.DBS.Client.Core.Watcher;
+using Shared.Util;
+
+using SUI.DBS.Response.Logger.Core;
+using SUI.DBS.Response.Logger.Core.Extensions;
+using SUI.DBS.Response.Logger.Core.Watcher;
 
 using Unit.Tests.Util;
 

@@ -1,14 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 
 using MatchingApi;
+using MatchingApi.Services;
 
 using Microsoft.AspNetCore.Http.Json;
 
+using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
-
-using SUI.Core.Endpoints;
-using SUI.Core.Services;
 
 DotNetEnv.Env.TraversePath().Load();
 

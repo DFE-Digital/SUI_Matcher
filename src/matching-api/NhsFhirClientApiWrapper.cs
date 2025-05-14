@@ -1,6 +1,5 @@
+using Shared.Endpoint;
 using Shared.Models;
-
-using SUI.Core.Endpoints;
 
 namespace MatchingApi;
 

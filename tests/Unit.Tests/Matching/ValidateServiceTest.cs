@@ -1,5 +1,6 @@
-﻿using SUI.Core.Domain;
-using SUI.Core.Services;
+﻿using MatchingApi.Services;
+
+using Shared.Models;
 
 namespace Unit.Tests.Matching
 {

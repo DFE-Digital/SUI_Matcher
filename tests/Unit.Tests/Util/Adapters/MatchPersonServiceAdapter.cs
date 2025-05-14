@@ -1,9 +1,9 @@
-﻿using Shared.Models;
+﻿using Shared.Endpoint;
+using Shared.Models;
+using Shared.Util;
 
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
-using SUI.Core;
-using SUI.Core.Services;
 
 namespace Unit.Tests.Util.Adapters;
 
@@ -11,7 +11,7 @@ public class MatchPersonServiceAdapter(IMatchingService matchingService) : IMatc
 {
     public async Task<PersonMatchResponse?> MatchPersonAsync(MatchPersonPayload payload)
     {
-        return await matchingService.SearchAsync(new SUI.Core.Domain.PersonSpecification
+        return await matchingService.SearchAsync(new PersonSpecification
         {
             AddressPostalCode = payload.AddressPostalCode,
             Family = payload.Family,
