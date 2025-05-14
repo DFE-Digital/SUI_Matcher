@@ -114,7 +114,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
 }
 
-
 param virtualNetworks_vnetfw_name string = '${environmentPrefix}-vnetfw-01'
 
 resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks@2024-05-01' = {
@@ -150,6 +149,24 @@ resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks
   }
 }
 
+resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
+  name: '${environmentPrefix}-${toLower(environmentName)}-vnet-cae-01'
+  scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
+}
+
+resource VnetPeering1 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-05-01' = {
+  name: '${caeVnet.name}/peering-fw-01'
+  properties: {
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: false
+    allowGatewayTransit: false
+    useRemoteGateways: false
+    remoteVirtualNetwork: {
+      id: virtualNetworks_vnetfw_name_resource.id
+    }
+  }
+}
+
 resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
   name: '${environmentPrefix}-${environmentName}-pib-01'
   location: location
@@ -163,7 +180,7 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
   }
 }
 
-resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01'= {
+resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
   name: '${environmentPrefix}-${environmentName}-fwp-01'
   location: location
   properties: {
@@ -171,7 +188,6 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01'= {
   }
   tags: paramTags
 }
-
 
 param vnetFirewallName string = '${environmentPrefix}-vnetfw-Firewall'
 
@@ -186,7 +202,7 @@ resource azureFirewalls_vnetfw_Firewall_name_resource 'Microsoft.Network/azureFi
     }
     threatIntelMode: 'Alert'
     firewallPolicy: {
-        id: firewallPolicy.id
+      id: firewallPolicy.id
     }
     ipConfigurations: [
       {
@@ -207,10 +223,7 @@ resource azureFirewalls_vnetfw_Firewall_name_resource 'Microsoft.Network/azureFi
   }
 }
 
-resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
-    name: '${environmentPrefix}-${toLower(environmentName)}-vnet-cae-01'
-    scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
-}
+
 
 resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
   parent: firewallPolicy
@@ -239,9 +252,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
               'int.api.service.nhs.uk'
             ]
             terminateTLS: false
-            sourceAddresses: [
-                ...caeVnet.properties.addressSpace.addressPrefixes
-            ]
+            sourceAddresses: [...caeVnet.properties.addressSpace.addressPrefixes]
           }
         ]
       }
@@ -270,7 +281,6 @@ resource routeTables_integration_rt_01_name_resource 'Microsoft.Network/routeTab
     ]
   }
 }
-
 
 // --- LEGACY FOR REFERENCE --- 
 
@@ -379,5 +389,3 @@ resource routeTables_integration_rt_01_name_resource 'Microsoft.Network/routeTab
 //   }
 //   tags: tags
 // }
-
-
