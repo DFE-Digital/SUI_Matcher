@@ -117,9 +117,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
 
 param virtualNetworks_vnetfw_name string = '${environmentPrefix}-vnetfw-01'
 
-// Hardcoded external ID for the integration VNet
-param virtualNetworks_integration_vnet_cae_01_externalid string = '/subscriptions/8fc7ea96-7305-492f-85f7-09069bb8fd29/resourceGroups/${environmentPrefix}-${toLower(environmentName)}/providers/Microsoft.Network/virtualNetworks/${environmentPrefix}-${toLower(environmentName)}-vnet-cae-01'
-
 resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: virtualNetworks_vnetfw_name
   location: location
@@ -127,7 +124,7 @@ resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.0.0.0/23'
+        '192.168.0.1/23'
       ]
     }
     encryption: {
@@ -137,22 +134,10 @@ resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks
     privateEndpointVNetPolicies: 'Disabled'
     subnets: [
       {
-        name: 'default'
-        properties: {
-          addressPrefixes: [
-            '10.0.0.0/24'
-          ]
-          delegations: []
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
-        }
-        type: 'Microsoft.Network/virtualNetworks/subnets'
-      }
-      {
         name: 'AzureFirewallSubnet'
         properties: {
           addressPrefixes: [
-            '10.0.1.0/26'
+            '192.168.0.1/25'
           ]
           delegations: []
           privateEndpointNetworkPolicies: 'Disabled'
@@ -161,51 +146,10 @@ resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks
         type: 'Microsoft.Network/virtualNetworks/subnets'
       }
     ]
-    virtualNetworkPeerings: [
-          {
-            name: 'peer-containers'
-            properties: {
-              peeringState: 'Connected'
-              peeringSyncLevel: 'FullyInSync'
-              remoteVirtualNetwork: {
-                id: virtualNetworks_integration_vnet_cae_01_externalid
-              }
-              allowVirtualNetworkAccess: true
-              allowForwardedTraffic: false
-              allowGatewayTransit: false
-              useRemoteGateways: false
-              doNotVerifyRemoteGateways: false
-              peerCompleteVnets: true
-              remoteAddressSpace: {
-                addressPrefixes: [
-                  '192.168.0.0/25'
-                ]
-              }
-              remoteVirtualNetworkAddressSpace: {
-                addressPrefixes: [
-                  '192.168.0.0/25'
-                ]
-              }
-            }
-            type: 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings'
-          }
-        ]
     enableDdosProtection: false
   }
 }
 
-resource virtualNetworks_vnetfw_name_AzureFirewallSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
-  parent: virtualNetworks_vnetfw_name_resource
-  name: 'AzureFirewallSubnet'
-  properties: {
-    addressPrefixes: [
-      '10.0.1.0/26'
-    ]
-    delegations: []
-    privateEndpointNetworkPolicies: 'Disabled'
-    privateLinkServiceNetworkPolicies: 'Enabled'
-  }
-}
 
 resource virtualNetworks_vnetfw_name_default 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
   parent: virtualNetworks_vnetfw_name_resource
@@ -278,6 +222,11 @@ resource azureFirewalls_vnetfw_Firewall_name_resource 'Microsoft.Network/azureFi
   }
 }
 
+resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
+    name: '${environmentPrefix}-${toLower(environmentName)}-vnet-cae-01'
+    scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
+}
+
 resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
   parent: firewallPolicy
   name: 'DefaultApplicationRuleCollectionGroup'
@@ -305,7 +254,9 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
               'int.api.service.nhs.uk'
             ]
             terminateTLS: false
-            sourceIpGroups: []
+            sourceAddresses: [
+                ...caeVnet.properties.addressSpace.addressPrefixes
+            ]
           }
         ]
       }
