@@ -62,9 +62,6 @@ jobs:
             templateFile: src/tools/client/SUI.Client.Watcher/infra/client.bicep
             additionalParameters: adminUsername="${{ env.VM_USERNAME }}" \
               adminPassword="${{ env.VM_PASSWORD }}" \
-              storageAccountKey="${{ secrets.STORAGE_ACCOUNT_KEY }}" \
-              storageAccountEndpoint="${{ secrets.STORAGE_ACCOUNT_ENDPOINT }}" \
-              storageAccountName="${{ secrets.STORAGE_ACCOUNT_NAME }}" \
 
         - name: Deploy Bicep files for client environment
           if: ${{ inputs.what_if == false }}
@@ -72,4 +69,4 @@ jobs:
             az deployment group create \
                 --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
                 --template-file src/tools/client/SUI.Client.Watcher/infra/client.bicep \
-                --parameters adminUsername="${{ env.VM_USERNAME }}" adminPassword="${{ env.VM_PASSWORD }}" storageAccountKey="${{ secrets.STORAGE_ACCOUNT_KEY }}" storageAccountEndpoint="${{ secrets.STORAGE_ACCOUNT_ENDPOINT }}" storageAccountName="${{ secrets.STORAGE_ACCOUNT_NAME }}"  \
+                --parameters adminUsername="${{ env.VM_USERNAME }}" adminPassword="${{ env.VM_PASSWORD }}" \
