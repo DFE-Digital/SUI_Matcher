@@ -47,8 +47,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakeNhsFhirApi", "tests\too
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.DBS.Response.Logger.Core", "src\tools\dbs-response-logger\SUI.DBS.Response.Logger.Core\SUI.DBS.Response.Logger.Core.csproj", "{C2C00189-7E7F-4515-B06A-D1F24B355C1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Azure.BlobStorage.Container.Sync", "src\tools\SUI.Azure.BlobStorage.Container.Sync\SUI.Azure.BlobStorage.Container.Sync.csproj", "{04778F18-2978-4714-ABF9-02A5104A0F08}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.DBS.Response.Logger.Console", "src\tools\dbs-response-logger\SUI.DBS.Response.Logger.Console\SUI.DBS.Response.Logger.Console.csproj", "{9D3264D5-2D68-4176-9A57-7B3213C7EE86}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.DBS.Response.Logger.Watcher", "src\tools\dbs-response-logger\SUI.DBS.Response.Logger.Watcher\SUI.DBS.Response.Logger.Watcher.csproj", "{4EF4CD9C-08CA-41A0-95B7-B22B902DD76F}"
