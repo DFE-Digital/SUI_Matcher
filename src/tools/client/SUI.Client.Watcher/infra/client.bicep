@@ -124,7 +124,7 @@ resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '192.168.0.1/23'
+        '192.168.2.0/23'
       ]
     }
     encryption: {
@@ -137,7 +137,7 @@ resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks
         name: 'AzureFirewallSubnet'
         properties: {
           addressPrefixes: [
-            '192.168.0.1/25'
+            '192.168.2.0/25'
           ]
           delegations: []
           privateEndpointNetworkPolicies: 'Disabled'
@@ -149,24 +149,6 @@ resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks
     enableDdosProtection: false
   }
 }
-
-
-resource virtualNetworks_vnetfw_name_default 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
-  parent: virtualNetworks_vnetfw_name_resource
-  name: 'default'
-  properties: {
-    addressPrefixes: [
-      '10.0.0.0/24'
-    ]
-    delegations: []
-    privateEndpointNetworkPolicies: 'Disabled'
-    privateLinkServiceNetworkPolicies: 'Enabled'
-  }
-}
-
-
-
-param azureFirewalls_vnetfw_Firewall_name string = '${environmentPrefix}-vnetfw-Firewall'
 
 resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
   name: '${environmentPrefix}-${environmentName}-pib-01'
@@ -190,8 +172,11 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01'= {
   tags: paramTags
 }
 
+
+param vnetFirewallName string = '${environmentPrefix}-vnetfw-Firewall'
+
 resource azureFirewalls_vnetfw_Firewall_name_resource 'Microsoft.Network/azureFirewalls@2024-05-01' = {
-  name: azureFirewalls_vnetfw_Firewall_name
+  name: vnetFirewallName
   location: location
   tags: paramTags
   properties: {
