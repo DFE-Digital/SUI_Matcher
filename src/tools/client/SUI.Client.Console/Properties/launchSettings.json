@@ -2,7 +2,7 @@
   "profiles": {
     "SUI.Client.Console": {
       "commandName": "Project",
-      "commandLineArgs": "sui_batch_search_queries.csv"
+      "commandLineArgs": "test_success.csv"
     }
   }
 }

@@ -86,7 +86,7 @@ dotnet test <path>/<to>/<test-class>
 To build and run the project:
 ```bash
 dotnet build sui-matching.sln
-dotnet run --project app-host/AppHost.csproj
+dotnet run --project src/app-host/AppHost.csproj
 ```
 Run simple test:
 ```bash
