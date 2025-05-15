@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 using MatchingApi;
 using MatchingApi.Services;
@@ -44,6 +45,7 @@ builder.Services.AddEndpoints(typeof(Program).Assembly);
 builder.Services.Configure<JsonOptions>(options =>
 {
     options.SerializerOptions.Converters.Add(new CustomDateOnlyConverter());
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 var app = builder.Build();

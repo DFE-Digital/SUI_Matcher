@@ -25,9 +25,6 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="sui_batch_search_queries.csv">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="test_fail_validation.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

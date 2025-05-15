@@ -1,4 +1,6 @@
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Shared.Models;
 
@@ -12,11 +14,17 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     private readonly IWireMockAdminApi _nhsAuthMockApi;
     private readonly AppHostFixture _fixture;
 
+    private readonly JsonSerializerOptions _httpClientJsonOptions;
+
     public AppHostIntegrationTests(AppHostFixture fixture)
     {
         _fixture = fixture;
         _client = fixture.CreateHttpClient("yarp");
         _nhsAuthMockApi = fixture.NhsAuthMockApi();
+        _httpClientJsonOptions = new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
     }
 
     public static IEnumerable<object[]> GetEndpoints()
@@ -57,7 +65,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.Match, personMatchResponse.Result.MatchStatus);
     }
@@ -76,7 +84,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.PotentialMatch, personMatchResponse.Result.MatchStatus);
     }
@@ -95,7 +103,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.NoMatch, personMatchResponse.Result.MatchStatus);
     }
@@ -112,7 +120,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.NoMatch, personMatchResponse.Result.MatchStatus);
     }
@@ -131,7 +139,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.ManyMatch, personMatchResponse.Result.MatchStatus);
     }
@@ -151,7 +159,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
         Assert.NotNull(personMatchResponse?.Result);
         Assert.NotNull(personMatchResponse.DataQuality);
         Assert.Equal(MatchStatus.Error, personMatchResponse.Result.MatchStatus);
@@ -179,7 +187,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>();
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.Match, personMatchResponse.Result.MatchStatus);
         Assert.NotNull(personMatchResponse.DataQuality);
