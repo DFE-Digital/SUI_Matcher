@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AssemblyName>dbsw</AssemblyName>
-        <Title>SUI DBS Client Watcher</Title>
+        <Title>SUI DBS Response Logger Watcher</Title>
         <Company>Department for Education</Company>
         <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
         <PackageId>DFE.SUI.DBS.Response.Logger.Watcher</PackageId>
@@ -33,6 +33,7 @@
         <None Update="appsettings.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Include="README.md" Pack="true"/>
     </ItemGroup>
 
 </Project>
