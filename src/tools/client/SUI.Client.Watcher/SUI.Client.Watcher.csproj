@@ -9,7 +9,7 @@
         <Title>SUI Client Watcher</Title>
         <Company>Department for Education</Company>
         <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
-        <PackageId>DFE.SUI.Client.Watcher</PackageId>
+        <PackageId>SUI.Client.Watcher</PackageId>
 
     </PropertyGroup>
 

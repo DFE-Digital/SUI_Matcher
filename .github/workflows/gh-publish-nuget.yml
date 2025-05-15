@@ -14,8 +14,8 @@ on:
         type: boolean
         
 env: 
-  client_name: 'DFE.SUI.Client.Watcher'
-  response_logger_name: 'DFE.SUI.DBS.Response.Logger.Watcher'
+  client_name: 'SUI.Client.Watcher'
+  response_logger_name: 'SUI.DBS.Response.Logger.Watcher'
 
 jobs:
   publish:
@@ -23,18 +23,92 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+        
+      - name: 'TEST - nuget version'
+        id: test_version
+        run: |
+          TEST_PACKAGE_NAME="Newtonsoft.Json"
+          API_URL="https://api.nuget.org/v3-flatcontainer/${TEST_PACKAGE_NAME,,}/index.json"
+          RESPONSE=$(curl -s -w "%{http_code}" -o response_test.json "$API_URL")
+          HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
+          
+          echo "URL=$API_URL"
+          echo "HTTP_STATUS=$HTTP_STATUS"
 
+          if [[ "$HTTP_STATUS" == "404" ]]; then
+            echo "Version not found, setting to 0.0.1"
+            VERSION="0.0.1"
+          else
+            echo "Version found, incrementing patch version"
+            LAST_VERSION=$(jq -r '.versions[-1]' response_test.json)
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
+            PATCH=$((PATCH + 1))
+            VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+
+          echo "NEWTON_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: 'Get Client Nuget version'
+        id: current_nuget_client_version
+        run: |
+          LOWERCASE_NAME="${{ env.client_name }}"
+          LOWERCASE_NAME=$(echo "$LOWERCASE_NAME" | tr '[:upper:]' '[:lower:]')
+          API_URL="https://api.nuget.org/v3-flatcontainer/${LOWERCASE_NAME}/index.json"
+          RESPONSE=$(curl -s -w "%{http_code}" -o response.json "$API_URL")
+          HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
+          
+          echo "URL=$API_URL"
+          echo "HTTP_STATUS=$HTTP_STATUS"
+          
+          if [[ "$HTTP_STATUS" == "404" ]]; then
+            VERSION="0.0.1"
+          else
+            LAST_VERSION=$(jq -r '.versions[-1]' response.json)
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
+            PATCH=$((PATCH + 1))
+            VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+
+          echo "CLIENT_VERSION=$VERSION" >> $GITHUB_ENV
+          
+      - name: 'Get Dbs logger nuget version'
+        id: current_nuget_dbs_version
+        run: |
+          LOWERCASE_NAME="${{ env.response_logger_name }}"
+          LOWERCASE_NAME=$(echo "$LOWERCASE_NAME" | tr '[:upper:]' '[:lower:]')
+          API_URL="https://api.nuget.org/v3-flatcontainer/${LOWERCASE_NAME}/index.json"
+          RESPONSE=$(curl -s -w "%{http_code}" -o response.json "$API_URL")
+          HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
+          
+          echo "URL=$API_URL"
+          echo "HTTP_STATUS=$HTTP_STATUS"
+          
+          if [[ "$HTTP_STATUS" == "404" ]]; then
+            VERSION="0.0.1"
+          else
+            LAST_VERSION=$(jq -r '.versions[-1]' response.json)
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
+            PATCH=$((PATCH + 1))
+            VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+
+          echo "DBS_VERSION=$VERSION" >> $GITHUB_ENV
+      
+      - name: Print Package Version
+        run: |
+          echo "next client nuget version: ${{ env.CLIENT_VERSION }}"
+          echo "next dbs nuget version: ${{ env.DBS_VERSION }}"
+          echo "test nuget version: ${{ env.NEWTON_VERSION }}"
+          
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-
-      - name: Fetch latest GitHub tag
-        id: fetch-latest-tag
-        run: |
-          latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
-          echo "Latest tag: $latest_tag"
-          echo "LATEST_VERSION=latest_tag" >> $GITHUB_ENV
 
       - name: Package Client Watcher
         if: ${{ github.event.inputs.publish-client == 'true' }}
@@ -42,7 +116,7 @@ jobs:
           dotnet pack ./src/tools/client/SUI.Client.Watcher/SUI.Client.Watcher.csproj \
             --configuration Release \
             --output ./nukpg \
-            /p:Version=${{ env.LATEST_VERSION }}
+            /p:Version=${{ env.PACKAGE_VERSION }}
 
       - name: Publish Client Watcher
         if: ${{ github.event.inputs.publish-client == 'true' }}
@@ -57,7 +131,7 @@ jobs:
           dotnet pack ./src/tools/DbsResponseLogger/SUI.DBS.Response.Logger.Watcher/SUI.DBS.Response.Logger.Watcher.csproj \
             --configuration Release \
             --output ./nukpg \
-            /p:Version=${{ env.LATEST_VERSION }}
+            /p:Version=${{ env.PACKAGE_VERSION }}
           
       - name: Publish Response Logger
         if: ${{ github.event.inputs.publish-response-logger == 'true' }}

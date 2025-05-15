@@ -9,7 +9,7 @@
         <Title>SUI DBS Response Logger Watcher</Title>
         <Company>Department for Education</Company>
         <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
-        <PackageId>DFE.SUI.DBS.Response.Logger.Watcher</PackageId>
+        <PackageId>SUI.DBS.Response.Logger.Watcher</PackageId>
     </PropertyGroup>
 
     <ItemGroup>
