@@ -114,7 +114,7 @@ jobs:
       - name: Package Response Logger
         if: ${{ github.event.inputs.publish-response-logger == 'true' }}
         run: |
-          dotnet pack ./src/tools/DbsResponseLogger/SUI.DBS.Response.Logger.Watcher/SUI.DBS.Response.Logger.Watcher.csproj \
+          dotnet pack ./src/tools/dbs-response-logger/SUI.DBS.Response.Logger.Watcher/SUI.DBS.Response.Logger.Watcher.csproj \
             --configuration Release \
             --output ./nukpg \
             /p:Version=${{ env.DBS_VERSION }} \
