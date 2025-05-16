@@ -10,6 +10,7 @@
         <Company>Department for Education</Company>
         <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
         <PackageId>SUI.Client.Watcher</PackageId>
+        <ToolCommandName>suiw</ToolCommandName>
 
     </PropertyGroup>
 

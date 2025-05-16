@@ -10,6 +10,7 @@
         <Company>Department for Education</Company>
         <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
         <PackageId>SUI.DBS.Response.Logger.Watcher</PackageId>
+        <ToolCommandName>suidbsw</ToolCommandName>
     </PropertyGroup>
 
     <ItemGroup>

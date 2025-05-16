@@ -101,7 +101,8 @@ jobs:
           dotnet pack ./src/tools/client/SUI.Client.Watcher/SUI.Client.Watcher.csproj \
             --configuration Release \
             --output ./nukpg \
-            /p:Version=${{ env.CLIENT_VERSION }}
+            /p:Version=${{ env.CLIENT_VERSION }} \
+            /p:PackAsTool=true
 
       - name: Publish Client Watcher
         if: ${{ github.event.inputs.publish-client == 'true' }}
@@ -116,7 +117,8 @@ jobs:
           dotnet pack ./src/tools/DbsResponseLogger/SUI.DBS.Response.Logger.Watcher/SUI.DBS.Response.Logger.Watcher.csproj \
             --configuration Release \
             --output ./nukpg \
-            /p:Version=${{ env.DBS_VERSION }}
+            /p:Version=${{ env.DBS_VERSION }} \
+            /p:PackAsTool=true
           
       - name: Publish Response Logger
         if: ${{ github.event.inputs.publish-response-logger == 'true' }}
