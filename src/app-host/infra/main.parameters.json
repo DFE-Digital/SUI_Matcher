@@ -9,7 +9,7 @@
         "value": "${AZURE_ENV_PREFIX}"
       },
       "location": {
-        "value": "westeurope"
+        "value": "${AZURE_LOCATION}"
       },
       "monitoringActionGroupEmail": {
         "value": "${AZURE_MONITORING_ACTION_GROUP_EMAIL}"
