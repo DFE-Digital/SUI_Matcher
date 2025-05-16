@@ -11,6 +11,7 @@
         <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
         <PackageId>SUI.DBS.Response.Logger.Watcher</PackageId>
         <ToolCommandName>suidbsw</ToolCommandName>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -34,7 +35,7 @@
         <None Update="appsettings.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-        <None Include="README.md" Pack="true"/>
+        <None Include="README.md" Pack="true"  PackagePath="\"/>
     </ItemGroup>
 
 </Project>
