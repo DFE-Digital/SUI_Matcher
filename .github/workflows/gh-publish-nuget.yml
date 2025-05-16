@@ -7,11 +7,19 @@ on:
         required: true
         default: false
         type: boolean
+      version-client:
+        description: 'Version of the client watcher to publish (if none select, auto increment patch version)'
+        required: false
+        type: string
       publish-response-logger:
         description: 'Publish the response logger to NuGet (Uses github latest tag)'
         required: true
         default: false
         type: boolean
+      version-response-logger:
+        description: 'Version of the response logger to publish (if none select, auto increment patch version)'
+        required: false
+        type: string
         
 env: 
   client_name: 'SUI.Client.Watcher'
@@ -28,50 +36,27 @@ jobs:
           
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
-        
-      - name: 'TEST - nuget version'
-        id: test_version
-        run: |
-          TEST_PACKAGE_NAME="Newtonsoft.Json"
-          API_URL="https://api.nuget.org/v3-flatcontainer/${TEST_PACKAGE_NAME,,}/index.json"
-          RESPONSE=$(curl -s -w "%{http_code}" -o response_test.json "$API_URL")
-          HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
-          
-          echo "URL=$API_URL"
-          echo "HTTP_STATUS=$HTTP_STATUS"
-
-          if [[ "$HTTP_STATUS" == "404" ]]; then
-            echo "Version not found, setting to 0.0.1"
-            VERSION="0.0.1"
-          else
-            echo "Version found, incrementing patch version"
-            LAST_VERSION=$(jq -r '.versions[-1]' response_test.json)
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
-            PATCH=$((PATCH + 1))
-            VERSION="$MAJOR.$MINOR.$PATCH"
-          fi
-
-          echo "NEWTON_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: 'Get Client Nuget version'
         id: current_nuget_client_version
         run: |
-          LOWERCASE_NAME="${{ env.client_name }}"
-          LOWERCASE_NAME=$(echo "$LOWERCASE_NAME" | tr '[:upper:]' '[:lower:]')
-          API_URL="https://api.nuget.org/v3-flatcontainer/${LOWERCASE_NAME}/index.json"
-          RESPONSE=$(curl -s -w "%{http_code}" -o response.json "$API_URL")
-          HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
-          
-          echo "URL=$API_URL"
-          echo "HTTP_STATUS=$HTTP_STATUS"
-          
-          if [[ "$HTTP_STATUS" == "404" ]]; then
-            VERSION="0.0.1"
+          if [[ -n "${{ github.event.inputs.version-client }}" ]]; then
+           VERSION="${{ github.event.inputs.version-client }}"
           else
-            LAST_VERSION=$(jq -r '.versions[-1]' response.json)
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
-            PATCH=$((PATCH + 1))
-            VERSION="$MAJOR.$MINOR.$PATCH"
+           LOWERCASE_NAME="${{ env.client_name }}"
+           LOWERCASE_NAME=$(echo "$LOWERCASE_NAME" | tr '[:upper:]' '[:lower:]')
+           API_URL="https://api.nuget.org/v3-flatcontainer/${LOWERCASE_NAME}/index.json"
+           RESPONSE=$(curl -s -w "%{http_code}" -o response.json "$API_URL")
+           HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
+          
+           if [[ "$HTTP_STATUS" == "404" ]]; then
+             VERSION="0.0.1"
+           else
+             LAST_VERSION=$(jq -r '.versions[-1]' response.json)
+             IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
+             PATCH=$((PATCH + 1))
+             VERSION="$MAJOR.$MINOR.$PATCH"
+           fi
           fi
 
           echo "CLIENT_VERSION=$VERSION" >> $GITHUB_ENV
@@ -79,22 +64,23 @@ jobs:
       - name: 'Get Dbs logger nuget version'
         id: current_nuget_dbs_version
         run: |
-          LOWERCASE_NAME="${{ env.response_logger_name }}"
-          LOWERCASE_NAME=$(echo "$LOWERCASE_NAME" | tr '[:upper:]' '[:lower:]')
-          API_URL="https://api.nuget.org/v3-flatcontainer/${LOWERCASE_NAME}/index.json"
-          RESPONSE=$(curl -s -w "%{http_code}" -o response.json "$API_URL")
-          HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
-          
-          echo "URL=$API_URL"
-          echo "HTTP_STATUS=$HTTP_STATUS"
-          
-          if [[ "$HTTP_STATUS" == "404" ]]; then
-            VERSION="0.0.1"
+          if [[ -n "${{ github.event.inputs.version-response-logger }}" ]]; then
+           VERSION="${{ github.event.inputs.version-response-logger }}"
           else
-            LAST_VERSION=$(jq -r '.versions[-1]' response.json)
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
-            PATCH=$((PATCH + 1))
-            VERSION="$MAJOR.$MINOR.$PATCH"
+           LOWERCASE_NAME="${{ env.response_logger_name }}"
+           LOWERCASE_NAME=$(echo "$LOWERCASE_NAME" | tr '[:upper:]' '[:lower:]')
+           API_URL="https://api.nuget.org/v3-flatcontainer/${LOWERCASE_NAME}/index.json"
+           RESPONSE=$(curl -s -w "%{http_code}" -o response.json "$API_URL")
+           HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
+          
+           if [[ "$HTTP_STATUS" == "404" ]]; then
+             VERSION="0.0.1"
+           else
+             LAST_VERSION=$(jq -r '.versions[-1]' response.json)
+             IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
+             PATCH=$((PATCH + 1))
+             VERSION="$MAJOR.$MINOR.$PATCH"
+           fi
           fi
 
           echo "DBS_VERSION=$VERSION" >> $GITHUB_ENV
@@ -103,7 +89,6 @@ jobs:
         run: |
           echo "next client nuget version: ${{ env.CLIENT_VERSION }}"
           echo "next dbs nuget version: ${{ env.DBS_VERSION }}"
-          echo "test nuget version: ${{ env.NEWTON_VERSION }}"
           
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
