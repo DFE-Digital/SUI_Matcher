@@ -141,8 +141,6 @@ public class MatchingService(
         return result;
     }
 
-    public string FormatDob(DateTime dob) => dob.ToString("yyyy-MM-dd");
-
     public async Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification)
     {
         StoreUniqueSearchIdFor(personSpecification);
@@ -318,7 +316,7 @@ public class MatchingService(
         {
             var altDob = new DateTime(model.BirthDate.Value.Year, model.BirthDate.Value.Day, model.BirthDate.Value.Month);
 
-            queries.Add(new()
+            queries.Add(new SearchQuery
             {
                 FuzzyMatch = true,
                 Given = modelName,
@@ -326,7 +324,7 @@ public class MatchingService(
                 Email = model.Email,
                 Gender = model.Gender,
                 Phone = model.Phone,
-                Birthdate = [$"eq{FormatDob(altDob)}"],
+                Birthdate = [$"eq{altDob:yyyy-MM-dd}"],
                 AddressPostalcode = model.AddressPostalCode,
             });
         }

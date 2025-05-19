@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+using System.Diagnostics.CodeAnalysis;
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace SUI.DBS.Response.Logger.Core.Extensions;
+namespace Shared.Extensions;
 
+[ExcludeFromCodeCoverage(Justification = "Host configuration setup")]
 public static class HostBuilderExtensions
 {
     public static IHostBuilder ConfigureAppSettingsJsonFile(this IHostBuilder builder)
