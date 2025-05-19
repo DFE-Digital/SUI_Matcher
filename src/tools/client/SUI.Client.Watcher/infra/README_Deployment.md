@@ -13,7 +13,8 @@ Run the client.bicep file from the pipeline to deploy most of the required infra
 There are a few steps to be able to get all the infrastructure running.
 
 - Add a private endpoint between the client VM VNET and the managedEnvrionment (where the API containers are running).
-- Add the route table '-rt-01' to the 'cae' VNETs subnet
+- Add the route table '-rt-01' to the 'cae' VNETs subnet.
+- Add VNET peering between cae VNET and the VNET for the firewall.
 
 
 
