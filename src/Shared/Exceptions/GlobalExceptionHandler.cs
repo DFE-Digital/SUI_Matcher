@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -8,6 +10,7 @@ namespace Shared.Exceptions;
 /// Ref: https://juliocasal.com/blog/Global-Error-Handling-In-AspNet-Core-APIs
 /// </summary>
 /// <param name="logger"></param>
+[ExcludeFromCodeCoverage(Justification = "This is a global exception handler and does not need to be unit tested.")]
 public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
@@ -21,7 +24,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             traceId
         );
 
-        var (statusCode, title) = MapException(exception);
+        (int statusCode, string title) = MapException(exception);
 
         await Results.Problem(
             title: title,
