@@ -223,8 +223,6 @@ resource azureFirewalls_vnetfw_Firewall_name_resource 'Microsoft.Network/azureFi
   }
 }
 
-
-
 resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
   parent: firewallPolicy
   name: 'DefaultApplicationRuleCollectionGroup'
@@ -255,6 +253,84 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
             sourceAddresses: [...caeVnet.properties.addressSpace.addressPrefixes]
           }
         ]
+      }
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+          {
+            ruleType: 'ApplicationRule'
+            name: 'acr-allow'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              '${environmentPrefix}${toLower(environmentName)}acr01.azurecr.io'
+            ]
+            terminateTLS: false
+            sourceAddresses: [
+              '192.168.0.0/24'
+            ]
+          }
+          {
+            ruleType: 'ApplicationRule'
+            name: 'blob'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              '*.blob.core.windows.net'
+            ]
+            terminateTLS: false
+            sourceAddresses: [
+              '192.168.0.0/24'
+            ]
+          }
+          {
+            ruleType: 'ApplicationRule'
+            name: 'kv'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              '${environmentPrefix}-int-kv01.vault.azure.net'
+            ]
+            terminateTLS: false
+            sourceAddresses: [
+              '192.168.0.0/24'
+            ]
+          }
+          {
+            ruleType: 'ApplicationRule'
+            name: 'login'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              'login.microsoftonline.com'
+            ]
+            terminateTLS: false
+            sourceAddresses: [
+              '192.168.0.0/24'
+            ]
+          }
+        ]
+        name: 'allow-acr'
+        priority: 200
       }
     ]
   }

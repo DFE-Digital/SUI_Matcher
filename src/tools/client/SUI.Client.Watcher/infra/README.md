@@ -8,10 +8,13 @@
 ## Client Infra
 
 There is a job to build the client infra. It will build the infra within this directory which is meant to mimic a local authority server where this client will run.
+There is also information in `README_Deployment.md` which requires extra manual steps to deploy.
 
 ## Upload Client
 
 We need to upload any new client to blob storage so it can be collected by the VM we created when we deployed the client infra. Again there is a job to do this.
+
+In addition, we also deploy versions manually to [Nuget.org](https://www.nuget.org/packages?q=SUI.*.Watcher&includeComputedFrameworks=true&prerel=true&sortby=relevance) which can be downloaded via the dotnet tools command.
 
 ## Connectivity
 
