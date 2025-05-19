@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using SUI.Client.Core;
+using Shared.Util;
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Watcher;
 
