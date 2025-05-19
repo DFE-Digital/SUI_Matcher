@@ -1,5 +1,8 @@
-﻿namespace SUI.Client.Core.Extensions;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace SUI.Client.Core.Extensions;
+
+[ExcludeFromCodeCoverage(Justification = "This is just a CLI WriteLine extension")]
 public static class TextWriterExtensions
 {
     public static void WriteAppName(this TextWriter output, string name)
