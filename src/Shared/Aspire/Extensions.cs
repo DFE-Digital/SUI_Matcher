@@ -15,7 +15,6 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 using Shared.Logging;
-using Shared.OpenTelemetry;
 
 namespace Shared.Aspire;
 
@@ -63,8 +62,7 @@ public static class Extensions
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
                     .AddMeter(InstrumentationOptions.MeterName)
-                    .AddMeter("Marten")
-                    .AddMeter(ActivitySourceProvider.DefaultSourceName);
+                    .AddMeter("Marten");
             })
             .WithTracing(tracing =>
             {
@@ -72,7 +70,6 @@ public static class Extensions
                         .AddHttpClientInstrumentation()
                         .AddSource(DiagnosticHeaders.DefaultListenerName)
                         .AddSource("Marten")
-                        .AddSource(ActivitySourceProvider.DefaultSourceName)
                         .AddSource("Yarp.ReverseProxy");
             });
 

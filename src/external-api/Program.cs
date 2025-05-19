@@ -23,7 +23,6 @@ else
 
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClient>();
 
-builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 

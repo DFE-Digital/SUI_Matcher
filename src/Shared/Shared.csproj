@@ -6,7 +6,6 @@
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
 		<PackageReference Include="DotNetEnv" />
 		<PackageReference Include="FluentValidation" />
-		<PackageReference Include="MediatR" />
 		<PackageReference Include="MassTransit" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
@@ -28,6 +27,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Models\Client\" />
+	  <Folder Include="OpenTelemetry\" />
 	</ItemGroup>
 
 </Project>
