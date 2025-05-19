@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -11,6 +12,7 @@ namespace Shared.Endpoint;
 /// <summary>
 /// Ref: https://github.com/m-jovanovic/minimal-endpoints/blob/main/MinimalEndpoints/Extensions/EndpointExtensions.cs
 /// </summary>
+[ExcludeFromCodeCoverage(Justification = "This is a extension class for registering and mapping endpoints.")]
 public static class EndpointExtensions
 {
     public static IServiceCollection AddEndpoints(this IServiceCollection services, Assembly assembly)
