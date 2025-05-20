@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 
 using Hl7.Fhir.Model;
@@ -10,6 +11,7 @@ public interface IFhirClientFactory
     FhirClient CreateFhirClient();
 }
 
+[ExcludeFromCodeCoverage(Justification = "Cannot test third party library")]
 public class FhirClientFactory(ILogger<FhirClientFactory> logger, ITokenService tokenService, IConfiguration config) : IFhirClientFactory
 {
     public FhirClient CreateFhirClient()
