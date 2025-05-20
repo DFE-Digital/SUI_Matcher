@@ -1,13 +1,5 @@
 using ExternalApi.Services;
 
-using Hl7.Fhir.Model;
-using Hl7.Fhir.Rest;
-
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-
-using Moq;
-
 using Shared.Models;
 
 using Task = System.Threading.Tasks.Task;
