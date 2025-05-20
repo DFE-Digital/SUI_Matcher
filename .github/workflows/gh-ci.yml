@@ -48,9 +48,6 @@ jobs:
 
       - name: Build
         run: dotnet build --no-restore
-        
-      - name: Install dotnet-reportgenerator-globaltool
-        run: dotnet tool install --global dotnet-coverage
 
       - name: Test
         run: |
