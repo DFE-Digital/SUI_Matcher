@@ -105,17 +105,16 @@ public class TestFhirClientError : FhirClient
     public TestFhirClientError(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
     {
     }
-    
+
     public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
     {
         throw new Exception("Error occurred while performing search");
     }
-    
+
     public override Task<TResource?> ReadAsync<TResource>(Uri location, string? ifNoneMatch = null, DateTimeOffset? ifModifiedSince = null,
         CancellationToken? ct = null) where TResource : class
     {
-      
+
         throw new Exception("Error occurred while performing read");
     }
 }
-

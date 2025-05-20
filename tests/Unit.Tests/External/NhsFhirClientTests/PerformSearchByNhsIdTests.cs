@@ -7,7 +7,7 @@ namespace Unit.Tests.External.NhsFhirClientTests;
 [TestClass]
 public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
 {
-    
+
     [TestMethod]
     public async Task ShouldReturnDemographicResult_WhenPersonFound()
     {
@@ -16,12 +16,12 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
         FhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
-        
+
         var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
-        
+
         // Act
         var result = await client.PerformSearchByNhsId("1234567890");
-        
+
         // Assert
         Assert.IsNotNull(result);
         Assert.IsNotNull(result.Result);
@@ -35,18 +35,18 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         var testFhirClient = new TestFhirClientError("https://fhir.api.endpoint");
         FhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
-        
+
         var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
-        
+
         // Act
         var result = await client.PerformSearchByNhsId("1234567890");
-        
+
         // Assert
         Assert.IsNotNull(result);
         Assert.IsNull(result.Result);
         Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage) == false);
     }
-    
+
 }
 //
 // public virtual Task<TResource?> ReadAsync<TResource>(

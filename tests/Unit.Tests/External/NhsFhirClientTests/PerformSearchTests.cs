@@ -17,7 +17,7 @@ namespace Unit.Tests.External.NhsFhirClientTests;
 [TestClass]
 public class PerformSearchTests : BaseNhsFhirClientTests
 {
-    
+
     [TestMethod]
     public async Task ShouldGetSearchResultsMatched_WhenMatched()
     {
@@ -32,7 +32,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
         FhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
-        
+
         var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
 
         // Act
@@ -79,7 +79,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
             Given = ["IAm"],
             Birthdate = ["eq1900-01-01"],
         };
-        
+
         var testFhirClient = new TestFhirClientUnmatched("https://fhir.api.endpoint");
         FhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
@@ -88,10 +88,9 @@ public class PerformSearchTests : BaseNhsFhirClientTests
 
         // Act
         var result = await client.PerformSearch(searchQuery);
-        
+
         // Assert
         Assert.IsNotNull(result);
         Assert.AreEqual(SearchResult.ResultType.Unmatched, result.Type);
     }
 }
-
