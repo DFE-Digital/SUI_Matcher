@@ -9,12 +9,8 @@ using Shared.Models;
 
 namespace ExternalApi.Services;
 
-public class NhsFhirClient(IFhirClientFactory fhirClientFactory,
-                           ILogger<NhsFhirClient> logger,
-                           IConfiguration configuration) : INhsFhirClient
+public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhirClient> logger) : INhsFhirClient
 {
-    private readonly string _baseUri = configuration["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"]!;
-
     public async Task<SearchResult?> PerformSearch(SearchQuery query)
     {
         var search = new SearchParams();
@@ -87,10 +83,7 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory,
 
             var data = await fhirClient.ReadAsync<Patient>(ResourceIdentity.Build("Patient", nhsId));
 
-            return new DemographicResult()
-            {
-                Result = data
-            };
+            return new DemographicResult() { Result = data };
         }
         catch (Exception ex)
         {
@@ -113,4 +106,3 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory,
         );
     }
 }
-

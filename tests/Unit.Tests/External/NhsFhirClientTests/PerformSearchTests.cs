@@ -15,23 +15,8 @@ using Task = System.Threading.Tasks.Task;
 namespace Unit.Tests.External.NhsFhirClientTests;
 
 [TestClass]
-public class PerformSearchTests
+public class PerformSearchTests : BaseNhsFhirClientTests
 {
-    private readonly Mock<ILogger<NhsFhirClient>> _loggerMock;
-    private readonly Mock<IConfiguration> _configurationMock;
-    private readonly Mock<IFhirClientFactory> _fhirClientFactory;
-    
-    public PerformSearchTests()
-    {
-        
-        _loggerMock = new Mock<ILogger<NhsFhirClient>>();
-        _configurationMock = new Mock<IConfiguration>();
-
-        _configurationMock.Setup(c => c["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"])
-            .Returns("https://fhir.api.endpoint");
-        
-        _fhirClientFactory = new Mock<IFhirClientFactory>();
-    }
     
     [TestMethod]
     public async Task ShouldGetSearchResultsMatched_WhenMatched()
@@ -45,10 +30,10 @@ public class PerformSearchTests
             Birthdate = ["eq1980-01-01"],
         };
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
-        _fhirClientFactory.Setup(f => f.CreateFhirClient())
+        FhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
         
-        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object, _configurationMock.Object);
+        var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
 
         // Act
         var result = await client.PerformSearch(searchQuery);
@@ -71,10 +56,10 @@ public class PerformSearchTests
         };
 
         var testFhirClient = new TestFhirClientMultiMatch("https://fhir.api.endpoint");
-        _fhirClientFactory.Setup(f => f.CreateFhirClient())
+        FhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
 
-        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object, _configurationMock.Object);
+        var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
 
         // Act
         var result = await client.PerformSearch(searchQuery);
@@ -96,10 +81,10 @@ public class PerformSearchTests
         };
         
         var testFhirClient = new TestFhirClientUnmatched("https://fhir.api.endpoint");
-        _fhirClientFactory.Setup(f => f.CreateFhirClient())
+        FhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
 
-        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object, _configurationMock.Object);
+        var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
 
         // Act
         var result = await client.PerformSearch(searchQuery);
@@ -110,69 +95,3 @@ public class PerformSearchTests
     }
 }
 
-public class TestFhirClientSuccess : FhirClient
-{
-    public TestFhirClientSuccess(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
-    {
-    }
-
-    public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
-    {
-        return new Bundle
-        {
-            Entry = new List<Bundle.EntryComponent>()
-            {
-                new Bundle.EntryComponent
-                {
-                    Resource = new Patient
-                    {
-                        Id = "123"
-                    },
-                    Search = new Bundle.SearchComponent()
-                    {
-                        Mode = Bundle.SearchEntryMode.Match,
-                        Score = 1.0m
-                    }
-                }
-            },
-        };
-    }
-}
-
-public class TestFhirClientMultiMatch : FhirClient
-{
-    public TestFhirClientMultiMatch(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
-    {
-    }
-
-    public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
-    {
-        return null;
-    }
-
-    public override Resource? LastBodyAsResource => new OperationOutcome()
-    {
-        Issue =
-        [
-            new OperationOutcome.IssueComponent()
-            {
-                Code = OperationOutcome.IssueType.MultipleMatches
-            }
-        ]
-    };
-}
-
-public class TestFhirClientUnmatched : FhirClient
-{
-    public TestFhirClientUnmatched(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
-    {
-    }
-
-    public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
-    {
-        return new Bundle
-        {
-            Entry = []
-        };
-    }
-}
