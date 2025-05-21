@@ -112,7 +112,7 @@ jobs:
           run: |
             EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
             echo "csv<<${EOF}" >> $GITHUB_OUTPUT
-            cat ./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.txt >> $GITHUB_OUTPUT
+            cat ./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv >> $GITHUB_OUTPUT
             echo "${EOF}" >> $GITHUB_OUTPUT
 
         - name: show contents of csv file
