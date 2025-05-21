@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
+
 using HealthChecks.Uris;
 
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -8,6 +10,7 @@ namespace AppHost;
 /// <summary>
 /// Ref: https://github.com/davidfowl/WaitForDependenciesAspire/tree/main/WaitForDependencies.Aspire.Hosting
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class Extensions
 {
     public static IResourceBuilder<T> WithHealthCheck<T>(
@@ -47,6 +50,7 @@ public static class Extensions
     }
 }
 
+[ExcludeFromCodeCoverage]
 public class HealthCheckAnnotation(Func<IResource, CancellationToken, Task<IHealthCheck?>> healthCheckFactory) : IResourceAnnotation
 {
     public Func<IResource, CancellationToken, Task<IHealthCheck?>> HealthCheckFactory { get; } = healthCheckFactory;
