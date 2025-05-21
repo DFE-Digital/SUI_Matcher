@@ -83,7 +83,7 @@ jobs:
         - name: Checkout
           uses: actions/checkout@v4
           with:
-            ref: ${{ env.CLIENT_VERSION }}
+            ref: feature/sui-399/simplify_smoke_test
 
         # - name: Login to Azure
         #   uses: azure/login@v2
