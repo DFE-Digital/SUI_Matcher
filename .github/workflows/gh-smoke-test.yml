@@ -63,6 +63,9 @@ jobs:
               echo "triggered_workflow=${{ github.event.workflow.name || 'Azure App Deployment' }}" >> $GITHUB_ENV
             fi
 
+        - name: Checkout
+          uses: actions/checkout@v4
+
         - name: Use version inputted or find latest tag
           id: check-version
           run: |
