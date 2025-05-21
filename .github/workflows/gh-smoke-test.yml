@@ -125,7 +125,7 @@ jobs:
               "@
               $fileContent | Out-File -FilePath $destinationPath -Encoding utf8
             
-              cd C:\Users\AzCopy\
+              cd C:\Users\AzCopy
             
               # Execute Smoke Test
               $logContent = .\dbsc.exe $destinationPath
@@ -162,9 +162,10 @@ jobs:
               $fileContent = @"
               ${{ steps.csv_file.outputs.csv }}
               "@
+
               $fileContent | Out-File -FilePath $destinationPath -Encoding utf8
             
-              cd C:\Users\AzCopy\
+              cd C:\Users\AzCopy
             
               $json_data = @(
                 [PSCustomObject]@{
