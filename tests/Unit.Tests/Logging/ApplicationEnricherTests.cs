@@ -1,19 +1,15 @@
 using System.Diagnostics;
 using System.Security.Claims;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Diagnostics.Enrichment;
-
 using Moq;
-
 using Shared.Logging;
 
 namespace Unit.Tests.Logging;
 
-[TestClass]
 public class ApplicationEnricherTests
 {
-    [TestMethod]
+    [Fact]
     public void Enrich_AddsSearchIdToCollector_WhenSearchIdExistsInActivity()
     {
         // Arrange
@@ -33,7 +29,7 @@ public class ApplicationEnricherTests
         activity.Stop();
     }
 
-    [TestMethod]
+    [Fact]
     public void Enrich_AddsMachineNameToCollector()
     {
         // Arrange
@@ -48,7 +44,7 @@ public class ApplicationEnricherTests
         collector.Verify(c => c.Add("MachineName", Environment.MachineName), Times.Once);
     }
 
-    [TestMethod]
+    [Fact]
     public void Enrich_AddsIsAuthenticatedToCollector_WhenHttpContextExists()
     {
         // Arrange
@@ -65,7 +61,7 @@ public class ApplicationEnricherTests
         collector.Verify(c => c.Add("IsAuthenticated", true), Times.Once);
     }
 
-    [TestMethod]
+    [Fact]
     public void Enrich_DoesNotAddIsAuthenticated_WhenHttpContextIsNull()
     {
         // Arrange

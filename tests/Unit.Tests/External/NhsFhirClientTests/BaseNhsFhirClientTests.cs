@@ -24,7 +24,7 @@ public class BaseNhsFhirClientTests
 
     protected class TestFhirClientSuccess : FhirClient
     {
-        public TestFhirClientSuccess(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
+        public TestFhirClientSuccess(string endpoint, FhirClientSettings settings = null!, HttpMessageHandler messageHandler = null!) : base(endpoint, settings, messageHandler)
         {
         }
 
@@ -61,7 +61,7 @@ public class BaseNhsFhirClientTests
         }
     }
 
-    public class TestFhirClientMultiMatch : FhirClient
+    protected class TestFhirClientMultiMatch : FhirClient
     {
         public TestFhirClientMultiMatch(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
         {
@@ -84,7 +84,7 @@ public class BaseNhsFhirClientTests
         };
     }
 
-    public class TestFhirClientUnmatched : FhirClient
+    protected class TestFhirClientUnmatched : FhirClient
     {
         public TestFhirClientUnmatched(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
         {
@@ -102,11 +102,11 @@ public class BaseNhsFhirClientTests
 
 public class TestFhirClientError : FhirClient
 {
-    public TestFhirClientError(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
+    public TestFhirClientError(string endpoint, FhirClientSettings settings = null!, HttpMessageHandler messageHandler = null!) : base(endpoint, settings, messageHandler)
     {
     }
 
-    public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
+    public override  Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
     {
         throw new Exception("Error occurred while performing search");
     }

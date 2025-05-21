@@ -1,42 +1,48 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <!--
-      Displays error on console in addition to the log file. Note that this feature comes with a performance impact.
-      For more information, visit https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-integration-dotnet-test#show-failure-per-test
-      -->
-    <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Bogus" />
-    <PackageReference Include="coverlet.collector">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Hl7.Fhir.R4" />
-    <PackageReference Include="Moq" />
-    <PackageReference Include="MSTest.TestAdapter" />
-    <PackageReference Include="MSTest.TestFramework" />
-      <PackageReference Include="Microsoft.NET.Test.Sdk" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="xunit"/>
+        <PackageReference Include="xunit.runner.visualstudio">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.collector">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="Bogus"/>
+        
+        <PackageReference Include="Hl7.Fhir.R4"/>
+        <PackageReference Include="Moq"/>
+       
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\external-api\External.csproj" />
-    <ProjectReference Include="..\..\src\matching-api\Matching.csproj" />
-    <ProjectReference Include="..\..\src\Shared\Shared.csproj" />
-    <ProjectReference Include="..\..\src\tools\client\SUI.Client.Core\SUI.Client.Core.csproj" />
-    <ProjectReference Include="..\..\src\tools\dbs-response-logger\SUI.DBS.Response.Logger.Core\SUI.DBS.Response.Logger.Core.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\external-api\External.csproj"/>
+        <ProjectReference Include="..\..\src\matching-api\Matching.csproj"/>
+        <ProjectReference Include="..\..\src\Shared\Shared.csproj"/>
+        <ProjectReference Include="..\..\src\tools\client\SUI.Client.Core\SUI.Client.Core.csproj"/>
+        <ProjectReference Include="..\..\src\tools\dbs-response-logger\SUI.DBS.Response.Logger.Core\SUI.DBS.Response.Logger.Core.csproj"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Smoke\dbs_batch_search_responses.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+    <ItemGroup>
+        <Using Include="Xunit"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Smoke\dbs_batch_search_responses.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 
 </Project>

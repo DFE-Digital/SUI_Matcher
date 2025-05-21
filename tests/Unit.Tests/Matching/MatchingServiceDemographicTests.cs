@@ -1,20 +1,16 @@
 using MatchingApi.Services;
-
 using Microsoft.Extensions.Logging.Abstractions;
-
 using Moq;
-
 using Shared.Endpoint;
 using Shared.Models;
 
 namespace Unit.Tests.Matching;
 
-[TestClass]
 public class MatchingServiceDemographicTests
 {
     private readonly ValidationService _validationService = new();
 
-    [TestMethod]
+    [Fact]
     public async Task ShouldReturnDemographics()
     {
         // Arrange
@@ -32,14 +28,14 @@ public class MatchingServiceDemographicTests
         var result = await sut.GetDemographicsAsync(request);
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.IsNotNull(result.Result);
-        Assert.AreEqual(0, result.Errors.Count);
+        Assert.NotNull(result);
+        Assert.NotNull(result.Result);
+        Assert.Equal(0, result.Errors.Count);
     }
 
-    [TestMethod]
-    [DataRow("", "NHS number is required")]
-    [DataRow("12345", "NHS number must be 10 digits")]
+    [Theory]
+    [InlineData("", "NHS number is required")]
+    [InlineData("12345", "NHS number must be 10 digits")]
     public async Task ShouldReturnErrors_WhenValidationErrorOccurs(string nhsId, string message)
     {
         // Arrange
@@ -55,8 +51,8 @@ public class MatchingServiceDemographicTests
         var result = await sut.GetDemographicsAsync(request);
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.IsNull(result.Result);
-        Assert.IsTrue(result.Errors.Count != 0, message);
+        Assert.NotNull(result);
+        Assert.Null(result.Result);
+        Assert.True(result.Errors.Count != 0, message);
     }
 }

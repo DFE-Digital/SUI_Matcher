@@ -1,41 +1,25 @@
 ﻿using System.Globalization;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 using Shared.Util;
-
 using SUI.DBS.Response.Logger.Core;
 using SUI.DBS.Response.Logger.Core.Extensions;
 using SUI.DBS.Response.Logger.Core.Watcher;
-
 using Unit.Tests.Util;
+using Xunit.Abstractions;
 
 using ColumnMapping = System.Collections.Generic.Dictionary<int, string>;
 
 namespace Unit.Tests.DbsResponseLogger;
 
-[TestClass]
-public class TxtProcessorTests
+public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
 {
-    private TempDirectoryFixture _dir = null!;
+    private readonly TempDirectoryFixture _dir = new();
 
-    public required TestContext TestContext { get; set; }
+    public required ITestOutputHelper TestContext = testOutputHelper;
 
-    [TestCleanup]
-    public void Clean()
-    {
-        //_dir.Dispose();
-    }
-
-    [TestInitialize]
-    public void Init()
-    {
-        _dir = new TempDirectoryFixture();
-    }
-
-    [TestMethod]
+    [Fact]
     public async Task TestDbsTxtResultsFile()
     {
         // ARRANGE
@@ -95,12 +79,12 @@ public class TxtProcessorTests
             throw monitor.GetLastOperation().Exception!;
         }
 
-        Assert.IsNull(monitor.GetLastOperation().Exception, monitor.GetLastOperation().Exception?.ToString() ?? "Exception occurred");
-        Assert.AreEqual(0, monitor.ErrorCount);
-        Assert.AreEqual(1, monitor.ProcessedCount);
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
 
-        Assert.AreEqual(1, logMessages.Count(x => x.Contains($"[MATCH_COMPLETED] MatchStatus: Match, AgeGroup: {GetAgeRange(testData[1])}, Gender: {GetGender(testData[1])}, Postcode: {GetPostCode(testData[1])}")));
-        Assert.AreEqual(1, logMessages.Count(x => x.Contains("The DBS results file has 2 records, batch search resulted in Match='1' and NoMatch='1'")));
+        Assert.Equal(1, logMessages.Count(x => x.Contains($"[MATCH_COMPLETED] MatchStatus: Match, AgeGroup: {GetAgeRange(testData[1])}, Gender: {GetGender(testData[1])}, Postcode: {GetPostCode(testData[1])}")));
+        Assert.Equal(1, logMessages.Count(x => x.Contains("The DBS results file has 2 records, batch search resulted in Match='1' and NoMatch='1'")));
     }
 
     private static string GetPostCode(TestData recordData)

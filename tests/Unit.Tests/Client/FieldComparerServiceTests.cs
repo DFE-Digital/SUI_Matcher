@@ -1,15 +1,12 @@
 using ExternalApi.Services;
-
 using Hl7.Fhir.Model;
-
 using Shared.Models;
 
 namespace Unit.Tests.Client;
 
-[TestClass]
 public class FieldComparerServiceTests
 {
-    [TestMethod]
+    [Fact]
     public void ComparePatientFields_ShouldReturnDifferences_WhenFieldsDoNotMatch()
     {
         // Arrange
@@ -41,16 +38,16 @@ public class FieldComparerServiceTests
         var differences = FieldComparerService.ComparePatientFields(query, patient);
 
         // Assert
-        CollectionAssert.Contains(differences, nameof(SearchQuery.Birthdate));
-        CollectionAssert.Contains(differences, nameof(SearchQuery.AddressPostalcode));
-        CollectionAssert.Contains(differences, nameof(SearchQuery.Phone));
-        CollectionAssert.Contains(differences, nameof(SearchQuery.Gender));
-        CollectionAssert.Contains(differences, nameof(SearchQuery.Given));
-        CollectionAssert.DoesNotContain(differences, nameof(SearchQuery.Family));
-        CollectionAssert.DoesNotContain(differences, nameof(SearchQuery.Email));
+        Assert.Contains(nameof(SearchQuery.Birthdate), differences);
+        Assert.Contains(nameof(SearchQuery.AddressPostalcode), differences);
+        Assert.Contains(nameof(SearchQuery.Phone),differences);
+        Assert.Contains(nameof(SearchQuery.Gender), differences);
+        Assert.Contains(nameof(SearchQuery.Given), differences);
+        Assert.DoesNotContain(nameof(SearchQuery.Family), differences);
+        Assert.DoesNotContain(nameof(SearchQuery.Email), differences);
     }
 
-    [TestMethod]
+    [Fact]
     public void ShouldIdentifyBirthdateAsTheSame()
     {
         // Arrange
@@ -68,6 +65,6 @@ public class FieldComparerServiceTests
         var differences = FieldComparerService.ComparePatientFields(query, patient);
 
         // Assert
-        Assert.IsFalse(differences.Contains(nameof(SearchQuery.Birthdate)));
+        Assert.DoesNotContain(nameof(SearchQuery.Birthdate), differences);
     }
 }

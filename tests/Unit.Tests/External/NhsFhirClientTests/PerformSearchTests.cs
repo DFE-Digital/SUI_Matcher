@@ -1,16 +1,12 @@
 using ExternalApi.Services;
-
 using Shared.Models;
-
 using Task = System.Threading.Tasks.Task;
 
 namespace Unit.Tests.External.NhsFhirClientTests;
 
-[TestClass]
 public class PerformSearchTests : BaseNhsFhirClientTests
 {
-
-    [TestMethod]
+    [Fact]
     public async Task ShouldGetSearchResultsMatched_WhenMatched()
     {
         // Arrange
@@ -31,12 +27,12 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         var result = await client.PerformSearch(searchQuery);
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(SearchResult.ResultType.Matched, result.Type);
-        Assert.AreEqual("123", result.NhsNumber);
+        Assert.NotNull(result);
+        Assert.Equal(SearchResult.ResultType.Matched, result.Type);
+        Assert.Equal("123", result.NhsNumber);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task ShouldGetSearchResultsMultiMatched_WhenMultipleMatches()
     {
         // Arrange
@@ -57,11 +53,11 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         var result = await client.PerformSearch(searchQuery);
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(SearchResult.ResultType.MultiMatched, result.Type);
+        Assert.NotNull(result);
+        Assert.Equal(SearchResult.ResultType.MultiMatched, result.Type);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task ShouldGetSearchResultsUnmatched_WhenNoMatches()
     {
         // Arrange
@@ -82,7 +78,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         var result = await client.PerformSearch(searchQuery);
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(SearchResult.ResultType.Unmatched, result.Type);
+        Assert.NotNull(result);
+        Assert.Equal(SearchResult.ResultType.Unmatched, result.Type);
     }
 }

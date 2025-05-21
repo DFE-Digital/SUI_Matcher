@@ -1,13 +1,11 @@
 using System.Text.Json;
-
 using MatchingApi;
 
 namespace Unit.Tests.Matching;
 
-[TestClass]
 public class CustomDateOnlyConverterTests
 {
-    [TestMethod]
+    [Fact]
     public void Read_ReturnsDateOnly_WhenValidDateStringProvided()
     {
         var json = "\"2023-10-01\"";
@@ -15,11 +13,11 @@ public class CustomDateOnlyConverterTests
 
         var result = JsonSerializer.Deserialize<DateOnly?>(json, options);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(new DateOnly(2023, 10, 1), result);
+        Assert.NotNull(result);
+        Assert.Equal(new DateOnly(2023, 10, 1), result);
     }
 
-    [TestMethod]
+    [Fact]
     public void Read_ReturnsNull_WhenEmptyStringProvided()
     {
         var json = "\"\"";
@@ -27,10 +25,10 @@ public class CustomDateOnlyConverterTests
 
         var result = JsonSerializer.Deserialize<DateOnly?>(json, options);
 
-        Assert.IsNull(result);
+        Assert.Null(result);
     }
 
-    [TestMethod]
+    [Fact]
     public void Write_SerializesDateOnlyToString_WhenDateOnlyProvided()
     {
         var date = new DateOnly(2023, 10, 1);
@@ -38,10 +36,10 @@ public class CustomDateOnlyConverterTests
 
         var result = JsonSerializer.Serialize(date, options);
 
-        Assert.AreEqual("\"2023-10-01\"", result);
+        Assert.Equal("\"2023-10-01\"", result);
     }
 
-    [TestMethod]
+    [Fact]
     public void Write_SerializesNullToString_WhenNullProvided()
     {
         DateOnly? date = null;
@@ -49,6 +47,6 @@ public class CustomDateOnlyConverterTests
 
         var result = JsonSerializer.Serialize(date, options);
 
-        Assert.AreEqual("null", result);
+        Assert.Equal("null", result);
     }
 }

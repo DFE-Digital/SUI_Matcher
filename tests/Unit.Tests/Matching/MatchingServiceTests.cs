@@ -1,22 +1,16 @@
 ﻿using System.Diagnostics;
-
 using MatchingApi.Services;
-
 using Microsoft.Extensions.Logging;
-
 using Moq;
-
 using Newtonsoft.Json;
-
 using Shared.Endpoint;
 using Shared.Models;
 
 namespace Unit.Tests.Matching;
 
-[TestClass]
 public sealed class MatchingServiceTests
 {
-    [TestMethod]
+    [Fact]
     public async Task EmptyPersonModelReturnsError()
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
@@ -25,9 +19,9 @@ public sealed class MatchingServiceTests
 
         var result = await subj.SearchAsync(new PersonSpecification());
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.Error, result.Result!.MatchStatus);
-        Assert.AreEqual(JsonConvert.SerializeObject(new DataQualityResult
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.Error, result.Result!.MatchStatus);
+        Assert.Equal(JsonConvert.SerializeObject(new DataQualityResult
         {
             Given = QualityType.NotProvided,
             Family = QualityType.NotProvided,
@@ -39,7 +33,7 @@ public sealed class MatchingServiceTests
         }), JsonConvert.SerializeObject(result.DataQuality));
     }
 
-    [TestMethod]
+    [Fact]
     public async Task MultipleMatches()
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
@@ -66,13 +60,13 @@ public sealed class MatchingServiceTests
 
         var result = await subj.SearchAsync(model);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.ManyMatch, result.Result!.MatchStatus);
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.ManyMatch, result.Result!.MatchStatus);
     }
 
-    [TestMethod]
-    [DataRow("2000-11-16", 3)] // non-swappable day/month in dob - so expect 5 search strategies
-    [DataRow("2000-11-10", 4)] // swappable day/month in dob - so expect 6 search strategies
+    [Theory]
+    [InlineData("2000-11-16", 3)] // non-swappable day/month in dob - so expect 5 search strategies
+    [InlineData("2000-11-10", 4)] // swappable day/month in dob - so expect 6 search strategies
     public async Task MultpleQueryStrategiesWereUsed(string dob, int expectedSearchStrategiesUsed)
     {
         var dateOfBirth = DateOnly.Parse(dob);
@@ -93,12 +87,12 @@ public sealed class MatchingServiceTests
 
         var result = await subj.SearchAsync(model);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.NoMatch, result.Result!.MatchStatus);
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.NoMatch, result.Result!.MatchStatus);
         nhsFhir.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Exactly(expectedSearchStrategiesUsed));
     }
 
-    [TestMethod]
+    [Fact]
     public async Task NoMatch()
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
@@ -125,11 +119,11 @@ public sealed class MatchingServiceTests
 
         var result = await subj.SearchAsync(model);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.NoMatch, result.Result!.MatchStatus);
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.NoMatch, result.Result!.MatchStatus);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task SingleCandidateMatch()
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
@@ -157,12 +151,12 @@ public sealed class MatchingServiceTests
 
         var result = await subj.SearchAsync(model);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.PotentialMatch, result.Result!.MatchStatus);
-        Assert.AreEqual(0.94m, result.Result.Score);
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.PotentialMatch, result.Result!.MatchStatus);
+        Assert.Equal(0.94m, result.Result.Score);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task SingleConfirmedMatch()
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
@@ -190,12 +184,12 @@ public sealed class MatchingServiceTests
 
         var result = await subj.SearchAsync(model);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.Match, result.Result!.MatchStatus);
-        Assert.AreEqual(0.99m, result.Result.Score);
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.Match, result.Result!.MatchStatus);
+        Assert.Equal(0.99m, result.Result.Score);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task SingleQuotesInGivenAndFamilyAreEscaped()
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
@@ -224,16 +218,16 @@ public sealed class MatchingServiceTests
 
         var result = await subj.SearchAsync(model);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(MatchStatus.Match, result.Result!.MatchStatus);
-        Assert.AreEqual(0.95m, result.Result.Score);
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.Match, result.Result!.MatchStatus);
+        Assert.Equal(0.95m, result.Result.Score);
 
         // Verify that PerformSearch was called with the correct values
         nhsFhir.Verify(x => x.PerformSearch(It.Is<SearchQuery>(q =>
             q.Given!.Contains("O'Connor") && q.Family!.Contains("D'Angelo"))));
     }
 
-    [TestMethod]
+    [Fact]
     public async Task ShouldLogPersonSpecificationAndResultStatus_WithMatchCompletedForAggregate()
     {
         // Arrange
