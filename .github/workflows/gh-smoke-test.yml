@@ -85,16 +85,16 @@ jobs:
           with:
             ref: ${{ env.CLIENT_VERSION }}
 
-        - name: Login to Azure
-          uses: azure/login@v2
-          with:
-            client-id: ${{ env.AZURE_CLIENT_ID }}
-            tenant-id: ${{ env.AZURE_TENANT_ID }}
-            subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+        # - name: Login to Azure
+        #   uses: azure/login@v2
+        #   with:
+        #     client-id: ${{ env.AZURE_CLIENT_ID }}
+        #     tenant-id: ${{ env.AZURE_TENANT_ID }}
+        #     subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-        - name: Set Azure Subscription
-          run: |
-            az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        # - name: Set Azure Subscription
+        #   run: |
+        #     az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
         - name: Read txt file contents
           id: dbs_file
@@ -112,7 +112,7 @@ jobs:
           run: |
             EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
             echo "csv<<${EOF}" >> $GITHUB_OUTPUT
-            cat ./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv >> $GITHUB_OUTPUT
+            cat ./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt >> $GITHUB_OUTPUT
             echo "${EOF}" >> $GITHUB_OUTPUT
 
         - name: show contents of csv file
