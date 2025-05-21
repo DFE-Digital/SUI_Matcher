@@ -6,11 +6,9 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Unit.Tests.External.NhsFhirClientTests;
 
-[TestClass]
 public class PerformSearchTests : BaseNhsFhirClientTests
 {
-
-    [TestMethod]
+    [Fact]
     public async Task ShouldGetSearchResultsMatched_WhenMatched()
     {
         // Arrange
@@ -22,21 +20,21 @@ public class PerformSearchTests : BaseNhsFhirClientTests
             Birthdate = ["eq1980-01-01"],
         };
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
-        FhirClientFactory.Setup(f => f.CreateFhirClient())
+        _fhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
 
-        var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
+        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
         var result = await client.PerformSearch(searchQuery);
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(SearchResult.ResultType.Matched, result.Type);
-        Assert.AreEqual("123", result.NhsNumber);
+        Assert.NotNull(result);
+        Assert.Equal(SearchResult.ResultType.Matched, result.Type);
+        Assert.Equal("123", result.NhsNumber);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task ShouldGetSearchResultsMultiMatched_WhenMultipleMatches()
     {
         // Arrange
@@ -48,20 +46,20 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         };
 
         var testFhirClient = new TestFhirClientMultiMatch("https://fhir.api.endpoint");
-        FhirClientFactory.Setup(f => f.CreateFhirClient())
+        _fhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
 
-        var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
+        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
         var result = await client.PerformSearch(searchQuery);
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(SearchResult.ResultType.MultiMatched, result.Type);
+        Assert.NotNull(result);
+        Assert.Equal(SearchResult.ResultType.MultiMatched, result.Type);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task ShouldGetSearchResultsUnmatched_WhenNoMatches()
     {
         // Arrange
@@ -73,16 +71,16 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         };
 
         var testFhirClient = new TestFhirClientUnmatched("https://fhir.api.endpoint");
-        FhirClientFactory.Setup(f => f.CreateFhirClient())
+        _fhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
 
-        var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
+        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
         var result = await client.PerformSearch(searchQuery);
 
         // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(SearchResult.ResultType.Unmatched, result.Type);
+        Assert.NotNull(result);
+        Assert.Equal(SearchResult.ResultType.Unmatched, result.Type);
     }
 }

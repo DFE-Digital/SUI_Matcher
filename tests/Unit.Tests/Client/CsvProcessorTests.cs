@@ -18,30 +18,20 @@ using SUI.Client.Core.Watcher;
 using Unit.Tests.Util;
 using Unit.Tests.Util.Adapters;
 
+using Xunit.Abstractions;
+
 using D = System.Collections.Generic.Dictionary<string, string>;
 
 namespace Unit.Tests.Client;
 
-[TestClass]
-public class CsvProcessorTests
+public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 {
-    private TempDirectoryFixture _dir = null!;
+    private readonly TempDirectoryFixture _dir = new();
 
-    public required TestContext TestContext { get; set; }
+    public required ITestOutputHelper TestContext = testOutputHelper;
 
-    [TestCleanup]
-    public void Clean()
-    {
-        //_dir.Dispose();
-    }
 
-    [TestInitialize]
-    public void Init()
-    {
-        _dir = new TempDirectoryFixture();
-    }
-
-    [TestMethod]
+    [Fact]
     public async Task TestCsvBatchFile()
     {
         // ARRANGE
@@ -122,20 +112,20 @@ public class CsvProcessorTests
             throw monitor.GetLastOperation().Exception!;
         }
 
-        Assert.IsNull(monitor.GetLastOperation().Exception, monitor.GetLastOperation().Exception?.ToString() ?? "Exception occurred");
-        Assert.AreEqual(0, monitor.ErrorCount);
-        Assert.AreEqual(1, monitor.ProcessedCount);
-        Assert.IsTrue(File.Exists(monitor.LastResult().OutputCsvFile));
-        Assert.IsTrue(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.IsTrue(File.Exists(monitor.LastResult().ReportPdfFile));
-        Assert.IsNotNull(monitor.LastResult().Stats);
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
+        Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
+        Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
+        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
+        Assert.NotNull(monitor.LastResult().Stats);
 
         var (_, records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
 
-        Assert.IsNotNull(records);
+        Assert.NotNull(records);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task TestOneFileSingleMatch()
     {
         var searchResult = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.98m, Type = SearchResult.ResultType.Matched };
@@ -176,19 +166,19 @@ public class CsvProcessorTests
             throw monitor.GetLastOperation().Exception!;
         }
 
-        Assert.IsNull(monitor.GetLastOperation().Exception, monitor.GetLastOperation().Exception?.ToString() ?? "Exception occurred");
-        Assert.AreEqual(0, monitor.ErrorCount);
-        Assert.AreEqual(1, monitor.ProcessedCount);
-        Assert.IsTrue(File.Exists(monitor.LastResult().OutputCsvFile));
-        Assert.IsTrue(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.IsTrue(File.Exists(monitor.LastResult().ReportPdfFile));
-        Assert.IsNotNull(monitor.LastResult().Stats);
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
+        Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
+        Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
+        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
+        Assert.NotNull(monitor.LastResult().Stats);
 
         mockNhsApi.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Once(), "The PerformSearch method should have invoked ONCE");
-        var (_, records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
-        Assert.AreEqual(searchResult.NhsNumber, records.First()[CsvFileProcessor.HeaderNhsNo], "The NHS number doesn't match");
-        Assert.AreEqual(searchResult.Score.ToString(), records.First()[CsvFileProcessor.HeaderScore], "The score doesn't match");
-        Assert.AreEqual(nameof(MatchStatus.Match), records.First()[CsvFileProcessor.HeaderStatus], "The score doesn't match");
+        (_, List<D> records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+        Assert.Equal(searchResult.NhsNumber, records.First()[CsvFileProcessor.HeaderNhsNo]);
+        Assert.Equal(searchResult.Score.ToString(), records.First()[CsvFileProcessor.HeaderScore]);
+        Assert.Equal(nameof(MatchStatus.Match), records.First()[CsvFileProcessor.HeaderStatus]);
     }
     private ServiceProvider Bootstrap(Action<ServiceCollection>? configure = null)
     {

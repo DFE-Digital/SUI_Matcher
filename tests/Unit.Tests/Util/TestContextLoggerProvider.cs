@@ -1,13 +1,15 @@
 ﻿using Microsoft.Extensions.Logging;
 
+using Xunit.Abstractions;
+
 namespace Unit.Tests.Util;
 
 public class TestContextLoggerProvider : ILoggerProvider
 {
-    private readonly TestContext _testContext;
+    private readonly ITestOutputHelper _testContext;
     private readonly List<string> _logMessages;
 
-    public TestContextLoggerProvider(TestContext testContext, List<string>? logMessages = null)
+    public TestContextLoggerProvider(ITestOutputHelper testContext, List<string>? logMessages = null)
     {
         _testContext = testContext;
         _logMessages = logMessages ?? new();
@@ -22,11 +24,11 @@ public class TestContextLoggerProvider : ILoggerProvider
 
     private class TestContextLogger : ILogger
     {
-        private readonly TestContext _testContext;
+        private readonly ITestOutputHelper _testContext;
         private readonly string _categoryName;
         private readonly List<string> _logMessages;
 
-        public TestContextLogger(TestContext testContext, string categoryName, List<string>? logMessages = null)
+        public TestContextLogger(ITestOutputHelper testContext, string categoryName, List<string>? logMessages = null)
         {
             _testContext = testContext;
             _categoryName = categoryName;

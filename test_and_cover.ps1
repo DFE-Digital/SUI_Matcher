@@ -6,8 +6,10 @@ $resultsDir = "./coverage"
 $mergedReport = "$resultsDir/coverage.xml"
 $finalReportDir = "$resultsDir/coveragereport"
 
+dotnet build --no-incremental
+
 # Run tests with coverage collection
-dotnet test --settings tests.runsettings --results-directory $resultsDir --diag mytestlog.txt
+dotnet test --no-build --results-directory $resultsDir --collect:"XPlat Code Coverage" --settings tests.runsettings
 
 # Merge all cobertura coverage reports
 dotnet coverage merge --reports "$resultsDir/**/coverage.cobertura.xml" -f cobertura -o $mergedReport
