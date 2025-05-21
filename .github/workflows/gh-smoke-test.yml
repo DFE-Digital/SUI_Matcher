@@ -96,16 +96,16 @@ jobs:
           run: |
             az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-        - name: Read txt file contents
-          id: dbs_file
-          run: |
-            EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-            echo "txt<<${EOF}" >> $GITHUB_OUTPUT
-            cat ./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt >> $GITHUB_OUTPUT
-            echo "${EOF}" >> $GITHUB_OUTPUT
+        # - name: Read txt file contents
+        #   id: dbs_file
+        #   run: |
+        #     EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+        #     echo "txt<<${EOF}" >> $GITHUB_OUTPUT
+        #     cat ./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt >> $GITHUB_OUTPUT
+        #     echo "${EOF}" >> $GITHUB_OUTPUT
 
-        - name: show contents of csv file
-          run: echo "${{ steps.dbs_file.outputs.txt }}" 
+        # - name: show contents of csv file
+        #   run: echo "${{ steps.dbs_file.outputs.txt }}" 
               
         - name: Read csv file contents
           id: csv_file
