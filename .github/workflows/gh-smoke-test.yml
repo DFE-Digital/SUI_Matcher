@@ -166,10 +166,8 @@ jobs:
               ${{ steps.csv_file.outputs.csv }}
               "@
 
-              Get-Content $fileContent
-
-              $fileContent | Export-Csv $destinationPath
-            
+              $fileContent | Out-File -FilePath $destinationPath -Encoding utf8
+              get-content $destinationPath
               cd C:\Users\AzCopy
             
               $json_data = @(
