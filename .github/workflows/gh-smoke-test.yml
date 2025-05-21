@@ -105,7 +105,7 @@ jobs:
             echo "${EOF}" >> $GITHUB_OUTPUT
 
         - name: show contents of csv file
-          run: echo "${{ steps.csv_file.outputs.txt }}" 
+          run: echo "${{ steps.dbs_file.outputs.txt }}" 
               
         - name: Read csv file contents
           id: csv_file
