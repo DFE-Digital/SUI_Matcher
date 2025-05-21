@@ -6,6 +6,12 @@ $resultsDir = "./coverage"
 $mergedReport = "$resultsDir/coverage.xml"
 $finalReportDir = "$resultsDir/coveragereport"
 
+
+# First remove the old coverage directory if it exists to avoid skewed results
+if (Test-Path $resultsDir) {
+    Remove-Item -Recurse -Force $resultsDir
+}
+
 dotnet build --no-incremental
 
 # Run tests with coverage collection
