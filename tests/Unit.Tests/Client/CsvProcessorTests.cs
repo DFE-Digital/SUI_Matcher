@@ -1,17 +1,23 @@
 ﻿using MatchingApi.Services;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shared.Endpoint;
 using Shared.Models;
 using Shared.Util;
+
 using SUI.Client.Core;
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
+
 using Unit.Tests.Util;
 using Unit.Tests.Util.Adapters;
+
 using Xunit.Abstractions;
 
 using D = System.Collections.Generic.Dictionary<string, string>;

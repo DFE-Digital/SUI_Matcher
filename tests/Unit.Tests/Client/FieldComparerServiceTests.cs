@@ -1,5 +1,7 @@
 using ExternalApi.Services;
+
 using Hl7.Fhir.Model;
+
 using Shared.Models;
 
 namespace Unit.Tests.Client;
@@ -40,7 +42,7 @@ public class FieldComparerServiceTests
         // Assert
         Assert.Contains(nameof(SearchQuery.Birthdate), differences);
         Assert.Contains(nameof(SearchQuery.AddressPostalcode), differences);
-        Assert.Contains(nameof(SearchQuery.Phone),differences);
+        Assert.Contains(nameof(SearchQuery.Phone), differences);
         Assert.Contains(nameof(SearchQuery.Gender), differences);
         Assert.Contains(nameof(SearchQuery.Given), differences);
         Assert.DoesNotContain(nameof(SearchQuery.Family), differences);

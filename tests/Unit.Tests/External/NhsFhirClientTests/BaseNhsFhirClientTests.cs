@@ -48,7 +48,7 @@ public class BaseNhsFhirClientTests
                     }
                 },
             };
-            
+
             return await Task.FromResult<Bundle?>(bundle);
         }
 
@@ -98,7 +98,7 @@ public class BaseNhsFhirClientTests
             {
                 Entry = []
             };
-            
+
             return await Task.FromResult<Bundle?>(bundle);
         }
     }
@@ -110,7 +110,7 @@ public class TestFhirClientError : FhirClient
     {
     }
 
-    public override  Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
+    public override Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
     {
         throw new Exception("Error occurred while performing search");
     }

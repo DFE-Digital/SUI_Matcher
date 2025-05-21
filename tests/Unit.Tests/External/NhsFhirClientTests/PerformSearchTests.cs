@@ -1,5 +1,7 @@
 using ExternalApi.Services;
+
 using Shared.Models;
+
 using Task = System.Threading.Tasks.Task;
 
 namespace Unit.Tests.External.NhsFhirClientTests;

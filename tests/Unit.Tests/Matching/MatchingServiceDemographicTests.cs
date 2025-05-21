@@ -1,6 +1,9 @@
 using MatchingApi.Services;
+
 using Microsoft.Extensions.Logging.Abstractions;
+
 using Moq;
+
 using Shared.Endpoint;
 using Shared.Models;
 
