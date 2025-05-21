@@ -15,7 +15,7 @@
 					<Format>cobertura,opencover</Format>
 					<Exclude>[*.Tests?]*</Exclude>
 					<!-- [Assembly-Filter]Type-Filter -->
-					<ExcludeByFile></ExcludeByFile>
+					<ExcludeByFile>**/**/Program.cs</ExcludeByFile>
 					<!-- Globbing filter -->
 					<SkipAutoProps>true</SkipAutoProps>
 				</Configuration>
