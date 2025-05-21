@@ -18,10 +18,10 @@ public class PerformSearchTests : BaseNhsFhirClientTests
             Birthdate = ["eq1980-01-01"],
         };
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
-        FhirClientFactory.Setup(f => f.CreateFhirClient())
+        _fhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
 
-        var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
+        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
         var result = await client.PerformSearch(searchQuery);
@@ -44,10 +44,10 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         };
 
         var testFhirClient = new TestFhirClientMultiMatch("https://fhir.api.endpoint");
-        FhirClientFactory.Setup(f => f.CreateFhirClient())
+        _fhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
 
-        var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
+        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
         var result = await client.PerformSearch(searchQuery);
@@ -69,10 +69,10 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         };
 
         var testFhirClient = new TestFhirClientUnmatched("https://fhir.api.endpoint");
-        FhirClientFactory.Setup(f => f.CreateFhirClient())
+        _fhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
 
-        var client = new NhsFhirClient(FhirClientFactory.Object, LoggerMock.Object);
+        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
         var result = await client.PerformSearch(searchQuery);

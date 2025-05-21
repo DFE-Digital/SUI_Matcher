@@ -13,13 +13,13 @@ namespace Unit.Tests.External.NhsFhirClientTests;
 
 public class BaseNhsFhirClientTests
 {
-    protected readonly Mock<ILogger<NhsFhirClient>> LoggerMock;
-    protected readonly Mock<IFhirClientFactory> FhirClientFactory;
+    protected readonly Mock<ILogger<NhsFhirClient>> _loggerMock;
+    protected readonly Mock<IFhirClientFactory> _fhirClientFactory;
 
     protected BaseNhsFhirClientTests()
     {
-        LoggerMock = new Mock<ILogger<NhsFhirClient>>();
-        FhirClientFactory = new Mock<IFhirClientFactory>();
+        _loggerMock = new Mock<ILogger<NhsFhirClient>>();
+        _fhirClientFactory = new Mock<IFhirClientFactory>();
     }
 
     protected class TestFhirClientSuccess : FhirClient
@@ -30,7 +30,7 @@ public class BaseNhsFhirClientTests
 
         public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
         {
-            return new Bundle
+            var bundle = new Bundle
             {
                 Entry = new List<Bundle.EntryComponent>()
                 {
@@ -48,6 +48,8 @@ public class BaseNhsFhirClientTests
                     }
                 },
             };
+            
+            return await Task.FromResult<Bundle?>(bundle);
         }
 
         public override Task<TResource?> ReadAsync<TResource>(Uri location, string? ifNoneMatch = null, DateTimeOffset? ifModifiedSince = null,
@@ -57,19 +59,19 @@ public class BaseNhsFhirClientTests
             {
                 Id = "123"
             } as TResource;
-            return Task.FromResult<TResource?>(resource);
+            return Task.FromResult(resource);
         }
     }
 
     protected class TestFhirClientMultiMatch : FhirClient
     {
-        public TestFhirClientMultiMatch(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
+        public TestFhirClientMultiMatch(string endpoint, FhirClientSettings settings = null!, HttpMessageHandler messageHandler = null!) : base(endpoint, settings, messageHandler)
         {
         }
 
         public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
         {
-            return null;
+            return await Task.FromResult<Bundle?>(null);
         }
 
         public override Resource? LastBodyAsResource => new OperationOutcome()
@@ -86,16 +88,18 @@ public class BaseNhsFhirClientTests
 
     protected class TestFhirClientUnmatched : FhirClient
     {
-        public TestFhirClientUnmatched(string endpoint, FhirClientSettings settings = null, HttpMessageHandler messageHandler = null) : base(endpoint, settings, messageHandler)
+        public TestFhirClientUnmatched(string endpoint, FhirClientSettings settings = null!, HttpMessageHandler messageHandler = null!) : base(endpoint, settings, messageHandler)
         {
         }
 
         public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
         {
-            return new Bundle
+            var bundle = new Bundle
             {
                 Entry = []
             };
+            
+            return await Task.FromResult<Bundle?>(bundle);
         }
     }
 }

@@ -30,7 +30,7 @@ public class MatchingServiceDemographicTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Result);
-        Assert.Equal(0, result.Errors.Count);
+        Assert.Empty(result.Errors);
     }
 
     [Theory]
