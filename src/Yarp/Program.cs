@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Shared.Aspire;
 
 DotNetEnv.Env.TraversePath().Load();
@@ -25,3 +27,6 @@ var app = builder.Build();
 app.MapReverseProxy();
 
 app.Run();
+
+[ExcludeFromCodeCoverage(Justification = "All .NET configuration")]
+public partial class Program;

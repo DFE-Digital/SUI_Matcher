@@ -24,22 +24,4 @@ public class ValidationService : IValidationService
 
         return response;
     }
-
-    public ValidationResponse ValidateNhsNumber(string nhsNumber)
-    {
-        var validationResults = new List<ValidationResult>();
-        var validationContext = new ValidationContext(nhsNumber, null, null);
-        Validator.TryValidateObject(nhsNumber, validationContext, validationResults, true);
-
-        var response = new ValidationResponse
-        {
-            Results = validationResults.Select(result => new ValidationResponse.ValidationResult
-            {
-                MemberNames = result.MemberNames,
-                ErrorMessage = result.ErrorMessage
-            }).ToList()
-        };
-
-        return response;
-    }
 }

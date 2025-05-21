@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
-using SUI.DBS.Response.Logger.Core;
+using Shared.Extensions;
+using Shared.Util;
+
 using SUI.DBS.Response.Logger.Core.Extensions;
 using SUI.DBS.Response.Logger.Core.Watcher;
 

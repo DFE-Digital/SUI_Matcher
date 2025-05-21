@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Shared.Endpoint;
 using Shared.Models;
 
 namespace ExternalApi;
 
+[ExcludeFromCodeCoverage(Justification = "Simple endpoint mapping")]
 public class ExternalFhirEndpoint(INhsFhirClient fhirClient) : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)

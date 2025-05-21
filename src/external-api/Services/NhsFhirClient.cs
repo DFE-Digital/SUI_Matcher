@@ -9,16 +9,10 @@ using Shared.Models;
 
 namespace ExternalApi.Services;
 
-public class NhsFhirClient(ITokenService tokenService,
-                           ILogger<NhsFhirClient> logger,
-                           IConfiguration configuration) : INhsFhirClient
+public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhirClient> logger) : INhsFhirClient
 {
-    private readonly string _baseUri = configuration["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"]!;
-
     public async Task<SearchResult?> PerformSearch(SearchQuery query)
     {
-        var fhirClient = CreateFhirClient();
-
         var search = new SearchParams();
 
         var queryMap = query.ToDictionary();
@@ -42,10 +36,12 @@ public class NhsFhirClient(ITokenService tokenService,
             logger.LogInformation("Searching for an Nhs patient record");
 
             // Search for a patient record
+            var fhirClient = fhirClientFactory.CreateFhirClient();
             var patient = await fhirClient.SearchAsync<Patient>(search);
 
             if (patient == null)
             {
+                // Where did this log come from?
                 if (fhirClient.LastBodyAsResource is OperationOutcome outcome && outcome.Issue.Count > 0 &&
                     outcome.Issue[0].Code == OperationOutcome.IssueType.MultipleMatches)
                 {
@@ -83,14 +79,11 @@ public class NhsFhirClient(ITokenService tokenService,
     {
         try
         {
-            var fhirClient = CreateFhirClient();
+            var fhirClient = fhirClientFactory.CreateFhirClient();
 
             var data = await fhirClient.ReadAsync<Patient>(ResourceIdentity.Build("Patient", nhsId));
 
-            return new DemographicResult()
-            {
-                Result = data
-            };
+            return new DemographicResult() { Result = data };
         }
         catch (Exception ex)
         {
@@ -100,24 +93,6 @@ public class NhsFhirClient(ITokenService tokenService,
                 ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID"
             };
         }
-    }
-
-    private FhirClient CreateFhirClient()
-    {
-        var fhirClient = new FhirClient(_baseUri);
-
-        // Set the authorization header
-        if (fhirClient.RequestHeaders != null)
-        {
-            var accessToken = tokenService.GetBearerToken().Result;
-
-            logger.LogInformation("Retrieved Nhs Digital FHIR API access token");
-
-            fhirClient.RequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            fhirClient.RequestHeaders.Add("X-Request-ID", Guid.NewGuid().ToString());
-        }
-
-        return fhirClient;
     }
 
     private void LogInputAndPdsDifferences(SearchQuery query, Patient patient)
