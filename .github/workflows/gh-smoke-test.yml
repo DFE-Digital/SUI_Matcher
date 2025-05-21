@@ -106,9 +106,11 @@ jobs:
         - name: Read csv file contents
           id: csv_file
           run: |
-            echo "csv<<EOF" >> $GITHUB_OUTPUT
-            echo $(cat ./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv) >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            {
+              echo "csv<<EOF"
+              cat ./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
 
         - name: show contents of csv file
           run: echo "${{ steps.csv_file.outputs.csv }}"      
