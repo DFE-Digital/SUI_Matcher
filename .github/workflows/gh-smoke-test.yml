@@ -163,7 +163,7 @@ jobs:
               ${{ steps.csv_file.outputs.csv }}
               "@
 
-              $fileContent | Out-File -FilePath $destinationPath -Encoding utf8
+              $fileContent | Export-Csv $destinationPath
             
               cd C:\Users\AzCopy
             
