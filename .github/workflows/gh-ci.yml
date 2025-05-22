@@ -41,10 +41,11 @@ jobs:
           /o:"dfe-digital" \
           /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml \
+          /d:sonar.cs.vscoveragexml.reportsPaths=coverage/coverage.xml \
           /d:sonar.coverage.exclusions=**/Program.cs,**/*.json \
           /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S6602 \
-          /d:sonar.scanner.scanAll=false
+          /d:sonar.scanner.scanAll=false \
+          /d:sonar.cs.cobertura.reportPaths=coverage/coverage.xml
 
       - name: Build
         run: dotnet build --no-restore
