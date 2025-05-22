@@ -41,20 +41,18 @@ jobs:
           /o:"dfe-digital" \
           /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.vscoveragexml.reportsPaths=coverage/coverage.xml \
+          /d:sonar.cs.opencover.reportsPaths=coverage.xml \
           /d:sonar.coverage.exclusions=**/Program.cs,**/*.json \
           /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S6602 \
-          /d:sonar.scanner.scanAll=false \
-          /d:sonar.cs.cobertura.reportPaths=coverage/coverage.xml \
-          /d:sonar.verbose=true \
-          /d:sonar.analysis.mode=preview
+          /d:sonar.scanner.scanAll=false
 
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Test
+      - name: Test with Coverage
         run: |
-          dotnet test --no-build --settings tests.runsettings --results-directory ./coverage
+          dotnet test --no-build --settings tests.runsettings --collect:"XPlat Code Coverage" --results-directory ./coverage
+          dotnet coverage merge --reports "coverage/**/coverage.cobertura.xml" -f xml -o coverage.xml
           dotnet coverage merge --reports "coverage/**/coverage.cobertura.xml" -f cobertura -o coverage/coverage.xml
 
       - name: End SonarCloud scanner

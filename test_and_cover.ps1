@@ -4,6 +4,7 @@ $ErrorActionPreference = "Stop"
 # Define directories
 $resultsDir = "./coverage"
 $mergedReport = "$resultsDir/coverage.xml"
+$openCoverReport = "$resultsDir/opencover.xml"
 $finalReportDir = "$resultsDir/coveragereport"
 
 
@@ -20,8 +21,11 @@ dotnet test --no-build --results-directory $resultsDir --collect:"XPlat Code Cov
 # Merge all cobertura coverage reports
 dotnet coverage merge --reports "$resultsDir/**/coverage.cobertura.xml" -f cobertura -o $mergedReport
 
-# Generate HTML report
-reportgenerator -reports:$mergedReport -reporttypes:Html -targetdir:$finalReportDir
+# Generate XML report (which will be in OpenCover format)
+dotnet coverage merge --reports "$resultsDir/**/coverage.cobertura.xml" -f xml -o $openCoverReport
+
+# Generate HTML report from both formats
+reportgenerator -reports:"$mergedReport;$openCoverReport" -reporttypes:Html -targetdir:$finalReportDir
 
 open "$finalReportDir/index.html" # Open the report in the default browser
 
