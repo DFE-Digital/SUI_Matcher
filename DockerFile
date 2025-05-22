@@ -1,0 +1,6 @@
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine
+WORKDIR /app
+COPY src/. .
+RUN dotnet restore
+RUN dotnet build --no-restore
+CMD ["dotnet", "run"]
