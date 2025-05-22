@@ -45,7 +45,9 @@ jobs:
           /d:sonar.coverage.exclusions=**/Program.cs,**/*.json \
           /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S6602 \
           /d:sonar.scanner.scanAll=false \
-          /d:sonar.cs.cobertura.reportPaths=coverage/coverage.xml
+          /d:sonar.cs.cobertura.reportPaths=coverage/coverage.xml \
+          /d:sonar.verbose=true \
+          /d:sonar.analysis.mode=preview
 
       - name: Build
         run: dotnet build --no-restore
