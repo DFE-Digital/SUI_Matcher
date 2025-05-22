@@ -22,5 +22,8 @@ dotnet build
 dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --settings tests.runsettings
 reportgenerator -reports:./**/coverage.cobertura.xml -targetdir:$finalReportDir -reporttypes:SonarQube,html
 
+# Merge all cobertura coverage reports (For legacy use on test reporting in CI)
+dotnet coverage merge --reports "tests/**/coverage.cobertura.xml" -f cobertura -o $mergedReport
+
 open "$finalReportDir/index.html" # Open the report in the default browser
 
