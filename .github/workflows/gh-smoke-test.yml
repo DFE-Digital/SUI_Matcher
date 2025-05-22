@@ -160,14 +160,20 @@ jobs:
         
         - name: check contents of return data for exceptions and errors
           if: ((env.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (env.cron_run == 'true'))
+          shell: python
           run: |
-            echo "Return data: ${{ steps.dbs_return_data.outputs.dbs_return_data }}"
-            if [[ "${{ steps.dbs_return_data.outputs.dbs_return_data }}" == *"Exception"* || "${{ steps.dbs_return_data.outputs.dbs_return_data }}" == *"Error"* ]]; then
-              echo "Smoke Test Failed"
-              exit 1
-            else
-              echo "Smoke Test Passed"
-            fi
+              import json
+              import sys
+              import os
+
+              dbs_return_data = """${{ steps.dbs_return_data.outputs.dbs_return_data }}"""
+
+              if "Exception" in dbs_return_data or "Error" in dbs_return_data or "Failed" in dbs_return_data:
+                print("Smoke Test Failed")
+                print(dbs_return_data)
+                sys.exit(1)
+              else:
+                print("Smoke Test Passed")
             
         - name: Smoke Test SUI Client (.exe)
           if: ((env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload Client Watcher') || (env.cron_run == 'true'))
@@ -226,11 +232,17 @@ jobs:
 
         - name: check contents of return data for exceptions and errors
           if: ((env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload Client Watcher') || (env.cron_run == 'true'))
+          shell: python
           run: |
-            echo "Return data: ${{ steps.client_return_data.outputs.client_return_data }}"
-            if [[ "${{ steps.client_return_data.outputs.client_return_data }}" == *"Exception"* || "${{ steps.client_return_data.outputs.client_return_data }}" == *"Error"* ]]; then
-              echo "Smoke Test Failed"
-              exit 1
-            else
-              echo "Smoke Test Passed"
-            fi
+              import json
+              import sys
+              import os
+
+              client_return_data = """${{ steps.client_return_data.outputs.client_return_data }}"""
+
+              if "Exception" in client_return_data or "Error" in client_return_data or "Failed" in client_return_data:
+                print("Smoke Test Failed")
+                print(client_return_data)
+                sys.exit(1)
+              else:
+                print("Smoke Test Passed")
