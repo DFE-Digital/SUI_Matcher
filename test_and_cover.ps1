@@ -4,7 +4,6 @@ $ErrorActionPreference = "Stop"
 # Define directories
 $resultsDir = "./coverage"
 $mergedReport = "$resultsDir/coverage.xml"
-$openCoverReport = "$resultsDir/opencover.xml"
 $finalReportDir = "$resultsDir/coveragereport"
 
 
@@ -13,19 +12,15 @@ if (Test-Path $resultsDir) {
     Remove-Item -Recurse -Force $resultsDir
 }
 
-dotnet build --no-incremental
+# Remove all folders with name 'TestResults'
+Get-ChildItem -Path . -Recurse -Directory -Filter "TestResults" | ForEach-Object {
+    Remove-Item $_.FullName -Recurse -Force
+}
 
-# Run tests with coverage collection
-dotnet test --no-build --results-directory $resultsDir --collect:"XPlat Code Coverage" --settings tests.runsettings
 
-# Merge all cobertura coverage reports
-dotnet coverage merge --reports "$resultsDir/**/coverage.cobertura.xml" -f cobertura -o $mergedReport
-
-# Generate XML report (which will be in OpenCover format)
-dotnet coverage merge --reports "$resultsDir/**/coverage.cobertura.xml" -f xml -o $openCoverReport
-
-# Generate HTML report from both formats
-reportgenerator -reports:"$mergedReport;$openCoverReport" -reporttypes:Html -targetdir:$finalReportDir
+dotnet build
+dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --settings tests.runsettings
+reportgenerator -reports:./**/coverage.cobertura.xml -targetdir:$finalReportDir -reporttypes:SonarQube,html
 
 open "$finalReportDir/index.html" # Open the report in the default browser
 
