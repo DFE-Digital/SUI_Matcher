@@ -43,22 +43,16 @@ jobs:
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.cs.opencover.reportsPaths=opencover.xml \
             /d:sonar.cs.vstest.reportsPaths="**/*.trx" \
-            /d:sonar.coverage.exclusions="\
-              **/Program.cs,\
-              **/*.json \
-            "\
+            /d:sonar.coverage.exclusions="**/Program.cs,**/*.json" \
             /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S6602 \
-            /d:sonar.scanner.scanAll=false
+            /d:sonar.scanner.scanAll=false \
             /d:sonar.verbose=true \
             /d:sonar.log.level="DEBUG"
-          dotnet build --no-restore
+          dotnet build
           dotnet test --no-build --settings tests.runsettings --logger:trx --collect:"XPlat Code Coverage" --results-directory ./coverage
           dotnet coverage merge --reports "coverage/**/coverage.cobertura.xml" -f xml -o opencover.xml
           dotnet coverage merge --reports "coverage/**/coverage.cobertura.xml" -f cobertura -o coverage/coverage.xml
           dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-
-      - name: Build
-        run: dotnet build --no-restore
 
       - name: Publish coverage
         uses: irongut/CodeCoverageSummary@v1.3.0
