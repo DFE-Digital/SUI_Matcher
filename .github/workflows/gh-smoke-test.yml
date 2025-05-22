@@ -102,7 +102,7 @@ jobs:
           run: |
             EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
             echo "txt<<${EOF}" >> $GITHUB_OUTPUT
-            openssl base64 -in ./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt | xargs >> $GITHUB_OUTPUT
+            base_64=`openssl base64 -in ./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt` ; echo "${base_64}" >> $GITHUB_OUTPUT
             echo "${EOF}" >> $GITHUB_OUTPUT
         
         - name: Read csv file contents
