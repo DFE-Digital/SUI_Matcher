@@ -50,8 +50,6 @@ jobs:
             AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
             AZURE_LOCATION: "westeurope"
             AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-            BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location || 's215d01-integration-container-01' }}
-            STORAGE_ACCOUNT: ${{ inputs.storage_account || 's215d01integrationsa01' }}
 
         steps:
         - name: Determine triggering upstream workflow
@@ -87,10 +85,6 @@ jobs:
           with:
             ref: ${{ env.CLIENT_VERSION }}
 
-        - name: Setup .NET
-          uses: actions/setup-dotnet@v4
-          with:
-            dotnet-version: '9.0.x'
 
         - name: Login to Azure
           uses: azure/login@v2
@@ -103,40 +97,41 @@ jobs:
           run: |
             az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-        - name: Upload TXT Files to Blob Storage
-          run:
-            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./tests/E2E.Tests/Resources/Smoke --pattern "*.txt" --overwrite
-              
-        - name: Upload CSV Files to Blob Storage
-          run:
-            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./tests/E2E.Tests/Resources/Smoke --pattern "*.csv" --overwrite
-            
+        - name: Read txt file contents
+          id: dbs_file
+          run: |
+            EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+            echo "txt<<${EOF}" >> $GITHUB_OUTPUT
+            openssl base64 -in ./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt | xargs >> $GITHUB_OUTPUT
+            echo "${EOF}" >> $GITHUB_OUTPUT
+        
+        - name: Read csv file contents
+          id: csv_file
+          run: |
+            EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+            echo "csv<<${EOF}" >> $GITHUB_OUTPUT
+            base_64=`openssl base64 -in ./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv` ; echo "${base_64}" >> $GITHUB_OUTPUT
+            echo "${EOF}" >> $GITHUB_OUTPUT
+
         - name: Smoke Test DBS Response Logger (.exe)
           if: ((env.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (env.cron_run == 'true'))
           id: dbs_return_data
           run: |
-            dbs_return_data="$(az vm run-command invoke \
+            dbs_return_data="$(az vm run-command invoke --debug \
               --command-id RunPowerShellScript \
               --name ${{ secrets.VM_NAME }} \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
               --script '
             
-              $connectionString = "DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT }};AccountKey=${{ secrets.STORAGE_ACCOUNT_KEY }};EndpointSuffix=core.windows.net"
-              $blobContainerName = "${{ env.BLOB_STORAGE_LOCATION }}"
-              $blobName = "dbs_batch_search_responses.txt"
-              $destinationPath = "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed\dbs_batch_search_responses.txt"
+              $destinationPath = "C:\Users\AzCopy\unprocessed\dbs_batch_search_responses.txt"
             
               # Create Directory if does not exist
-              New-Item -ItemType Directory -Path "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed"
+              New-Item -ItemType Directory -Path "C:\Users\AzCopy\unprocessed"
 
-              # Install Azure CLI if not installed
-              Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
-              Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
+              $fileContent = "${{ steps.dbs_file.outputs.txt }}"
 
-              # Download Txt file from Blob Storage
-              az storage blob download --connection-string $connectionString --container-name $blobContainerName --name $blobName --file $destinationPath
-            
-              cd C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}
+              [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
+              cd C:\Users\AzCopy
             
               # Execute Smoke Test
               $logContent = .\dbsc.exe $destinationPath
@@ -179,28 +174,22 @@ jobs:
           if: ((env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload Client Watcher') || (env.cron_run == 'true'))
           id: client_return_data
           run: |
-            client_return_data="$(az vm run-command invoke \
+            client_return_data="$(az vm run-command invoke --debug \
               --command-id RunPowerShellScript \
               --name ${{ secrets.VM_NAME }} \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
               --script '
             
-              $connectionString = "DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT }};AccountKey=${{ secrets.STORAGE_ACCOUNT_KEY }};EndpointSuffix=core.windows.net"
-              $blobContainerName = "${{ env.BLOB_STORAGE_LOCATION }}"
-              $blobName = "sui_batch_search_queries.csv"
-              $destinationPath = "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed\sui_batch_search_queries.csv"
+              $destinationPath = "C:\Users\AzCopy\unprocessed\sui_batch_search_queries.csv"
             
               # Create Directory if does not exist
-              New-Item -ItemType Directory -Path "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed"
+              New-Item -ItemType Directory -Path "C:\Users\AzCopy\unprocessed"
 
-              # Install Azure CLI if not installed
-              Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
-              Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
+              $fileContent = "${{ steps.csv_file.outputs.csv }}"
 
-              # Download Txt file from Blob Storage
-              az storage blob download --connection-string $connectionString --container-name $blobContainerName --name $blobName --file $destinationPath
-            
-              cd C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}
+              [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
+
+              cd C:\Users\AzCopy
             
               $json_data = @(
                 [PSCustomObject]@{
