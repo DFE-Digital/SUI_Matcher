@@ -113,8 +113,9 @@ jobs:
             
         - name: Smoke Test DBS Response Logger (.exe)
           if: ((env.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (env.cron_run == 'true'))
+          id: dbs_return_data
           run: |
-            az vm run-command invoke \
+            dbs_return_data="$(az vm run-command invoke \
               --command-id RunPowerShellScript \
               --name ${{ secrets.VM_NAME }} \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
@@ -151,12 +152,34 @@ jobs:
                 Write-Error "Smoke Test Failed"
                 exit 1 # Exit with a zero status code
               }
-              '
+              ')"
+              EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+              echo "dbs_return_data<<${EOF}" >> $GITHUB_OUTPUT
+              echo "${dbs_return_data}" >> $GITHUB_OUTPUT
+              echo "${EOF}" >> $GITHUB_OUTPUT
+        
+        - name: check contents of return data for exceptions and errors
+          if: ((env.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (env.cron_run == 'true'))
+          shell: python
+          run: |
+              import json
+              import sys
+              import os
+
+              dbs_return_data = """${{ steps.dbs_return_data.outputs.dbs_return_data }}"""
+
+              if "Exception" in dbs_return_data or "Error" in dbs_return_data or "Failed" in dbs_return_data:
+                print("Smoke Test Failed")
+                print(dbs_return_data)
+                sys.exit(1)
+              else:
+                print("Smoke Test Passed")
             
         - name: Smoke Test SUI Client (.exe)
           if: ((env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload Client Watcher') || (env.cron_run == 'true'))
+          id: client_return_data
           run: |
-            az vm run-command invoke \
+            client_return_data="$(az vm run-command invoke \
               --command-id RunPowerShellScript \
               --name ${{ secrets.VM_NAME }} \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
@@ -201,4 +224,25 @@ jobs:
                 Write-Error "Smoke Test Failed"
                 exit 1 # Exit with a zero status code
               }
-              '
+              ')"
+              EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+              echo "client_return_data<<${EOF}" >> $GITHUB_OUTPUT
+              echo "${client_return_data}" >> $GITHUB_OUTPUT
+              echo "${EOF}" >> $GITHUB_OUTPUT
+
+        - name: check contents of return data for exceptions and errors
+          if: ((env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload Client Watcher') || (env.cron_run == 'true'))
+          shell: python
+          run: |
+              import json
+              import sys
+              import os
+
+              client_return_data = """${{ steps.client_return_data.outputs.client_return_data }}"""
+
+              if "Exception" in client_return_data or "Error" in client_return_data or "Failed" in client_return_data:
+                print("Smoke Test Failed")
+                print(client_return_data)
+                sys.exit(1)
+              else:
+                print("Smoke Test Passed")
