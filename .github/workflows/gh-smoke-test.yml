@@ -179,7 +179,7 @@ jobs:
               "@
 
               $fileContent | Out-File -FilePath $destinationPath -Encoding utf8
-              get-content $destinationPath
+  
               cd C:\Users\AzCopy
             
               $json_data = @(
