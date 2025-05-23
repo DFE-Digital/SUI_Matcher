@@ -28,6 +28,9 @@
     <None Update="test_fail_validation.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+      <None Update="test_success.csv">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
   </ItemGroup>
 
 </Project>
