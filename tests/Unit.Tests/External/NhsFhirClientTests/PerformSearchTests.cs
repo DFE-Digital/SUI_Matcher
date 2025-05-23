@@ -14,10 +14,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         // Arrange
         var searchQuery = new SearchQuery
         {
-            Family = "Smith",
-            Given = ["John"],
-            Gender = "male",
-            Birthdate = ["eq1980-01-01"],
+            Family = "Smith", Given = ["John"], Gender = "male", Birthdate = ["eq1980-01-01"],
         };
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
         _fhirClientFactory.Setup(f => f.CreateFhirClient())
@@ -38,12 +35,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
     public async Task ShouldGetSearchResultsMultiMatched_WhenMultipleMatches()
     {
         // Arrange
-        var searchQuery = new SearchQuery
-        {
-            Family = "Doe",
-            Given = ["John"],
-            Birthdate = ["eq1980-01-01"],
-        };
+        var searchQuery = new SearchQuery { Family = "Doe", Given = ["John"], Birthdate = ["eq1980-01-01"], };
 
         var testFhirClient = new TestFhirClientMultiMatch("https://fhir.api.endpoint");
         _fhirClientFactory.Setup(f => f.CreateFhirClient())
@@ -63,12 +55,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
     public async Task ShouldGetSearchResultsUnmatched_WhenNoMatches()
     {
         // Arrange
-        var searchQuery = new SearchQuery
-        {
-            Family = "NotExistent",
-            Given = ["IAm"],
-            Birthdate = ["eq1900-01-01"],
-        };
+        var searchQuery = new SearchQuery { Family = "NotExistent", Given = ["IAm"], Birthdate = ["eq1900-01-01"], };
 
         var testFhirClient = new TestFhirClientUnmatched("https://fhir.api.endpoint");
         _fhirClientFactory.Setup(f => f.CreateFhirClient())
