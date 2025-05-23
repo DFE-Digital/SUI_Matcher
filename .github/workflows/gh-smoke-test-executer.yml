@@ -153,10 +153,10 @@ jobs:
               exit 1 # Exit with a zero status code
             }
             ')"
-            EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-            echo "return_data<<${EOF}" >> $GITHUB_OUTPUT
-            echo "${dbs_return_data}" >> $GITHUB_OUTPUT
-            echo "${EOF}" >> $GITHUB_OUTPUT
+        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+        echo "return_data<<${EOF}" >> $GITHUB_OUTPUT
+        echo "${dbs_return_data}" >> $GITHUB_OUTPUT
+        echo "${EOF}" >> $GITHUB_OUTPUT
 
     - name: check contents of return data for exceptions and errors
       shell: python
