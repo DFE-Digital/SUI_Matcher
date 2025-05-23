@@ -1,3 +1,5 @@
+name: Smoke Test Executer
+
 on:
   workflow_call:
     inputs:
@@ -46,10 +48,10 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.azure_tenant_id }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.azure_sub_id }}
       AZURE_LOCATION: ${{ inputs.azure_location }}
-      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      AZURE_RESOURCE_GROUP: ${{ secrets.resource_group }}
       SMOKE_TEST_TYPE: ${{ inputs.smoke_test_type }}
       VERSION: ${{ inputs.version }}
-      VM_NAME: ${{ secrets.vm_name }}
+      VM_NAME: ${{ inputs.vm_name }}
       SUI_SERVER_URL: ${{ secrets.sui_server_url }}
 
     steps:
@@ -67,7 +69,7 @@ jobs:
 
     - name: Set Azure Subscription
       run: |
-        az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        az account set --subscription ${{ env.AZURE_SUBSCRIPTION_ID }}
         
     - name: Set file name
       id: set_file_name
@@ -75,9 +77,9 @@ jobs:
         if [ "${{ env.SMOKE_TEST_TYPE }}" == "dbs_batch_search" ]; then
           file_name="./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt"
           log_success_message="The DBS results file has 7 records, batch search resulted"
-          executable="./dbs.exe"
+          executable="./dbsc.exe"
         else
-          file_name="./tests/E2E.Tests/Resources/Smoke/client_watcher_responses.txt"
+          file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv"
           log_success_message="File processed; output=SUI.Client.Core.ProcessCsvFileResult"
           executable=".\suic.exe"
         fi
@@ -89,73 +91,57 @@ jobs:
       id: read_file
       run: |
         EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-        file_name=${{ env.file_name }}
         echo "data<<${EOF}" >> $GITHUB_OUTPUT
-        base_64=`openssl base64 -in ${file_name}` ; echo "${base_64}" >> $GITHUB_OUTPUT
+        base_64=`openssl base64 -in ${{ env.file_name }}` ; echo "${base_64}" >> $GITHUB_OUTPUT
         echo "${EOF}" >> $GITHUB_OUTPUT
         
-    - name: Smoke Test DBS Response Logger (.exe)
+    - name: Smoke Test Run (.exe)
       id: return_data
       run: |
-        return_data="$(az vm run-command invoke --debug \
+        return_data="$(az vm run-command invoke \
           --command-id RunPowerShellScript \
           --name ${{ env.VM_NAME }} \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --script '            
-            if (${{ env.SMOKE_TEST_TYPE }} -eq "dbs_batch_search")
-            {
-              $destinationPath = "C:\Users\AzCopy\unprocessed\dbs_batch_search_responses.txt"
-            }
-            else
-            {
-              $destinationPath = "C:\Users\AzCopy\unprocessed\client_watcher_responses.txt"
-            }
-            
-            # Create Directory if does not exist
-            New-Item -ItemType Directory -Path "C:\Users\AzCopy\unprocessed"
+          --script '
+        
+        if ("${{ env.SMOKE_TEST_TYPE }}" -eq "dbs_batch_search") {
+            $destinationPath = "C:\Users\AzCopy\unprocessed\dbs_batch_search_responses.txt"
+        } else {
+            $destinationPath = "C:\Users\AzCopy\unprocessed\sui_batch_search_queries.csv"
+        }
 
-            $fileContent = "${{ steps.read_file.outputs.data }}"
+        # Create Directory if it does not exist
+        New-Item -ItemType Directory -Path "C:\Users\AzCopy\unprocessed" -Force
 
-            [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
-            cd C:\Users\AzCopy
+        $fileContent = "${{ steps.read_file.outputs.data }}"
 
-            if (${{ env.SMOKE_TEST_TYPE }} -eq "client_batch_search")
-            {
-              $json_data = @(
+        [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
+        cd C:\Users\AzCopy
+
+        if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
+            $json_data = @(
                 [PSCustomObject]@{
-                  MatchApiBaseAddress = "${{ env.SUI_SERVER_URL }}"
+                    MatchApiBaseAddress = "${{ env.SUI_SERVER_URL }}"
                 }
-              )
-                $json_data | ConvertTo-Json | Out-File -FilePath ".\appsettings.json"
-            }
-            
-            # Execute Smoke Test
-            $logContent = "${{ env.executable }}" $destinationPath
-            
-            # assert smoke test was successful
-            if ($logContent -match "${{ env.log_success_message }}")
-            {
-              Write-Output "Smoke Test Passed"
-              exit 0 # Exit with a non-zero status code
-            }
-            else
-            {
-              Write-Error "Smoke Test Failed"
-              exit 1 # Exit with a zero status code
-            }
-            {
-              Write-Output "Smoke Test Passed"
-              exit 0 # Exit with a non-zero status code
-            }
-            else
-            {
-              Write-Error "Smoke Test Failed"
-              exit 1 # Exit with a zero status code
-            }
-            ')"
+            )
+            $json_data | ConvertTo-Json | Out-File -FilePath ".\appsettings.json"
+        }
+
+        # Execute Smoke Test
+        $logContent = ${{ env.executable }} $destinationPath
+
+        # Assert smoke test was successful
+        if ($logContent -match "${{ env.log_success_message }}") {
+            Write-Output "Smoke Test Passed"
+            exit 0 # Exit with a zero status code
+        } else {
+            Write-Error "Smoke Test Failed"
+            exit 1 # Exit with a non-zero status code
+        }
+        ')"
         EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
         echo "return_data<<${EOF}" >> $GITHUB_OUTPUT
-        echo "${dbs_return_data}" >> $GITHUB_OUTPUT
+        echo "${return_data}" >> $GITHUB_OUTPUT
         echo "${EOF}" >> $GITHUB_OUTPUT
 
     - name: check contents of return data for exceptions and errors

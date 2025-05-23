@@ -3,22 +3,10 @@ name: Smoke Test Deployed Apps
 on:
   workflow_dispatch:
      inputs:
-       blob_storage_location:
-         description: 'Blob storage location'
-         required: true
-         default: 's215d01-integration-container-01'
-       storage_account:
-         description: 'Storage account'
-         required: true
-         default: 's215d01integrationsa01'
        virtual_machine_name:
          description: 'Virtual Machine Name'
          required: true
          default: 's215d01-integration-vm-01'
-       environment:
-         description: 'Environment'
-         required: true
-         default: 'Integration'
        after_workflow:
          description: 'Trigger specific smoke test workflow'
          type: choice
@@ -41,208 +29,75 @@ permissions:
   contents: read
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        env: 
-            AZURE_ENV_NAME: ${{ inputs.environment || 'Integration' }}
-            AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-            AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-            AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-            AZURE_LOCATION: "westeurope"
-            AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-            BLOB_STORAGE_LOCATION: ${{ inputs.blob_storage_location || 's215d01-integration-container-01' }}
-            STORAGE_ACCOUNT: ${{ inputs.storage_account || 's215d01integrationsa01' }}
+  env_setup:
+    runs-on: ubuntu-latest
+    outputs:
+      triggered_workflow: ${{ steps.detect_workflow.outputs.triggered_workflow }}
+      cron_run: ${{ steps.detect_workflow.outputs.cron_run }}
+      client_version: ${{ steps.check-version.outputs.CLIENT_VERSION }}
+      azure_location: ${{ steps.check-version.outputs.AZURE_LOCATION }}
+    env: 
+      AZURE_ENV_NAME: ${{ inputs.environment || 'Integration' }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
 
-        steps:
-        - name: Determine triggering upstream workflow
-          id: detect_workflow
-          run: |
-            if [ "${{ github.event.inputs.after_workflow }}" != "" ]; then
-              echo "triggered_workflow=${{ github.event.inputs.after_workflow }}" >> $GITHUB_ENV
-            elif [ "${{ github.event_name == 'schedule' }}" == "true" ]; then
-              echo "cron_run=true" >> $GITHUB_ENV
-            else
-              echo "triggered_workflow=${{ github.event.workflow.name || 'Azure App Deployment' }}" >> $GITHUB_ENV
-            fi
+    steps:
+    - name: Determine triggering upstream workflow
+      id: detect_workflow
+      run: |
+        if [ "${{ github.event.inputs.after_workflow }}" != "" ]; then
+          echo "triggered_workflow=${{ github.event.inputs.after_workflow }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name == 'schedule' }}" == "true" ]; then
+          echo "cron_run=true" >> $GITHUB_OUTPUT
+        else
+          echo "triggered_workflow=${{ github.event.workflow.name || 'Azure App Deployment' }}" >> $GITHUB_OUTPUT
+          echo "cron_run=false" >> $GITHUB_OUTPUT
+        fi
             
-        - name: Checkout
-          uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-        - name: Use version inputted or find latest tag
-          id: check-version
-          run: |
-            if [ -z "${{ github.event.inputs.version }}" ]; then
-              echo "No input version provided. Fetching latest tag."
-              git fetch --tags
-              latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-              echo "Latest tag: $latest_tag"
-              echo "CLIENT_VERSION=$latest_tag" >> $GITHUB_ENV
-            else
-              echo "Using input version: ${{ github.event.inputs.version }}"
-              echo "CLIENT_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-            fi
-
-        - name: Checkout
-          uses: actions/checkout@v4
-          with:
-            ref: ${{ env.CLIENT_VERSION }}
-
-        - name: Setup .NET
-          uses: actions/setup-dotnet@v4
-          with:
-            dotnet-version: '9.0.x'
-
-        - name: Login to Azure
-          uses: azure/login@v2
-          with:
-            client-id: ${{ env.AZURE_CLIENT_ID }}
-            tenant-id: ${{ env.AZURE_TENANT_ID }}
-            subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
-
-        - name: Set Azure Subscription
-          run: |
-            az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-        - name: Upload TXT Files to Blob Storage
-          run:
-            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./tests/E2E.Tests/Resources/Smoke --pattern "*.txt" --overwrite
-              
-        - name: Upload CSV Files to Blob Storage
-          run:
-            az storage blob upload-batch --destination ${{ env.BLOB_STORAGE_LOCATION }} --account-name ${{ env.STORAGE_ACCOUNT }} --source ./tests/E2E.Tests/Resources/Smoke --pattern "*.csv" --overwrite
-            
-        - name: Smoke Test DBS Response Logger (.exe)
-          if: ((env.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (env.cron_run == 'true'))
-          id: dbs_return_data
-          run: |
-            dbs_return_data="$(az vm run-command invoke \
-              --command-id RunPowerShellScript \
-              --name ${{ secrets.VM_NAME }} \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-              --script '
-            
-              $connectionString = "DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT }};AccountKey=${{ secrets.STORAGE_ACCOUNT_KEY }};EndpointSuffix=core.windows.net"
-              $blobContainerName = "${{ env.BLOB_STORAGE_LOCATION }}"
-              $blobName = "dbs_batch_search_responses.txt"
-              $destinationPath = "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed\dbs_batch_search_responses.txt"
-            
-              # Create Directory if does not exist
-              New-Item -ItemType Directory -Path "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed"
-
-              # Install Azure CLI if not installed
-              Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
-              Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
-
-              # Download Txt file from Blob Storage
-              az storage blob download --connection-string $connectionString --container-name $blobContainerName --name $blobName --file $destinationPath
-            
-              cd C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}
-            
-              # Execute Smoke Test
-              $logContent = .\dbsc.exe $destinationPath
-            
-              # assert smoke test was successful
-              if ($logContent -match "The DBS results file has 7 records, batch search resulted")
-              {
-                Write-Output "Smoke Test Passed"
-                exit 0 # Exit with a non-zero status code
-              }
-              else
-              {
-                Write-Error "Smoke Test Failed"
-                exit 1 # Exit with a zero status code
-              }
-              ')"
-              EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-              echo "dbs_return_data<<${EOF}" >> $GITHUB_OUTPUT
-              echo "${dbs_return_data}" >> $GITHUB_OUTPUT
-              echo "${EOF}" >> $GITHUB_OUTPUT
-        
-        - name: check contents of return data for exceptions and errors
-          if: ((env.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (env.cron_run == 'true'))
-          shell: python
-          run: |
-              import json
-              import sys
-              import os
-
-              dbs_return_data = """${{ steps.dbs_return_data.outputs.dbs_return_data }}"""
-
-              if "Exception" in dbs_return_data or "Error" in dbs_return_data or "Failed" in dbs_return_data:
-                print("Smoke Test Failed")
-                print(dbs_return_data)
-                sys.exit(1)
-              else:
-                print("Smoke Test Passed")
-            
-        - name: Smoke Test SUI Client (.exe)
-          if: ((env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload Client Watcher') || (env.cron_run == 'true'))
-          id: client_return_data
-          run: |
-            client_return_data="$(az vm run-command invoke \
-              --command-id RunPowerShellScript \
-              --name ${{ secrets.VM_NAME }} \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-              --script '
-            
-              $connectionString = "DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT }};AccountKey=${{ secrets.STORAGE_ACCOUNT_KEY }};EndpointSuffix=core.windows.net"
-              $blobContainerName = "${{ env.BLOB_STORAGE_LOCATION }}"
-              $blobName = "sui_batch_search_queries.csv"
-              $destinationPath = "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed\sui_batch_search_queries.csv"
-            
-              # Create Directory if does not exist
-              New-Item -ItemType Directory -Path "C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}\unprocessed"
-
-              # Install Azure CLI if not installed
-              Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile "AzureCLI.msi"
-              Start-Process -FilePath "AzureCLI.msi" -ArgumentList "/quiet" -Wait
-
-              # Download Txt file from Blob Storage
-              az storage blob download --connection-string $connectionString --container-name $blobContainerName --name $blobName --file $destinationPath
-            
-              cd C:\Users\AzCopy\${{ env.BLOB_STORAGE_LOCATION }}
-            
-              $json_data = @(
-                [PSCustomObject]@{
-                  MatchApiBaseAddress = "${{ secrets.AZURE_SUI_SERVER_URL }}"
-                }
-              )
+    - name: Use version inputted or find latest tag
+      id: check-version
+      run: |
+        git fetch --tags
+        latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+        echo "Latest tag: $latest_tag"
+        echo "CLIENT_VERSION=$latest_tag" >> $GITHUB_ENV
   
-              $json_data | ConvertTo-Json | Out-File -FilePath ".\appsettings.json"
 
-              # Execute Smoke Test
-              $logContent = .\suic.exe $destinationPath
-            
-              # assert smoke test was successful
-              if ($logContent -match "File processed; output=SUI.Client.Core.ProcessCsvFileResult")
-              {
-                Write-Output "Smoke Test Passed"
-                exit 0 # Exit with a non-zero status code
-              }
-              else
-              {
-                Write-Error "Smoke Test Failed"
-                exit 1 # Exit with a zero status code
-              }
-              ')"
-              EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-              echo "client_return_data<<${EOF}" >> $GITHUB_OUTPUT
-              echo "${client_return_data}" >> $GITHUB_OUTPUT
-              echo "${EOF}" >> $GITHUB_OUTPUT
-
-        - name: check contents of return data for exceptions and errors
-          if: ((env.triggered_workflow == 'Azure App Deployment' || env.triggered_workflow == 'Build and Upload Client Watcher') || (env.cron_run == 'true'))
-          shell: python
-          run: |
-              import json
-              import sys
-              import os
-
-              client_return_data = """${{ steps.client_return_data.outputs.client_return_data }}"""
-
-              if "Exception" in client_return_data or "Error" in client_return_data or "Failed" in client_return_data:
-                print("Smoke Test Failed")
-                print(client_return_data)
-                sys.exit(1)
-              else:
-                print("Smoke Test Passed")
+  dbs_smoketest:
+    needs: env_setup
+    name: Smoke Test DBS Response Logger (.exe)
+    if: ((needs.env_setup.outputs.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (needs.env_setup.outputs.cron_run == 'true'))
+    uses: ./.github/workflows/gh-smoke-test-executer.yml
+    with:
+      smoke_test_type: dbs_batch_search
+      azure_location: westeurope
+      version: ${{ needs.env_setup.outputs.client_version }}
+      vm_name: ${{ inputs.virtual_machine_name }}
+    secrets:
+      sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
+      azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+  
+  client_smoketest:
+    needs: env_setup
+    name: Smoke Test SUI Client (.exe)
+    if: ((needs.env_setup.outputs.triggered_workflow == 'Azure App Deployment' || needs.env_setup.outputs.triggered_workflow == 'Build and Upload Client Watcher') || (needs.env_setup.outputs.cron_run == 'true'))
+    uses: ./.github/workflows/gh-smoke-test-executer.yml
+    with:
+      smoke_test_type: client_batch_search
+      azure_location: westeurope
+      version: ${{ needs.env_setup.outputs.client_version }}
+      vm_name: ${{ inputs.virtual_machine_name }}
+    secrets:
+      sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
+      azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
