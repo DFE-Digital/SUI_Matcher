@@ -98,7 +98,7 @@ jobs:
     - name: Smoke Test Run (.exe)
       id: return_data
       run: |
-        return_data="$(az vm run-command invoke --debug \
+        return_data="$(az vm run-command invoke \
           --command-id RunPowerShellScript \
           --name ${{ env.VM_NAME }} \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \

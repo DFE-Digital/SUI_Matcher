@@ -41,7 +41,6 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_LOCATION: "westeurope"
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
 
     steps:
@@ -67,10 +66,6 @@ jobs:
         latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
         echo "Latest tag: $latest_tag"
         echo "CLIENT_VERSION=$latest_tag" >> $GITHUB_ENV
-
-    - name: Add needed env var to github env
-      run: |
-        echo "AZURE_LOCATION=${{ env.AZURE_LOCATION }}" >> $GITHUB_OUTPUT
   
 
   dbs_smoketest:
@@ -80,7 +75,7 @@ jobs:
     uses: ./.github/workflows/gh-smoke-test-executer.yml
     with:
       smoke_test_type: dbs_batch_search
-      azure_location: ${{ needs.env_setup.outputs.azure_location }}
+      azure_location: westeurope
       version: ${{ needs.env_setup.outputs.client_version }}
       vm_name: ${{ inputs.virtual_machine_name }}
     secrets:
@@ -97,7 +92,7 @@ jobs:
     uses: ./.github/workflows/gh-smoke-test-executer.yml
     with:
       smoke_test_type: client_batch_search
-      azure_location: ${{ needs.env_setup.outputs.azure_location }}
+      azure_location: westeurope
       version: ${{ needs.env_setup.outputs.client_version }}
       vm_name: ${{ inputs.virtual_machine_name }}
     secrets:
