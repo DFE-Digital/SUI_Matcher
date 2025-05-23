@@ -185,8 +185,13 @@ public class MatchingService(
         if (model.BirthDate.Value.Day <=
             12) // 5. fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12.
         {
-            var altDob = new DateTime(model.BirthDate.Value.Year, model.BirthDate.Value.Day,
-                model.BirthDate.Value.Month);
+            var altDob = new DateTime(
+                model.BirthDate.Value.Year,
+                model.BirthDate.Value.Day,
+                model.BirthDate.Value.Month,
+                0, 0, 0,
+                DateTimeKind.Unspecified
+            );
 
             queries.Add(new SearchQuery
             {

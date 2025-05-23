@@ -4,7 +4,7 @@ namespace MatchingApi.Services;
 
 public static class DataQualityEvaluatorService
 {
-    private record PropertyMapping(
+    sealed record PropertyMapping(
         string Name,
         string? RequiredError,
         string? InvalidError,
