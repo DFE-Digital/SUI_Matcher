@@ -15,6 +15,7 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
     public void Dispose()
     {
         _logger.Close();
+        GC.SuppressFinalize(this);
     }
 
     private class JsonFileLogger : ILogger
