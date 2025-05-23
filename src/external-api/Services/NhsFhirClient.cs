@@ -26,32 +26,30 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
 
             if (patient == null)
             {
-                // Where did this log come from?
-                // TODO: Could remove the whole if statement by checking for multiple match first or last
                 var isMultipleMatches = fhirClient.LastBodyAsResource is OperationOutcome outcome &&
                     outcome.Issue.Count > 0 &&
                     outcome.Issue[0].Code == OperationOutcome.IssueType.MultipleMatches;
+
                 if (isMultipleMatches)
                 {
-                    logger.LogInformation("multiple patient records found");
-
                     return SearchResult.MultiMatched();
                 }
-            }
-            else
-            {
-                logger.LogInformation("{EntryCount} patient record(s) found", patient.Entry.Count);
-                switch (patient.Entry.Count)
-                {
-                    case 0:
-                        return SearchResult.Unmatched();
-                    case 1:
-                        LogInputAndPdsDifferences(query, (Patient)patient.Entry[0].Resource);
-                        return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
-                }
+
+                logger.LogInformation("multiple patient records found");
+                return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response");
             }
 
-            return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response");
+            logger.LogInformation("{EntryCount} patient record(s) found", patient.Entry.Count);
+            switch (patient.Entry.Count)
+            {
+                case 0:
+                    return SearchResult.Unmatched();
+                case 1:
+                    LogInputAndPdsDifferences(query, (Patient)patient.Entry[0].Resource);
+                    return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
+                default:
+                    return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response, more than 1 entry found");
+            }
         }
         catch (Exception ex)
         {
