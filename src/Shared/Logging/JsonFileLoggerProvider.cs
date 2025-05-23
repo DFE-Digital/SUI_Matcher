@@ -18,7 +18,7 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
         GC.SuppressFinalize(this);
     }
 
-    private class JsonFileLogger : ILogger
+    sealed class JsonFileLogger : ILogger
     {
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
 
