@@ -33,7 +33,8 @@ public class MatchingService(
 
             return new PersonMatchResponse
             {
-                Result = new MatchResult { MatchStatus = MatchStatus.Error, }, DataQuality = dataQualityResult
+                Result = new MatchResult { MatchStatus = MatchStatus.Error, },
+                DataQuality = dataQualityResult
             };
         }
 
@@ -78,7 +79,8 @@ public class MatchingService(
         var result = await nhsFhirClient.PerformSearchByNhsId(request.NhsNumber!);
         return new DemographicResponse()
         {
-            Result = result.Result, Errors = result.ErrorMessage is null ? [] : [result.ErrorMessage]
+            Result = result.Result,
+            Errors = result.ErrorMessage is null ? [] : [result.ErrorMessage]
         };
     }
 

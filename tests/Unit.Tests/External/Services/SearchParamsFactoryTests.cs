@@ -15,7 +15,7 @@ public class SearchParamsFactoryTests
 
         // Act
         var searchParams = SearchParamsFactory.Create(query);
-            
+
         // Assert
         // Check regular parameters
         Assert.Contains(searchParams.Parameters, p => p is { Item1: "family", Item2: "Doe" });

@@ -11,7 +11,7 @@ namespace ExternalApi.Services;
 
 public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhirClient> logger) : INhsFhirClient
 {
-    
+
     public async Task<SearchResult?> PerformSearch(SearchQuery query)
     {
         var searchParams = SearchParamsFactory.Create(query);

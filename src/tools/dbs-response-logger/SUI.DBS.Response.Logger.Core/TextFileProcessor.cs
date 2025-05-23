@@ -84,13 +84,13 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
         }
 
         logger.LogInformation("The DBS results file has {RecordCount} records, batch search resulted in Match='{Matches}' and NoMatch='{NoMatches}'"
-            ,recordCount
-            ,matches
-            ,noMatches);
+            , recordCount
+            , matches
+            , noMatches);
 
         activity.Stop();
     }
-    
+
     private static MatchPersonResult ParseMatchPersonResult(RecordColumn[] recordColumns, string[] recordData)
     {
         var result = new MatchPersonResult();

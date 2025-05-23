@@ -14,7 +14,10 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         // Arrange
         var searchQuery = new SearchQuery
         {
-            Family = "Smith", Given = ["John"], Gender = "male", Birthdate = ["eq1980-01-01"],
+            Family = "Smith",
+            Given = ["John"],
+            Gender = "male",
+            Birthdate = ["eq1980-01-01"],
         };
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
         _fhirClientFactory.Setup(f => f.CreateFhirClient())
@@ -70,7 +73,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         Assert.NotNull(result);
         Assert.Equal(SearchResult.ResultType.Unmatched, result.Type);
     }
-    
+
     [Fact]
     public async Task ShouldGetSearchResultsError_WhenAnExceptionIsThrown()
     {

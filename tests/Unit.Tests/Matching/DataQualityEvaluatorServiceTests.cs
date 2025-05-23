@@ -54,10 +54,10 @@ public class DataQualityEvaluatorServiceTests
         // Arrange
         var spec = new PersonSpecification();
         var validationResults = Array.Empty<ValidationResponse.ValidationResult>();
-        
+
         // Act
         var result = DataQualityEvaluatorService.ToQualityResult(spec, validationResults);
-        
+
         // Assert
         // Assert.Equal(QualityType.NotProvided, result.Given);
         // Assert.Equal(QualityType.NotProvided, result.Family);
