@@ -1,0 +1,176 @@
+on:
+  workflow_call:
+    inputs:
+      smoke_test_type:
+        required: true
+        type: string
+        description: "Type of smoke test to run"
+      azure_location:
+        required: true
+        type: string
+        description: "Azure location for the resources"
+      version:
+        required: true
+        type: string
+        description: "Version of the application to test"
+      vm_name:
+        required: true
+        type: string
+        description: "Name of the virtual machine"
+    secrets:
+      sui_server_url:
+        required: true
+        description: "url of the SUI server"
+      azure_sub_id:
+        required: true
+        description: "Azure subscription ID"
+      azure_client_id:
+        required: true
+        description: "Azure client ID"
+      azure_tenant_id:
+        required: true
+        description: "Azure tenant ID"
+      resource_group:
+        required: true
+        description: "Azure resource group"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  smoke_test:
+    runs-on: ubuntu-latest
+    env: 
+      AZURE_CLIENT_ID: ${{ secrets.azure_client_id }}
+      AZURE_TENANT_ID: ${{ secrets.azure_tenant_id }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.azure_sub_id }}
+      AZURE_LOCATION: ${{ inputs.azure_location }}
+      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      SMOKE_TEST_TYPE: ${{ inputs.smoke_test_type }}
+      VERSION: ${{ inputs.version }}
+      VM_NAME: ${{ secrets.vm_name }}
+      SUI_SERVER_URL: ${{ secrets.sui_server_url }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ env.VERSION }}
+
+    - name: Login to Azure
+      uses: azure/login@v2
+      with:
+        client-id: ${{ env.AZURE_CLIENT_ID }}
+        tenant-id: ${{ env.AZURE_TENANT_ID }}
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Set Azure Subscription
+      run: |
+        az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        
+    - name: Set file name
+      id: set_file_name
+      run: |
+        if [ "${{ env.SMOKE_TEST_TYPE }}" == "dbs_batch_search" ]; then
+          file_name="./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt"
+          log_success_message="The DBS results file has 7 records, batch search resulted"
+          executable="./dbs.exe"
+        else
+          file_name="./tests/E2E.Tests/Resources/Smoke/client_watcher_responses.txt"
+          log_success_message="File processed; output=SUI.Client.Core.ProcessCsvFileResult"
+          executable=".\suic.exe"
+        fi
+        echo "file_name=${file_name}" >> $GITHUB_ENV
+        echo "log_success_message=${log_success_message}" >> $GITHUB_ENV
+        echo "executable=${executable}" >> $GITHUB_ENV
+
+    - name: Read file contents
+      id: read_file
+      run: |
+        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+        file_name=${{ env.file_name }}
+        echo "data<<${EOF}" >> $GITHUB_OUTPUT
+        base_64=`openssl base64 -in ${file_name}` ; echo "${base_64}" >> $GITHUB_OUTPUT
+        echo "${EOF}" >> $GITHUB_OUTPUT
+        
+    - name: Smoke Test DBS Response Logger (.exe)
+      id: return_data
+      run: |
+        return_data="$(az vm run-command invoke --debug \
+          --command-id RunPowerShellScript \
+          --name ${{ env.VM_NAME }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --script '            
+            if (${{ env.SMOKE_TEST_TYPE }} -eq "dbs_batch_search")
+            {
+              $destinationPath = "C:\Users\AzCopy\unprocessed\dbs_batch_search_responses.txt"
+            }
+            else
+            {
+              $destinationPath = "C:\Users\AzCopy\unprocessed\client_watcher_responses.txt"
+            }
+            
+            # Create Directory if does not exist
+            New-Item -ItemType Directory -Path "C:\Users\AzCopy\unprocessed"
+
+            $fileContent = "${{ steps.read_file.outputs.data }}"
+
+            [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
+            cd C:\Users\AzCopy
+
+            if (${{ env.SMOKE_TEST_TYPE }} -eq "client_batch_search")
+            {
+              $json_data = @(
+                [PSCustomObject]@{
+                  MatchApiBaseAddress = "${{ env.SUI_SERVER_URL }}"
+                }
+              )
+                $json_data | ConvertTo-Json | Out-File -FilePath ".\appsettings.json"
+            }
+            
+            # Execute Smoke Test
+            $logContent = "${{ env.executable }}" $destinationPath
+            
+            # assert smoke test was successful
+            if ($logContent -match "${{ env.log_success_message }}")
+            {
+              Write-Output "Smoke Test Passed"
+              exit 0 # Exit with a non-zero status code
+            }
+            else
+            {
+              Write-Error "Smoke Test Failed"
+              exit 1 # Exit with a zero status code
+            }
+            {
+              Write-Output "Smoke Test Passed"
+              exit 0 # Exit with a non-zero status code
+            }
+            else
+            {
+              Write-Error "Smoke Test Failed"
+              exit 1 # Exit with a zero status code
+            }
+            ')"
+        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+        echo "return_data<<${EOF}" >> $GITHUB_OUTPUT
+        echo "${dbs_return_data}" >> $GITHUB_OUTPUT
+        echo "${EOF}" >> $GITHUB_OUTPUT
+
+    - name: check contents of return data for exceptions and errors
+      shell: python
+      run: |
+        import json
+        import sys
+        import os
+
+        client_return_data = """${{ steps.return_data.outputs.return_data }}"""
+
+        if "Exception" in client_return_data or "Error" in client_return_data or "Failed" in client_return_data:
+          print("Smoke Test Failed")
+          print(client_return_data)
+          sys.exit(1)
+        else:
+          print("Smoke Test Passed")
+ 
