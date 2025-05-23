@@ -30,7 +30,7 @@ public sealed class MatchingServiceTests
         {
             Given = QualityType.NotProvided,
             Family = QualityType.NotProvided,
-            Birthdate = QualityType.NotProvided,
+            BirthDate = QualityType.NotProvided,
             Gender = QualityType.NotProvided,
             Phone = QualityType.NotProvided,
             Email = QualityType.NotProvided,
