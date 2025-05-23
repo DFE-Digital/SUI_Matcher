@@ -165,7 +165,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         Assert.Equal(MatchStatus.Error, personMatchResponse.Result.MatchStatus);
         Assert.Equal(QualityType.NotProvided, personMatchResponse.DataQuality.Given);
         Assert.Equal(QualityType.NotProvided, personMatchResponse.DataQuality.Family);
-        Assert.Equal(QualityType.Valid, personMatchResponse.DataQuality.Birthdate);
+        Assert.Equal(QualityType.Valid, personMatchResponse.DataQuality.BirthDate);
 
     }
 

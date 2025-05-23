@@ -11,7 +11,7 @@ public class DataQualityResult
     public QualityType Family { get; set; } = QualityType.Valid;
 
     [JsonPropertyName("birthdate")]
-    public QualityType Birthdate { get; set; } = QualityType.Valid;
+    public QualityType BirthDate { get; set; } = QualityType.Valid;
 
     [JsonPropertyName("addressPostalCode")]
     public QualityType AddressPostalCode { get; set; } = QualityType.Valid;

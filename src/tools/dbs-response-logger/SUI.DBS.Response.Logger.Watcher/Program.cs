@@ -45,3 +45,4 @@ while (true)
 await processingTask;
 
 await host.StopAsync();
+cts.Dispose();

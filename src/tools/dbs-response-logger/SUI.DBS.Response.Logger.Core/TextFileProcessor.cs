@@ -37,9 +37,8 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
         string[] lines = await File.ReadAllLinesAsync(filePath);
 
-        var recordColumns = Enum.GetValues(typeof(RecordColumn)).Cast<RecordColumn>().ToArray();
+        var recordColumns = Enum.GetValues<RecordColumn>();
 
-        var currentRow = 0;
         var recordCount = 0;
         var matches = 0;
         var noMatches = 0;
@@ -49,59 +48,69 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
         {
             var recordData = line.Replace("\"", "").Split(",");
 
-            if (recordData.Any(x => !string.IsNullOrWhiteSpace(x)))
+            if (recordData.All(string.IsNullOrWhiteSpace))
             {
-                ++recordCount;
-
-                var result = new MatchPersonResult();
-
-                foreach (var recordColumn in recordColumns)
-                {
-                    var fieldName = recordColumn.ToString();
-
-                    var field = typeof(MatchPersonResult).GetField($"<{fieldName}>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance);
-
-                    if (field != null)
-                    {
-                        field.SetValue(result, recordData[(int)recordColumn]);
-                    }
-                }
-
-                StoreUniqueSearchIdFor(result);
-
-                var matched = !string.IsNullOrWhiteSpace(result.NhsNumber);
-
-                if (matched)
-                {
-                    ++matches;
-                }
-                else
-                {
-                    ++noMatches;
-                }
-
-                var ageGroup = !string.IsNullOrWhiteSpace(result.BirthDate)
-                    ? GetAgeGroup(ToDateOnly(result.BirthDate)!.Value)
-                    : "Unknown";
-
-                logger.LogInformation(
-                    "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
-                    matched ? "Match" : "NoMatch",
-                    ageGroup,
-                    ToGender(result.Gender),
-                    ToPostCode(result.PostCode)
-                );
+                continue;
             }
 
-            ++currentRow;
+            ++recordCount;
+
+            var result = ParseMatchPersonResult(recordColumns, recordData);
+
+            StoreUniqueSearchIdFor(result);
+
+            var matched = !string.IsNullOrWhiteSpace(result.NhsNumber);
+
+            if (matched)
+            {
+                ++matches;
+            }
+            else
+            {
+                ++noMatches;
+            }
+
+            var ageGroup = !string.IsNullOrWhiteSpace(result.BirthDate)
+                ? GetAgeGroup(ToDateOnly(result.BirthDate)!.Value)
+                : "Unknown";
+
+            logger.LogInformation(
+                "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
+                matched ? "Match" : "NoMatch",
+                ageGroup,
+                ToGender(result.Gender),
+                ToPostCode(result.PostCode)
+            );
         }
 
-        logger.LogInformation($"The DBS results file has {recordCount} records, batch search resulted in Match='{matches}' and NoMatch='{noMatches}'");
+        logger.LogInformation("The DBS results file has {RecordCount} records, batch search resulted in Match='{Matches}' and NoMatch='{NoMatches}'"
+            , recordCount
+            , matches
+            , noMatches);
 
         activity.Stop();
     }
 
-    public static DateOnly? ToDateOnly(string? value)
+    private static MatchPersonResult ParseMatchPersonResult(RecordColumn[] recordColumns, string[] recordData)
+    {
+        var result = new MatchPersonResult();
+
+        foreach (var recordColumn in recordColumns)
+        {
+            var fieldName = recordColumn.ToString();
+
+            var field = typeof(MatchPersonResult).GetField($"<{fieldName}>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (field != null)
+            {
+                field.SetValue(result, recordData[(int)recordColumn]);
+            }
+        }
+
+        return result;
+    }
+
+    private static DateOnly? ToDateOnly(string? value)
         => !string.IsNullOrWhiteSpace(value) && DateOnly.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) ? date : null;
 
     public static string ToGender(string? value)

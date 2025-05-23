@@ -5,11 +5,11 @@ namespace MatchingApi;
 
 public class NhsFhirClientApiWrapper(HttpClient httpClient) : INhsFhirClient
 {
-    public async Task<SearchResult?> PerformSearch(SearchQuery searchQuery)
+    public async Task<SearchResult?> PerformSearch(SearchQuery query)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/search")
         {
-            Content = JsonContent.Create(searchQuery)
+            Content = JsonContent.Create(query)
         };
         var response = await httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

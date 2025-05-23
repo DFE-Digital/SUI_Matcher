@@ -14,133 +14,6 @@ public class MatchingService(
     INhsFhirClient nhsFhirClient,
     IValidationService validationService) : IMatchingService
 {
-    public static DataQualityResult ToQualityResult(PersonSpecification spec, IEnumerable<ValidationResponse.ValidationResult> validationResults)
-    {
-        var result = new DataQualityResult();
-
-        foreach (var vResult in validationResults)
-        {
-            if (result.Given == QualityType.Valid)
-            {
-                if (vResult.MemberNames.Contains("Given", StringComparer.OrdinalIgnoreCase))
-                {
-                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GivenNameRequired) ?? false)
-                    {
-                        result.Given = QualityType.NotProvided;
-                    }
-                    else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GivenNameInvalid) ?? false)
-                    {
-                        result.Given = QualityType.Invalid;
-                    }
-                }
-            }
-
-            if (result.Family == QualityType.Valid)
-            {
-                if (vResult.MemberNames.Contains("Family", StringComparer.OrdinalIgnoreCase))
-                {
-                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.FamilyNameRequired) ?? false)
-                    {
-                        result.Family = QualityType.NotProvided;
-                    }
-                    else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.FamilyNameInvalid) ?? false)
-                    {
-                        result.Family = QualityType.Invalid;
-                    }
-                }
-            }
-
-            if (result.Birthdate == QualityType.Valid)
-            {
-                if (vResult.MemberNames.Contains("Birthdate", StringComparer.OrdinalIgnoreCase))
-                {
-                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.BirthDateRequired) ?? false)
-                    {
-                        result.Birthdate = QualityType.NotProvided;
-                    }
-                    else if (vResult.ErrorMessage?.Equals(PersonValidationConstants.BirthDateInvalid) ?? false)
-                    {
-                        result.Birthdate = QualityType.Invalid;
-                    }
-                }
-            }
-
-            if (result.Gender == QualityType.Valid)
-            {
-                if (vResult.MemberNames.Contains("Gender", StringComparer.OrdinalIgnoreCase))
-                {
-                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.GenderInvalid) ?? false)
-                    {
-                        result.Gender = QualityType.Invalid;
-
-                        // Remove from search query, if invalid
-                        spec.Gender = null;
-                    }
-                }
-                else if (string.IsNullOrEmpty(spec.Gender))
-                {
-                    result.Gender = QualityType.NotProvided;
-                }
-            }
-
-            if (result.Phone == QualityType.Valid)
-            {
-                if (vResult.MemberNames.Contains("Phone", StringComparer.OrdinalIgnoreCase))
-                {
-                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PhoneInvalid) ?? false)
-                    {
-                        result.Phone = QualityType.Invalid;
-
-                        // Remove from search query, if invalid
-                        spec.Phone = null;
-                    }
-                }
-                else if (string.IsNullOrEmpty(spec.Phone))
-                {
-                    result.Phone = QualityType.NotProvided;
-                }
-            }
-
-            if (result.Email == QualityType.Valid)
-            {
-                if (vResult.MemberNames.Contains("Email", StringComparer.OrdinalIgnoreCase))
-                {
-                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.EmailInvalid) ?? false)
-                    {
-                        result.Email = QualityType.Invalid;
-
-                        // Remove from search query, if invalid
-                        spec.Email = null;
-                    }
-                }
-                else if (string.IsNullOrEmpty(spec.Email))
-                {
-                    result.Email = QualityType.NotProvided;
-                }
-            }
-
-            if (result.AddressPostalCode == QualityType.Valid)
-            {
-                if (vResult.MemberNames.Contains("AddressPostalCode", StringComparer.OrdinalIgnoreCase))
-                {
-                    if (vResult.ErrorMessage?.Equals(PersonValidationConstants.PostCodeInvalid) ?? false)
-                    {
-                        result.AddressPostalCode = QualityType.Invalid;
-
-                        // Remove from search query, if invalid
-                        spec.AddressPostalCode = null;
-                    }
-                }
-                else if (string.IsNullOrEmpty(spec.AddressPostalCode))
-                {
-                    result.AddressPostalCode = QualityType.NotProvided;
-                }
-            }
-        }
-
-        return result;
-    }
-
     public async Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification)
     {
         StoreUniqueSearchIdFor(personSpecification);
@@ -149,9 +22,10 @@ public class MatchingService(
 
         var validationResults = validationService.Validate(personSpecification);
 
-        var dataQualityResult = ToQualityResult(personSpecification, validationResults.Results!);
+        var dataQualityResult = DataQualityEvaluatorService.ToQualityResult(personSpecification, validationResults.Results!.ToList());
 
-        logger.LogInformation("Person data validation resulted in: {QualityResult}", JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
+        logger.LogInformation("Person data validation resulted in: {QualityResult}",
+            JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
 
         if (!HasMinDataRequirements(dataQualityResult))
         {
@@ -159,10 +33,7 @@ public class MatchingService(
 
             return new PersonMatchResponse
             {
-                Result = new()
-                {
-                    MatchStatus = MatchStatus.Error,
-                },
+                Result = new MatchResult { MatchStatus = MatchStatus.Error, },
                 DataQuality = dataQualityResult
             };
         }
@@ -266,14 +137,18 @@ public class MatchingService(
         Activity.Current?.SetBaggage("SearchId", hash);
     }
 
-    private SearchQuery[] GetSearchQueries(PersonSpecification model)
+    private static SearchQuery[] GetSearchQueries(PersonSpecification model)
     {
         if (!model.BirthDate.HasValue)
         {
             throw new InvalidOperationException("Birthdate is required for search queries");
         }
 
-        var dobRange = new[] { "ge" + model.BirthDate.Value.AddMonths(-6).ToString("yyyy-MM-dd"), "le" + model.BirthDate.Value.AddMonths(6).ToString("yyyy-MM-dd") };
+        var dobRange = new[]
+        {
+            "ge" + model.BirthDate.Value.AddMonths(-6).ToString("yyyy-MM-dd"),
+            "le" + model.BirthDate.Value.AddMonths(6).ToString("yyyy-MM-dd")
+        };
         var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
 
         var modelName = model.Given is not null ? new[] { model.Given } : null;
@@ -304,17 +179,21 @@ public class MatchingService(
             },
             new() // 2. fuzzy search with given name, family name and DOB range 6 months either side of given date.
             {
-                FuzzyMatch = true,
-                Given = modelName,
-                Family = model.Family,
-                Birthdate = dobRange,
+                FuzzyMatch = true, Given = modelName, Family = model.Family, Birthdate = dobRange,
             },
         };
 
         // Only applicable if dob day is less than or equal to 12
-        if (model.BirthDate.Value.Day <= 12) // 5. fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12.
+        if (model.BirthDate.Value.Day <=
+            12) // 5. fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12.
         {
-            var altDob = new DateTime(model.BirthDate.Value.Year, model.BirthDate.Value.Day, model.BirthDate.Value.Month);
+            var altDob = new DateTime(
+                model.BirthDate.Value.Year,
+                model.BirthDate.Value.Day,
+                model.BirthDate.Value.Month,
+                0, 0, 0,
+                DateTimeKind.Unspecified
+            );
 
             queries.Add(new SearchQuery
             {
@@ -337,13 +216,13 @@ public class MatchingService(
         return [.. queries];
     }
 
-    private bool HasMinDataRequirements(DataQualityResult dataQualityResult)
+    private static bool HasMinDataRequirements(DataQualityResult dataQualityResult)
     {
         return dataQualityResult is
         {
             Given: QualityType.Valid,
             Family: QualityType.Valid,
-            Birthdate: QualityType.Valid
+            BirthDate: QualityType.Valid
         };
     }
 

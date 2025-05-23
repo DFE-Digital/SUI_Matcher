@@ -24,20 +24,20 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
     public const string HeaderScore = "SUI_Score";
     public const string HeaderNhsNo = "SUI_NHSNo";
 
-    public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string inputFilePath, string baseOutputDirectory)
+    public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
-        if (!File.Exists(inputFilePath))
+        if (!File.Exists(filePath))
         {
-            throw new FileNotFoundException("File not found", inputFilePath);
+            throw new FileNotFoundException("File not found", filePath);
         }
 
         var ts = $"_{DateTime.Now:yyyyMMdd-HHmmss}";
 
-        var outputDirectory = Path.Combine(baseOutputDirectory, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(inputFilePath)));
+        var outputDirectory = Path.Combine(outputPath, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(filePath)));
         Directory.CreateDirectory(outputDirectory);
 
         var stats = new CsvProcessStats();
-        var (headers, records) = await ReadCsvAsync(inputFilePath);
+        var (headers, records) = await ReadCsvAsync(filePath);
 
         headers.Add(HeaderStatus);
         headers.Add(HeaderScore);
@@ -64,7 +64,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
             RecordStats(stats, response);
         }
 
-        var outputFilePath = GetOutputFileName(ts, outputDirectory, inputFilePath);
+        var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
         await WriteCsvAsync(outputFilePath, headers, records);
 
         var pdfReport = PdfReportGenerator.GenerateReport(stats, GetOutputFileName(ts, outputDirectory, "report.pdf"));

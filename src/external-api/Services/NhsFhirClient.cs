@@ -11,25 +11,10 @@ namespace ExternalApi.Services;
 
 public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhirClient> logger) : INhsFhirClient
 {
+
     public async Task<SearchResult?> PerformSearch(SearchQuery query)
     {
-        var search = new SearchParams();
-
-        var queryMap = query.ToDictionary();
-        foreach (var entry in queryMap)
-        {
-            if (entry.Value.GetType().IsArray)
-            {
-                foreach (var item in (IEnumerable)entry.Value)
-                {
-                    search.Add(entry.Key, item.ToString()!);
-                }
-            }
-            else
-            {
-                search.Add(entry.Key, entry.Value.ToString()!);
-            }
-        }
+        var searchParams = SearchParamsFactory.Create(query);
 
         try
         {
@@ -37,36 +22,34 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
 
             // Search for a patient record
             var fhirClient = fhirClientFactory.CreateFhirClient();
-            var patient = await fhirClient.SearchAsync<Patient>(search);
+            var patient = await fhirClient.SearchAsync<Patient>(searchParams);
 
             if (patient == null)
             {
-                // Where did this log come from?
-                if (fhirClient.LastBodyAsResource is OperationOutcome outcome && outcome.Issue.Count > 0 &&
-                    outcome.Issue[0].Code == OperationOutcome.IssueType.MultipleMatches)
-                {
-                    logger.LogInformation("multiple patient records found");
+                var isMultipleMatches = fhirClient.LastBodyAsResource is OperationOutcome outcome &&
+                    outcome.Issue.Count > 0 &&
+                    outcome.Issue[0].Code == OperationOutcome.IssueType.MultipleMatches;
 
+                if (isMultipleMatches)
+                {
                     return SearchResult.MultiMatched();
                 }
+
+                logger.LogInformation("multiple patient records found");
+                return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response");
             }
-            else
+
+            logger.LogInformation("{EntryCount} patient record(s) found", patient.Entry.Count);
+            switch (patient.Entry.Count)
             {
-                logger.LogInformation("{EntryCount} patient record(s) found", patient.Entry.Count);
-                if (patient.Entry.Count == 0)
-                {
+                case 0:
                     return SearchResult.Unmatched();
-                }
-
-                if (patient.Entry.Count == 1)
-                {
+                case 1:
                     LogInputAndPdsDifferences(query, (Patient)patient.Entry[0].Resource);
-
                     return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
-                }
+                default:
+                    return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response, more than 1 entry found");
             }
-
-            return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response");
         }
         catch (Exception ex)
         {
