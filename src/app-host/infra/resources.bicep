@@ -490,11 +490,11 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: '${environmentPrefix}${lowercaseEnvironmentName}sa01'
   location: location
-  tags: tags
   sku: {
     name: 'Standard_LRS'
   }
   kind: 'StorageV2'
+  tags: tags
   properties: {
     accessTier: 'Hot'
     minimumTlsVersion: 'TLS1_2'
@@ -517,8 +517,8 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${environmentPrefix}-${lowercaseEnvironmentName}-appinsights-01'
   location: location
-  tags: tags
   kind: 'web'
+  tags: tags
   properties: {
     Application_Type: 'web'
     Flow_Type: 'Bluefield'
