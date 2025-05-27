@@ -18,7 +18,7 @@ Get-ChildItem -Path . -Recurse -Directory -Filter "TestResults" | ForEach-Object
 }
 
 
-dotnet build
+dotnet build --no-incremental
 dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --settings tests.runsettings
 reportgenerator -reports:./**/coverage.cobertura.xml -targetdir:$finalReportDir -reporttypes:SonarQube,html
 

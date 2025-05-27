@@ -49,7 +49,7 @@ jobs:
             /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S6602 \
             /d:sonar.scanner.skipJreProvisioning=true \
             /d:sonar.scanner.scanAll=false
-          dotnet build
+          dotnet build --no-incremental
           dotnet test --no-build --verbosity normal --settings tests.runsettings
           reportgenerator -reports:./**/coverage.cobertura.xml -targetdir:CoverageReport -reporttypes:SonarQube,html
           dotnet coverage merge --reports "tests/**/coverage.cobertura.xml" -f cobertura -o coverage/coverage.xml
