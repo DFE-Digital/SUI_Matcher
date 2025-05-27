@@ -77,14 +77,20 @@ jobs:
         if [ "${{ env.SMOKE_TEST_TYPE }}" == "dbs_batch_search" ]; then
           file_name="./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt"
           log_success_message="The DBS results file has 7 records, batch search resulted"
-          executable="./dbsc.exe"
+          $packagename = "SUI.DBS.Response.Logger.Watcher"
+          $destinationpathfile = "dbs_batch_search_responses.txt"
+          executable="suidbsw"
         else
           file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv"
           log_success_message="File processed; output=SUI.Client.Core.ProcessCsvFileResult"
-          executable=".\suic.exe"
+          $packagename = "SUI.Client.Watcher"
+          $destinationpathfile = "sui_batch_search_queries.csv"
+          $executable="suiw"
         fi
         echo "file_name=${file_name}" >> $GITHUB_ENV
         echo "log_success_message=${log_success_message}" >> $GITHUB_ENV
+        echo "packagename=${packagename}" >> $GITHUB_ENV
+        echo "destinationpathfile=${destinationpath}" >> $GITHUB_ENV
         echo "executable=${executable}" >> $GITHUB_ENV
 
     - name: Read file contents
@@ -103,20 +109,41 @@ jobs:
           --name ${{ env.VM_NAME }} \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --script '
-        
-        if ("${{ env.SMOKE_TEST_TYPE }}" -eq "dbs_batch_search") {
-            $destinationPath = "C:\Users\AzCopy\unprocessed\dbs_batch_search_responses.txt"
-        } else {
-            $destinationPath = "C:\Users\AzCopy\unprocessed\sui_batch_search_queries.csv"
+
+        $packageName="${{ env.packagename }}"
+        $basePath = "C:\Users\SmokeTests"
+        $basePathUnprocessed = "$basePath\unprocessed"
+        $basePathProcessed = "$basePath\processed"
+        $destinationPath = "$basePath\${{ env.destinationpathfile }}"
+
+        function Clean-SmokeTestEnvironment {
+            param (
+          [string]$SmokeTestsPath,
+          [string]$PackageName
+            )
+            # Check for the existence of the directory and clean it up if it exists
+            if (Test-Path $SmokeTestsPath) {
+          Remove-Item -Path $SmokeTestsPath -Recurse -Force
+            }
+            # Check for the package and remove it if it exists
+            if (Get-Package -Name $PackageName -ErrorAction SilentlyContinue) {
+          Uninstall-Package -Name $PackageName -Force
+            }
         }
 
-        # Create Directory if it does not exist
-        New-Item -ItemType Directory -Path "C:\Users\AzCopy\unprocessed" -Force
+        Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
+        # Install the package
+        dotnet tool install --global $packagename
+
+        # Create the SmokeTests directories
+        New-Item -ItemType Directory -Path $basePath -Force
+        New-Item -ItemType Directory -Path $basePathUnprocessed -Force
+        New-Item -ItemType Directory -Path $basePathProcessed -Force
 
         $fileContent = "${{ steps.read_file.outputs.data }}"
 
         [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
-        cd C:\Users\AzCopy
+        cd C:\Users\SmokeTests
 
         if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
             $json_data = @(
@@ -128,11 +155,12 @@ jobs:
         }
 
         # Execute Smoke Test
-        $logContent = ${{ env.executable }} $destinationPath
+        $logContent = ${{ env.executable }} $destinationPath $basePathProcessed
 
         # Assert smoke test was successful
         if ($logContent -match "${{ env.log_success_message }}") {
             Write-Output "Smoke Test Passed"
+            Clean-SmokeTestEnvironment -SmokeTestsPath "C:\Users\SmokeTests" -PackageName $packagename
             exit 0 # Exit with a zero status code
         } else {
             Write-Error "Smoke Test Failed"

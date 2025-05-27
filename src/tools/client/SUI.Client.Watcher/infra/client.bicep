@@ -277,7 +277,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
           }
           {
             ruleType: 'ApplicationRule'
-            name: 'blob'
+            name: 'Nuget'
             protocols: [
               {
                 protocolType: 'Https'
@@ -285,7 +285,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
               }
             ]
             targetFqdns: [
-              '*.blob.core.windows.net'
+              'api.nuget.org'
             ]
             terminateTLS: false
             sourceAddresses: [
@@ -319,7 +319,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
               }
             ]
             targetFqdns: [
-              'login.microsoftonline.com'
+              environment().authentication.loginEndpoint
             ]
             terminateTLS: false
             sourceAddresses: [
