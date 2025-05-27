@@ -1,7 +1,5 @@
 ﻿using System.Collections.Immutable;
 
-using AppHost.SwaggerUi;
-
 using Aspire.Hosting.Lifecycle;
 
 using Microsoft.AspNetCore.Builder;
@@ -14,7 +12,9 @@ using Microsoft.Extensions.Logging;
 
 using Yarp.ReverseProxy.Forwarder;
 
-public static class SwaggerUIExtensions
+namespace AppHost.SwaggerUi;
+
+public static class SwaggerUiExtensions
 {
     /// <summary>
     /// Maps the swagger ui endpoint to the application.
@@ -23,7 +23,7 @@ public static class SwaggerUIExtensions
     /// <param name="documentNames">The list of open api documents. Defaults to "v1" if null.</param>
     /// <param name="path">The path to the open api document.</param>
     /// <param name="endpointName">The endpoint name</param>
-    public static IResourceBuilder<ProjectResource> WithSwaggerUI(this IResourceBuilder<ProjectResource> builder,
+    public static IResourceBuilder<ProjectResource> WithSwaggerUi(this IResourceBuilder<ProjectResource> builder,
         string[]? documentNames = null, string path = "openapi/v1.json", string endpointName = "http")
     {
         if (!builder.ApplicationBuilder.Resources.OfType<SwaggerUIResource>().Any())
@@ -40,11 +40,11 @@ public static class SwaggerUIExtensions
                 .ExcludeFromManifest();
         }
 
-        return builder.WithAnnotation(new SwaggerUIAnnotation(documentNames ?? ["v1", "v2"], path, builder.GetEndpoint(endpointName)));
+        return builder.WithAnnotation(new SwaggerUiAnnotation(documentNames ?? ["v1", "v2"], path, builder.GetEndpoint(endpointName)));
     }
 
-    class SwaggerUiHook(ResourceNotificationService notificationService,
-               ResourceLoggerService resourceLoggerService) : IDistributedApplicationLifecycleHook
+    private abstract class SwaggerUiHook(ResourceNotificationService notificationService,
+        ResourceLoggerService resourceLoggerService) : IDistributedApplicationLifecycleHook
     {
         public async Task AfterEndpointsAllocatedAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
         {
@@ -73,7 +73,7 @@ public static class SwaggerUIExtensions
 
             foreach (var r in appModel.Resources)
             {
-                if (!r.TryGetLastAnnotation<SwaggerUIAnnotation>(out var annotation))
+                if (!r.TryGetLastAnnotation<SwaggerUiAnnotation>(out var annotation))
                 {
                     continue;
                 }
@@ -100,24 +100,24 @@ public static class SwaggerUIExtensions
 
             // Swagger UI will make requests to the apphost so we can avoid doing any CORS configuration.
             app.Map("/openapi/{resourceName}/{documentName}.json",
-                async (string resourceName, string documentName, IHttpForwarder forwarder, HttpContext context) =>
-            {
-                var (endpoint, path) = resourceToEndpoint[resourceName];
-
-                await forwarder.SendAsync(context, endpoint, client, (c, r) =>
+                async (string resourceName, string _, IHttpForwarder forwarder, HttpContext context) =>
                 {
-                    r.RequestUri = new($"{endpoint}/{path}");
-                    return ValueTask.CompletedTask;
+                    (string endpoint, string path) = resourceToEndpoint[resourceName];
+
+                    await forwarder.SendAsync(context, endpoint, client, (_, r) =>
+                    {
+                        r.RequestUri = new Uri($"{endpoint}/{path}");
+                        return ValueTask.CompletedTask;
+                    });
                 });
-            });
 
             app.Map("{*path}", async (HttpContext context, IHttpForwarder forwarder, string? path) =>
             {
-                var (endpoint, _) = portToResourceMap[context.Connection.LocalPort];
+                (string endpoint, _) = portToResourceMap[context.Connection.LocalPort];
 
-                await forwarder.SendAsync(context, endpoint, client, (c, r) =>
+                await forwarder.SendAsync(context, endpoint, client, (_, r) =>
                 {
-                    r.RequestUri = path is null ? new(endpoint) : new($"{endpoint}/{path}");
+                    r.RequestUri = path is null ? new Uri(endpoint) : new Uri($"{endpoint}/{path}");
                     return ValueTask.CompletedTask;
                 });
             });
@@ -135,7 +135,7 @@ public static class SwaggerUIExtensions
                 var address = BindingAddress.Parse(rawAddress);
 
                 // We map the bound port to the resource URL. This lets us forward requests to the correct resource
-                var (_, paths) = portToResourceMap[address.Port] = portToResourceMap[index++];
+                (_, List<string> paths) = portToResourceMap[address.Port] = portToResourceMap[index++];
 
                 // We add the swagger ui endpoint for each resource
                 foreach (var p in paths)
