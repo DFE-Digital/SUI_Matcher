@@ -32,12 +32,14 @@ jobs:
 
       - name: Install dotnet reportgenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
-        
+
       - name: Install SonarCloud Scanner
         shell: bash
         run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Start SonarCloud scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin \
             /k:"DFE-Digital_SUI_Matcher" \
@@ -63,7 +65,7 @@ jobs:
           format: markdown
           hide_complexity: true
           output: both
-      
+
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
         if: github.event_name == 'pull_request'

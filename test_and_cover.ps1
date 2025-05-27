@@ -19,7 +19,7 @@ Get-ChildItem -Path . -Recurse -Directory -Filter "TestResults" | ForEach-Object
 
 
 dotnet build --no-incremental
-dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --settings tests.runsettings
+dotnet test --no-build  --verbosity minimal --collect:"XPlat Code Coverage" --settings tests.runsettings
 reportgenerator -reports:./**/coverage.cobertura.xml -targetdir:$finalReportDir -reporttypes:SonarQube,html
 
 # Merge all cobertura coverage reports (For legacy use on test reporting in CI)
