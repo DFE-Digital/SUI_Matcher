@@ -43,7 +43,7 @@ public static class SwaggerUiExtensions
         return builder.WithAnnotation(new SwaggerUiAnnotation(documentNames ?? ["v1", "v2"], path, builder.GetEndpoint(endpointName)));
     }
 
-    private abstract class SwaggerUiHook(ResourceNotificationService notificationService,
+    private class SwaggerUiHook(ResourceNotificationService notificationService,
         ResourceLoggerService resourceLoggerService) : IDistributedApplicationLifecycleHook
     {
         public async Task AfterEndpointsAllocatedAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
