@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -6,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Shared.Logging;
 
-public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
+public sealed partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 {
     private readonly JsonFileLogger _logger = new(filePath, nameof(JsonFileLoggerProvider));
 
@@ -15,10 +14,9 @@ public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
     public void Dispose()
     {
         Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (disposing)
         {
