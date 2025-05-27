@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Shared.Logging;
 
-public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
+public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 {
     private readonly JsonFileLogger _logger = new(filePath, nameof(JsonFileLoggerProvider));
 
@@ -15,9 +15,10 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
     public void Dispose()
     {
         _logger.Close();
+        GC.SuppressFinalize(this);
     }
 
-    private class JsonFileLogger : ILogger
+    sealed partial class JsonFileLogger : ILogger
     {
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
 
@@ -75,12 +76,10 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 
             if (state is IEnumerable<KeyValuePair<string, object?>> formattedLogValues)
             {
-                foreach (var item in formattedLogValues)
+                foreach (var item in formattedLogValues
+                             .Where(item => WordOnlyRegex().IsMatch(item.Key)))
                 {
-                    if (Regex.IsMatch(item.Key, @"^\w+$"))
-                    {
-                        logEntry[item.Key] = item.Value;
-                    }
+                    logEntry[item.Key] = item.Value;
                 }
             }
 
@@ -94,5 +93,8 @@ public class JsonFileLoggerProvider(string filePath) : ILoggerProvider
             _logFileWriter.Close();
             _logFileWriter.Dispose();
         }
+
+        [GeneratedRegex(@"^\w+$")]
+        private static partial Regex WordOnlyRegex();
     }
 }

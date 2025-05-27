@@ -21,7 +21,7 @@ public class ApplicationEnricher(IHttpContextAccessor httpContextAccessor) : ILo
         var httpContext = httpContextAccessor.HttpContext;
         if (httpContext is not null)
         {
-            collector.Add("IsAuthenticated", httpContext?.User?.Identity?.IsAuthenticated!);
+            collector.Add("IsAuthenticated", httpContext.User.Identity?.IsAuthenticated!);
         }
     }
 }

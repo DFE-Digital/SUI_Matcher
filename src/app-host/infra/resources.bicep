@@ -31,21 +31,21 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: '${environmentPrefix}${lowercaseEnvironmentName}acr01'
   location: location
+  tags: tags
   sku: {
     name: 'Basic'
   }
-  tags: tags
 }
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: '${environmentPrefix}-${lowercaseEnvironmentName}-loganalytics-01'
   location: location
+  tags: tags
   properties: {
     sku: {
       name: 'PerGB2018'
     }
   }
-  tags: tags
 }
 
 param dashboard_name string = 'sui-pilot-dashboard'
@@ -148,7 +148,6 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                         type: 'long'
                       }
                     ]
-                    splitBy: []
                     aggregation: 'Sum'
                   }
                   isOptional: true
@@ -168,9 +167,6 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                 }
               ]
               type: 'Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart'
-              settings: {
-                content: {}
-              }
             }
           }
           {
@@ -255,7 +251,6 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                         type: 'long'
                       }
                     ]
-                    splitBy: []
                     aggregation: 'Sum'
                   }
                   isOptional: true
@@ -275,9 +270,6 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                 }
               ]
               type: 'Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart'
-              settings: {
-                content: {}
-              }
             }
           }
           {
@@ -362,7 +354,6 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                         type: 'long'
                       }
                     ]
-                    splitBy: []
                     aggregation: 'Sum'
                   }
                   isOptional: true
@@ -457,6 +448,7 @@ resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-preview' = {
   name: '${environmentPrefix}-${lowercaseEnvironmentName}-cae-01'
   location: location
+  tags: tags
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -484,7 +476,7 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
       internal: true
     }
   }
-  tags: tags
+  
 
   resource aspireDashboard 'dotNetComponents' = {
     name: '${environmentPrefix}-${lowercaseEnvironmentName}-dashboard-01'
@@ -502,11 +494,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     name: 'Standard_LRS'
   }
   kind: 'StorageV2'
+  tags: tags
   properties: {
     accessTier: 'Hot'
     minimumTlsVersion: 'TLS1_2'
   }
-  tags: tags
 }
 
 resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
@@ -526,12 +518,12 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${environmentPrefix}-${lowercaseEnvironmentName}-appinsights-01'
   location: location
   kind: 'web'
+  tags: tags
   properties: {
     Application_Type: 'web'
     Flow_Type: 'Bluefield'
     WorkspaceResourceId: logAnalyticsWorkspace.id
   }
-  tags: tags
 }
 
 resource loganalyticsDbsConsoleApplogs 'Microsoft.OperationalInsights/workspaces/tables@2025-02-01' = {

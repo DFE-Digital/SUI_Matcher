@@ -1,3 +1,5 @@
+using AppHost.SwaggerUi;
+
 using Aspire.Hosting.Testing;
 
 using FluentAssertions.Primitives;
@@ -47,7 +49,7 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
 
         var matchingApi = applicationBuilder.AddProject<Projects.Matching>("matching-api")
             .WithReference(externalApi)
-            .WithSwaggerUI().WaitFor(NhsAuthMockService);
+            .WithSwaggerUi().WaitFor(NhsAuthMockService);
 
         applicationBuilder.AddProject<Projects.Yarp>("yarp")
             .WithEnvironment(ctx =>

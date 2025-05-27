@@ -1,3 +1,5 @@
+using AppHost.SwaggerUi;
+
 DotNetEnv.Env.TraversePath().Load();
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -8,11 +10,11 @@ var secrets = builder.ExecutionContext.IsPublishMode
 
 var externalApi = builder.AddProject<Projects.External>("external-api")
                          .WithReference(secrets)
-                         .WithSwaggerUI();
+                         .WithSwaggerUi();
 
 var matchingApi = builder.AddProject<Projects.Matching>("matching-api")
                          .WithReference(externalApi)
-                         .WithSwaggerUI();
+                         .WithSwaggerUi();
 
 builder.AddProject<Projects.Yarp>("yarp")
     .WithReference(secrets)
