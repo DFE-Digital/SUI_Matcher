@@ -32,6 +32,10 @@ jobs:
 
       - name: Install dotnet reportgenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
+        
+      - name: Install SonarCloud Scanner
+        shell: bash
+        run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Start SonarCloud scanner
         run: |
