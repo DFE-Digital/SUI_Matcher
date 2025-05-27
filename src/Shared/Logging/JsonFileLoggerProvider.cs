@@ -14,8 +14,16 @@ public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 
     public void Dispose()
     {
-        _logger.Close();
+        Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _logger.Close();
+        }
     }
 
     sealed partial class JsonFileLogger : ILogger
