@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
 
+using AppHost.SwaggerUi;
+
 using Aspire.Hosting.Lifecycle;
 
 using Microsoft.AspNetCore.Builder;
@@ -64,7 +66,7 @@ public static class SwaggerUIExtensions
             var app = builder.Build();
 
             // openapi/resourcename/documentname.json
-            app.MapSwaggerUI();
+            app.MapSwaggerUi();
 
             var resourceToEndpoint = new Dictionary<string, (string, string)>();
             var portToResourceMap = new Dictionary<int, (string, List<string>)>();
