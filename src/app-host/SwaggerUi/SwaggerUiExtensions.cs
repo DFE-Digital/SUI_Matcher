@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 using Aspire.Hosting.Lifecycle;
 
@@ -14,6 +15,7 @@ using Yarp.ReverseProxy.Forwarder;
 
 namespace AppHost.SwaggerUi;
 
+[ExcludeFromCodeCoverage(Justification = "All Swagger setup")]
 public static class SwaggerUiExtensions
 {
     /// <summary>

@@ -12,16 +12,18 @@ if (Test-Path $resultsDir) {
     Remove-Item -Recurse -Force $resultsDir
 }
 
+# Remove all folders with name 'TestResults'
+Get-ChildItem -Path . -Recurse -Directory -Filter "TestResults" | ForEach-Object {
+    Remove-Item $_.FullName -Recurse -Force
+}
+
+
 dotnet build --no-incremental
+dotnet test --no-build  --verbosity minimal --collect:"XPlat Code Coverage" --settings tests.runsettings
+reportgenerator -reports:./**/coverage.cobertura.xml -targetdir:$finalReportDir -reporttypes:SonarQube,html
 
-# Run tests with coverage collection
-dotnet test --no-build --results-directory $resultsDir --collect:"XPlat Code Coverage" --settings tests.runsettings
-
-# Merge all cobertura coverage reports
-dotnet coverage merge --reports "$resultsDir/**/coverage.cobertura.xml" -f cobertura -o $mergedReport
-
-# Generate HTML report
-reportgenerator -reports:$mergedReport -reporttypes:Html -targetdir:$finalReportDir
+# Merge all cobertura coverage reports (For legacy use on test reporting in CI)
+dotnet coverage merge --reports "tests/**/coverage.cobertura.xml" -f cobertura -o $mergedReport
 
 open "$finalReportDir/index.html" # Open the report in the default browser
 
