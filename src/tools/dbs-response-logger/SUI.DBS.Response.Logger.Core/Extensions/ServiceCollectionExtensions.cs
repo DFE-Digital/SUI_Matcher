@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
         {
             builder.AddConsole(options => options.FormatterName = "log4net")
                 .AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
-            builder.AddProvider(new JsonFileLoggerProvider(Path.Combine(Directory.GetCurrentDirectory(), "logs.json")));
+            builder.AddProvider(new JsonFileLoggerProvider(Path.Combine(Directory.GetCurrentDirectory(), "dbs-response-logger-logs.json")));
         });
 
         services.AddSingleton<ITxtFileProcessor, TxtFileProcessor>();
