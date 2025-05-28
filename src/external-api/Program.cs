@@ -68,4 +68,4 @@ await using (var scope = app.Services.CreateAsyncScope())
     await tokenService.Initialise();
 }
 
-app.Run();
+await app.RunAsync();

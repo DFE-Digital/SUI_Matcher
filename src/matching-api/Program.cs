@@ -66,4 +66,4 @@ app.MapDefaultEndpoints();
 app.MapEndpoints(versionedGroup);
 app.MapOpenApi();
 
-app.Run();
+await app.RunAsync();
