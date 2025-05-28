@@ -45,7 +45,7 @@ public static class SwaggerUiExtensions
         return builder.WithAnnotation(new SwaggerUiAnnotation(documentNames ?? ["v1", "v2"], path, builder.GetEndpoint(endpointName)));
     }
 
-    sealed class SwaggerUiHook(ResourceNotificationService notificationService,
+    private sealed class SwaggerUiHook(ResourceNotificationService notificationService,
         ResourceLoggerService resourceLoggerService) : IDistributedApplicationLifecycleHook
     {
         public async Task AfterEndpointsAllocatedAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
@@ -151,7 +151,7 @@ public static class SwaggerUiExtensions
         }
     }
 
-    private class ResourceLoggerProvider(ILogger logger) : ILoggerProvider
+    private sealed class ResourceLoggerProvider(ILogger logger) : ILoggerProvider
     {
         public ILogger CreateLogger(string categoryName)
         {
@@ -171,7 +171,7 @@ public static class SwaggerUiExtensions
             }
         }
 
-        private class ResourceLogger(ILogger logger) : ILogger
+        private sealed class ResourceLogger(ILogger logger) : ILogger
         {
             public IDisposable? BeginScope<TState>(TState state) where TState : notnull
             {
