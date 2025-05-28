@@ -55,7 +55,7 @@ public class TokenService : ITokenService
     {
         if (_privateKey == null || _clientId == null || _kid == null)
         {
-            throw new Exception("Token service not initialised");
+            throw new InvalidOperationException("Token service not initialised");
         }
 
         if (_accessToken != null && _accessTokenExpiration > DateTimeOffset.UtcNow)
@@ -71,16 +71,16 @@ public class TokenService : ITokenService
         var auth = new AuthClientCredentials(_tokenUrl, _privateKey!, _clientId!, _kid!);
         _accessTokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_accountTokenExpiresInMinutes);
         _accessToken = await auth.AccessToken(_accountTokenExpiresInMinutes) ??
-                          throw new Exception("Failed to get access token");
+                          throw new InvalidOperationException("Failed to get access token");
 
         return _accessToken;
     }
 
     public async Task Initialise()
     {
-        _privateKey = await GetSecretMaterial(NhsDigitalKeyConstants.PrivateKey) ?? throw new Exception("Failed to get private key");
-        _clientId = await GetSecretMaterial(NhsDigitalKeyConstants.ClientId) ?? throw new Exception("Failed to get client id");
-        _kid = await GetSecretMaterial(NhsDigitalKeyConstants.Kid) ?? throw new Exception("Failed to get kid");
+        _privateKey = await GetSecretMaterial(NhsDigitalKeyConstants.PrivateKey) ?? throw new InvalidOperationException("Failed to get private key");
+        _clientId = await GetSecretMaterial(NhsDigitalKeyConstants.ClientId) ?? throw new InvalidOperationException("Failed to get client id");
+        _kid = await GetSecretMaterial(NhsDigitalKeyConstants.Kid) ?? throw new InvalidOperationException("Failed to get kid");
     }
 
     protected virtual async Task<string?> GetSecretMaterial(string secretName)
