@@ -1,4 +1,6 @@
-﻿public class SwaggerUIResource(string name) : Resource(name)
+﻿namespace AppHost.SwaggerUi;
+
+public class SwaggerUiResource(string name) : Resource(name)
 {
 
 }

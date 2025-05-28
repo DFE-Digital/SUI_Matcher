@@ -28,11 +28,11 @@ public static class SwaggerUiExtensions
     public static IResourceBuilder<ProjectResource> WithSwaggerUi(this IResourceBuilder<ProjectResource> builder,
         string[]? documentNames = null, string path = "openapi/v1.json", string endpointName = "http")
     {
-        if (!builder.ApplicationBuilder.Resources.OfType<SwaggerUIResource>().Any())
+        if (!builder.ApplicationBuilder.Resources.OfType<SwaggerUiResource>().Any())
         {
             // Add the swagger ui code hook and resource
             builder.ApplicationBuilder.Services.TryAddLifecycleHook<SwaggerUiHook>();
-            builder.ApplicationBuilder.AddResource(new SwaggerUIResource("swagger-ui"))
+            builder.ApplicationBuilder.AddResource(new SwaggerUiResource("swagger-ui"))
                 .WithInitialState(new CustomResourceSnapshot
                 {
                     ResourceType = "swagger-ui",
@@ -50,7 +50,7 @@ public static class SwaggerUiExtensions
     {
         public async Task AfterEndpointsAllocatedAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
         {
-            var openApiResource = appModel.Resources.OfType<SwaggerUIResource>().SingleOrDefault();
+            var openApiResource = appModel.Resources.OfType<SwaggerUiResource>().SingleOrDefault();
 
             if (openApiResource is null)
             {
