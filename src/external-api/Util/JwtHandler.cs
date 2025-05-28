@@ -25,7 +25,7 @@ public class JwtHandler
         }
         else
         {
-            throw new Exception("Can not recognise the certificate/key extension");
+            throw new InvalidOperationException("Can not recognise the certificate/key extension");
         }
     }
 
@@ -51,7 +51,7 @@ public class JwtHandler
         return tokenHandler.WriteToken(token);
     }
 
-    private SigningCredentials FromPrivateKey(string privateKey, string kid)
+    private static SigningCredentials FromPrivateKey(string privateKey, string kid)
     {
         privateKey = privateKey.Replace("-----BEGIN RSA PRIVATE KEY-----", "");
         privateKey = privateKey.Replace("-----END RSA PRIVATE KEY-----", "");
