@@ -33,7 +33,7 @@ public class JwtHandlerTests
         var clientId = "test-client";
         var kid = "test-kid";
 
-        Assert.Throws<Exception>(() => new JwtHandler("", audience, clientId, kid));
+        Assert.Throws<InvalidOperationException>(() => new JwtHandler("", audience, clientId, kid));
     }
 
     [Fact]
