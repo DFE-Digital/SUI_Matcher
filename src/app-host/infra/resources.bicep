@@ -374,9 +374,6 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                 }
               ]
               type: 'Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart'
-              settings: {
-                content: {}
-              }
             }
           }
         ]
