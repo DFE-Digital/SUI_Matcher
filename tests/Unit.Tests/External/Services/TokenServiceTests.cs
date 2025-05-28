@@ -46,7 +46,7 @@ public class TokenServiceTests
         _secretClientMock
             .Setup(s => s.GetSecretAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(responseMock.Object);
-        
+
         IOptions<NhsAuthConfigOptions> options = Options.Create(new NhsAuthConfigOptions
         {
             NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES = 5 // Set a default expiry for testing
@@ -75,7 +75,7 @@ public class TokenServiceTests
         // Assert
         // No exception means success
     }
-    
+
     [Fact]
     public async Task GetBearerToken_ReturnsSameToken_IfNotExpired()
     {

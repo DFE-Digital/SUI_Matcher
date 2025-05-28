@@ -45,7 +45,7 @@ public class TokenService : ITokenService
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient("nhs-auth-api");
         _jwtHandler = jwtHandler;
-        
+
         _secretClient = secretClient;
 
         _accountTokenExpiresInMinutes = options.Value.NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES ?? NhsDigitalKeyConstants.AccountTokenExpiresInMinutes;
