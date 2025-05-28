@@ -99,7 +99,7 @@ public static class SwaggerUiExtensions
 
             // Swagger UI will make requests to the apphost so we can avoid doing any CORS configuration.
             app.Map("/openapi/{resourceName}/{documentName}.json",
-                async (string resourceName, string _, IHttpForwarder forwarder, HttpContext context) =>
+                async (string resourceName, string documentName, IHttpForwarder forwarder, HttpContext context) =>
                 {
                     (string endpoint, string path) = resourceToEndpoint[resourceName];
 
