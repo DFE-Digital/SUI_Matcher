@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 using Shared.Logging;
 
@@ -15,7 +16,7 @@ public static class ServiceCollectionExtensions
         services.AddLogging(builder =>
         {
             builder.AddConsole(options => options.FormatterName = "log4net")
-                .AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
+                .AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
             builder.AddProvider(new JsonFileLoggerProvider(Path.Combine(Directory.GetCurrentDirectory(), "dbs-response-logger-logs.json")));
         });
 
