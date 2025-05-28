@@ -34,7 +34,7 @@ public class AuthClientCredentials
 
         if (response.StatusCode != HttpStatusCode.OK)
         {
-            throw new Exception("Authentication failed. \n" + response.Content);
+            throw new HttpRequestException("Authentication failed. \n" + response.Content);
         }
 
         var resBody = await response.Content.ReadAsStringAsync();
