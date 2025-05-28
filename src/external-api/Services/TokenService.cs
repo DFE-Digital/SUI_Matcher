@@ -6,6 +6,8 @@ using Azure.Security.KeyVault.Secrets;
 
 using ExternalApi.Util;
 
+using Microsoft.Extensions.Options;
+
 namespace ExternalApi.Services;
 
 public interface ITokenService
@@ -27,7 +29,6 @@ public class TokenService : ITokenService
 
     // Key vault Client
     private readonly SecretClient _secretClient;
-    private readonly string _tokenUrl;
     private readonly int _accountTokenExpiresInMinutes;
     private string? _privateKey;
     private string? _clientId;
@@ -39,23 +40,15 @@ public class TokenService : ITokenService
     private readonly HttpClient _httpClient;
     private readonly IJwtHandler _jwtHandler;
 
-    public TokenService(IConfiguration configuration, ILogger<TokenService> logger, IJwtHandler jwtHandler, IHttpClientFactory httpClientFactory)
+    public TokenService(IOptions<NhsAuthConfigOptions> options, ILogger<TokenService> logger, IJwtHandler jwtHandler, IHttpClientFactory httpClientFactory, SecretClient secretClient)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient("nhs-auth-api");
         _jwtHandler = jwtHandler;
         
-        var keyVaultUri = new Uri(configuration["ConnectionStrings:secrets"]!);
-        _secretClient = new SecretClient(keyVaultUri, new DefaultAzureCredential());
-        _tokenUrl = configuration["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"]!;
+        _secretClient = secretClient;
 
-        var parsed = int.TryParse(configuration["NhsAuthConfig:NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES"],
-            out _accountTokenExpiresInMinutes);
-
-        if (!parsed)
-        {
-            _accountTokenExpiresInMinutes = NhsDigitalKeyConstants.AccountTokenExpiresInMinutes;
-        }
+        _accountTokenExpiresInMinutes = options.Value.NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES ?? NhsDigitalKeyConstants.AccountTokenExpiresInMinutes;
     }
 
     public async Task<string> GetBearerToken()
@@ -94,10 +87,11 @@ public class TokenService : ITokenService
         KeyVaultSecret secret = await _secretClient.GetSecretAsync(secretName);
         return secret.Value;
     }
-    
-    public async Task<string?> AccessToken(int expInMinutes = 1)
+
+    private async Task<string?> AccessToken(int expInMinutes = 1)
     {
-        var jwt = _jwtHandler.GenerateJwt(_privateKey!, _tokenUrl, _clientId!, _kid!, expInMinutes);
+        var authAddress = _httpClient.BaseAddress!.ToString();
+        var jwt = _jwtHandler.GenerateJwt(_privateKey!, authAddress, _clientId!, _kid!, expInMinutes);
 
         var values = new Dictionary<string, string>
         {
@@ -107,9 +101,9 @@ public class TokenService : ITokenService
         };
         var content = new FormUrlEncodedContent(values);
 
-        Console.WriteLine("Requesting token from " + _tokenUrl);
+        Console.WriteLine("Requesting token from " + authAddress);
 
-        var response = await _httpClient.PostAsync(_tokenUrl, content);
+        var response = await _httpClient.PostAsync(authAddress, content);
 
         if (response.StatusCode != HttpStatusCode.OK)
         {

@@ -1,5 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 
+using ExternalApi;
 using ExternalApi.Services;
 using ExternalApi.Util;
 
@@ -26,6 +28,9 @@ builder.Services.AddSingleton<INhsFhirClient, NhsFhirClient>();
 builder.Services.AddSingleton<IJwtHandler, JwtHandler>();
 builder.Services.AddTransient<IFhirClientFactory, FhirClientFactory>();
 
+
+builder.Services.Configure<NhsAuthConfigOptions>(builder.Configuration.GetSection("NhsAuthConfig"));
+
 // Setup client factory for external API calls
 builder.Services.AddHttpClient("nhs-auth-api", client =>
     {
@@ -33,6 +38,13 @@ builder.Services.AddHttpClient("nhs-auth-api", client =>
     })
     .AddServiceDiscovery()
     .AddStandardResilienceHandler();
+
+builder.Services.AddSingleton<SecretClient>(_ =>
+{
+    var keyVaultString = builder.Configuration.GetConnectionString("secrets") ?? throw new InvalidOperationException("Key Vault URI is not configured.");
+    var uri = new Uri(keyVaultString);
+    return new SecretClient(uri, new DefaultAzureCredential());
+});
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
