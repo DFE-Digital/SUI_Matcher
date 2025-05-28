@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 
 using Azure.Security.KeyVault.Secrets;
 
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Options;
 
 namespace ExternalApi.Services;
 
+[ExcludeFromCodeCoverage(Justification = "Stub for testing purposes")]
 public class StubTokenService(
     IOptions<NhsAuthConfigOptions> options,
     ILogger<StubTokenService> logger, IJwtHandler jwtHandler, IHttpClientFactory httpClientFactory, SecretClient secretClient) :
