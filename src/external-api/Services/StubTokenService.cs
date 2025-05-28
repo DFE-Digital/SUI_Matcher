@@ -28,7 +28,7 @@ public class StubTokenService(
                 else if (privateKey.StartsWith("file:"))
                 {
                     privateKey = privateKey.Replace("file:", "");
-                    privateKey = File.ReadAllText(privateKey);
+                    privateKey = await File.ReadAllTextAsync(privateKey);
                 }
                 return await Task.FromResult(privateKey);
             default:
