@@ -67,7 +67,6 @@ public static class SwaggerUiExtensions
 
             var app = builder.Build();
 
-            // openapi/resourcename/documentname.json
             app.MapSwaggerUi();
 
             var resourceToEndpoint = new Dictionary<string, (string, string)>();
@@ -83,12 +82,10 @@ public static class SwaggerUiExtensions
                 // We store the url and path for each resource so we can hit the open api endpoint
                 resourceToEndpoint[r.Name] = (annotation.EndpointReference.Url, annotation.Path);
 
-                var paths = new List<string>();
+                var paths = annotation.DocumentNames
+                    .Select(documentName => $"swagger/{r.Name}/{documentName}")
+                    .ToList();
                 // To avoid cors issues, we expose URLs that send requests to the apphost and then forward them to the actual resource
-                foreach (var documentName in annotation.DocumentNames)
-                {
-                    paths.Add($"swagger/{r.Name}/{documentName}");
-                }
 
                 // We store the URL for the resource on the host so we can map it back to the actual address once they are allocated
                 portToResourceMap[app.Urls.Count] = (annotation.EndpointReference.Url, paths);
@@ -163,6 +160,15 @@ public static class SwaggerUiExtensions
 
         public void Dispose()
         {
+            Dispose(true);
+        }
+
+        private static void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // Dispose of any resources if necessary
+            }
         }
 
         private class ResourceLogger(ILogger logger) : ILogger
