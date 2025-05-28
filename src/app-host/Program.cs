@@ -20,4 +20,4 @@ builder.AddProject<Projects.Yarp>("yarp")
     .WithReference(secrets)
     .WithReference(matchingApi).WaitFor(matchingApi);
 
-builder.Build().Run();
+await builder.Build().RunAsync();

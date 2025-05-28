@@ -66,7 +66,4 @@ app.MapDefaultEndpoints();
 app.MapEndpoints(versionedGroup);
 app.MapOpenApi();
 
-app.Run();
-
-[ExcludeFromCodeCoverage]
-public partial class Program;
+await app.RunAsync();

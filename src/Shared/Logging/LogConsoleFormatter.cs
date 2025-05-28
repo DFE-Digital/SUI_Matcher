@@ -40,5 +40,3 @@ public class LogConsoleFormatter : ConsoleFormatter
     }
 
 }
-
-public sealed class CustomOptions : ConsoleFormatterOptions;

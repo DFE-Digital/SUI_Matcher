@@ -10,13 +10,13 @@ public class JwtHandlerTests
     public void GenerateJwt_ReturnsValidToken_WhenGivenValidRsaKey()
     {
 
-        var audience = "test-audience";
-        var clientId = "test-client";
-        var kid = "test-kid";
+        const string audience = "test-audience";
+        const string clientId = "test-client";
+        const string kid = "test-kid";
 
-        var handler = new JwtHandler(JwtPemHelper.CreateTestPem(), audience, clientId, kid);
+        var handler = new JwtHandler();
 
-        var token = handler.GenerateJwt();
+        var token = handler.GenerateJwt(JwtPemHelper.CreateTestPem(), audience, clientId, kid);
 
         var handlerJwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
         var jwt = handlerJwt.ReadJwtToken(token);
@@ -29,19 +29,15 @@ public class JwtHandlerTests
     [Fact]
     public void Constructor_ThrowsException_WhenKeyIsEmpty()
     {
-        var audience = "test-audience";
-        var clientId = "test-client";
-        var kid = "test-kid";
-
-        Assert.Throws<Exception>(() => new JwtHandler("", audience, clientId, kid));
+        var service = new JwtHandler();
+        Assert.Throws<InvalidOperationException>(() => service.GenerateJwt("", "", "", ""));
     }
 
     [Fact]
     public void GenerateJwt_RespectsExpirationTime()
     {
-
-        var handler = new JwtHandler(JwtPemHelper.CreateTestPem(), "aud", "cid", "kid");
-        var token = handler.GenerateJwt(10);
+        var handler = new JwtHandler();
+        var token = handler.GenerateJwt(JwtPemHelper.CreateTestPem(), "aud", "cid", "kid", 10);
 
         var handlerJwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
         var jwt = handlerJwt.ReadJwtToken(token);

@@ -8,42 +8,33 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace ExternalApi.Util;
 
-public class JwtHandler
+public interface IJwtHandler
 {
-    private readonly string _audience;
-    private readonly string _clientId;
-    private readonly SigningCredentials _signingCredentials;
+    string GenerateJwt(string keyOrPfx, string audience, string clientId, string kid, int expInMinutes = 1);
+}
 
-    public JwtHandler(string keyOrPfx, string audience, string clientId, string kid)
+public class JwtHandler : IJwtHandler
+{
+    public string GenerateJwt(string keyOrPfx, string audience, string clientId, string kid, int expInMinutes = 1)
     {
-        _audience = audience;
-        _clientId = clientId;
-
-        if (keyOrPfx.Length > 0)
+        if (keyOrPfx.Length <= 0)
         {
-            _signingCredentials = FromPrivateKey(keyOrPfx, kid);
+            throw new InvalidOperationException("Can not recognise the certificate/key extension");
         }
-        else
-        {
-            throw new Exception("Can not recognise the certificate/key extension");
-        }
-    }
 
-    public string GenerateJwt(int expInMinutes = 1)
-    {
-
+        SigningCredentials signingCredentials = FromPrivateKey(keyOrPfx, kid);
         var now = DateTime.UtcNow;
         var token = new JwtSecurityToken(
-            _clientId,
-            _audience,
+            clientId,
+            audience,
             new List<Claim>
             {
                 new("jti", Guid.NewGuid().ToString()),
-                new(JwtClaimTypes.Subject, _clientId),
+                new(JwtClaimTypes.Subject, clientId),
             },
             now,
             now.AddMinutes(expInMinutes),
-            _signingCredentials
+            signingCredentials
         );
 
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -51,7 +42,7 @@ public class JwtHandler
         return tokenHandler.WriteToken(token);
     }
 
-    private SigningCredentials FromPrivateKey(string privateKey, string kid)
+    private static SigningCredentials FromPrivateKey(string privateKey, string kid)
     {
         privateKey = privateKey.Replace("-----BEGIN RSA PRIVATE KEY-----", "");
         privateKey = privateKey.Replace("-----END RSA PRIVATE KEY-----", "");

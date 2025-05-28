@@ -17,13 +17,10 @@ Get-ChildItem -Path . -Recurse -Directory -Filter "TestResults" | ForEach-Object
     Remove-Item $_.FullName -Recurse -Force
 }
 
-
+dotnet clean
 dotnet build --no-incremental
 dotnet test --no-build  --verbosity minimal --collect:"XPlat Code Coverage" --settings tests.runsettings
 reportgenerator -reports:./**/coverage.cobertura.xml -targetdir:$finalReportDir -reporttypes:SonarQube,html
-
-# Merge all cobertura coverage reports (For legacy use on test reporting in CI)
-dotnet coverage merge --reports "tests/**/coverage.cobertura.xml" -f cobertura -o $mergedReport
 
 open "$finalReportDir/index.html" # Open the report in the default browser
 

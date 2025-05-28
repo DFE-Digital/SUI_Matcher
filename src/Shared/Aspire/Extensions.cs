@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -47,11 +48,11 @@ public static class Extensions
         return builder;
     }
 
-    public static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
+    private static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
     {
         builder.Logging.EnableEnrichment();
         builder.Services.AddLogEnricher<ApplicationEnricher>();
-        builder.Logging.AddConsole(options => options.FormatterName = "log4net").AddConsoleFormatter<LogConsoleFormatter, CustomOptions>();
+        builder.Logging.AddConsole(options => options.FormatterName = "log4net").AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
         builder.Logging.AddOpenTelemetry(logging =>
         {
             logging.IncludeFormattedMessage = true;

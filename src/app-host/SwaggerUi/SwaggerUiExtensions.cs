@@ -28,11 +28,11 @@ public static class SwaggerUiExtensions
     public static IResourceBuilder<ProjectResource> WithSwaggerUi(this IResourceBuilder<ProjectResource> builder,
         string[]? documentNames = null, string path = "openapi/v1.json", string endpointName = "http")
     {
-        if (!builder.ApplicationBuilder.Resources.OfType<SwaggerUIResource>().Any())
+        if (!builder.ApplicationBuilder.Resources.OfType<SwaggerUiResource>().Any())
         {
             // Add the swagger ui code hook and resource
             builder.ApplicationBuilder.Services.TryAddLifecycleHook<SwaggerUiHook>();
-            builder.ApplicationBuilder.AddResource(new SwaggerUIResource("swagger-ui"))
+            builder.ApplicationBuilder.AddResource(new SwaggerUiResource("swagger-ui"))
                 .WithInitialState(new CustomResourceSnapshot
                 {
                     ResourceType = "swagger-ui",
@@ -45,12 +45,12 @@ public static class SwaggerUiExtensions
         return builder.WithAnnotation(new SwaggerUiAnnotation(documentNames ?? ["v1", "v2"], path, builder.GetEndpoint(endpointName)));
     }
 
-    sealed class SwaggerUiHook(ResourceNotificationService notificationService,
+    private sealed class SwaggerUiHook(ResourceNotificationService notificationService,
         ResourceLoggerService resourceLoggerService) : IDistributedApplicationLifecycleHook
     {
         public async Task AfterEndpointsAllocatedAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
         {
-            var openApiResource = appModel.Resources.OfType<SwaggerUIResource>().SingleOrDefault();
+            var openApiResource = appModel.Resources.OfType<SwaggerUiResource>().SingleOrDefault();
 
             if (openApiResource is null)
             {
@@ -67,7 +67,6 @@ public static class SwaggerUiExtensions
 
             var app = builder.Build();
 
-            // openapi/resourcename/documentname.json
             app.MapSwaggerUi();
 
             var resourceToEndpoint = new Dictionary<string, (string, string)>();
@@ -83,12 +82,10 @@ public static class SwaggerUiExtensions
                 // We store the url and path for each resource so we can hit the open api endpoint
                 resourceToEndpoint[r.Name] = (annotation.EndpointReference.Url, annotation.Path);
 
-                var paths = new List<string>();
+                var paths = annotation.DocumentNames
+                    .Select(documentName => $"swagger/{r.Name}/{documentName}")
+                    .ToList();
                 // To avoid cors issues, we expose URLs that send requests to the apphost and then forward them to the actual resource
-                foreach (var documentName in annotation.DocumentNames)
-                {
-                    paths.Add($"swagger/{r.Name}/{documentName}");
-                }
 
                 // We store the URL for the resource on the host so we can map it back to the actual address once they are allocated
                 portToResourceMap[app.Urls.Count] = (annotation.EndpointReference.Url, paths);
@@ -154,7 +151,7 @@ public static class SwaggerUiExtensions
         }
     }
 
-    private class ResourceLoggerProvider(ILogger logger) : ILoggerProvider
+    private sealed class ResourceLoggerProvider(ILogger logger) : ILoggerProvider
     {
         public ILogger CreateLogger(string categoryName)
         {
@@ -163,9 +160,18 @@ public static class SwaggerUiExtensions
 
         public void Dispose()
         {
+            Dispose(true);
         }
 
-        private class ResourceLogger(ILogger logger) : ILogger
+        private static void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // Dispose of any resources if necessary
+            }
+        }
+
+        private sealed class ResourceLogger(ILogger logger) : ILogger
         {
             public IDisposable? BeginScope<TState>(TState state) where TState : notnull
             {

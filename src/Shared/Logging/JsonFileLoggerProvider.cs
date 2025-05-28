@@ -1,4 +1,4 @@
-using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -6,7 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Shared.Logging;
 
-public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
+[ExcludeFromCodeCoverage(Justification = "This is a logging provider purely for writing logs.")]
+public sealed partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 {
     private readonly JsonFileLogger _logger = new(filePath, nameof(JsonFileLoggerProvider));
 
@@ -14,8 +15,15 @@ public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 
     public void Dispose()
     {
-        _logger.Close();
-        GC.SuppressFinalize(this);
+        Dispose(true);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _logger.Close();
+        }
     }
 
     sealed partial class JsonFileLogger : ILogger
