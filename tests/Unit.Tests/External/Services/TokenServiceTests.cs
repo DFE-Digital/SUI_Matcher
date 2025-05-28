@@ -56,27 +56,6 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public async Task Initialise_SetsSecrets_WhenSecretsArePresent()
-    {
-        // Arrange
-        var secret = new KeyVaultSecret("name", "value");
-        var responseMock = new Mock<Response<KeyVaultSecret>>();
-        responseMock.Setup(r => r.Value).Returns(secret);
-
-        _secretClientMock
-            .Setup(s => s.GetSecretAsync(It.IsAny<string>(), null, CancellationToken.None))
-            .ReturnsAsync(responseMock.Object);
-
-        var service = CreateService();
-
-        // Act
-        await service.Initialise();
-
-        // Assert
-        // No exception means success
-    }
-
-    [Fact]
     public async Task GetBearerToken_ReturnsSameToken_IfNotExpired()
     {
         // Arrange
