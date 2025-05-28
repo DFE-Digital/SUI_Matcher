@@ -7,7 +7,7 @@ using QuestPDF.Infrastructure;
 
 namespace SUI.Client.Core;
 
-public class PdfReportGenerator
+public static class PdfReportGenerator
 {
     public static string GenerateReport(CsvProcessStats stats, string filePath)
     {
@@ -108,11 +108,9 @@ public class PdfReportGenerator
 
     private static string ExportPlotToSvg(PlotModel model)
     {
-        using (var stream = new MemoryStream())
-        {
-            var exporter = new SvgExporter { Width = 600, Height = 400 };
-            exporter.Export(model, stream);
-            return System.Text.Encoding.UTF8.GetString(stream.ToArray());
-        }
+        using var stream = new MemoryStream();
+        var exporter = new SvgExporter { Width = 600, Height = 400 };
+        exporter.Export(model, stream);
+        return System.Text.Encoding.UTF8.GetString(stream.ToArray());
     }
 }
