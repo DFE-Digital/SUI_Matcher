@@ -123,7 +123,7 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
         var row = data.Records[0];
         assertions(row);
 
-        cts.Cancel();
+        await cts.CancelAsync();
 
     }
 
