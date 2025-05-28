@@ -31,10 +31,10 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: '${environmentPrefix}${lowercaseEnvironmentName}acr01'
   location: location
-  tags: tags
   sku: {
     name: 'Basic'
   }
+  tags: tags
 }
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
@@ -474,7 +474,6 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
       internal: true
     }
   }
-  
 
   resource aspireDashboard 'dotNetComponents' = {
     name: '${environmentPrefix}-${lowercaseEnvironmentName}-dashboard-01'
@@ -505,8 +504,8 @@ resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01
 }
 
 resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-container-01'
   parent: blobServices
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-container-01'
   properties: {
     publicAccess: 'None'
   }
@@ -552,12 +551,12 @@ param dataCollectionRulesDbsClientConsoleAppLogsRuleName string = 'DbsClientCons
 resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   name: dataCollectionRulesDbsClientConsoleAppLogsRuleName
   location: location
+  kind: 'Windows'
   tags: {
     Environment: lowercaseEnvironmentName
     Product: 'SUI'
     'Service Offering': 'SUI'
   }
-  kind: 'Windows'
   properties: {
     streamDeclarations: {
       'Custom-DbsClientConsoleAppLogs_CL': {
