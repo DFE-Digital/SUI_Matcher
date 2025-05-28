@@ -12,15 +12,15 @@ public class CsvFileMonitor
     private readonly ILogger<CsvFileMonitor> _logger;
     private readonly ICsvFileProcessor _fileProcessor;
     private readonly ConcurrentQueue<string> _fileQueue = new();
-    private int _processedCount = 0;
-    private int _errorCount = 0;
+    private int _processedCount;
+    private int _errorCount;
     public int ProcessedCount => _processedCount;
     public int ErrorCount => _errorCount;
     public event EventHandler<FileProcessedEnvelope>? Processed;
 
     public FileProcessedEnvelope? LastOperation { get; private set; }
 
-    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new Exception("LastResult is null");
+    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new ArgumentNullException(nameof(LastOperation));
 
     public ProcessCsvFileResult LastResult() => GetLastOperation().AssertSuccess();
 
@@ -31,7 +31,7 @@ public class CsvFileMonitor
         _logger = logger;
         _fileProcessor = fileProcessor;
         Directory.CreateDirectory(_config.ProcessedDirectory);
-        _fileWatcherService.FileDetected += (s, filePath) => _fileQueue.Enqueue(filePath);
+        _fileWatcherService.FileDetected += (_, filePath) => _fileQueue.Enqueue(filePath);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -73,7 +73,7 @@ public class CsvFileMonitor
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogInformation($"Error processing file {filePath}: {ex.Message}");
+                    _logger.LogInformation("Error processing file {FilePath}: {Message}", filePath, ex.Message);
                     Interlocked.Increment(ref _errorCount);
                     LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
@@ -106,7 +106,8 @@ public class CsvFileMonitor
                 attempts++;
                 if (attempts >= retryCount)
                     throw;
-                _logger.LogInformation($"Retry attempt {attempts} failed: {ex.Message}. Retrying in {delayMs}ms.");
+                _logger.LogInformation("Retry attempt {Attempts} failed: {Message}. Retrying in {DelayMs}ms.",
+                    attempts, ex.Message, delayMs);
                 await Task.Delay(delayMs);
             }
         }
