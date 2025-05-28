@@ -9,7 +9,6 @@ namespace SUI.Client.Core.Watcher;
 public class CsvFileWatcherService : IDisposable
 {
     private readonly FileSystemWatcher _watcher;
-    private readonly CsvWatcherConfig _config;
     private readonly ILogger _logger;
     public event EventHandler<string>? FileDetected;
 
@@ -17,10 +16,10 @@ public class CsvFileWatcherService : IDisposable
 
     public CsvFileWatcherService(IOptions<CsvWatcherConfig> config, ILoggerFactory loggerFactory)
     {
-        _config = config.Value;
+        CsvWatcherConfig config1 = config.Value;
         _logger = loggerFactory.CreateLogger<CsvFileWatcherService>();
-        Directory.CreateDirectory(_config.IncomingDirectory);
-        _watcher = new FileSystemWatcher(_config.IncomingDirectory, "*.csv")
+        Directory.CreateDirectory(config1.IncomingDirectory);
+        _watcher = new FileSystemWatcher(config1.IncomingDirectory, "*.csv")
         {
             NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
         };
@@ -31,7 +30,7 @@ public class CsvFileWatcherService : IDisposable
     private void OnCreated(object sender, FileSystemEventArgs e)
     {
         Count++;
-        _logger.LogInformation($"New file detected: {Path.GetFileName(e.FullPath)}");
+        _logger.LogInformation("New file detected: {Path}", Path.GetFileName(e.FullPath));
         FileDetected?.Invoke(this, e.FullPath);
     }
 
@@ -42,6 +41,15 @@ public class CsvFileWatcherService : IDisposable
     public void Dispose()
     {
         Stop();
-        _watcher.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    
+    private void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _watcher.Dispose();
+        }
     }
 }
