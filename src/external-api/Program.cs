@@ -69,6 +69,3 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 
 app.Run();
-
-[ExcludeFromCodeCoverage]
-public partial class Program;

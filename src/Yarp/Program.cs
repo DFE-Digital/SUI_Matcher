@@ -27,6 +27,3 @@ var app = builder.Build();
 app.MapReverseProxy();
 
 await app.RunAsync();
-
-[ExcludeFromCodeCoverage(Justification = "All .NET configuration")]
-public partial class Program;
