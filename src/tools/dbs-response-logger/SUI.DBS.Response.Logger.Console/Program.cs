@@ -21,7 +21,7 @@ builder.ConfigureServices((hostContext, services) =>
 var host = builder.Build();
 var fileProcessor = host.Services.GetRequiredService<ITxtFileProcessor>();
 var inputFile = args[0];
-var outputDirectory = Path.GetDirectoryName(inputFile) ?? throw new Exception($"Directory name returned null for input: {inputFile}");
+_ = Path.GetDirectoryName(inputFile) ?? throw new InvalidOperationException($"Directory name returned null for input: {inputFile}");
 await fileProcessor.ProcessFileAsync(inputFile);
 
 Console.WriteLine($"File processed; for={inputFile}");
