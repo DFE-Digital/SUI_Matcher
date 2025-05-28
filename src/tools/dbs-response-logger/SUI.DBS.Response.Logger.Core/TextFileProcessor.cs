@@ -90,7 +90,7 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
         activity.Stop();
     }
-    
+
     private static MatchPersonResult ParseMatchPersonResult(RecordColumn[] recordColumns, string[] recordData)
     {
         var result = new MatchPersonResult();

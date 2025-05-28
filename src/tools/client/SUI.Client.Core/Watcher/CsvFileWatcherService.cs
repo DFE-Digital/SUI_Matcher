@@ -44,7 +44,7 @@ public class CsvFileWatcherService : IDisposable
         Dispose(true);
         GC.SuppressFinalize(this);
     }
-    
+
     private void Dispose(bool disposing)
     {
         if (disposing)
