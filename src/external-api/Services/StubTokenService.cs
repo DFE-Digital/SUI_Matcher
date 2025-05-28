@@ -1,10 +1,12 @@
 ﻿using System.Security.Cryptography;
 
+using ExternalApi.Util;
+
 namespace ExternalApi.Services;
 
 public class StubTokenService(
-    IConfiguration configuration, ILogger<StubTokenService> logger) :
-    TokenService(configuration, logger)
+    IConfiguration configuration, ILogger<StubTokenService> logger, IJwtHandler jwtHandler, IHttpClientFactory httpClientFactory) :
+    TokenService(configuration, logger, jwtHandler, httpClientFactory)
 {
     private readonly IConfiguration _configuration = configuration;
 
@@ -20,10 +22,8 @@ public class StubTokenService(
                 var privateKey = _configuration["NhsAuthConfig:NHS_DIGITAL_PRIVATE_KEY"];
                 if (string.IsNullOrEmpty(privateKey))
                 {
-                    using (var rsa = RSA.Create(2048))
-                    {
-                        privateKey = Convert.ToBase64String(rsa.ExportRSAPrivateKey());
-                    }
+                    using var rsa = RSA.Create(2048);
+                    privateKey = Convert.ToBase64String(rsa.ExportRSAPrivateKey());
                 }
                 else if (privateKey.StartsWith("file:"))
                 {

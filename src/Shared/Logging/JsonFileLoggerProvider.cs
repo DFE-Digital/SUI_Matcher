@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -5,6 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Shared.Logging;
 
+[ExcludeFromCodeCoverage(Justification = "This is a logging provider purely for writing logs.")]
 public sealed partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 {
     private readonly JsonFileLogger _logger = new(filePath, nameof(JsonFileLoggerProvider));
