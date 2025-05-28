@@ -48,12 +48,13 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
   }
 }
 
-param dashboard_name string = 'sui-pilot-dashboard'
-param log_analytics_workspace_id string = '${environmentPrefix}-${toLower(environmentName)}-loganalytics-01'
-param log_analytics_workspace_external_id string = '/subscriptions/${subscription().id}/resourceGroups/${resourceGroup().id}/providers/microsoft.operationalinsights/workspaces/${log_analytics_workspace_id}'
+@description('The dashboard name')
+param dashboardName string = 'sui-pilot-dashboard'
+param logAnalyticsWorkspaceId string = '${environmentPrefix}-${toLower(environmentName)}-loganalytics-01'
+param logAnalyticsWorkspaceExternalId string = '/subscriptions/${subscription().id}/resourceGroups/${resourceGroup().id}/providers/microsoft.operationalinsights/workspaces/${logAnalyticsWorkspaceId}'
 
 resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
-  name: dashboard_name
+  name: dashboardName
   location: location
   tags: {
     'hidden-title': 'SUI Pilot Dashboard'
@@ -87,7 +88,7 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                   name: 'Scope'
                   value: {
                     resourceIds: [
-                      log_analytics_workspace_external_id
+                      logAnalyticsWorkspaceExternalId
                     ]
                   }
                   isOptional: true
@@ -132,7 +133,7 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                 }
                 {
                   name: 'PartSubTitle'
-                  value: log_analytics_workspace_id
+                  value: logAnalyticsWorkspaceId
                   isOptional: true
                 }
                 {
@@ -190,7 +191,7 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                   name: 'Scope'
                   value: {
                     resourceIds: [
-                      log_analytics_workspace_external_id
+                      logAnalyticsWorkspaceExternalId
                     ]
                   }
                   isOptional: true
@@ -235,7 +236,7 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                 }
                 {
                   name: 'PartSubTitle'
-                  value: log_analytics_workspace_id
+                  value: logAnalyticsWorkspaceId
                   isOptional: true
                 }
                 {
@@ -293,7 +294,7 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                   name: 'Scope'
                   value: {
                     resourceIds: [
-                      log_analytics_workspace_external_id
+                      logAnalyticsWorkspaceExternalId
                     ]
                   }
                   isOptional: true
@@ -338,7 +339,7 @@ resource suiPilotDashboard 'Microsoft.Portal/dashboards@2022-12-01-preview' = {
                 }
                 {
                   name: 'PartSubTitle'
-                  value: log_analytics_workspace_id
+                  value: logAnalyticsWorkspaceId
                   isOptional: true
                 }
                 {
@@ -549,10 +550,10 @@ resource loganalyticsDbsConsoleApplogs 'Microsoft.OperationalInsights/workspaces
   }
 }
 
-param dataCollectionRules_DbsClientConsoleAppLogsRule_name string = 'DbsClientConsoleAppLogsRule'
+param dataCollectionRulesDbsClientConsoleAppLogsRuleName string = 'DbsClientConsoleAppLogsRule'
 
 resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
-  name: dataCollectionRules_DbsClientConsoleAppLogsRule_name
+  name: dataCollectionRulesDbsClientConsoleAppLogsRuleName
   location: location
   tags: {
     Environment: lowercaseEnvironmentName
