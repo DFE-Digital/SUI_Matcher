@@ -160,6 +160,7 @@ jobs:
             $json_data | ConvertTo-Json | Out-File -FilePath ".\appsettings.json"
         }
         # Poll log file until it hasn't been updated for 1 minute
+        $logFilePrefix = "${{ env.logFilePrefix }}"
         $logFile = "$basePath\$logFilePrefix"
         $lastWriteTime = (Get-Item $logFile).LastWriteTime
         $timeout = (Get-Date).AddMinutes(1)
