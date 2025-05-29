@@ -26,8 +26,13 @@ public class LogConsoleFormatter : ConsoleFormatter
         }
 
         var searchId = Activity.Current?.GetBaggageItem("SearchId");
+        var algorithmVersion = Activity.Current?.GetBaggageItem("AlgorithmVersion");
 
-        if (searchId is not null)
+        if (searchId is not null && algorithmVersion is not null)
+        {
+            textWriter.Write($"[{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [SearchId={searchId}] ");
+        }
+        else if (searchId is not null)
         {
             textWriter.Write($"[{logEntry.LogLevel}] [SearchId={searchId}] ");
         }
