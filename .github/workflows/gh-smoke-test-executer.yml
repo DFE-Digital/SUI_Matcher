@@ -71,23 +71,23 @@ jobs:
       run: |
         az account set --subscription ${{ env.AZURE_SUBSCRIPTION_ID }}
         
-    - name: Set file name
+    - name: Set variables
       id: set_file_name
       run: |
         if [ "${{ env.SMOKE_TEST_TYPE }}" == "dbs_batch_search" ]; then
           file_name="./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt"
           log_success_message="The DBS results file has 7 records, batch search resulted"
-          $packagename = "SUI.DBS.Response.Logger.Watcher"
-          $destinationpathfile = "dbs_batch_search_responses.txt"
-          $logFilePrefix = "dbs-response-logger-logs.log"
+          packagename = "SUI.DBS.Response.Logger.Watcher"
+          destinationpathfile="dbs_batch_search_responses.txt"
+          logFilePrefix="dbs-response-logger-logs.log"
           executable="suidbsw"
         else
           file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv"
           log_success_message="File processed; output=SUI.Client.Core.ProcessCsvFileResult"
-          $packagename = "SUI.Client.Watcher"
-          $destinationpathfile = "sui_batch_search_queries.csv"
-          $logFilePrefix = "sui-client-logs.log"
-          $executable="suiw"
+          packagename="SUI.Client.Watcher"
+          destinationpathfile="sui_batch_search_queries.csv"
+          logFilePrefix="sui-client-logs.log"
+          executable="suiw"
         fi
         echo "file_name=${file_name}" >> $GITHUB_ENV
         echo "log_success_message=${log_success_message}" >> $GITHUB_ENV
