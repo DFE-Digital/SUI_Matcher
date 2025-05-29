@@ -321,7 +321,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
               }
             ]
             targetFqdns: [
-              environment().authentication.loginEndpoint
+              'login.microsoftonline.com'
             ]
             terminateTLS: false
             sourceAddresses: [
