@@ -136,7 +136,7 @@ jobs:
 
         Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
         # Install the package
-        dotnet tool install --global $packagename
+        dotnet tool install --global $packageName
 
         # Create the SmokeTests directories
         New-Item -ItemType Directory -Path $basePath -Force
@@ -178,7 +178,7 @@ jobs:
         if ($logContent -match "${{ env.log_success_message }}") {
             Write-Output "Smoke Test Passed"
             Stop-Job $job
-            Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packagename
+            Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
             exit 0 # Exit with a zero status code
         } else {
             Write-Error "Smoke Test Failed"
