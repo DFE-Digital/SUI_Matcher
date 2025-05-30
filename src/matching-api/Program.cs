@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 using MatchingApi;
 using MatchingApi.Services;
+using MatchingApi.Util;
 
 using Microsoft.AspNetCore.Http.Json;
 
@@ -65,5 +66,14 @@ app.UseRouting();
 app.MapDefaultEndpoints();
 app.MapEndpoints(versionedGroup);
 app.MapOpenApi();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var matchingService = scope.ServiceProvider.GetRequiredService<IMatchingService>();
+    if (matchingService is MatchingService service)
+    {
+        service.CacheAlgorithmVersion(AlgorithmVersionUtil.GetCurrentAlgorithmVersion());
+    }
+}
 
 await app.RunAsync();
