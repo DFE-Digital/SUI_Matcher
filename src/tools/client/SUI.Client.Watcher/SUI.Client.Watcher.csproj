@@ -10,7 +10,7 @@
         <Company>Department for Education</Company>
         <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
         <PackageId>SUI.Client.Watcher</PackageId>
-        <PackageAsTool>true</PackageAsTool>
+        <PackAsTool>true</PackAsTool>
         <ToolCommandName>suiw</ToolCommandName>
         <PackageReadmeFile>README.md</PackageReadmeFile>
 
