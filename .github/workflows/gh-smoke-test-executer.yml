@@ -94,6 +94,7 @@ jobs:
         echo "packagename=${packagename}" >> $GITHUB_ENV
         echo "destinationpathfile=${destinationpath}" >> $GITHUB_ENV
         echo "executable=${executable}" >> $GITHUB_ENV
+        echo "logFilePrefix=${logFilePrefix}" >> $GITHUB_ENV
 
     - name: Read file contents
       id: read_file
@@ -177,7 +178,7 @@ jobs:
         if ($logContent -match "${{ env.log_success_message }}") {
             Write-Output "Smoke Test Passed"
             Stop-Job $job
-            Clean-SmokeTestEnvironment -SmokeTestsPath "C:\Users\SmokeTests" -PackageName $packagename
+            Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packagename
             exit 0 # Exit with a zero status code
         } else {
             Write-Error "Smoke Test Failed"
