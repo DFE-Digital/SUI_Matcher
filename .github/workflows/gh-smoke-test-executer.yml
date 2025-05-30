@@ -144,13 +144,7 @@ jobs:
         New-Item -ItemType Directory -Path $basePathProcessed -Force
 
         # Start the smoke test executable in a background job
-        $job = Start-Job -ScriptBlock { ${{ env.executable }} $destinationPath $basePathProcessed }
-
-        $fileContent = "${{ steps.read_file.outputs.data }}"
-
-        [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
         cd $basePath
-
         if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
             $json_data = @(
                 [PSCustomObject]@{
@@ -159,6 +153,12 @@ jobs:
             )
             $json_data | ConvertTo-Json | Out-File -FilePath ".\appsettings.json"
         }
+        $job = Start-Job -ScriptBlock { ${{ env.executable }} $destinationPath $basePathProcessed }
+
+        $fileContent = "${{ steps.read_file.outputs.data }}"
+
+        [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
+
         # Poll log file until it hasnt been updated for 1 minute
         $logFilePrefix = "${{ env.logFilePrefix }}"
         $logFile = "$basePath\$logFilePrefix"
