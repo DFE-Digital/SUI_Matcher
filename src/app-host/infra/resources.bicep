@@ -579,7 +579,7 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
             'DbsConsoleAppLogs_CL'
           ]
           filePatterns: [
-            'C:\\Users\\SmokeTests\\${environmentPrefix}-${lowercaseEnvironmentName}-container-01\\dbs-response-logger-logs*.log'
+            'C:\\Users\\SmokeTests\\*.log'
           ]
           format: 'json'
           name: 'DbsConsoleAppLog'
