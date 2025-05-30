@@ -1,5 +1,11 @@
 name: Publish client NuGet packages
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/tools/client/SUI.Client.Watcher/**'
+      - 'src/tools/dbs-response-logger/SUI.DBS.Response.Logger.Watcher/**'
   workflow_dispatch:
     inputs:
       publish-client:
@@ -95,8 +101,28 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
+      - name: Check changed files to set publish flags
+        id: check-changed-files
+        run: |
+          if git diff --name-only HEAD^ | grep -q 'src/tools/client'; then
+            echo "publish-client=true" >> $GITHUB_ENV
+          else
+            echo "publish-client=false" >> $GITHUB_ENV
+          fi
+
+          if git diff --name-only HEAD^ | grep -q 'src/tools/dbs-response-logger'; then
+            echo "publish-response-logger=true" >> $GITHUB_ENV
+          else
+            echo "publish-response-logger=false" >> $GITHUB_ENV
+          fi
+
+      - name: Print publish flags
+        run: |
+          echo "Publish Client Watcher: ${{ env.publish_client }}"
+          echo "Publish Response Logger: ${{ env.publish_response_logger }}"
+
       - name: Package Client Watcher
-        if: ${{ github.event.inputs.publish-client == 'true' }}
+        if: ${{ github.event.inputs.publish-client == 'true' || env.publish_client == 'true' }}
         run: |
           dotnet pack ./src/tools/client/SUI.Client.Watcher/SUI.Client.Watcher.csproj \
             --configuration Release \
@@ -105,14 +131,14 @@ jobs:
             /p:PackAsTool=true
 
       - name: Publish Client Watcher
-        if: ${{ github.event.inputs.publish-client == 'true' }}
+        if: ${{ github.event.inputs.publish-client == 'true' || env.publish_client == 'true' }}
         run: |
           dotnet nuget push ./nukpg/${{env.client_name}}.${{ env.CLIENT_VERSION }}.nupkg \
             --source https://api.nuget.org/v3/index.json \
             --api-key ${{ secrets.NUGET_API_KEY }}
           
       - name: Package Response Logger
-        if: ${{ github.event.inputs.publish-response-logger == 'true' }}
+        if: ${{ github.event.inputs.publish-response-logger == 'true' || env.publish_response_logger == 'true' }}
         run: |
           dotnet pack ./src/tools/dbs-response-logger/SUI.DBS.Response.Logger.Watcher/SUI.DBS.Response.Logger.Watcher.csproj \
             --configuration Release \
@@ -121,7 +147,7 @@ jobs:
             /p:PackAsTool=true
           
       - name: Publish Response Logger
-        if: ${{ github.event.inputs.publish-response-logger == 'true' }}
+        if: ${{ github.event.inputs.publish-response-logger == 'true' || env.publish_response_logger == 'true' }}
         run: |
           dotnet nuget push ./nukpg/${{env.response_logger_name}}.${{ env.DBS_VERSION }}.nupkg \
             --source https://api.nuget.org/v3/index.json \

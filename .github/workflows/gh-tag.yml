@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+
 env:
   MAJOR_MINOR_VERSION: "0.0"
 
