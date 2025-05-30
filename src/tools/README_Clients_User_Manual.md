@@ -53,3 +53,16 @@ dotnet tool uninstall --global DFE.SUI.Client.Watcher
 ```bash
 dotnet tool uninstall --global DFE.SUI.DBS.Response.Logger.Watcher
 ```
+
+## Installing Windows 2022 server
+```bash
+Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';
+
+./dotnet-install.ps1 -Version 9.0.300 -InstallDir 'C:\Program Files\dotnet\'
+
+dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org"
+
+dotnet tool install SUI.Client.Watcher --tool-path 'C:\Program Files\dotnet\tools'
+
+$env:Path = "C:\Program Files\dotnet\tools;$env:Path"
+```
