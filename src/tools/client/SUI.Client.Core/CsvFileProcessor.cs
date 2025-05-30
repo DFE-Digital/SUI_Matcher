@@ -23,6 +23,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderScore = "SUI_Score";
     public const string HeaderNhsNo = "SUI_NHSNo";
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
@@ -76,11 +77,11 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
     private static string WriteStatsJsonFile(string outputDirectory, string ts, CsvProcessStats stats)
     {
         var statsJsonFileName = GetOutputFileName(ts, outputDirectory, "stats.json");
-        File.WriteAllText(statsJsonFileName, JsonSerializer.Serialize(stats, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(statsJsonFileName, JsonSerializer.Serialize(stats, JsonSerializerOptions));
         return statsJsonFileName;
     }
 
-    private static void RecordStats(CsvProcessStats stats, Types.PersonMatchResponse? response)
+    private static void RecordStats(CsvProcessStats stats, PersonMatchResponse? response)
     {
         stats.Count++;
         switch (response?.Result?.MatchStatus)

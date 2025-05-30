@@ -37,7 +37,7 @@ while (true)
     var command = Console.ReadLine();
     if (command == "q")
     {
-        cts.Cancel();
+        await cts.CancelAsync();
         break;
     }
     else if (command == "stats")
