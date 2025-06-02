@@ -138,7 +138,6 @@ resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks
           addressPrefixes: [
             '192.168.2.0/25'
           ]
-          delegations: []
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
         }
@@ -150,8 +149,8 @@ resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks
 }
 
 resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
-  name: '${environmentPrefix}-${toLower(environmentName)}-vnet-cae-01'
   scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
+  name: '${environmentPrefix}-${toLower(environmentName)}-vnet-cae-01'
 }
 
 resource VnetPeering1 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-05-01' = {
@@ -170,10 +169,10 @@ resource VnetPeering1 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@
 resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
   name: '${environmentPrefix}-${environmentName}-pib-01'
   location: location
-  tags: paramTags
   sku: {
     name: 'Standard'
   }
+  tags: paramTags
   properties: {
     publicIPAllocationMethod: 'static'
     publicIPAddressVersion: 'IPv4'
@@ -183,10 +182,10 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
 resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
   name: '${environmentPrefix}-${environmentName}-fwp-01'
   location: location
+  tags: paramTags
   properties: {
     threatIntelMode: 'Alert'
   }
-  tags: paramTags
 }
 
 param vnetFirewallName string = '${environmentPrefix}-vnetfw-Firewall'
@@ -217,9 +216,6 @@ resource azureFirewalls_vnetfw_Firewall_name_resource 'Microsoft.Network/azureFi
         }
       }
     ]
-    networkRuleCollections: []
-    applicationRuleCollections: []
-    natRuleCollections: []
   }
 }
 

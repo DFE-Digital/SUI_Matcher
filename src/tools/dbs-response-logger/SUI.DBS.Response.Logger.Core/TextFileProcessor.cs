@@ -97,13 +97,28 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
         foreach (var recordColumn in recordColumns)
         {
-            var fieldName = recordColumn.ToString();
+            var column = recordData[(int)recordColumn];
 
-            var field = typeof(MatchPersonResult).GetField($"<{fieldName}>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            if (field != null)
+            switch (recordColumn)
             {
-                field.SetValue(result, recordData[(int)recordColumn]);
+                case RecordColumn.Given:
+                    result.Given = column;
+                    break;
+                case RecordColumn.Family:
+                    result.Family = column;
+                    break;
+                case RecordColumn.BirthDate:
+                    result.BirthDate = column;
+                    break;
+                case RecordColumn.Gender:
+                    result.Gender = column;
+                    break;
+                case RecordColumn.PostCode:
+                    result.PostCode = column;
+                    break;
+                case RecordColumn.NhsNumber:
+                    result.NhsNumber = column;
+                    break;
             }
         }
 
@@ -114,7 +129,10 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
         => !string.IsNullOrWhiteSpace(value) && DateOnly.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) ? date : null;
 
     public static string ToGender(string? value)
-        => !string.IsNullOrWhiteSpace(value) ? (value == "1" ? "Male" : "Female") : "Unknown";
+    {
+        var genderFromValue = value == "1" ? "Male" : "Female";
+        return !string.IsNullOrWhiteSpace(value) ? genderFromValue : "Unknown";
+    }
 
     public static string ToPostCode(string? value)
         => !string.IsNullOrWhiteSpace(value) ? value : "Unknown";
@@ -141,11 +159,10 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
     private static void StoreUniqueSearchIdFor(MatchPersonResult matchPersonResult)
     {
-        using var md5 = MD5.Create();
         byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(matchPersonResult));
-        byte[] hashBytes = md5.ComputeHash(bytes);
+        byte[] hashBytes = MD5.HashData(bytes);
 
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new();
 
         foreach (var t in hashBytes)
         {
