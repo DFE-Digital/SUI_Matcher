@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace SUI.Client.Core.Watcher;
@@ -6,6 +8,7 @@ namespace SUI.Client.Core.Watcher;
 /// <summary>
 /// Wrapper for FileSystemWatcher
 /// </summary>
+[ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
 public class CsvFileWatcherService : IDisposable
 {
     private readonly FileSystemWatcher _watcher;
