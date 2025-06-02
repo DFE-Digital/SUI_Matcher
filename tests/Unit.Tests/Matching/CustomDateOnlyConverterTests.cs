@@ -6,13 +6,14 @@ namespace Unit.Tests.Matching;
 
 public class CustomDateOnlyConverterTests
 {
+    private static JsonSerializerOptions Options => new() { Converters = { new CustomDateOnlyConverter() } };
+    
     [Fact]
     public void Read_ReturnsDateOnly_WhenValidDateStringProvided()
     {
-        var json = "\"2023-10-01\"";
-        var options = new JsonSerializerOptions { Converters = { new CustomDateOnlyConverter() } };
+        const string json = "\"2023-10-01\"";
 
-        var result = JsonSerializer.Deserialize<DateOnly?>(json, options);
+        var result = JsonSerializer.Deserialize<DateOnly?>(json, Options);
 
         Assert.NotNull(result);
         Assert.Equal(new DateOnly(2023, 10, 1), result);
@@ -21,10 +22,9 @@ public class CustomDateOnlyConverterTests
     [Fact]
     public void Read_ReturnsNull_WhenEmptyStringProvided()
     {
-        var json = "\"\"";
-        var options = new JsonSerializerOptions { Converters = { new CustomDateOnlyConverter() } };
+        const string json = "\"\"";
 
-        var result = JsonSerializer.Deserialize<DateOnly?>(json, options);
+        var result = JsonSerializer.Deserialize<DateOnly?>(json, Options);
 
         Assert.Null(result);
     }
@@ -33,9 +33,8 @@ public class CustomDateOnlyConverterTests
     public void Write_SerializesDateOnlyToString_WhenDateOnlyProvided()
     {
         var date = new DateOnly(2023, 10, 1);
-        var options = new JsonSerializerOptions { Converters = { new CustomDateOnlyConverter() } };
 
-        var result = JsonSerializer.Serialize(date, options);
+        var result = JsonSerializer.Serialize(date, Options);
 
         Assert.Equal("\"2023-10-01\"", result);
     }
@@ -44,9 +43,8 @@ public class CustomDateOnlyConverterTests
     public void Write_SerializesNullToString_WhenNullProvided()
     {
         DateOnly? date = null;
-        var options = new JsonSerializerOptions { Converters = { new CustomDateOnlyConverter() } };
 
-        var result = JsonSerializer.Serialize(date, options);
+        var result = JsonSerializer.Serialize(date, Options);
 
         Assert.Equal("null", result);
     }
