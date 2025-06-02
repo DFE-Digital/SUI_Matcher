@@ -7,7 +7,7 @@ namespace Unit.Tests.Matching;
 public class CustomDateOnlyConverterTests
 {
     private static JsonSerializerOptions Options => new() { Converters = { new CustomDateOnlyConverter() } };
-    
+
     [Fact]
     public void Read_ReturnsDateOnly_WhenValidDateStringProvided()
     {
