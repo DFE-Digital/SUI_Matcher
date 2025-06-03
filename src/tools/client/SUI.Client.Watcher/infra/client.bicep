@@ -365,6 +365,11 @@ resource dbsClientConsoleApplogsEndpoint 'Microsoft.Insights/dataCollectionEndpo
   properties: {}
 }
 
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {
+  name: logAnalyticsWorkspaceName
+  scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
+}
+
 param dbsClientConsoleAppLogsRuleName string = 'DbsClientConsoleAppLogsRule'
 
 resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
@@ -406,6 +411,7 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
       logAnalytics: [
         {
           name: logAnalyticsWorkspaceName
+          workspaceResourceId: logAnalyticsWorkspace.id
         }
       ]
     }
