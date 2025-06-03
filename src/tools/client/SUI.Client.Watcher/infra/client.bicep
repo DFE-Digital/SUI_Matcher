@@ -362,11 +362,7 @@ resource dbsClientConsoleApplogsEndpoint 'Microsoft.Insights/dataCollectionEndpo
   name: dbsClientConsoleApplogsEndpointName
   location: location
   tags: paramTags
-  properties: {
-    networkAcls: {
-      publicNetworkAccess: 'Enabled'
-    }
-  }
+  properties: {}
 }
 
 param dbsClientConsoleAppLogsRuleName string = 'DbsClientConsoleAppLogsRule'
