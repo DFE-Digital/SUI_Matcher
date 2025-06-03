@@ -576,7 +576,7 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
       logFiles: [
         {
           streams: [
-            'DbsConsoleAppLogs_CL'
+            'Custom-DbsClientConsoleAppLogs_CL'
           ]
           filePatterns: [
             'C:\\Users\\SmokeTests\\${environmentPrefix}-${lowercaseEnvironmentName}-container-01\\dbs-response-logger-logs*.log'
@@ -597,13 +597,13 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
     dataFlows: [
       {
         streams: [
-          'DbsConsoleAppLogs_CL'
+          'Custom-DbsClientConsoleAppLogs_CL'
         ]
         destinations: [
           'la-479495940'
         ]
         transformKql: 'source'
-        outputStream: 'DbsConsoleAppLogs_CL'
+        outputStream: 'Custom-DbsClientConsoleAppLogs_CL'
       }
     ]
   }
