@@ -1,6 +1,11 @@
 name: Azure Infra Deployment
 
 on:
+  push:
+    branches:
+    - main
+    paths:
+    - 'src/app-host/infra/**'
   workflow_dispatch:
     inputs:
       environment:
@@ -41,15 +46,26 @@ jobs:
       AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 'Get latest tag if no version provided'
+        id: get_latest_tag
+        run: |
+          if [[ -z "${{ env.APPLICATION_VERSION }}" ]]; then
+            git fetch --tags
+            LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+            echo "Latest tag is: $LATEST_TAG"
+            echo "version=$LATEST_TAG" >> $GITHUB_ENV
+          else
+            echo "Using provided version: ${{ env.APPLICATION_VERSION }}"
+            echo "version=${{ env.APPLICATION_VERSION }}" >> $GITHUB_ENV
+          fi
+
       - name: Checkout (version)
         uses: actions/checkout@v4
-        if: ${{ github.event.inputs.version != '' }}
         with:
-          ref: ${{ env.APPLICATION_VERSION }}
-
-      - name: Checkout (branch)
-        uses: actions/checkout@v4
-        if: ${{ github.event.inputs.version == '' }}
+          ref: ${{ env.version }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
