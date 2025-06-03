@@ -20,6 +20,11 @@ param subnetRange string = '192.168.0.128/26'
 
 param location string = resourceGroup().location
 
+@description('Log Analytics Workspace Id')
+param logAnalyticsWorkspaceId string
+
+param logAnalyticsWorkspaceName string = '${environmentPrefix}-${environmentName}-loganalytics-01'
+
 @description('Tags for the resources')
 param paramTags object = {
   Product: 'SUI'
@@ -354,110 +359,71 @@ resource routeTables_integration_rt_01_name_resource 'Microsoft.Network/routeTab
   }
 }
 
-// --- LEGACY FOR REFERENCE --- 
+param dbsClientConsoleApplogsEndpointName string = 'DbsClientConsoleApplogsEndpoint'
 
-// resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
-//   name: '${environmentPrefix}-${environmentName}-pib-01'
-//   location: location
-//   tags: tags
-//   sku: {
-//     name: 'Standard'
-//   }
-//   properties: {
-//     publicIPAllocationMethod: 'static'
-//     publicIPAddressVersion: 'IPv4'
-//   }
-// }
-// Cannot create IPs due to policies
+resource dbsClientConsoleApplogsEndpoint 'Microsoft.Insights/dataCollectionEndpoints@2023-03-11' = {
+  name: dbsClientConsoleApplogsEndpointName
+  location: location
+  tags: paramTags
+}
 
-// resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01'= {
-//   name: '${environmentPrefix}-${environmentName}-fwp-01'
-//   location: location
-//   properties: {
-//     threatIntelMode: 'Alert'
-//   }
-//   tags: tags
-// }
+param dbsClientConsoleAppLogsRuleName string = 'DbsClientConsoleAppLogsRule'
 
-// resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
-//   parent: firewallPolicy
-//   name: 'DefaultApplicationRuleCollectionGroup'
-//   properties: {
-//     priority: 300
-//     ruleCollections: [
-//       {
-//         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-//         action: {
-//           type: 'Allow'
-//         }
-//         name: 'Global-rules-arc'
-//         priority: 300
-//         rules: [
-//           {
-//             ruleType: 'ApplicationRule'
-//             name: 'global-rule-01'
-//             protocols: [
-//               {
-//                 protocolType: 'Https'
-//                 port: 443
-//               }
-//             ]
-//             targetFqdns: [
-//               'int.api.service.nhs.uk'
-//             ]
-//             terminateTLS: false
-//             sourceIpGroups: [
-//               infraIpGroup.id
-//             ]
-//           }
-//         ]
-//       }
-//     ]
-//   }
-// }
+resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
+  name: dbsClientConsoleAppLogsRuleName
+  location: location
+  tags: paramTags
+  kind: 'Windows'
+  properties: {
+    dataCollectionEndpointId: dbsClientConsoleApplogsEndpoint.id
+    streamDeclarations: {
+      'Custom-Json-DbsClientConsoleApplogs_CL': {
+        columns: [
+          {
+            name: 'TimeGenerated'
+            type: 'datetime'
+          }
+          {
+            name: 'Message'
+            type: 'string'
+          }
+        ]
+      }
+    }
+    dataSources: {
+      logFiles: [
+        {
+          streams: [
+            'Custom-Json-DbsClientConsoleApplogs_CL'
+          ]
+          filePatterns: [
+            'C:\\Users\\SmokeTests\\*.log'
+          ]
+          format: 'json'
+          name: 'DbsConsoleAppLog'
+        }
+      ]
+    }
+    destinations: {
+      logAnalytics: [
+        {
+          workspaceResourceId: logAnalyticsWorkspaceId
+          name: logAnalyticsWorkspaceName
+        }
+      ]
+    }
+    dataFlows: [
+      {
+        streams: [
+          'Custom-Json-DbsClientConsoleApplogs_CL'
+        ]
+        destinations: [
+          logAnalyticsWorkspaceName
+        ]
+        transformKql: 'source'
+        outputStream: 'Custom-DbsClientConsoleApplogs_CL'
+      }
+    ]
+  }
+}
 
-// resource fireWall 'Microsoft.Network/azureFirewalls@2021-03-01' = {
-//   name: '${environmentPrefix}-${environmentName}-fw-01'
-//   location: location
-//   dependsOn: [
-//     containerAppEnvironment
-//     applicationRuleCollectionGroup
-//   ]
-//   properties: {
-//     ipConfigurations: [{
-//       name: 'fw-ip-config-01'
-//       properties: {
-//         publicIPAddress: {
-//           id: publicIP.id
-//         }
-//         subnet: {
-//           id: caevnets.properties.subnets[1].id
-//         }
-//       }
-//     }]
-//     firewallPolicy: {
-//       id: firewallPolicy.id
-//     }
-//   }
-//   tags: tags
-// }
-
-// resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
-//   location: location
-//   name: '${environmentPrefix}-${environmentName}-rt-01'
-//   properties: {
-//     disableBgpRoutePropagation: true
-//     routes: [
-//       {
-//         name: '${environmentPrefix}-${environmentName}-internet'
-//         properties: {
-//           addressPrefix: '0.0.0.0/0'
-//           nextHopIpAddress: fireWall.properties.ipConfigurations[0].properties.privateIPAddress
-//           nextHopType: 'Internet'
-//         }
-//         type: 'string'
-//       }
-//     ]
-//   }
-//   tags: tags
-// }
