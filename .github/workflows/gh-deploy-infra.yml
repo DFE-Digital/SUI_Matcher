@@ -53,10 +53,12 @@ jobs:
         id: get_latest_tag
         run: |
           if [[ -z "${{ env.APPLICATION_VERSION }}" ]]; then
+            git fetch --tags
             LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
             echo "Latest tag is: $LATEST_TAG"
             echo "version=$LATEST_TAG" >> $GITHUB_ENV
           else
+            echo "Using provided version: ${{ env.APPLICATION_VERSION }}"
             echo "version=${{ env.APPLICATION_VERSION }}" >> $GITHUB_ENV
           fi
 
