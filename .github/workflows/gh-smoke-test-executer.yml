@@ -79,20 +79,20 @@ jobs:
           log_success_message="The DBS results file has 7 records, batch search resulted"
           packagename = "SUI.DBS.Response.Logger.Watcher"
           destinationpathfile="dbs_batch_search_responses.txt"
-          logFilePrefix="dbs-response-logger-logs.log"
-          executable="suidbsw"
+          logFilePrefix="dbs-response-logger-logs"
+          executable="suidbsw.exe"
         else
           file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv"
           log_success_message="File processed; output=SUI.Client.Core.ProcessCsvFileResult"
           packagename="SUI.Client.Watcher"
           destinationpathfile="sui_batch_search_queries.csv"
-          logFilePrefix="sui-client-logs.log"
-          executable="suiw"
+          logFilePrefix="sui-client-logs"
+          executable="suiw.exe"
         fi
         echo "file_name=${file_name}" >> $GITHUB_ENV
         echo "log_success_message=${log_success_message}" >> $GITHUB_ENV
         echo "packagename=${packagename}" >> $GITHUB_ENV
-        echo "destinationpathfile=${destinationpath}" >> $GITHUB_ENV
+        echo "destinationpathfile=${destinationpathfile}" >> $GITHUB_ENV
         echo "executable=${executable}" >> $GITHUB_ENV
         echo "logFilePrefix=${logFilePrefix}" >> $GITHUB_ENV
 
@@ -114,10 +114,13 @@ jobs:
           --script '
 
         $packageName="${{ env.packagename }}"
+        $destinationPathFile="${{ env.destinationpathfile }}"
         $basePath = "C:\Users\SmokeTests"
         $basePathUnprocessed = "$basePath\unprocessed"
         $basePathProcessed = "$basePath\processed"
-        $destinationPath = "$basePath\${{ env.destinationpathfile }}"
+        $destinationPath = "$basePathUnprocessed\$destinationPathFile"
+        $installPath = "C:\Program Files\dotnet\tools"
+        $appSettingsPath = "$basePath\appsettings.json"
 
         function Clean-SmokeTestEnvironment {
             param (
@@ -128,15 +131,20 @@ jobs:
             if (Test-Path $SmokeTestsPath) {
           Remove-Item -Path $SmokeTestsPath -Recurse -Force
             }
-            # Check for the package and remove it if it exists
-            if (Get-Package -Name $PackageName -ErrorAction SilentlyContinue) {
-          Uninstall-Package -Name $PackageName -Force
+            # Check for the dotnet package and remove it if it exists
+            if (dotnet tool list --tool-path $installPath | Select-String $PackageName) {
+          dotnet tool uninstall --tool-path $installPath $PackageName
             }
         }
 
         Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
         # Install the package
-        dotnet tool install --global $packageName
+        dotnet tool install $packageName --tool-path $installPath
+        # Check if tool path in PATH and add it if not
+        if ($env:Path -notlike "*$installPath*") {
+            Write-Output "Adding $installPath to PATH"
+            $env:Path = "$installPath;$env:Path"
+        }
 
         # Create the SmokeTests directories
         New-Item -ItemType Directory -Path $basePath -Force
@@ -144,23 +152,29 @@ jobs:
         New-Item -ItemType Directory -Path $basePathProcessed -Force
 
         # Start the smoke test executable in a background job
-        cd $basePath
+
         if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
-            $json_data = @(
-                [PSCustomObject]@{
-                    MatchApiBaseAddress = "${{ env.SUI_SERVER_URL }}"
-                }
-            )
-            $json_data | ConvertTo-Json | Out-File -FilePath ".\appsettings.json"
+            $job = Start-Job -ScriptBlock {
+                Param($basePath, $basePathUnprocessed, $basePathProcessed)
+                cd $basePath;
+                ${{ env.executable }} $basePathUnprocessed $basePathProcessed ${{ env.SUI_SERVER_URL }}
+                } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
+        } else {
+            $job = Start-Job -ScriptBlock {
+                Param($basePath, $basePathUnprocessed, $basePathProcessed)
+                cd $basePath; 
+                ${{ env.executable }} $basePathUnprocessed $basePathProcessed
+                } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
         }
-        $job = Start-Job -ScriptBlock { ${{ env.executable }} $destinationPath $basePathProcessed }
+
 
         $fileContent = "${{ steps.read_file.outputs.data }}"
 
         [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
 
         # Poll log file until it hasnt been updated for 1 minute
-        $logFilePrefix = "${{ env.logFilePrefix }}"
+        $today = Get-Date -Format "yyyy-MM-dd"
+        $logFilePrefix = "${{ env.logFilePrefix }}-$today.log"
         $logFile = "$basePath\$logFilePrefix"
         $lastWriteTime = (Get-Item $logFile).LastWriteTime
         $timeout = (Get-Date).AddMinutes(1)
