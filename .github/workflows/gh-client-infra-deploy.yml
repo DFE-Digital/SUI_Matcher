@@ -1,11 +1,6 @@
 name: Deploy Client Infrastructure
 
 on:
-    push:
-        branches:
-        - main
-        paths:
-          - 'src/app-host/infra/**'
     workflow_dispatch:
         inputs:
             environment:
@@ -18,7 +13,8 @@ on:
               type: boolean
             version:
                 description: 'Deployment version'
-                required: false
+                required: true
+                default: 'v0.0.15'
  
 permissions:
   id-token: write
@@ -41,22 +37,8 @@ jobs:
         steps:
         - name: Checkout repository
           uses: actions/checkout@v4
-
-        - name: 'Get latest tag if no version provided'
-          id: get_latest_tag
-          run: |
-            if [[ -z "${{ env.CLIENT_VERSION }}" ]]; then
-              LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-              echo "Latest tag is: $LATEST_TAG"
-              echo "version=$LATEST_TAG" >> $GITHUB_ENV
-            else
-              echo "version=${{ env.CLIENT_VERSION }}" >> $GITHUB_ENV
-            fi
-
-        - name: Checkout repository
-          uses: actions/checkout@v4
           with:
-            ref: ${{ env.version }}
+            ref: ${{ env.CLIENT_VERSION }}
             
         - name: Ensure Azure CLI is installed
           run: |
