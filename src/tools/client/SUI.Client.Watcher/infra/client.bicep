@@ -20,9 +20,6 @@ param subnetRange string = '192.168.0.128/26'
 
 param location string = resourceGroup().location
 
-@description('Log Analytics Workspace Id')
-param logAnalyticsWorkspaceId string
-
 param logAnalyticsWorkspaceName string = '${environmentPrefix}-${environmentName}-loganalytics-01'
 
 @description('Tags for the resources')
@@ -407,7 +404,6 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
     destinations: {
       logAnalytics: [
         {
-          workspaceResourceId: logAnalyticsWorkspaceId
           name: logAnalyticsWorkspaceName
         }
       ]
