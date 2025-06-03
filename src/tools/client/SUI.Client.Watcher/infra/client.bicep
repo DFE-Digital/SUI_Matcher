@@ -362,6 +362,11 @@ resource dbsClientConsoleApplogsEndpoint 'Microsoft.Insights/dataCollectionEndpo
   name: dbsClientConsoleApplogsEndpointName
   location: location
   tags: paramTags
+  properties: {
+    networkAcls: {
+      publicNetworkAccess: 'Enabled'
+    }
+  }
 }
 
 param dbsClientConsoleAppLogsRuleName string = 'DbsClientConsoleAppLogsRule'
@@ -422,4 +427,3 @@ resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsof
     ]
   }
 }
-
