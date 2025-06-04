@@ -77,7 +77,7 @@ public class CsvFileMonitor
                     Interlocked.Increment(ref _errorCount);
                     LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
-                
+
                 _logger.LogInformation("Finished processing file: {fileName}", Path.GetFileName(filePath));
                 Processed?.Invoke(this, LastOperation);
             }
