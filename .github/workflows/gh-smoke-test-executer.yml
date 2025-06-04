@@ -179,6 +179,17 @@ jobs:
           $lastWriteTime = (Get-Item $logFile).LastWriteTime
           $timeout = (Get-Date).AddMinutes(5)
           $unchangedCount = 0
+
+          $logfiletimeout = (Get-Date).AddMinutes(1)
+          while ((Get-Date) -lt $logfiletimeout -and !(Test-Path $logFile)) {
+              Start-Sleep -Seconds 2
+          }
+
+          if (!(Test-Path $logFile)) {
+              Write-Error "Log file was not created in time."
+              exit 1
+          }
+
           while ((Get-Date) -lt $timeout) {
               Start-Sleep -Seconds 5
               $currentWriteTime = (Get-Item $logFile).LastWriteTime
