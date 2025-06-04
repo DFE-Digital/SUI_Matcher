@@ -54,7 +54,7 @@ public class CsvFileMonitor
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            if (_fileQueue.TryDequeue(out var filePath))
+            if (_fileQueue.TryDequeue(out var filePath) && File.Exists(filePath))
             {
                 _logger.LogInformation("Discovered file: {fileName}", Path.GetFileName(filePath));
                 try
@@ -77,6 +77,8 @@ public class CsvFileMonitor
                     Interlocked.Increment(ref _errorCount);
                     LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
+
+                _logger.LogInformation("Finished processing file: {fileName}", Path.GetFileName(filePath));
                 Processed?.Invoke(this, LastOperation);
             }
             await Task.Delay(_config.ProcessingDelayMs, cancellationToken);

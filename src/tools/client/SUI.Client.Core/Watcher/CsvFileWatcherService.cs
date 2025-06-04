@@ -33,7 +33,7 @@ public class CsvFileWatcherService : IDisposable
     private void OnCreated(object sender, FileSystemEventArgs e)
     {
         Count++;
-        _logger.LogInformation("New file detected: {Path}", Path.GetFileName(e.FullPath));
+        _logger.LogInformation("Detected file system event on file: {fileName}", e.Name);
         FileDetected?.Invoke(this, e.FullPath);
     }
 
