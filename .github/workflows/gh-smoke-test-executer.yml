@@ -43,7 +43,7 @@ permissions:
 jobs:
   smoke_test:
     runs-on: ubuntu-latest
-    env: 
+    env:
       AZURE_CLIENT_ID: ${{ secrets.azure_client_id }}
       AZURE_TENANT_ID: ${{ secrets.azure_tenant_id }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.azure_sub_id }}
@@ -55,170 +55,180 @@ jobs:
       SUI_SERVER_URL: ${{ secrets.sui_server_url }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ env.VERSION }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ env.VERSION }}
 
-    - name: Login to Azure
-      uses: azure/login@v2
-      with:
-        client-id: ${{ env.AZURE_CLIENT_ID }}
-        tenant-id: ${{ env.AZURE_TENANT_ID }}
-        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Set Azure Subscription
-      run: |
-        az account set --subscription ${{ env.AZURE_SUBSCRIPTION_ID }}
-        
-    - name: Set variables
-      id: set_file_name
-      run: |
-        if [ "${{ env.SMOKE_TEST_TYPE }}" == "dbs_batch_search" ]; then
-          file_name="./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt"
-          log_success_message="The DBS results file has 7 records, batch search resulted"
-          packagename = "SUI.DBS.Response.Logger.Watcher"
-          destinationpathfile="dbs_batch_search_responses.txt"
-          logFilePrefix="dbs-response-logger-logs"
-          executable="suidbsw.exe"
-        else
-          file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv"
-          log_success_message="File processed; output=SUI.Client.Core.ProcessCsvFileResult"
-          packagename="SUI.Client.Watcher"
-          destinationpathfile="sui_batch_search_queries.csv"
-          logFilePrefix="sui-client-logs"
-          executable="suiw.exe"
-        fi
-        echo "file_name=${file_name}" >> $GITHUB_ENV
-        echo "log_success_message=${log_success_message}" >> $GITHUB_ENV
-        echo "packagename=${packagename}" >> $GITHUB_ENV
-        echo "destinationpathfile=${destinationpathfile}" >> $GITHUB_ENV
-        echo "executable=${executable}" >> $GITHUB_ENV
-        echo "logFilePrefix=${logFilePrefix}" >> $GITHUB_ENV
+      - name: Set Azure Subscription
+        run: |
+          az account set --subscription ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Read file contents
-      id: read_file
-      run: |
-        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-        echo "data<<${EOF}" >> $GITHUB_OUTPUT
-        base_64=`openssl base64 -in ${{ env.file_name }}` ; echo "${base_64}" >> $GITHUB_OUTPUT
-        echo "${EOF}" >> $GITHUB_OUTPUT
-        
-    - name: Smoke Test Run (.exe)
-      id: return_data
-      run: |
-        return_data="$(az vm run-command invoke \
-          --command-id RunPowerShellScript \
-          --name ${{ env.VM_NAME }} \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --script '
+      - name: Set variables
+        id: set_file_name
+        run: |
+          if [ "${{ env.SMOKE_TEST_TYPE }}" == "dbs_batch_search" ]; then
+            file_name="./tests/E2E.Tests/Resources/Smoke/dbs_batch_search_responses.txt"
+            log_success_message="The DBS results file has 7 records, batch search resulted"
+            packagename = "SUI.DBS.Response.Logger.Watcher"
+            destinationpathfile="dbs_batch_search_responses.txt"
+            logFilePrefix="dbs-response-logger-logs"
+            executable="suidbsw.exe"
+          else
+            file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv"
+            log_success_message="File processed; output=SUI.Client.Core.ProcessCsvFileResult"
+            packagename="SUI.Client.Watcher"
+            destinationpathfile="sui_batch_search_queries.csv"
+            logFilePrefix="sui-client-logs"
+            executable="suiw.exe"
+          fi
+          echo "file_name=${file_name}" >> $GITHUB_ENV
+          echo "log_success_message=${log_success_message}" >> $GITHUB_ENV
+          echo "packagename=${packagename}" >> $GITHUB_ENV
+          echo "destinationpathfile=${destinationpathfile}" >> $GITHUB_ENV
+          echo "executable=${executable}" >> $GITHUB_ENV
+          echo "logFilePrefix=${logFilePrefix}" >> $GITHUB_ENV
 
-        $packageName="${{ env.packagename }}"
-        $destinationPathFile="${{ env.destinationpathfile }}"
-        $basePath = "C:\Users\SmokeTests"
-        $basePathUnprocessed = "$basePath\unprocessed"
-        $basePathProcessed = "$basePath\processed"
-        $destinationPath = "$basePathUnprocessed\$destinationPathFile"
-        $installPath = "C:\Program Files\dotnet\tools"
-        $appSettingsPath = "$basePath\appsettings.json"
+      - name: Read file contents
+        id: read_file
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "data<<${EOF}" >> $GITHUB_OUTPUT
+          base_64=`openssl base64 -in ${{ env.file_name }}` ; echo "${base_64}" >> $GITHUB_OUTPUT
+          echo "${EOF}" >> $GITHUB_OUTPUT
 
-        function Clean-SmokeTestEnvironment {
-            param (
-          [string]$SmokeTestsPath,
-          [string]$PackageName
-            )
-            # Check for the existence of the directory and clean it up if it exists
-            if (Test-Path $SmokeTestsPath) {
-          Remove-Item -Path $SmokeTestsPath -Recurse -Force
-            }
-            # Check for the dotnet package and remove it if it exists
-            if (dotnet tool list --tool-path $installPath | Select-String $PackageName) {
-          dotnet tool uninstall --tool-path $installPath $PackageName
-            }
-        }
+      - name: Smoke Test Run (.exe)
+        id: return_data
+        run: |
+          return_data="$(az vm run-command invoke \
+            --command-id RunPowerShellScript \
+            --name ${{ env.VM_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --script '
 
-        Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
-        # Install the package
-        dotnet tool install $packageName --tool-path $installPath
-        # Check if tool path in PATH and add it if not
-        if ($env:Path -notlike "*$installPath*") {
-            Write-Output "Adding $installPath to PATH"
-            $env:Path = "$installPath;$env:Path"
-        }
+          $packageName="${{ env.packagename }}"
+          $destinationPathFile="${{ env.destinationpathfile }}"
+          $basePath = "C:\Users\SmokeTests"
+          $basePathUnprocessed = "$basePath\unprocessed"
+          $basePathProcessed = "$basePath\processed"
+          $destinationPath = "$basePathUnprocessed\$destinationPathFile"
+          $installPath = "C:\Program Files\dotnet\tools"
 
-        # Create the SmokeTests directories
-        New-Item -ItemType Directory -Path $basePath -Force
-        New-Item -ItemType Directory -Path $basePathUnprocessed -Force
-        New-Item -ItemType Directory -Path $basePathProcessed -Force
+          function Clean-SmokeTestEnvironment {
+              param (
+            [string]$SmokeTestsPath,
+            [string]$PackageName
+              )
+              # Check for the existence of the directory and clean it up if it exists
+              if (Test-Path $SmokeTestsPath) {
+            Remove-Item -Path $SmokeTestsPath -Recurse -Force
+              }
+              # Check for the dotnet package and remove it if it exists
+              if (dotnet tool list --tool-path $installPath | Select-String $PackageName) {
+            dotnet tool uninstall --tool-path $installPath $PackageName
+              }
+          }
 
-        # Start the smoke test executable in a background job
+          Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
+          # Install the package
+          dotnet tool install $packageName --tool-path $installPath
+          # Check if tool path in PATH and add it if not
+          if ($env:Path -notlike "*$installPath*") {
+              Write-Output "Adding $installPath to PATH"
+              $env:Path = "$installPath;$env:Path"
+          }
 
-        if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
-            $job = Start-Job -ScriptBlock {
-                Param($basePath, $basePathUnprocessed, $basePathProcessed)
-                cd $basePath;
-                ${{ env.executable }} $basePathUnprocessed $basePathProcessed ${{ env.SUI_SERVER_URL }}
-                } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
-        } else {
-            $job = Start-Job -ScriptBlock {
-                Param($basePath, $basePathUnprocessed, $basePathProcessed)
-                cd $basePath; 
-                ${{ env.executable }} $basePathUnprocessed $basePathProcessed
-                } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
-        }
+          # Create the SmokeTests directories
+          New-Item -ItemType Directory -Path $basePath -Force
+          New-Item -ItemType Directory -Path $basePathUnprocessed -Force
+          New-Item -ItemType Directory -Path $basePathProcessed -Force
+
+          # Start the smoke test executable in a background job
+
+          if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
+              $job = Start-Job -ScriptBlock {
+                  Param($basePath, $basePathUnprocessed, $basePathProcessed)
+                  cd $basePath;
+                  ${{ env.executable }} $basePathUnprocessed $basePathProcessed ${{ env.SUI_SERVER_URL }}
+                  } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
+          } else {
+              $job = Start-Job -ScriptBlock {
+                  Param($basePath, $basePathUnprocessed, $basePathProcessed)
+                  cd $basePath; 
+                  ${{ env.executable }} $basePathUnprocessed $basePathProcessed
+                  } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
+          }
 
 
-        $fileContent = "${{ steps.read_file.outputs.data }}"
+          $fileContent = "${{ steps.read_file.outputs.data }}"
 
-        [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
+          [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
 
-        # Poll log file until it hasnt been updated for 1 minute
-        $today = Get-Date -Format "yyyy-MM-dd"
-        $logFilePrefix = "${{ env.logFilePrefix }}-$today.log"
-        $logFile = "$basePath\$logFilePrefix"
-        $lastWriteTime = (Get-Item $logFile).LastWriteTime
-        $timeout = (Get-Date).AddMinutes(1)
-        while ((Get-Date) -lt $timeout) {
-            Start-Sleep -Seconds 5
-            $currentWriteTime = (Get-Item $logFile).LastWriteTime
-            if ($currentWriteTime -eq $lastWriteTime) {
-                break
-            }
-            $lastWriteTime = $currentWriteTime
-        }
-        # Save log file content to a variable
-        $logContent = Get-Content -Path $logFile -Raw
+          # Wait for log file to exist
+          $timeout = (Get-Date).AddMinutes(1)
+          while ((Get-Date) -lt $timeout -and !(Test-Path $logFile)) {
+              Start-Sleep -Seconds 2
+          }
 
-        # Assert smoke test was successful
-        if ($logContent -match "${{ env.log_success_message }}") {
-            Write-Output "Smoke Test Passed"
-            Stop-Job $job
-            Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
-            exit 0 # Exit with a zero status code
-        } else {
-            Write-Error "Smoke Test Failed"
-            Stop-Job $job
-            exit 1 # Exit with a non-zero status code
-        }
-        ')"
-        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-        echo "return_data<<${EOF}" >> $GITHUB_OUTPUT
-        echo "${return_data}" >> $GITHUB_OUTPUT
-        echo "${EOF}" >> $GITHUB_OUTPUT
+          if (!(Test-Path $logFile)) {
+              Write-Error "Log file was not created in time."
+              Stop-Job $job
+              exit 1
+          }
 
-    - name: check contents of return data for exceptions and errors
-      shell: python
-      run: |
-        import json
-        import sys
-        import os
+          # Poll log file until it hasn't been updated for 10 seconds (2 checks)
+          $lastWriteTime = (Get-Item $logFile).LastWriteTime
+          $unchangedCount = 0
+          while ((Get-Date) -lt $timeout) {
+              Start-Sleep -Seconds 5
+              $currentWriteTime = (Get-Item $logFile).LastWriteTime
+              if ($currentWriteTime -eq $lastWriteTime) {
+                  $unchangedCount++
+                  if ($unchangedCount -ge 2) { break }
+              } else {
+                  $unchangedCount = 0
+                  $lastWriteTime = $currentWriteTime
+              }
+          }
+          # Save log file content to a variable
+          $logContent = Get-Content -Path $logFile -Raw
 
-        client_return_data = """${{ steps.return_data.outputs.return_data }}"""
+          # Assert smoke test was successful
+          if ($logContent -match "${{ env.log_success_message }}") {
+              Write-Output "Smoke Test Passed"
+              Stop-Job $job
+              Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
+              exit 0 # Exit with a zero status code
+          } else {
+              Write-Error "Smoke Test Failed"
+              Stop-Job $job
+              exit 1 # Exit with a non-zero status code
+          }
+          ')"
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "return_data<<${EOF}" >> $GITHUB_OUTPUT
+          echo "${return_data}" >> $GITHUB_OUTPUT
+          echo "${EOF}" >> $GITHUB_OUTPUT
 
-        if "Exception" in client_return_data or "Error" in client_return_data or "Failed" in client_return_data:
-          print("Smoke Test Failed")
-          print(client_return_data)
-          sys.exit(1)
-        else:
-          print("Smoke Test Passed")
- 
+      - name: check contents of return data for exceptions and errors
+        shell: python
+        run: |
+          import json
+          import sys
+          import os
+
+          client_return_data = """${{ steps.return_data.outputs.return_data }}"""
+
+          if "Exception" in client_return_data or "Error" in client_return_data or "Failed" in client_return_data:
+            print("Smoke Test Failed")
+            print(client_return_data)
+            sys.exit(1)
+          else:
+            print("Smoke Test Passed")
