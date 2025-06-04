@@ -1,10 +1,10 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 
-using Microsoft.Extensions.Logging;
-
 using CsvHelper;
 using CsvHelper.Configuration;
+
+using Microsoft.Extensions.Logging;
 
 using Shared.Models;
 
