@@ -9,7 +9,7 @@ namespace SUI.Client.Core.Watcher;
 /// Wrapper for FileSystemWatcher
 /// </summary>
 [ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
-public class CsvFileWatcherService : IDisposable
+public sealed class CsvFileWatcherService : IDisposable
 {
     private readonly FileSystemWatcher _watcher;
     private readonly ILogger _logger;

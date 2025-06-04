@@ -37,17 +37,17 @@ public class CsvFileMonitor
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _fileWatcherService.Start();
-        _logger.LogInformation("Started watching {directory}", _config.IncomingDirectory);
+        _logger.LogInformation("Started watching {Directory}", _config.IncomingDirectory);
         try
         {
             await ProcessInternalAsync(cancellationToken);
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException exception)
         {
-            _logger.LogInformation("Cancelled. Stopping...");
+            _logger.LogError(exception, "Cancelled. Stopping...");
         }
         _fileWatcherService.Stop();
-        _logger.LogInformation("Stopped watching {directory}", _config.IncomingDirectory);
+        _logger.LogInformation("Stopped watching {Directory}", _config.IncomingDirectory);
     }
 
     private async Task ProcessInternalAsync(CancellationToken cancellationToken)
@@ -56,7 +56,7 @@ public class CsvFileMonitor
         {
             if (_fileQueue.TryDequeue(out var filePath))
             {
-                _logger.LogInformation("Discovered file: {fileName}", Path.GetFileName(filePath));
+                _logger.LogInformation("Discovered file: {FileName}", Path.GetFileName(filePath));
                 try
                 {
                     var processCsvFileResult = await ProcessFileAsync(filePath);
@@ -64,7 +64,7 @@ public class CsvFileMonitor
                     {
                         string destPath = Path.Combine(processCsvFileResult.OutputDirectory, Path.GetFileName(filePath));
                         File.Move(filePath, destPath);
-                        _logger.LogInformation("File moved to Processed directory: {destPath}", destPath);
+                        _logger.LogInformation("File moved to Processed directory: {DestPath}", destPath);
                         Interlocked.Increment(ref _processedCount);
                         return Task.CompletedTask;
                     }, _config.RetryCount, _config.RetryDelayMs);
@@ -73,7 +73,7 @@ public class CsvFileMonitor
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogInformation("Error processing file {FilePath}: {Message}", filePath, ex.Message);
+                    _logger.LogInformation(ex, "Error processing file {FilePath}: {Message}", filePath, ex.Message);
                     Interlocked.Increment(ref _errorCount);
                     LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
@@ -106,7 +106,7 @@ public class CsvFileMonitor
                 attempts++;
                 if (attempts >= retryCount)
                     throw;
-                _logger.LogInformation("Retry attempt {Attempts} failed: {Message}. Retrying in {DelayMs}ms.",
+                _logger.LogInformation(ex, "Retry attempt {Attempts} failed: {Message}. Retrying in {DelayMs}ms.",
                     attempts, ex.Message, delayMs);
                 await Task.Delay(delayMs);
             }
