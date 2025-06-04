@@ -1,6 +1,8 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 
+using Microsoft.Extensions.Logging;
+
 using CsvHelper;
 using CsvHelper.Configuration;
 
@@ -18,15 +20,17 @@ public interface ICsvFileProcessor
     Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath);
 }
 
-public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : ICsvFileProcessor
+public class CsvFileProcessor(ILogger<CsvFileProcessor> _logger, CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : ICsvFileProcessor
 {
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderScore = "SUI_Score";
     public const string HeaderNhsNo = "SUI_NHSNo";
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
+        _logger.LogInformation("Processing CSV file: {FilePath}", filePath);
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("File not found", filePath);
@@ -46,6 +50,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
 
         foreach (var record in records)
         {
+            _logger.LogInformation("Processing record new record}");
             var payload = new MatchPersonPayload
             {
                 Given = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
@@ -57,6 +62,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
             };
 
             var response = await matchPersonApi.MatchPersonAsync(payload);
+            _logger.LogInformation("Received response: {Response}", response);
 
             record[HeaderStatus] = response?.Result?.MatchStatus.ToString() ?? "-";
             record[HeaderScore] = response?.Result?.Score.ToString() ?? "-";
@@ -66,6 +72,7 @@ public class CsvFileProcessor(CsvMappingConfig mapping, IMatchPersonApiService m
         }
 
         var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
+        _logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
         await WriteCsvAsync(outputFilePath, headers, records);
 
         var pdfReport = PdfReportGenerator.GenerateReport(stats, GetOutputFileName(ts, outputDirectory, "report.pdf"));
