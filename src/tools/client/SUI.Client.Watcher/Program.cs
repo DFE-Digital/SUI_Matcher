@@ -1,12 +1,25 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Globalization;
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 using Shared.Extensions;
 using Shared.Util;
 
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Watcher;
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("sui-client-watcher.log", rollingInterval: RollingInterval.Day, formatProvider: new DateTimeFormatInfo()
+    {
+        FullDateTimePattern = "yyyy-MM-dd"
+    })
+    .CreateLogger();
 
 Console.Out.WriteAppName("SUI CSV File Watcher");
 Rule.Assert(args.Length == 3, "Usage: suiw <watch_directory> <output_directory> <matching_service_uri>");
@@ -18,7 +31,12 @@ builder.ConfigureAppSettingsJsonFile();
 builder.ConfigureServices((hostContext, services) =>
 {
     services.AddClientCore(hostContext.Configuration, matchApiBaseAddress);
-    services.AddLogging(configure => configure.AddConsole());
+    // Replace AddConsole with Serilog. Temporary for now. If it works well, we can add it to the core library.
+    services.AddLogging(loggingBuilder =>
+    {
+        loggingBuilder.ClearProviders();
+        loggingBuilder.AddSerilog();
+    });
     services.Configure<CsvWatcherConfig>(x =>
     {
         x.IncomingDirectory = args[0];
@@ -50,3 +68,6 @@ await processingTask;
 
 await host.StopAsync();
 cts.Dispose();
+
+// Ensure to flush and close Serilog
+Log.CloseAndFlush();
