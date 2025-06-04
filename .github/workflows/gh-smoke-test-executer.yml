@@ -112,7 +112,7 @@ jobs:
             --name ${{ env.VM_NAME }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --script '
-
+          
           $packageName="${{ env.packagename }}"
           $destinationPathFile="${{ env.destinationpathfile }}"
           $basePath = "C:\Users\SmokeTests"
@@ -120,7 +120,8 @@ jobs:
           $basePathProcessed = "$basePath\processed"
           $destinationPath = "$basePathUnprocessed\$destinationPathFile"
           $installPath = "C:\Program Files\dotnet\tools"
-
+          $appSettingsPath = "$basePath\appsettings.json"
+          
           function Clean-SmokeTestEnvironment {
               param (
             [string]$SmokeTestsPath,
@@ -135,7 +136,7 @@ jobs:
             dotnet tool uninstall --tool-path $installPath $PackageName
               }
           }
-
+          
           Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
           # Install the package
           dotnet tool install $packageName --tool-path $installPath
@@ -144,14 +145,14 @@ jobs:
               Write-Output "Adding $installPath to PATH"
               $env:Path = "$installPath;$env:Path"
           }
-
+          
           # Create the SmokeTests directories
           New-Item -ItemType Directory -Path $basePath -Force
           New-Item -ItemType Directory -Path $basePathUnprocessed -Force
           New-Item -ItemType Directory -Path $basePathProcessed -Force
-
+          
           # Start the smoke test executable in a background job
-
+          
           if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
               $job = Start-Job -ScriptBlock {
                   Param($basePath, $basePathUnprocessed, $basePathProcessed)
@@ -165,41 +166,29 @@ jobs:
                   ${{ env.executable }} $basePathUnprocessed $basePathProcessed
                   } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
           }
-
-
+          
+          
           $fileContent = "${{ steps.read_file.outputs.data }}"
-
+          
           [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
-
-          # Wait for log file to exist
-          $timeout = (Get-Date).AddMinutes(1)
-          while ((Get-Date) -lt $timeout -and !(Test-Path $logFile)) {
-              Start-Sleep -Seconds 2
-          }
-
-          if (!(Test-Path $logFile)) {
-              Write-Error "Log file was not created in time."
-              Stop-Job $job
-              exit 1
-          }
-
-          # Poll log file until it hasn't been updated for 10 seconds (2 checks)
+          
+          # Poll log file until it hasnt been updated for 1 minute
+          $today = Get-Date -Format "yyyy-MM-dd"
+          $logFilePrefix = "${{ env.logFilePrefix }}-$today.log"
+          $logFile = "$basePath\$logFilePrefix"
           $lastWriteTime = (Get-Item $logFile).LastWriteTime
-          $unchangedCount = 0
+          $timeout = (Get-Date).AddMinutes(1)
           while ((Get-Date) -lt $timeout) {
               Start-Sleep -Seconds 5
               $currentWriteTime = (Get-Item $logFile).LastWriteTime
               if ($currentWriteTime -eq $lastWriteTime) {
-                  $unchangedCount++
-                  if ($unchangedCount -ge 2) { break }
-              } else {
-                  $unchangedCount = 0
-                  $lastWriteTime = $currentWriteTime
+                  break
               }
+              $lastWriteTime = $currentWriteTime
           }
           # Save log file content to a variable
           $logContent = Get-Content -Path $logFile -Raw
-
+          
           # Assert smoke test was successful
           if ($logContent -match "${{ env.log_success_message }}") {
               Write-Output "Smoke Test Passed"
@@ -223,12 +212,13 @@ jobs:
           import json
           import sys
           import os
-
+          
           client_return_data = """${{ steps.return_data.outputs.return_data }}"""
-
+          
           if "Exception" in client_return_data or "Error" in client_return_data or "Failed" in client_return_data:
             print("Smoke Test Failed")
             print(client_return_data)
             sys.exit(1)
           else:
             print("Smoke Test Passed")
+ 
