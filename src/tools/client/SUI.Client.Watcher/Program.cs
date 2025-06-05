@@ -15,10 +15,7 @@ using SUI.Client.Core.Watcher;
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .WriteTo.Console()
-    .WriteTo.File("sui-client-watcher.log", rollingInterval: RollingInterval.Day, formatProvider: new DateTimeFormatInfo()
-    {
-        FullDateTimePattern = "yyyy-MM-dd"
-    })
+    .WriteTo.File("sui-client-watcher.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 Console.Out.WriteAppName("SUI CSV File Watcher");
