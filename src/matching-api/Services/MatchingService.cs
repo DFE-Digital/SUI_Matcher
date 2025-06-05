@@ -208,11 +208,6 @@ public class MatchingService(
             });
         }
 
-        if (queries.Count == 0)
-        {
-            throw new InvalidOperationException("No search queries were generated for model");
-        }
-
         return [.. queries];
     }
 
