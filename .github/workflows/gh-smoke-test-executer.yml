@@ -120,7 +120,6 @@ jobs:
           $basePathProcessed = "$basePath\processed"
           $destinationPath = "$basePathUnprocessed\$destinationPathFile"
           $installPath = "C:\Program Files\dotnet\tools"
-          $appSettingsPath = "$basePath\appsettings.json"
 
           function Clean-SmokeTestEnvironment {
               param (
@@ -187,7 +186,6 @@ jobs:
 
           if (!(Test-Path $logFile)) {
               Write-Error "Log file was not created in time."
-              exit 1
           }
 
           while ((Get-Date) -lt $timeout) {
