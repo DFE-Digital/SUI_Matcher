@@ -62,7 +62,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> _logger, CsvMappingConfi
             };
 
             var response = await matchPersonApi.MatchPersonAsync(payload);
-            _logger.LogInformation("Received response: {Response}", response);
+            _logger.LogInformation("Received response");
 
             record[HeaderStatus] = response?.Result?.MatchStatus.ToString() ?? "-";
             record[HeaderScore] = response?.Result?.Score.ToString() ?? "-";
