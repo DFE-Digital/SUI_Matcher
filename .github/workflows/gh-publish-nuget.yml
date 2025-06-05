@@ -104,15 +104,15 @@ jobs:
       - name: Check changed files to set publish flags
         id: check-changed-files
         run: |
-          client_files=$(git show --name-only HEAD | grep src/tools/client)
-          if [[ ! -z $client_files ]]; then
+          client_files=$(git show --name-only HEAD | grep src/tools/client || true)
+          if [[ -n $client_files ]]; then
             echo "auto_publish_client=true" >> $GITHUB_ENV
           else
             echo "auto_publish_client=false" >> $GITHUB_ENV
           fi
 
-          dbs_files=$(git show --name-only HEAD | grep src/tools/dbs-response-logger)
-          if [[ ! -z $dbs_files ]]; then
+          dbs_files=$(git show --name-only HEAD | grep src/tools/dbs-response-logger || true)
+          if [[ -n $dbs_files ]]; then
             echo "auto_publish_response_logger=true" >> $GITHUB_ENV
           else
             echo "auto_publish_response_logger=false" >> $GITHUB_ENV
