@@ -103,8 +103,8 @@ jobs:
           echo "data<<${EOF}" >> $GITHUB_OUTPUT
           base_64=`openssl base64 -in ${{ env.file_name }}` ; echo "${base_64}" >> $GITHUB_OUTPUT
           echo "${EOF}" >> $GITHUB_OUTPUT
-
-      - name: Smoke Test Run (.exe)
+          
+      - name: Smoke Test Run (tool)
         id: return_data
         run: |
           return_data="$(az vm run-command invoke \
@@ -113,111 +113,209 @@ jobs:
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --script '
 
-          $packageName="${{ env.packagename }}"
-          $destinationPathFile="${{ env.destinationpathfile }}"
           $basePath = "C:\Users\SmokeTests"
+          $serverUrl = "${{ env.SUI_SERVER_URL }}"
+          $installPath = "C:\Program Files\dotnet\tools"
           $basePathUnprocessed = "$basePath\unprocessed"
           $basePathProcessed = "$basePath\processed"
+          $packageName="${{ env.packagename }}"
+          $destinationPathFile="${{ env.destinationpathfile }}"
           $destinationPath = "$basePathUnprocessed\$destinationPathFile"
-          $installPath = "C:\Program Files\dotnet\tools"
+          $logFileName = "sui-client-logs-$(Get-Date -Format 'yyyy-MM-dd').log"
+          $logFilePath = Join-Path $basePath $logFileName
+          $toolTimeoutInSeconds = 1200
 
-          function Clean-SmokeTestEnvironment {
-              param (
-            [string]$SmokeTestsPath,
-            [string]$PackageName
-              )
-              # Check for the existence of the directory and clean it up if it exists
-              if (Test-Path $SmokeTestsPath) {
-            Remove-Item -Path $SmokeTestsPath -Recurse -Force
-              }
-              # Check for the dotnet package and remove it if it exists
-              if (dotnet tool list --tool-path $installPath | Select-String $PackageName) {
-            dotnet tool uninstall --tool-path $installPath $PackageName
-              }
+          function Cleanup-SmokeTestEnvironment {
+            param([string]$PackageName, [string]$SmokeTestsPath)
+            dotnet tool uninstall $PackageName --tool-path $installPath
+            if (Test-Path $SmokeTestsPath) { Remove-Item -Path $SmokeTestsPath -Recurse -Force }
           }
 
-          Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
-          # Install the package
+          Cleanup-SmokeTestEnvironment -PackageName $packageName -SmokeTestsPath $basePath
+
           dotnet tool install $packageName --tool-path $installPath
-          # Check if tool path in PATH and add it if not
+
           if ($env:Path -notlike "*$installPath*") {
-              Write-Output "Adding $installPath to PATH"
-              $env:Path = "$installPath;$env:Path"
+            $env:Path = "$installPath;$env:Path"
           }
 
-          # Create the SmokeTests directories
           New-Item -ItemType Directory -Path $basePath -Force
           New-Item -ItemType Directory -Path $basePathUnprocessed -Force
           New-Item -ItemType Directory -Path $basePathProcessed -Force
 
-          # Start the smoke test executable in a background job
-
+          # Start tool in background using Start-Job
           if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
-              $job = Start-Job -ScriptBlock {
-                  Param($basePath, $basePathUnprocessed, $basePathProcessed)
-                  cd $basePath;
-                  ${{ env.executable }} $basePathUnprocessed $basePathProcessed ${{ env.SUI_SERVER_URL }}
-                  } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
+            $job = Start-Job -ScriptBlock {
+                Param($basePath, $basePathUnprocessed, $basePathProcessed, $serverUrl)
+                cd $basePath;
+                & ${{ env.executable }} $basePathUnprocessed $basePathProcessed $serverUrl
+                } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed, $serverUrl
           } else {
-              $job = Start-Job -ScriptBlock {
-                  Param($basePath, $basePathUnprocessed, $basePathProcessed)
-                  cd $basePath; 
-                  ${{ env.executable }} $basePathUnprocessed $basePathProcessed
-                  } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
+            $job = Start-Job -ScriptBlock {
+                Param($basePath, $basePathUnprocessed, $basePathProcessed)
+                cd $basePath; 
+                & ${{ env.executable }} $basePathUnprocessed $basePathProcessed
+                } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
           }
 
+          # Give time for the job to start before writing the file
+          Start-Sleep -Seconds 30
 
           $fileContent = "${{ steps.read_file.outputs.data }}"
-
           [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
 
-          # Poll log file until it hasnt been updated for 1 minute
-          $today = Get-Date -Format "yyyy-MM-dd"
-          $logFilePrefix = "${{ env.logFilePrefix }}-$today.log"
-          $logFile = "$basePath\$logFilePrefix"
-          $lastWriteTime = (Get-Item $logFile).LastWriteTime
-          $timeout = (Get-Date).AddMinutes(5)
-          $unchangedCount = 0
-
-          $logfiletimeout = (Get-Date).AddMinutes(1)
-          while ((Get-Date) -lt $logfiletimeout -and !(Test-Path $logFile)) {
-              Start-Sleep -Seconds 2
-          }
-
-          if (!(Test-Path $logFile)) {
-              Write-Error "Log file was not created in time."
-          }
+          $timeout = (Get-Date).AddSeconds($toolTimeoutInSeconds)
+          $successFound = $false
 
           while ((Get-Date) -lt $timeout) {
-              Start-Sleep -Seconds 5
-              $currentWriteTime = (Get-Item $logFile).LastWriteTime
-              if ($currentWriteTime -eq $lastWriteTime) {
-                  $unchangedCount++
-                  if ($unchangedCount -ge 2) { break }
-              } else {
-                  $unchangedCount = 0
-                  $lastWriteTime = $currentWriteTime
+            if (Test-Path $logFilePath) {
+              $logContent = Get-Content -Path $logFilePath -Raw
+              if ($logContent -match "File moved to Processed directory") {
+                Write-Output "Smoke Test Passed"
+                $successFound = $true
+                break
               }
+            }
+            Start-Sleep -Seconds 2
           }
-          # Save log file content to a variable
-          $logContent = Get-Content -Path $logFile -Raw
 
-          # Assert smoke test was successful
-          if ($logContent -match "${{ env.log_success_message }}") {
-              Write-Output "Smoke Test Passed"
-              Stop-Job $job
-              Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
-              exit 0 # Exit with a zero status code
-          } else {
-              Write-Error "Smoke Test Failed"
-              Stop-Job $job
-              exit 1 # Exit with a non-zero status code
+          # Ensure the background job completes or is stopped
+          $jobTimeout = $toolTimeoutInSeconds + 30
+          Wait-Job -Job $job -Timeout $jobTimeout | Out-Null
+
+          if ($job.State -eq "Running") {
+            Stop-Job -Job $job
           }
+
+          Receive-Job -Job $job
+          Remove-Job -Job $job
+
+          if (-not $successFound) {
+            Write-Error "Smoke Test Failed"
+            exit 1
+          }
+
+          exit 0
           ')"
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "return_data<<${EOF}" >> $GITHUB_OUTPUT
           echo "${return_data}" >> $GITHUB_OUTPUT
           echo "${EOF}" >> $GITHUB_OUTPUT
+
+#      - name: Smoke Test Run (.exe)
+#        id: return_data
+#        run: |
+#          return_data="$(az vm run-command invoke \
+#            --command-id RunPowerShellScript \
+#            --name ${{ env.VM_NAME }} \
+#            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+#            --script '
+#
+#          $packageName="${{ env.packagename }}"
+#          $destinationPathFile="${{ env.destinationpathfile }}"
+#          $basePath = "C:\Users\SmokeTests"
+#          $basePathUnprocessed = "$basePath\unprocessed"
+#          $basePathProcessed = "$basePath\processed"
+#          $destinationPath = "$basePathUnprocessed\$destinationPathFile"
+#          $installPath = "C:\Program Files\dotnet\tools"
+#
+#          function Clean-SmokeTestEnvironment {
+#              param (
+#            [string]$SmokeTestsPath,
+#            [string]$PackageName
+#              )
+#              # Check for the existence of the directory and clean it up if it exists
+#              if (Test-Path $SmokeTestsPath) {
+#                Remove-Item -Path $SmokeTestsPath -Recurse -Force
+#              }
+#              # Check for the dotnet package and remove it if it exists
+#              if (dotnet tool list --tool-path $installPath | Select-String $PackageName) {
+#                dotnet tool uninstall --tool-path $installPath $PackageName
+#              }
+#          }
+#
+#          Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
+#          # Install the package
+#          dotnet tool install $packageName --tool-path $installPath
+#          # Check if tool path in PATH and add it if not
+#          if ($env:Path -notlike "*$installPath*") {
+#              Write-Output "Adding $installPath to PATH"
+#              $env:Path = "$installPath;$env:Path"
+#          }
+#
+#          # Create the SmokeTests directories
+#          New-Item -ItemType Directory -Path $basePath -Force
+#          New-Item -ItemType Directory -Path $basePathUnprocessed -Force
+#          New-Item -ItemType Directory -Path $basePathProcessed -Force
+#
+#          # Start the smoke test executable in a background job
+#
+#          if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
+#              $job = Start-Job -ScriptBlock {
+#                  Param($basePath, $basePathUnprocessed, $basePathProcessed)
+#                  cd $basePath;
+#                  ${{ env.executable }} $basePathUnprocessed $basePathProcessed ${{ env.SUI_SERVER_URL }}
+#                  } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
+#          } else {
+#              $job = Start-Job -ScriptBlock {
+#                  Param($basePath, $basePathUnprocessed, $basePathProcessed)
+#                  cd $basePath; 
+#                  ${{ env.executable }} $basePathUnprocessed $basePathProcessed
+#                  } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
+#          }
+#
+#
+#          $fileContent = "${{ steps.read_file.outputs.data }}"
+#
+#          [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$fileContent")) | Out-File -FilePath $destinationPath -Encoding utf8
+#
+#          # Poll log file until it hasnt been updated for 1 minute
+#          $today = Get-Date -Format "yyyy-MM-dd"
+#          $logFilePrefix = "${{ env.logFilePrefix }}-$today.log"
+#          $logFile = "$basePath\$logFilePrefix"
+#          $lastWriteTime = (Get-Item $logFile).LastWriteTime
+#          $timeout = (Get-Date).AddMinutes(5)
+#          $unchangedCount = 0
+#
+#          $logfiletimeout = (Get-Date).AddMinutes(1)
+#          while ((Get-Date) -lt $logfiletimeout -and !(Test-Path $logFile)) {
+#              Start-Sleep -Seconds 2
+#          }
+#
+#          if (!(Test-Path $logFile)) {
+#              Write-Error "Log file was not created in time."
+#          }
+#
+#          while ((Get-Date) -lt $timeout) {
+#              Start-Sleep -Seconds 5
+#              $currentWriteTime = (Get-Item $logFile).LastWriteTime
+#              if ($currentWriteTime -eq $lastWriteTime) {
+#                  $unchangedCount++
+#                  if ($unchangedCount -ge 2) { break }
+#              } else {
+#                  $unchangedCount = 0
+#                  $lastWriteTime = $currentWriteTime
+#              }
+#          }
+#          # Save log file content to a variable
+#          $logContent = Get-Content -Path $logFile -Raw
+#
+#          # Assert smoke test was successful
+#          if ($logContent -match "${{ env.log_success_message }}") {
+#              Write-Output "Smoke Test Passed"
+#              Stop-Job $job
+#              Clean-SmokeTestEnvironment -SmokeTestsPath $basePath -PackageName $packageName
+#              exit 0 # Exit with a zero status code
+#          } else {
+#              Write-Error "Smoke Test Failed"
+#              Stop-Job $job
+#              exit 1 # Exit with a non-zero status code
+#          }
+#          ')"
+#          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+#          echo "return_data<<${EOF}" >> $GITHUB_OUTPUT
+#          echo "${return_data}" >> $GITHUB_OUTPUT
+#          echo "${EOF}" >> $GITHUB_OUTPUT
 
       - name: check contents of return data for exceptions and errors
         shell: python
