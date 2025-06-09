@@ -11,7 +11,7 @@ namespace SUI.DBS.Response.Logger.Core.Watcher;
 public sealed class TxtFileWatcherService : IDisposable
 {
     private readonly FileSystemWatcher _watcher;
-    
+
     private readonly ILogger _logger;
     public event EventHandler<string>? FileDetected;
 
