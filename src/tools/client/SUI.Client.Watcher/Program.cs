@@ -31,18 +31,24 @@ var cts = new CancellationTokenSource();
 var processor = host.Services.GetRequiredService<CsvFileMonitor>();
 var processingTask = processor.StartAsync(cts.Token);
 
-Console.WriteLine("File watcher started. Type 'q' to quit, 'stats' for statistics.");
-while (true)
+const string commandHelpMessage = "Type 'q' to quit, 'stats' for statistics.";
+Console.WriteLine($"File watcher started. {commandHelpMessage}");
+bool holdAppOpen = true;
+while (holdAppOpen)
 {
     var command = Console.ReadLine();
-    if (command == "q")
+    switch (command?.ToLower())
     {
-        await cts.CancelAsync();
-        break;
-    }
-    else if (command == "stats")
-    {
-        processor.PrintStats(Console.Out);
+        case "q":
+            await cts.CancelAsync();
+            holdAppOpen = false;
+            break;
+        case "stats":
+            processor.PrintStats(Console.Out);
+            continue;
+        default:
+            Console.WriteLine($"Unknown command. {commandHelpMessage}");
+            continue;
     }
 }
 
