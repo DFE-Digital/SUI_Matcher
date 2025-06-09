@@ -18,8 +18,6 @@ public class MatchingService(
     {
         StoreUniqueSearchIdFor(personSpecification);
 
-        logger.LogInformation("Searching for matching person");
-
         var validationResults = validationService.Validate(personSpecification);
 
         var dataQualityResult = DataQualityEvaluatorService.ToQualityResult(personSpecification, validationResults.Results!.ToList());
