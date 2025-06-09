@@ -121,14 +121,17 @@ jobs:
           $packageName="${{ env.packagename }}"
           $destinationPathFile="${{ env.destinationpathfile }}"
           $destinationPath = "$basePathUnprocessed\$destinationPathFile"
-          $logFileName = "sui-client-logs-$(Get-Date -Format 'yyyy-MM-dd').log"
+          $logFileName = "${{ env.logFilePrefix }}-$(Get-Date -Format 'yyyy-MM-dd').log"
           $logFilePath = Join-Path $basePath $logFileName
           # 30 minutes timeout for the tool to run should be enough for most smoke tests
           $toolTimeoutInSeconds = 1800
 
           function Cleanup-SmokeTestEnvironment {
             param([string]$PackageName, [string]$SmokeTestsPath)
-            dotnet tool uninstall $PackageName --tool-path $installPath
+            if (dotnet tool list --tool-path $installPath | Select-String -Pattern $PackageName) {
+                Write-Output "Uninstalling existing $PackageName tool..."
+                dotnet tool uninstall $PackageName --tool-path $installPath
+            }
             if (Test-Path $SmokeTestsPath) { Remove-Item -Path $SmokeTestsPath -Recurse -Force }
           }
 
