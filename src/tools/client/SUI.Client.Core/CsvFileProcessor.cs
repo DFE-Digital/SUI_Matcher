@@ -42,7 +42,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         Directory.CreateDirectory(outputDirectory);
 
         var stats = new CsvProcessStats();
-        var (headers, records) = await ReadCsvAsync(filePath);
+        (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
 
         headers.Add(HeaderStatus);
         headers.Add(HeaderScore);
