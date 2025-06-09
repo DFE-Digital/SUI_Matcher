@@ -20,7 +20,7 @@ public class TxtFileMonitor
 
     public FileProcessedEnvelope? LastOperation { get; private set; }
 
-    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new ArgumentNullException("LastResult is null");
+    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new ArgumentNullException(nameof(LastOperation));
 
     public TxtFileMonitor(TxtFileWatcherService fileWatcherService, IOptions<TxtWatcherConfig> config, ILogger<TxtFileMonitor> logger, ITxtFileProcessor fileProcessor)
     {
