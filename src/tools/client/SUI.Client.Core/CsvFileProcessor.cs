@@ -47,10 +47,24 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         headers.Add(HeaderStatus);
         headers.Add(HeaderScore);
         headers.Add(HeaderNhsNo);
+        
+        int totalRecords = records.Count;
+        int currentRecord = 0;
+        DateTime lastLogTime = DateTime.Now;
+    
+        logger.LogInformation("Beginning to process {TotalRecords} records", totalRecords);
 
         foreach (var record in records)
         {
-            logger.LogInformation("Processing record new record}");
+            currentRecord++;
+            // Log progress every 5 seconds so we can see how many records are being processed over time.
+            if ((DateTime.Now - lastLogTime).TotalSeconds >= 5)
+            {
+                logger.LogInformation("{Current} of {Total} records processed", 
+                    currentRecord, totalRecords);
+                lastLogTime = DateTime.Now;
+            }
+            
             var payload = new MatchPersonPayload
             {
                 Given = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
@@ -62,7 +76,6 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
             };
 
             var response = await matchPersonApi.MatchPersonAsync(payload);
-            logger.LogInformation("Received response");
 
             record[HeaderStatus] = response?.Result?.MatchStatus.ToString() ?? "-";
             record[HeaderScore] = response?.Result?.Score.ToString() ?? "-";
