@@ -13,12 +13,14 @@ param adminPassword string
 param environmentPrefix string = 's215d01'
 
 @description('Network')
-param Network string = '192.168.0.128/25'
+param network string = '192.168.0.128/25'
 
 @description('Subnet Range')
 param subnetRange string = '192.168.0.128/26'
 
 param location string = resourceGroup().location
+
+param virtualNetworksVnetfwName string = '${environmentPrefix}-vnetfw-01'
 
 param logAnalyticsWorkspaceName string = '${environmentPrefix}-${environmentName}-loganalytics-01'
 
@@ -35,7 +37,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        Network
+        network
       ]
     }
     subnets: [
@@ -116,10 +118,8 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
 }
 
-param virtualNetworks_vnetfw_name string = '${environmentPrefix}-vnetfw-01'
-
-resource virtualNetworks_vnetfw_name_resource 'Microsoft.Network/virtualNetworks@2024-05-01' = {
-  name: virtualNetworks_vnetfw_name
+resource virtualNetworksVnetfwNameResource 'Microsoft.Network/virtualNetworks@2024-05-01' = {
+  name: virtualNetworksVnetfwName
   location: location
   tags: paramTags
   properties: {
@@ -163,7 +163,7 @@ resource VnetPeering1 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@
     allowGatewayTransit: false
     useRemoteGateways: false
     remoteVirtualNetwork: {
-      id: virtualNetworks_vnetfw_name_resource.id
+      id: virtualNetworksVnetfwNameResource.id
     }
   }
 }
@@ -192,7 +192,7 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
 
 param vnetFirewallName string = '${environmentPrefix}-vnetfw-Firewall'
 
-resource azureFirewalls_vnetfw_Firewall_name_resource 'Microsoft.Network/azureFirewalls@2024-05-01' = {
+resource azureFirewallsVnetfwFirewallNameResource 'Microsoft.Network/azureFirewalls@2024-05-01' = {
   name: vnetFirewallName
   location: location
   tags: paramTags
@@ -213,7 +213,7 @@ resource azureFirewalls_vnetfw_Firewall_name_resource 'Microsoft.Network/azureFi
             id: publicIP.id
           }
           subnet: {
-            id: '${virtualNetworks_vnetfw_name_resource.id}/subnets/AzureFirewallSubnet'
+            id: '${virtualNetworksVnetfwNameResource.id}/subnets/AzureFirewallSubnet'
           }
         }
       }
@@ -334,10 +334,10 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
   }
 }
 
-param routeTables_integration_rt_01_name string = '${environmentPrefix}-${toLower(environmentName)}-rt-01'
+param routeTablesIntegrationRtName01 string = '${environmentPrefix}-${toLower(environmentName)}-rt-01'
 
-resource routeTables_integration_rt_01_name_resource 'Microsoft.Network/routeTables@2024-05-01' = {
-  name: routeTables_integration_rt_01_name
+resource routeTablesIntegrationRtNameResource01 'Microsoft.Network/routeTables@2024-05-01' = {
+  name: routeTablesIntegrationRtName01
   location: location
   tags: paramTags
   properties: {
@@ -348,7 +348,7 @@ resource routeTables_integration_rt_01_name_resource 'Microsoft.Network/routeTab
         properties: {
           addressPrefix: '0.0.0.0/0'
           nextHopType: 'VirtualAppliance'
-          nextHopIpAddress: azureFirewalls_vnetfw_Firewall_name_resource.properties.ipConfigurations[0].properties.privateIPAddress
+          nextHopIpAddress: azureFirewallsVnetfwFirewallNameResource.properties.ipConfigurations[0].properties.privateIPAddress
         }
         type: 'Microsoft.Network/routeTables/routes'
       }
@@ -375,8 +375,8 @@ param dbsClientConsoleAppLogsRuleName string = 'DbsClientConsoleAppLogsRule'
 resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   name: dbsClientConsoleAppLogsRuleName
   location: location
-  tags: paramTags
   kind: 'Windows'
+  tags: paramTags
   properties: {
     dataCollectionEndpointId: dbsClientConsoleApplogsEndpoint.id
     streamDeclarations: {

@@ -20,7 +20,7 @@ public class TxtFileMonitor
 
     public FileProcessedEnvelope? LastOperation { get; private set; }
 
-    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new Exception("LastResult is null");
+    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new ArgumentNullException("LastResult is null");
 
     public TxtFileMonitor(TxtFileWatcherService fileWatcherService, IOptions<TxtWatcherConfig> config, ILogger<TxtFileMonitor> logger, ITxtFileProcessor fileProcessor)
     {
@@ -35,17 +35,17 @@ public class TxtFileMonitor
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _fileWatcherService.Start();
-        _logger.LogInformation("Started watching {directory}", _config.IncomingDirectory);
+        _logger.LogInformation("Started watching {Directory}", _config.IncomingDirectory);
         try
         {
             await ProcessInternalAsync(cancellationToken);
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException exception)
         {
-            _logger.LogInformation("Cancelled. Stopping...");
+            _logger.LogError(exception, "Cancelled. Stopping...");
         }
         _fileWatcherService.Stop();
-        _logger.LogInformation("Stopped watching {directory}", _config.IncomingDirectory);
+        _logger.LogInformation("Stopped watching {Directory}", _config.IncomingDirectory);
     }
 
     private async Task ProcessInternalAsync(CancellationToken cancellationToken)
@@ -54,7 +54,7 @@ public class TxtFileMonitor
         {
             if (_fileQueue.TryDequeue(out var filePath))
             {
-                _logger.LogInformation("Discovered file: {fileName}", Path.GetFileName(filePath));
+                _logger.LogInformation("Discovered file: {FileName}", Path.GetFileName(filePath));
                 try
                 {
                     await ProcessFileAsync(filePath);
@@ -62,7 +62,7 @@ public class TxtFileMonitor
                     {
                         string destPath = Path.Combine(_config.ProcessedDirectory, Path.GetFileName(filePath));
                         File.Move(filePath, destPath);
-                        _logger.LogInformation("File moved to Processed directory: {destPath}", destPath);
+                        _logger.LogInformation("File moved to Processed directory: {DestPath}", destPath);
                         Interlocked.Increment(ref _processedCount);
                         return Task.CompletedTask;
                     }, _config.RetryCount, _config.RetryDelayMs);
@@ -71,7 +71,7 @@ public class TxtFileMonitor
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogInformation($"Error processing file {filePath}: {ex.Message}");
+                    _logger.LogInformation(ex, "Error processing file {FilePath}: {Message}", filePath, ex.Message);
                     Interlocked.Increment(ref _errorCount);
                     LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
@@ -104,7 +104,7 @@ public class TxtFileMonitor
                 attempts++;
                 if (attempts >= retryCount)
                     throw;
-                _logger.LogInformation($"Retry attempt {attempts} failed: {ex.Message}. Retrying in {delayMs}ms.");
+                _logger.LogInformation(ex, "Retry attempt {Attempts} failed: {Message}. Retrying in {DelayMs}ms.", attempts, ex.Message, delayMs);
                 await Task.Delay(delayMs);
             }
         }
