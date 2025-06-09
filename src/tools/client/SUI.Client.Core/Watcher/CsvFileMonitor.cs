@@ -20,7 +20,7 @@ public class CsvFileMonitor
 
     public FileProcessedEnvelope? LastOperation { get; private set; }
 
-    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new ArgumentNullException(nameof(LastOperation));
+    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new InvalidOperationException("LastOperation is null");
 
     public ProcessCsvFileResult LastResult() => GetLastOperation().AssertSuccess();
 
