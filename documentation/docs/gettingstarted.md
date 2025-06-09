@@ -1,11 +1,5 @@
 # Getting started
 
-## Configure Git Hooks
-
-```bash
-git config core.hooksPath .githooks
-```
-
 ## Setting up an API credential
 
 1. On the [NHS Developer site](https://onboarding.prod.api.platform.nhs.uk/), create a new developer account, if you do not yet have one.

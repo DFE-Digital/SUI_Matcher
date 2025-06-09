@@ -14,7 +14,7 @@ public class MatchingService(
     INhsFhirClient nhsFhirClient,
     IValidationService validationService) : IMatchingService
 {
-    private int? _algorithmVersion;
+    public static readonly int AlgorithmVersion = 1;
 
     public async Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification)
     {
@@ -66,8 +66,8 @@ public class MatchingService(
         };
     }
 
-    public void StoreAlgorithmVersion() =>
-        Activity.Current?.SetBaggage("AlgorithmVersion", _algorithmVersion?.ToString() ?? "1");
+    private static void StoreAlgorithmVersion() =>
+        Activity.Current?.SetBaggage("AlgorithmVersion", AlgorithmVersion.ToString());
 
     public async Task<DemographicResponse?> GetDemographicsAsync(DemographicRequest request)
     {
@@ -90,8 +90,6 @@ public class MatchingService(
             Errors = result.ErrorMessage is null ? [] : [result.ErrorMessage]
         };
     }
-
-    public void CacheAlgorithmVersion(int? version) => _algorithmVersion = version;
 
     private static string GetAgeGroup(DateOnly birthDate)
     {
@@ -145,7 +143,8 @@ public class MatchingService(
 
         Activity.Current?.SetBaggage("SearchId", hash);
     }
-    public static SearchQuery[] GetSearchQueries(PersonSpecification model)
+
+    private static SearchQuery[] GetSearchQueries(PersonSpecification model)
     {
         if (!model.BirthDate.HasValue)
         {

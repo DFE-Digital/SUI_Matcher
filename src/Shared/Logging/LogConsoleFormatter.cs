@@ -5,12 +5,8 @@ using Microsoft.Extensions.Logging.Console;
 
 namespace Shared.Logging;
 
-public class LogConsoleFormatter : ConsoleFormatter
+public class LogConsoleFormatter() : ConsoleFormatter("log4net")
 {
-    public LogConsoleFormatter() : base("log4net")
-    {
-    }
-
     public override void Write<TState>(
         in LogEntry<TState> logEntry,
         IExternalScopeProvider? scopeProvider,
