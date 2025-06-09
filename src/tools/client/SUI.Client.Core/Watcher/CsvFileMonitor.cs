@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace SUI.Client.Core.Watcher;
 
+[ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
 public class CsvFileMonitor
 {
     private readonly CsvFileWatcherService _fileWatcherService;

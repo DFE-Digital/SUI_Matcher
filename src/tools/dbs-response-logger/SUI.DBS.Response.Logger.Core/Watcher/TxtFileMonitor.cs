@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace SUI.DBS.Response.Logger.Core.Watcher;
 
+[ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
 public class TxtFileMonitor
 {
     private readonly TxtFileWatcherService _fileWatcherService;
