@@ -20,7 +20,7 @@ public interface ICsvFileProcessor
     Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath);
 }
 
-public class CsvFileProcessor(ILogger<CsvFileProcessor> _logger, CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : ICsvFileProcessor
+public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : ICsvFileProcessor
 {
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderScore = "SUI_Score";
@@ -30,7 +30,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> _logger, CsvMappingConfi
 
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
-        _logger.LogInformation("Processing CSV file: {FilePath}", filePath);
+        logger.LogInformation("Processing CSV file: {FilePath}", filePath);
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("File not found", filePath);
@@ -50,7 +50,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> _logger, CsvMappingConfi
 
         foreach (var record in records)
         {
-            _logger.LogInformation("Processing record new record}");
+            logger.LogInformation("Processing record new record}");
             var payload = new MatchPersonPayload
             {
                 Given = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
@@ -62,7 +62,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> _logger, CsvMappingConfi
             };
 
             var response = await matchPersonApi.MatchPersonAsync(payload);
-            _logger.LogInformation("Received response");
+            logger.LogInformation("Received response");
 
             record[HeaderStatus] = response?.Result?.MatchStatus.ToString() ?? "-";
             record[HeaderScore] = response?.Result?.Score.ToString() ?? "-";
@@ -72,7 +72,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> _logger, CsvMappingConfi
         }
 
         var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
-        _logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
+        logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
         await WriteCsvAsync(outputFilePath, headers, records);
 
         var pdfReport = PdfReportGenerator.GenerateReport(stats, GetOutputFileName(ts, outputDirectory, "report.pdf"));
