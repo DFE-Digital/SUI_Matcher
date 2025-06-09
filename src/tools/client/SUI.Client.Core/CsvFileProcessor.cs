@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 
 using CsvHelper;
@@ -50,19 +51,19 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
 
         int totalRecords = records.Count;
         int currentRecord = 0;
-        DateTime lastLogTime = DateTime.Now;
+        var progressStopwatch = new Stopwatch();
+        progressStopwatch.Start();
 
         logger.LogInformation("Beginning to process {TotalRecords} records", totalRecords);
 
         foreach (var record in records)
         {
             currentRecord++;
-            // Log progress every 5 seconds so we can see how many records are being processed over time.
-            if ((DateTime.Now - lastLogTime).TotalSeconds >= 5)
+            // Log progress at least every 5 seconds so we can see how many records are being processed over time.
+            if (progressStopwatch.ElapsedMilliseconds >= 5000)
             {
-                logger.LogInformation("{Current} of {Total} records processed",
-                    currentRecord, totalRecords);
-                lastLogTime = DateTime.Now;
+                logger.LogInformation("{Current} of {Total} records processed", currentRecord, totalRecords);
+                progressStopwatch.Restart();
             }
 
             var payload = new MatchPersonPayload
