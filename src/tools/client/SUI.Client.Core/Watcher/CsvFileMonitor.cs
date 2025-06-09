@@ -80,7 +80,7 @@ public class CsvFileMonitor
                     LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
 
-                _logger.LogInformation("Finished processing file: {fileName}", Path.GetFileName(filePath));
+                _logger.LogInformation("Finished processing file: {FileName}", Path.GetFileName(filePath));
                 Processed?.Invoke(this, LastOperation);
             }
             await Task.Delay(_config.ProcessingDelayMs, cancellationToken);
