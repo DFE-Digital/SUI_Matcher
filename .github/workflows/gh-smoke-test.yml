@@ -70,14 +70,14 @@ jobs:
 
   dbs_smoketest:
     needs: env_setup
-    name: Smoke Test DBS Response Logger (.exe)
+    name: Smoke Test DBS Response Logger
     if: ((needs.env_setup.outputs.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (needs.env_setup.outputs.cron_run == 'true'))
     uses: ./.github/workflows/gh-smoke-test-executer.yml
     with:
       smoke_test_type: dbs_batch_search
       azure_location: westeurope
       version: ${{ needs.env_setup.outputs.client_version }}
-      vm_name: ${{ inputs.virtual_machine_name }}
+      vm_name: ${{ inputs.virtual_machine_name || 's215d01-integration-vm-01' }}
     secrets:
       sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
       azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -87,14 +87,14 @@ jobs:
   
   client_smoketest:
     needs: env_setup
-    name: Smoke Test SUI Client (.exe)
+    name: Smoke Test SUI Client
     if: ((needs.env_setup.outputs.triggered_workflow == 'Azure App Deployment' || needs.env_setup.outputs.triggered_workflow == 'Build and Upload Client Watcher') || (needs.env_setup.outputs.cron_run == 'true'))
     uses: ./.github/workflows/gh-smoke-test-executer.yml
     with:
       smoke_test_type: client_batch_search
       azure_location: westeurope
       version: ${{ needs.env_setup.outputs.client_version }}
-      vm_name: ${{ inputs.virtual_machine_name }}
+      vm_name: ${{ inputs.virtual_machine_name || 's215d01-integration-vm-01' }}
     secrets:
       sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
       azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
