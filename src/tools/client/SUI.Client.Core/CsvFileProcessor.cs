@@ -47,11 +47,11 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         headers.Add(HeaderStatus);
         headers.Add(HeaderScore);
         headers.Add(HeaderNhsNo);
-        
+
         int totalRecords = records.Count;
         int currentRecord = 0;
         DateTime lastLogTime = DateTime.Now;
-    
+
         logger.LogInformation("Beginning to process {TotalRecords} records", totalRecords);
 
         foreach (var record in records)
@@ -60,11 +60,11 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
             // Log progress every 5 seconds so we can see how many records are being processed over time.
             if ((DateTime.Now - lastLogTime).TotalSeconds >= 5)
             {
-                logger.LogInformation("{Current} of {Total} records processed", 
+                logger.LogInformation("{Current} of {Total} records processed",
                     currentRecord, totalRecords);
                 lastLogTime = DateTime.Now;
             }
-            
+
             var payload = new MatchPersonPayload
             {
                 Given = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
