@@ -31,7 +31,6 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
 
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
-        logger.LogInformation("Processing CSV file: {FilePath}", filePath);
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("File not found", filePath);
@@ -54,7 +53,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         var progressStopwatch = new Stopwatch();
         progressStopwatch.Start();
 
-        logger.LogInformation("Beginning to process {TotalRecords} records", totalRecords);
+        logger.LogInformation("Beginning to process {TotalRecords} records from file: {FilePath}", totalRecords, filePath);
 
         foreach (var record in records)
         {
