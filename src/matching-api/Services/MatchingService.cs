@@ -121,7 +121,7 @@ public class MatchingService(
     private static void StoreUniqueSearchIdFor(PersonSpecification personSpecification)
     {
         byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(personSpecification));
-        byte[] hashBytes = MD5.HashData(bytes);
+        byte[] hashBytes = SHA256.HashData(bytes);
 
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < hashBytes.Length; i++)

@@ -8,6 +8,7 @@ namespace SUI.DBS.Response.Logger.Core.Watcher;
 /// <summary>
 /// Wrapper for FileSystemWatcher
 /// </summary>
+[ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
 public sealed class TxtFileWatcherService : IDisposable
 {
     private readonly FileSystemWatcher _watcher;
