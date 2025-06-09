@@ -2,7 +2,7 @@
   "profiles": {
     "SUI.Client.Watcher": {
       "commandName": "Project",
-      "commandLineArgs": "/Users/danielmurray/dev/hippo/unprocessed /Users/danielmurray/dev/hippo/unprocessed http://localhost:5000"
+      "commandLineArgs": "\"C:\\temp\\sui\\incoming\" \"C:\\temp\\sui\\incoming\\processed\" http://localhost:5000"
     }
   }
 }
