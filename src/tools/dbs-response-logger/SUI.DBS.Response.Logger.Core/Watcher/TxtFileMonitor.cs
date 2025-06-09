@@ -1,5 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
