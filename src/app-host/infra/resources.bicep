@@ -145,34 +145,6 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
   }
 }
 
-// Another which doesn't like dashes in the name
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: '${environmentPrefix}${lowercaseEnvironmentName}sa01'
-  location: location
-  sku: {
-    name: 'Standard_LRS'
-  }
-  kind: 'StorageV2'
-  tags: tags
-  properties: {
-    accessTier: 'Hot'
-    minimumTlsVersion: 'TLS1_2'
-  }
-}
-
-resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
-  parent: storageAccount
-  name: 'default'
-}
-
-resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  parent: blobServices
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-container-01'
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${environmentPrefix}-${lowercaseEnvironmentName}-appinsights-01'
   location: location
