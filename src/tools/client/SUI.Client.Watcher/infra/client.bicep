@@ -44,6 +44,11 @@ resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
   name: '${environmentPrefix}-${toLower(environmentName)}-vnet-cae-01'
 }
 
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {
+  scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
+  name: logAnalyticsWorkspaceName
+}
+
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   name: '${environmentPrefix}-${environmentName}-clientvnet-01'
   location: location
@@ -365,11 +370,6 @@ resource dbsClientConsoleApplogsEndpoint 'Microsoft.Insights/dataCollectionEndpo
   location: location
   tags: paramTags
   properties: {}
-}
-
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {
-  scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
-  name: logAnalyticsWorkspaceName
 }
 
 resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
