@@ -31,6 +31,11 @@ param paramTags object = {
   'Service Offering': 'SUI'
 }
 
+resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
+  scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
+  name: '${environmentPrefix}-${toLower(environmentName)}-vnet-cae-01'
+}
+
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   name: '${environmentPrefix}-${environmentName}-clientvnet-01'
   location: location
@@ -148,11 +153,6 @@ resource virtualNetworksVnetfwNameResource 'Microsoft.Network/virtualNetworks@20
     ]
     enableDdosProtection: false
   }
-}
-
-resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
-  scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
-  name: '${environmentPrefix}-${toLower(environmentName)}-vnet-cae-01'
 }
 
 resource VnetPeering1 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-05-01' = {
