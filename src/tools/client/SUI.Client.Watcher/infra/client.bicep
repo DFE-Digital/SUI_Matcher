@@ -24,6 +24,14 @@ param virtualNetworksVnetfwName string = '${environmentPrefix}-vnetfw-01'
 
 param logAnalyticsWorkspaceName string = '${environmentPrefix}-${environmentName}-loganalytics-01'
 
+param vnetFirewallName string = '${environmentPrefix}-vnetfw-Firewall'
+
+param routeTablesIntegrationRtName01 string = '${environmentPrefix}-${toLower(environmentName)}-rt-01'
+
+param dbsClientConsoleApplogsEndpointName string = 'DbsClientConsoleApplogsEndpoint'
+
+param dbsClientConsoleAppLogsRuleName string = 'DbsClientConsoleAppLogsRule'
+
 @description('Tags for the resources')
 param paramTags object = {
   Product: 'SUI'
@@ -190,8 +198,6 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
   }
 }
 
-param vnetFirewallName string = '${environmentPrefix}-vnetfw-Firewall'
-
 resource azureFirewallsVnetfwFirewallNameResource 'Microsoft.Network/azureFirewalls@2024-05-01' = {
   name: vnetFirewallName
   location: location
@@ -334,8 +340,6 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
   }
 }
 
-param routeTablesIntegrationRtName01 string = '${environmentPrefix}-${toLower(environmentName)}-rt-01'
-
 resource routeTablesIntegrationRtNameResource01 'Microsoft.Network/routeTables@2024-05-01' = {
   name: routeTablesIntegrationRtName01
   location: location
@@ -356,8 +360,6 @@ resource routeTablesIntegrationRtNameResource01 'Microsoft.Network/routeTables@2
   }
 }
 
-param dbsClientConsoleApplogsEndpointName string = 'DbsClientConsoleApplogsEndpoint'
-
 resource dbsClientConsoleApplogsEndpoint 'Microsoft.Insights/dataCollectionEndpoints@2023-03-11' = {
   name: dbsClientConsoleApplogsEndpointName
   location: location
@@ -369,8 +371,6 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06
   scope: resourceGroup('${environmentPrefix}-${toLower(environmentName)}')
   name: logAnalyticsWorkspaceName
 }
-
-param dbsClientConsoleAppLogsRuleName string = 'DbsClientConsoleAppLogsRule'
 
 resource dataCollectionRules_DbsClientConsoleAppLogsRule_name_resource 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   name: dbsClientConsoleAppLogsRuleName
