@@ -281,6 +281,6 @@ public sealed class MatchingServiceTests
     }
 
 
-    private ILogger<MatchingService> CreateLogger() =>
+    private static Logger<MatchingService> CreateLogger() =>
          new Logger<MatchingService>(new LoggerFactory());
 }

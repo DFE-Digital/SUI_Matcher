@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace SUI.DBS.Response.Logger.Core.Watcher;
@@ -6,10 +8,11 @@ namespace SUI.DBS.Response.Logger.Core.Watcher;
 /// <summary>
 /// Wrapper for FileSystemWatcher
 /// </summary>
-public class TxtFileWatcherService : IDisposable
+[ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
+public sealed class TxtFileWatcherService : IDisposable
 {
     private readonly FileSystemWatcher _watcher;
-    private readonly TxtWatcherConfig _config;
+
     private readonly ILogger _logger;
     public event EventHandler<string>? FileDetected;
 
@@ -17,10 +20,10 @@ public class TxtFileWatcherService : IDisposable
 
     public TxtFileWatcherService(IOptions<TxtWatcherConfig> config, ILoggerFactory loggerFactory)
     {
-        _config = config.Value;
+        TxtWatcherConfig config1 = config.Value;
         _logger = loggerFactory.CreateLogger<TxtFileWatcherService>();
-        Directory.CreateDirectory(_config.IncomingDirectory);
-        _watcher = new FileSystemWatcher(_config.IncomingDirectory, "*.txt")
+        Directory.CreateDirectory(config1.IncomingDirectory);
+        _watcher = new FileSystemWatcher(config1.IncomingDirectory, "*.txt")
         {
             NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
         };
@@ -31,7 +34,7 @@ public class TxtFileWatcherService : IDisposable
     private void OnCreated(object sender, FileSystemEventArgs e)
     {
         Count++;
-        _logger.LogInformation($"New file detected: {Path.GetFileName(e.FullPath)}");
+        _logger.LogInformation("New file detected: {Filename}", Path.GetFileName(e.FullPath));
         FileDetected?.Invoke(this, e.FullPath);
     }
 
@@ -42,6 +45,15 @@ public class TxtFileWatcherService : IDisposable
     public void Dispose()
     {
         Stop();
-        _watcher.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _watcher.Dispose();
+        }
     }
 }

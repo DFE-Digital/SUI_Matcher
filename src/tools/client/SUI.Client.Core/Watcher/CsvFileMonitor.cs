@@ -1,10 +1,12 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace SUI.Client.Core.Watcher;
 
+[ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
 public class CsvFileMonitor
 {
     private readonly CsvFileWatcherService _fileWatcherService;
@@ -20,7 +22,7 @@ public class CsvFileMonitor
 
     public FileProcessedEnvelope? LastOperation { get; private set; }
 
-    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new ArgumentNullException(nameof(LastOperation));
+    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new InvalidOperationException("LastOperation is null");
 
     public ProcessCsvFileResult LastResult() => GetLastOperation().AssertSuccess();
 
@@ -78,7 +80,7 @@ public class CsvFileMonitor
                     LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
 
-                _logger.LogInformation("Finished processing file: {fileName}", Path.GetFileName(filePath));
+                _logger.LogInformation("Finished processing file: {FileName}", Path.GetFileName(filePath));
                 Processed?.Invoke(this, LastOperation);
             }
             await Task.Delay(_config.ProcessingDelayMs, cancellationToken);

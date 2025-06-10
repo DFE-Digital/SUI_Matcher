@@ -18,8 +18,6 @@ public class MatchingService(
     {
         StoreUniqueSearchIdFor(personSpecification);
 
-        logger.LogInformation("Searching for matching person");
-
         var validationResults = validationService.Validate(personSpecification);
 
         var dataQualityResult = DataQualityEvaluatorService.ToQualityResult(personSpecification, validationResults.Results!.ToList());
@@ -122,9 +120,8 @@ public class MatchingService(
 
     private static void StoreUniqueSearchIdFor(PersonSpecification personSpecification)
     {
-        using var md5 = MD5.Create();
         byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(personSpecification));
-        byte[] hashBytes = md5.ComputeHash(bytes);
+        byte[] hashBytes = SHA256.HashData(bytes);
 
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < hashBytes.Length; i++)
@@ -229,7 +226,7 @@ public class MatchingService(
         {
             var query = queries[i];
 
-            logger.LogInformation($"Performing search query ({i}) against Nhs Fhir API");
+            logger.LogInformation("Performing search query ({Query}) against Nhs Fhir API", i);
 
             var searchResult = await nhsFhirClient.PerformSearch(query);
             if (searchResult != null)
@@ -246,20 +243,20 @@ public class MatchingService(
                         status = MatchStatus.PotentialMatch;
                     }
 
-                    logger.LogInformation($"Search query ({i}) resulted in status '{status.ToString()}'");
+                    logger.LogInformation("Search query ({Query}) resulted in status '{Status}'", i, status.ToString());
 
                     return new MatchResult2(searchResult, status, i); // single match with confidence score
                 }
                 else if (searchResult.Type == SearchResult.ResultType.MultiMatched)
                 {
-                    logger.LogInformation($"Search query ({i}) resulted in status 'ManyMatch'");
+                    logger.LogInformation("Search query ({Query}) resulted in status 'ManyMatch'", i);
 
                     return new MatchResult2(searchResult, MatchStatus.ManyMatch, i); // multiple matches
                 }
             }
         }
 
-        logger.LogInformation($"Search query ({queries.Length - 1}) resulted in status 'NoMatch'");
+        logger.LogInformation("Search query ({QueryLength}) resulted in status 'NoMatch'", queries.Length - 1);
 
         return new MatchResult2(MatchStatus.NoMatch);
     }
