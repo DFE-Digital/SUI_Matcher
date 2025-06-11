@@ -103,7 +103,7 @@ jobs:
           echo "data<<${EOF}" >> $GITHUB_OUTPUT
           base_64=`openssl base64 -in ${{ env.file_name }}` ; echo "${base_64}" >> $GITHUB_OUTPUT
           echo "${EOF}" >> $GITHUB_OUTPUT
-          
+
       - name: Smoke Test Run (tool)
         id: return_data
         run: |
@@ -147,19 +147,17 @@ jobs:
           New-Item -ItemType Directory -Path $basePathUnprocessed -Force
           New-Item -ItemType Directory -Path $basePathProcessed -Force
 
-          # Start tool in background using Start-Job
+          # Start tool as a process so it can be killed directly
           if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
-            $job = Start-Job -ScriptBlock {
-                Param($basePath, $basePathUnprocessed, $basePathProcessed, $serverUrl)
-                cd $basePath;
-                & ${{ env.executable }} $basePathUnprocessed $basePathProcessed $serverUrl
-                } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed, $serverUrl
+              $process = Start-Process -FilePath "${{ env.executable }}" `
+                  -ArgumentList "$basePathUnprocessed", "$basePathProcessed", "$serverUrl" `
+                  -WorkingDirectory $basePath `
+                  -PassThru
           } else {
-            $job = Start-Job -ScriptBlock {
-                Param($basePath, $basePathUnprocessed, $basePathProcessed)
-                cd $basePath; 
-                & ${{ env.executable }} $basePathUnprocessed $basePathProcessed
-                } -ArgumentList $basePath, $basePathUnprocessed, $basePathProcessed
+              $process = Start-Process -FilePath "${{ env.executable }}" `
+                  -ArgumentList "$basePathUnprocessed", "$basePathProcessed" `
+                  -WorkingDirectory $basePath `
+                  -PassThru
           }
 
           # Give time for the job to start before writing the file
@@ -182,17 +180,13 @@ jobs:
             }
             Start-Sleep -Seconds 2
           }
+          
+          # Give time for the app to finish processing anything else before stopping it
+          Start-Sleep -Seconds 30
 
-          # Ensure the background job completes or is stopped
-          $jobTimeout = 60
-          Wait-Job -Job $job -Timeout $jobTimeout | Out-Null
-
-          if ($job.State -eq "Running") {
-            Stop-Job -Job $job
+          if ($process -and !$process.HasExited) {
+              Stop-Process -Id $process.Id -Force
           }
-
-          Receive-Job -Job $job
-          Remove-Job -Job $job
 
           if (-not $successFound) {
             Write-Error "Smoke Test Failed"

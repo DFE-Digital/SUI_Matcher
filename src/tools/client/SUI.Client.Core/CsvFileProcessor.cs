@@ -84,6 +84,8 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
             RecordStats(stats, response);
         }
 
+        progressStopwatch.Stop();
+
         var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
         await WriteCsvAsync(outputFilePath, headers, records);
