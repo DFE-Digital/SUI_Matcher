@@ -182,6 +182,10 @@ jobs:
             }
             Start-Sleep -Seconds 2
           }
+          
+          # Give time for the job to complete anything else it might be doing after the log message
+          $jobTimeout = 30
+          Wait-Job -Job $job -Timeout $jobTimeout | Out-Null
 
           Stop-Job -Job $job  -Force
           Receive-Job -Job $job
