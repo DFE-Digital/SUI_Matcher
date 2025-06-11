@@ -187,10 +187,7 @@ jobs:
           $jobTimeout = 60
           Wait-Job -Job $job -Timeout $jobTimeout | Out-Null
 
-          if ($job.State -eq "Running") {
-            Stop-Job -Job $job
-          }
-
+          Stop-Job -Job $job
           Receive-Job -Job $job
           Remove-Job -Job $job
 
