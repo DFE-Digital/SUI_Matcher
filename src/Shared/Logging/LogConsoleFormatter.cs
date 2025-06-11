@@ -5,12 +5,8 @@ using Microsoft.Extensions.Logging.Console;
 
 namespace Shared.Logging;
 
-public class LogConsoleFormatter : ConsoleFormatter
+public class LogConsoleFormatter() : ConsoleFormatter("log4net")
 {
-    public LogConsoleFormatter() : base("log4net")
-    {
-    }
-
     public override void Write<TState>(
         in LogEntry<TState> logEntry,
         IExternalScopeProvider? scopeProvider,
@@ -26,8 +22,13 @@ public class LogConsoleFormatter : ConsoleFormatter
         }
 
         var searchId = Activity.Current?.GetBaggageItem("SearchId");
+        var algorithmVersion = Activity.Current?.GetBaggageItem("AlgorithmVersion");
 
-        if (searchId is not null)
+        if (searchId is not null && algorithmVersion is not null)
+        {
+            textWriter.Write($"[{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [SearchId={searchId}] ");
+        }
+        else if (searchId is not null)
         {
             textWriter.Write($"[{logEntry.LogLevel}] [SearchId={searchId}] ");
         }

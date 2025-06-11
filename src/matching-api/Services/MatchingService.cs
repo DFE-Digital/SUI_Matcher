@@ -14,8 +14,12 @@ public class MatchingService(
     INhsFhirClient nhsFhirClient,
     IValidationService validationService) : IMatchingService
 {
+    public static readonly int AlgorithmVersion = 1;
+
     public async Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification)
     {
+        StoreAlgorithmVersion();
+
         StoreUniqueSearchIdFor(personSpecification);
 
         var validationResults = validationService.Validate(personSpecification);
@@ -59,6 +63,9 @@ public class MatchingService(
             DataQuality = dataQualityResult
         };
     }
+
+    private static void StoreAlgorithmVersion() =>
+        Activity.Current?.SetBaggage("AlgorithmVersion", AlgorithmVersion.ToString());
 
     public async Task<DemographicResponse?> GetDemographicsAsync(DemographicRequest request)
     {

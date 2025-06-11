@@ -1,19 +1,32 @@
 ﻿using System.Diagnostics;
 
+using Castle.Core.Logging;
+
 using MatchingApi.Services;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 
 using Moq;
 
 using Newtonsoft.Json;
 
 using Shared.Endpoint;
+using Shared.Logging;
 using Shared.Models;
+
+using Unit.Tests.Util;
+
+using Xunit.Abstractions;
+
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Unit.Tests.Matching;
 
-public sealed class MatchingServiceTests
+public sealed class MatchingServiceTests(ITestOutputHelper outputHelper)
 {
     [Fact]
     public async Task EmptyPersonModelReturnsError()
@@ -280,6 +293,52 @@ public sealed class MatchingServiceTests
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
     }
 
+    [Fact]
+    public async Task ShouldPrependCurrentAlgorithmVersionToLogMessage()
+    {
+        // Arrange
+        var writer = new StringWriter();
+        Console.SetOut(writer);
+        var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddConsole(options => options.FormatterName = "log4net")
+                .AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
+        });
+
+        var logger = loggerFactory.CreateLogger<MatchingService>();
+        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
+        var validationService = new ValidationService();
+        var subj = new MatchingService(logger, nhsFhir.Object, validationService);
+
+        var model = new PersonSpecification
+        {
+            BirthDate = new DateOnly(1970, 1, 1),
+            Family = "Smith",
+            Given = "John",
+        };
+
+        nhsFhir.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult
+            {
+                Type = SearchResult.ResultType.Matched,
+                Score = 1
+            });
+
+        using var activity = new Activity("TestActivity");
+        activity.Start();
+
+        // Act
+        await subj.SearchAsync(model);
+
+        // Assert
+        var logMessages = writer.ToString().Split("\n");
+
+        Assert.NotEmpty(logMessages);
+
+        outputHelper.WriteLine(writer.ToString());
+
+        Assert.Contains(logMessages, x => x.Contains($"[Algorithm=v{MatchingService.AlgorithmVersion}]"));
+    }
 
     private static Logger<MatchingService> CreateLogger() =>
          new Logger<MatchingService>(new LoggerFactory());
