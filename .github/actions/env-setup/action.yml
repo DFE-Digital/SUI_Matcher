@@ -1,0 +1,23 @@
+name: Environment Setup
+
+description: "Composite action to set up environment and outputs for smoke tests."
+
+outputs:
+  client_version:
+    description: 'Latest client version tag'
+    value: ${{ steps.check-version.outputs.CLIENT_VERSION }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Use latest tag
+      id: check-version
+      shell: bash
+      run: |
+        git fetch --tags
+        latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+        echo "Latest tag: $latest_tag"
+        echo "CLIENT_VERSION=$latest_tag" >> $GITHUB_OUTPUT

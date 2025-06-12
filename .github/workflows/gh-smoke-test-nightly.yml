@@ -8,40 +8,29 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  VM_NAME: "s215d01-integration-vm-01"
+
 jobs:
   env_setup:
     runs-on: ubuntu-latest
     outputs:
-      client_version: ${{ steps.check-version.outputs.CLIENT_VERSION }}
-      vm_name: ${{ steps.set-vm-name.outputs.VM_NAME }}
-
+      client_version: ${{ steps.env-setup.outputs.client_version }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use latest tag
-        id: check-version
-        run: |
-          git fetch --tags
-          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-          echo "Latest tag: $latest_tag"
-          echo "CLIENT_VERSION=$latest_tag" >> $GITHUB_ENV
-
-      - name: Set VM Name
-        id: set-vm-name
-        env:
-          AZURE_VM_NAME: ${{ secrets.AZURE_VM_NAME }}
-        run: echo "VM_NAME=${AZURE_VM_NAME}" >> $GITHUB_OUTPUT
+      - name: Environment Setup
+        id: env-setup
+        uses: ./.github/actions/env-setup
 
   dbs_smoketest:
-    needs: [env_setup, client_smoketest]
+    needs: [env_setup, client_smoketest] # Ensures we run synronously and not in parallel
+    if: always()
     name: Smoke Test DBS Response Logger
     uses: ./.github/workflows/gh-smoke-test-executer.yml
     with:
       smoke_test_type: dbs_batch_search
       azure_location: westeurope
       version: ${{ needs.env_setup.outputs.client_version }}
-      vm_name: ${{ needs.env_setup.outputs.vm_name }}
+      vm_name: "s215d01-integration-vm-01"
     secrets:
       sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
       azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -57,7 +46,7 @@ jobs:
       smoke_test_type: client_batch_search
       azure_location: westeurope
       version: ${{ needs.env_setup.outputs.client_version }}
-      vm_name: ${{ needs.env_setup.outputs.vm_name }}
+      vm_name: "s215d01-integration-vm-01"
     secrets:
       sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
       azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
