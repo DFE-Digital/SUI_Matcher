@@ -1,0 +1,66 @@
+name: Smoke Test Deployed Apps - nightly
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # Runs daily at 3:00 AM UTC
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  env_setup:
+    runs-on: ubuntu-latest
+    outputs:
+      client_version: ${{ steps.check-version.outputs.CLIENT_VERSION }}
+      vm_name: ${{ steps.set-vm-name.outputs.VM_NAME }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use latest tag
+        id: check-version
+        run: |
+          git fetch --tags
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "Latest tag: $latest_tag"
+          echo "CLIENT_VERSION=$latest_tag" >> $GITHUB_ENV
+
+      - name: Set VM Name
+        id: set-vm-name
+        env:
+          AZURE_VM_NAME: ${{ secrets.AZURE_VM_NAME }}
+        run: echo "VM_NAME=${AZURE_VM_NAME}" >> $GITHUB_OUTPUT
+
+  dbs_smoketest:
+    needs: [env_setup, client_smoketest]
+    name: Smoke Test DBS Response Logger
+    uses: ./.github/workflows/gh-smoke-test-executer.yml
+    with:
+      smoke_test_type: dbs_batch_search
+      azure_location: westeurope
+      version: ${{ needs.env_setup.outputs.client_version }}
+      vm_name: ${{ needs.env_setup.outputs.vm_name }}
+    secrets:
+      sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
+      azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+
+  client_smoketest:
+    needs: env_setup
+    name: Smoke Test SUI Client
+    uses: ./.github/workflows/gh-smoke-test-executer.yml
+    with:
+      smoke_test_type: client_batch_search
+      azure_location: westeurope
+      version: ${{ needs.env_setup.outputs.client_version }}
+      vm_name: ${{ needs.env_setup.outputs.vm_name }}
+    secrets:
+      sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
+      azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
