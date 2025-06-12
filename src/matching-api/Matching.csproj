@@ -7,9 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-      <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" />
-      <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
-      <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" />
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
+    <PackageReference Include="DotNetEnv" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
 		<PackageReference Include="Asp.Versioning.Http" />

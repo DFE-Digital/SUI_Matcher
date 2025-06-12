@@ -17,6 +17,7 @@ public class FhirClientFactory(ILogger<FhirClientFactory> logger, ITokenService 
     public FhirClient CreateFhirClient()
     {
         var baseUri = config["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"];
+
         var fhirClient = new FhirClient(baseUri);
 
         // Set the authorization header

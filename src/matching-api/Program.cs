@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.Json;
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
+using Shared.Extensions;
 
 DotNetEnv.Env.TraversePath().Load();
 
@@ -24,8 +25,18 @@ builder.Services.AddSingleton<IMatchingService, MatchingService>();
 builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
 
-builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(
-    static client => client.BaseAddress = new("https+http://external-api"));
+builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(static client =>
+    {
+        client.BaseAddress = new("https+http://external-api");
+    })
+    .AddServiceDiscovery()
+    .RemoveAllResilienceHandlers()
+    .AddStandardResilienceHandler(options =>
+    {
+        options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(100);
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(450);
+        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(200);
+    });
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();

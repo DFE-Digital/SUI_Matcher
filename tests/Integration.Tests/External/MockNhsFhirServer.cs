@@ -23,9 +23,7 @@ public sealed class MockNhsFhirServer(string baseUrl)
                 .WithBodyAsJson(() => new
                 {
                     access_token = "12312321321321"
-                }
-            )
-        ));
+                })));
 
         builder.Given(b => b
             .WithRequest(request => request
