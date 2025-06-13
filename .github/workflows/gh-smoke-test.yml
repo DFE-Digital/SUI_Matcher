@@ -2,27 +2,30 @@ name: Smoke Test Deployed Apps
 
 on:
   workflow_dispatch:
-     inputs:
-       virtual_machine_name:
-         description: 'Virtual Machine Name'
-         required: true
-         default: 's215d01-integration-vm-01'
-       after_workflow:
-         description: 'Trigger specific smoke test workflow'
-         type: choice
-         required: true
-         default: 'Azure App Deployment'
-         options:
-           - "Azure App Deployment"
-           - "Build and Upload Client Watcher"
-           - "Build and Upload DBS Response Logger Watcher"
-         
+    inputs:
+      virtual_machine_name:
+        description: "Virtual Machine Name"
+        required: true
+        default: "s215d01-integration-vm-01"
+      after_workflow:
+        description: "Trigger specific smoke test workflow"
+        type: choice
+        required: true
+        default: "Azure App Deployment"
+        options:
+          - "Azure App Deployment"
+          - "Build and Upload Client Watcher"
+          - "Build and Upload DBS Response Logger Watcher"
+
   workflow_run:
-    workflows: ["Azure App Deployment", "Build and Upload Client Watcher", "Build and Upload DBS Response Logger Watcher"]
+    workflows:
+      [
+        "Azure App Deployment",
+        "Build and Upload Client Watcher",
+        "Build and Upload DBS Response Logger Watcher",
+      ]
     types:
       - completed
-  schedule:
-    - cron: "0 3 * * *"  # Runs daily at 3:00 AM UTC
 
 permissions:
   id-token: write
@@ -33,45 +36,24 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       triggered_workflow: ${{ steps.detect_workflow.outputs.triggered_workflow }}
-      cron_run: ${{ steps.detect_workflow.outputs.cron_run }}
-      client_version: ${{ steps.check-version.outputs.CLIENT_VERSION }}
-      azure_location: ${{ steps.check-version.outputs.AZURE_LOCATION }}
-    env: 
-      AZURE_ENV_NAME: ${{ inputs.environment || 'Integration' }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-
+      client_version: ${{ steps.env-setup.outputs.client_version }}
     steps:
-    - name: Determine triggering upstream workflow
-      id: detect_workflow
-      run: |
-        if [ "${{ github.event.inputs.after_workflow }}" != "" ]; then
-          echo "triggered_workflow=${{ github.event.inputs.after_workflow }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event_name == 'schedule' }}" == "true" ]; then
-          echo "cron_run=true" >> $GITHUB_OUTPUT
-        else
-          echo "triggered_workflow=${{ github.event.workflow.name || 'Azure App Deployment' }}" >> $GITHUB_OUTPUT
-          echo "cron_run=false" >> $GITHUB_OUTPUT
-        fi
-            
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Use version inputted or find latest tag
-      id: check-version
-      run: |
-        git fetch --tags
-        latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-        echo "Latest tag: $latest_tag"
-        echo "CLIENT_VERSION=$latest_tag" >> $GITHUB_ENV
-  
+      - name: Determine triggering upstream workflow
+        id: detect_workflow
+        run: |
+          if [ "${{ github.event.inputs.after_workflow }}" != "" ]; then
+            echo "triggered_workflow=${{ github.event.inputs.after_workflow }}" >> $GITHUB_OUTPUT
+          else
+            echo "triggered_workflow=${{ github.event.workflow.name || 'Azure App Deployment' }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Environment Setup
+        id: env-setup
+        uses: ./.github/actions/env-setup
 
   dbs_smoketest:
     needs: env_setup
     name: Smoke Test DBS Response Logger
-    if: ((needs.env_setup.outputs.triggered_workflow == 'Build and Upload DBS Response Logger Watcher') || (needs.env_setup.outputs.cron_run == 'true'))
+    if: (needs.env_setup.outputs.triggered_workflow == 'Build and Upload DBS Response Logger Watcher')
     uses: ./.github/workflows/gh-smoke-test-executer.yml
     with:
       smoke_test_type: dbs_batch_search
@@ -84,11 +66,11 @@ jobs:
       azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
       azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
       resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
-  
+
   client_smoketest:
     needs: env_setup
     name: Smoke Test SUI Client
-    if: ((needs.env_setup.outputs.triggered_workflow == 'Azure App Deployment' || needs.env_setup.outputs.triggered_workflow == 'Build and Upload Client Watcher') || (needs.env_setup.outputs.cron_run == 'true'))
+    if: (needs.env_setup.outputs.triggered_workflow == 'Azure App Deployment' || needs.env_setup.outputs.triggered_workflow == 'Build and Upload Client Watcher')
     uses: ./.github/workflows/gh-smoke-test-executer.yml
     with:
       smoke_test_type: client_batch_search

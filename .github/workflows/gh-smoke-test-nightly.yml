@@ -1,0 +1,55 @@
+name: Smoke Test Deployed Apps - nightly
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # Runs daily at 3:00 AM UTC
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  VM_NAME: "s215d01-integration-vm-01"
+
+jobs:
+  env_setup:
+    runs-on: ubuntu-latest
+    outputs:
+      client_version: ${{ steps.env-setup.outputs.client_version }}
+    steps:
+      - name: Environment Setup
+        id: env-setup
+        uses: ./.github/actions/env-setup
+
+  dbs_smoketest:
+    needs: [env_setup, client_smoketest] # Ensures we run synronously and not in parallel
+    if: always()
+    name: Smoke Test DBS Response Logger
+    uses: ./.github/workflows/gh-smoke-test-executer.yml
+    with:
+      smoke_test_type: dbs_batch_search
+      azure_location: westeurope
+      version: ${{ needs.env_setup.outputs.client_version }}
+      vm_name: "s215d01-integration-vm-01"
+    secrets:
+      sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
+      azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+
+  client_smoketest:
+    needs: env_setup
+    name: Smoke Test SUI Client
+    uses: ./.github/workflows/gh-smoke-test-executer.yml
+    with:
+      smoke_test_type: client_batch_search
+      azure_location: westeurope
+      version: ${{ needs.env_setup.outputs.client_version }}
+      vm_name: "s215d01-integration-vm-01"
+    secrets:
+      sui_server_url: ${{ secrets.AZURE_SUI_SERVER_URL }}
+      azure_sub_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
