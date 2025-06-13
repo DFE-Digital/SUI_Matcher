@@ -26,7 +26,7 @@ using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Unit.Tests.Matching;
 
-public sealed class MatchingServiceTests(ITestOutputHelper outputHelper)
+public sealed class MatchingServiceTests
 {
     [Fact]
     public async Task EmptyPersonModelReturnsError()
@@ -297,12 +297,14 @@ public sealed class MatchingServiceTests(ITestOutputHelper outputHelper)
     public async Task ShouldPrependCurrentAlgorithmVersionToLogMessage()
     {
         // Arrange
-        var writer = new StringWriter();
-        Console.SetOut(writer);
+        var logMessages = new List<string>();
         var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.AddConsole(options => options.FormatterName = "log4net")
-                .AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
+                .AddConsoleFormatter<TestLogConsoleFormatter, TestConsoleFormatterOptions>(options =>
+                {
+                    options.TestLogMessages = logMessages;
+                });
         });
 
         var logger = loggerFactory.CreateLogger<MatchingService>();
@@ -331,12 +333,7 @@ public sealed class MatchingServiceTests(ITestOutputHelper outputHelper)
         await subj.SearchAsync(model);
 
         // Assert
-        var logMessages = writer.ToString().Split("\n");
-
         Assert.NotEmpty(logMessages);
-
-        outputHelper.WriteLine(writer.ToString());
-
         Assert.Contains(logMessages, x => x.Contains($"[Algorithm=v{MatchingService.AlgorithmVersion}]"));
     }
 
