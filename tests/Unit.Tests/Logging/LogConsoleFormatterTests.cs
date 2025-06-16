@@ -30,7 +30,7 @@ public class LogConsoleFormatterTests
         Assert.Contains("[Information] [Algorithm=v1] [SearchId=123] Test Message", output);
     }
 
-    
+
 
     [Fact]
     public void Write_WithOnlySearchId_WritesPartialFormat()
@@ -75,7 +75,7 @@ public class LogConsoleFormatterTests
         var output = _writer.ToString();
         Assert.Equal(string.Empty, output);
     }
-    
+
     private static LogEntry<string> CreateLogEntry(LogLevel level, bool nullState = false)
     {
         return new LogEntry<string>(
