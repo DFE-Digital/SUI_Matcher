@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using Shared.Util;
+
 namespace SUI.Client.Core.Watcher;
 
 [ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
@@ -62,14 +64,14 @@ public class CsvFileMonitor
                 try
                 {
                     var processCsvFileResult = await ProcessFileAsync(filePath);
-                    await RetryAsync(() =>
+                    await RetryUtil.RetryAsync(() =>
                     {
                         string destPath = Path.Combine(processCsvFileResult.OutputDirectory, Path.GetFileName(filePath));
                         File.Move(filePath, destPath);
                         _logger.LogInformation("File moved to Processed directory: {DestPath}", destPath);
                         Interlocked.Increment(ref _processedCount);
                         return Task.CompletedTask;
-                    }, _config.RetryCount, _config.RetryDelayMs);
+                    }, _config.RetryCount, _config.RetryDelayMs, _logger);
 
                     LastOperation = new FileProcessedEnvelope(filePath, result: processCsvFileResult);
                 }
@@ -93,27 +95,5 @@ public class CsvFileMonitor
     public void PrintStats(TextWriter output)
     {
         output.WriteLine($"Processed Count: {_processedCount}, Error Count: {_errorCount}");
-    }
-
-    private async Task RetryAsync(Func<Task> action, int retryCount, int delayMs)
-    {
-        int attempts = 0;
-        while (attempts < retryCount)
-        {
-            try
-            {
-                await action();
-                return;
-            }
-            catch (Exception ex)
-            {
-                attempts++;
-                if (attempts >= retryCount)
-                    throw;
-                _logger.LogInformation(ex, "Retry attempt {Attempts} failed: {Message}. Retrying in {DelayMs}ms.",
-                    attempts, ex.Message, delayMs);
-                await Task.Delay(delayMs);
-            }
-        }
     }
 }

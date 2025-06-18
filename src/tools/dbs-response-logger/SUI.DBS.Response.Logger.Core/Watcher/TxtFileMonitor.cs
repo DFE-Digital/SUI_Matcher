@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using Shared.Util;
+
 namespace SUI.DBS.Response.Logger.Core.Watcher;
 
 [ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
@@ -60,14 +62,14 @@ public class TxtFileMonitor
                 try
                 {
                     await ProcessFileAsync(filePath);
-                    await RetryAsync(() =>
+                    await RetryUtil.RetryAsync(() =>
                     {
                         string destPath = Path.Combine(_config.ProcessedDirectory, Path.GetFileName(filePath));
                         File.Move(filePath, destPath);
                         _logger.LogInformation("File moved to Processed directory: {DestPath}", destPath);
                         Interlocked.Increment(ref _processedCount);
                         return Task.CompletedTask;
-                    }, _config.RetryCount, _config.RetryDelayMs);
+                    }, _config.RetryCount, _config.RetryDelayMs, _logger);
 
                     LastOperation = new FileProcessedEnvelope(filePath);
                 }
@@ -90,25 +92,4 @@ public class TxtFileMonitor
 
     private async Task ProcessFileAsync(string filePath)
         => await _fileProcessor.ProcessFileAsync(filePath);
-
-    private async Task RetryAsync(Func<Task> action, int retryCount, int delayMs)
-    {
-        int attempts = 0;
-        while (attempts < retryCount)
-        {
-            try
-            {
-                await action();
-                return;
-            }
-            catch (Exception ex)
-            {
-                attempts++;
-                if (attempts >= retryCount)
-                    throw;
-                _logger.LogInformation(ex, "Retry attempt {Attempts} failed: {Message}. Retrying in {DelayMs}ms.", attempts, ex.Message, delayMs);
-                await Task.Delay(delayMs);
-            }
-        }
-    }
 }
