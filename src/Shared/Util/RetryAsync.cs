@@ -18,7 +18,7 @@ public static class RetryUtil
             {
                 attempts++;
                 logger.LogInformation(ex, "Retry attempt {Attempts} failed: {Message}. Retrying in {DelayMs}ms.", attempts, ex.Message, delayMs);
-                
+
                 if (attempts >= retryCount)
                     throw;
 
@@ -26,5 +26,5 @@ public static class RetryUtil
             }
         }
     }
-    
+
 }
