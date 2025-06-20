@@ -83,7 +83,7 @@ jobs:
             executable="suidbsw.exe"
           else
             file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv"
-            log_success_message="Finished processing file: sui_batch_search_queries.csv"
+            log_success_message="File moved to Processed directory"
             packagename="SUI.Client.Watcher"
             destinationpathfile="sui_batch_search_queries.csv"
             logFilePrefix="sui-client-logs"
@@ -91,6 +91,7 @@ jobs:
           fi
           echo "file_name=${file_name}" >> $GITHUB_ENV
           echo "log_success_message=${log_success_message}" >> $GITHUB_ENV
+          echo "log_error_message=Error processing file" >> $GITHUB_ENV
           echo "packagename=${packagename}" >> $GITHUB_ENV
           echo "destinationpathfile=${destinationpathfile}" >> $GITHUB_ENV
           echo "executable=${executable}" >> $GITHUB_ENV
@@ -175,6 +176,10 @@ jobs:
               if ($logContent -match "${{ env.log_success_message }}") {
                 Write-Output "Smoke Test Passed"
                 $successFound = $true
+                break
+              }
+              elseif($logContent -match "${{ env.log_error_message }}") {
+                Write-Error "${{ env.log_error_message }}"
                 break
               }
             }
