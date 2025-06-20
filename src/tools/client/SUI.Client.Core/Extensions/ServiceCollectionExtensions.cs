@@ -24,7 +24,8 @@ public static class ServiceCollectionExtensions
         var mapping = configuration.GetSection("CsvMapping").Get<CsvMappingConfig>() ?? new CsvMappingConfig();
 
         services.AddSingleton(mapping);
-        services.AddSingleton(x => {
+        services.AddSingleton(x =>
+        {
             var client = new HttpClient
             {
                 BaseAddress = new Uri(matchApiBaseAddress)
