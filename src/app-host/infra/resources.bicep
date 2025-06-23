@@ -1,20 +1,17 @@
 @description('The location used for all deployed resources')
 param location string = resourceGroup().location
 
-@description('The address prefix for the virtual network')
-param containerAppVnet string = '192.168.0.0/24'
-
-@description('Container App environment subnet')
-param containerAppEnvSubnet string = '192.168.0.0/26'
-
-@description('Container App environment subnet')
-param containerAppFirewallSubnet string = '192.168.0.64/26'
-
 @description('environmentName')
 param environmentName string
 
 @description('environmentPrefix')
 param environmentPrefix string
+
+@description('The address prefix for the virtual network')
+param containerAppVnet string = environmentName == 'Prod' ? '192.168.1.0/24' : '192.168.0.0/24'
+
+@description('Container App environment subnet')
+param containerAppEnvSubnet string = environmentName == 'Prod' ? '192.168.1.0/26' : '192.168.0.0/26'
 
 @description('Tags that will be applied to all resources')
 param tags object = {}
@@ -95,18 +92,12 @@ resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
           ]
         }
       }
-      {
-        name: '${environmentPrefix}-${lowercaseEnvironmentName}-vnet-fw-01'
-        properties: {
-          addressPrefix: containerAppFirewallSubnet
-        }
-      }
     ]
   }
 }
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-preview' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-cae-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-cae-02'
   location: location
   tags: tags
   properties: {
@@ -130,10 +121,10 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
         enabled: true
       }
     }
-    publicNetworkAccess: 'Disabled'
+    publicNetworkAccess: 'Disabled' // For Pen Test destroy cae and rebuild with that set to Enabled
     vnetConfiguration: {
       infrastructureSubnetId: '${caevnets.id}/subnets/${environmentPrefix}-${lowercaseEnvironmentName}-subnet-cae-01'
-      internal: true
+      internal: true // For Pen Test destroy cae and rebuild with this value removed
     }
   }
 
