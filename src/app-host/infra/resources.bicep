@@ -7,11 +7,14 @@ param environmentName string
 @description('environmentPrefix')
 param environmentPrefix string
 
+@description('container app managed environment number')
+param containerAppManagedEnvironmentNumber string
+
 @description('The address prefix for the virtual network')
-param containerAppVnet string = environmentName == 'Prod' ? '192.168.1.0/24' : '192.168.0.0/24'
+param containerAppVnet string
 
 @description('Container App environment subnet')
-param containerAppEnvSubnet string = environmentName == 'Prod' ? '192.168.1.0/26' : '192.168.0.0/26'
+param containerAppEnvSubnet string
 
 @description('Tags that will be applied to all resources')
 param tags object = {}
@@ -97,7 +100,7 @@ resource caevnets 'Microsoft.Network/virtualNetworks@2022-07-01' = {
 }
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-preview' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-cae-02'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-cae-${containerAppManagedEnvironmentNumber}'
   location: location
   tags: tags
   properties: {

@@ -8,6 +8,15 @@
       "environmentPrefix": {
         "value": "${AZURE_ENV_PREFIX}"
       },
+      "containerAppManagedEnvironmentNumber": {
+        "value": "${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}"
+      },
+      "containerAppVnet": {
+        "value": "${AZURE_CONTAINER_APP_VNET}"
+      },
+      "containerAppEnvSubnet": {
+        "value": "${AZURE_CONTAINER_APP_ENV_SUBNET}"
+      },
       "location": {
         "value": "${AZURE_LOCATION}"
       },

@@ -10,6 +10,18 @@ param environmentName string
 param environmentPrefix string
 
 @minLength(1)
+@description('The version number of the container app managed environment, used for naming convention')
+param containerAppManagedEnvironmentNumber string
+
+@minLength(1)
+@description('The address prefix for the virtual network')
+param containerAppVnet string
+
+@minLength(1)
+@description('Container App environment subnet')
+param containerAppEnvSubnet string
+
+@minLength(1)
 @description('The location used for all deployed resources')
 param location string
 
@@ -35,6 +47,9 @@ module resources 'resources.bicep' = {
     tags: tags
     environmentPrefix: environmentPrefix
     environmentName: environmentName
+    containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
+    containerAppVnet: containerAppVnet
+    containerAppEnvSubnet: containerAppEnvSubnet
   }
 }
 
