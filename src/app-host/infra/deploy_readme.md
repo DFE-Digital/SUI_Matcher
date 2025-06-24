@@ -35,7 +35,7 @@ export AZURE_CONTAINER_APP_ENV_SUBNET="<Enter Subnet for Env Deployment>"
     ```
 3. Use what-if to preview what will be changed/deployed [Documentation](https://learn.microsoft.com/en-us/cli/azure/deployment/group?view=azure-cli-latest#az-deployment-group-what-if)
    ```bash
-   az deployment group what-if --resource-group <name of resource group> --template-file main.bicep --parameters environmentName=$AZURE_ENV_NAME environmentPrefix=$AZURE_ENV_PREFIX location=$AZURE_LOCATION monitoringActionGroupEmail=$AZURE_MONITORING_ACTION_GROUP_EMAIL containerAppManagedEnvironmentNumber=$AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER containerAppVnet=$AZURE_CONTAINER_APP_VNET containerAppEnvSubnet=$AZURE_CONTAINER_APP_ENV_SUBNET
+   az deployment group what-if --resource-group "${AZURE_RESOURCE_GROUP}" --template-file main.bicep --parameters environmentName="${AZURE_ENV_NAME}" environmentPrefix="${AZURE_ENV_PREFIX}" location="${AZURE_LOCATION}" monitoringActionGroupEmail="${AZURE_MONITORING_ACTION_GROUP_EMAIL}" containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" containerAppVnet="${AZURE_CONTAINER_APP_VNET}" containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}"
    ```
    You will see a preview of the changes that will be made to your Azure resources. This is a good way to verify that the parameters are set correctly and that the deployment will proceed as expected.
 
