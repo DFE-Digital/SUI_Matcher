@@ -48,7 +48,6 @@ jobs:
       AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
       AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
 
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
