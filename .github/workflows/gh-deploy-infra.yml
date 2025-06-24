@@ -44,6 +44,9 @@ jobs:
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
       APPLICATION_VERSION: ${{ inputs.version }}
       AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
+      AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ secrets.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
+      AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
+      AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
 
     steps:
       - name: Checkout
@@ -108,7 +111,7 @@ jobs:
           resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
           templateFile: src/app-host/infra/main.bicep
 #          parametersFile: "app-host/infra/main.parameters.json"
-          additionalParameters: environmentName="${{ env.AZURE_ENV_NAME }}" environmentPrefix="${{ env.AZURE_ENV_PREFIX }}" location="${{ env.AZURE_LOCATION }}" monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}"
+          additionalParameters: environmentName="${{ env.AZURE_ENV_NAME }}" environmentPrefix="${{ env.AZURE_ENV_PREFIX }}" location="${{ env.AZURE_LOCATION }}" monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}" containerAppManagedEnvironmentNumber="${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}" containerAppVnet="${{ env.AZURE_CONTAINER_APP_VNET }}" containerAppEnvSubnet="${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}" 
 
       - name: Provision Infrastructure
         if: ${{ inputs.what_if == false }}
