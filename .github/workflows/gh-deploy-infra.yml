@@ -68,7 +68,7 @@ jobs:
       - name: Checkout (version)
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.version }}
+          ref: ${{ env.infra_version }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
