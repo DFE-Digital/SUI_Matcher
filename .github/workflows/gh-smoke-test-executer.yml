@@ -197,9 +197,6 @@ jobs:
             Write-Error "Smoke Test Failed"
             exit 1
           }
-          else {
-           Cleanup-SmokeTestEnvironment -PackageName $packageName -SmokeTestsPath $basePath
-          }
 
           exit 0
           ')"
