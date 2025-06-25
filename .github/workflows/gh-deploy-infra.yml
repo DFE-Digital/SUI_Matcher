@@ -42,7 +42,7 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_LOCATION: 'westeurope'
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-      APPLICATION_VERSION: ${{ inputs.version }}
+      INFRA_VERSION: ${{ inputs.version }}
       AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
       AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ secrets.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
       AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
@@ -55,14 +55,14 @@ jobs:
       - name: 'Get latest tag if no version provided'
         id: get_latest_tag
         run: |
-          if [[ -z "${{ env.APPLICATION_VERSION }}" ]]; then
+          if [[ -z "${{ env.INFRA_VERSION }}" ]]; then
             git fetch --tags
             LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
             echo "Latest tag is: $LATEST_TAG"
-            echo "version=$LATEST_TAG" >> $GITHUB_ENV
+            echo "infra_version=$LATEST_TAG" >> $GITHUB_ENV
           else
-            echo "Using provided version: ${{ env.APPLICATION_VERSION }}"
-            echo "version=${{ env.APPLICATION_VERSION }}" >> $GITHUB_ENV
+            echo "Using provided version: ${{ env.INFRA_VERSION }}"
+            echo "infra_version=${{ env.INFRA_VERSION }}" >> $GITHUB_ENV
           fi
 
       - name: Checkout (version)
