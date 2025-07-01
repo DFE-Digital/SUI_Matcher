@@ -7,6 +7,11 @@ on:
         required: true
         type: string
         description: "Type of smoke test to run"
+      use_small_dataset:
+        required: false
+        type: boolean
+        default: false
+        description: "Run smoke test with a smaller dataset"
       azure_location:
         required: true
         type: string
@@ -82,7 +87,11 @@ jobs:
             logFilePrefix="dbs-response-logger-logs"
             executable="suidbsw.exe"
           else
-            file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv"
+            if [ "${{ inputs.use_small_dataset }}" = "true" ]; then
+                file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries_small.csv"
+            else
+              file_name="./tests/E2E.Tests/Resources/Smoke/sui_batch_search_queries.csv"
+            fi
             log_success_message="File moved to Processed directory"
             packagename="SUI.Client.Watcher"
             destinationpathfile="sui_batch_search_queries.csv"
