@@ -6,23 +6,39 @@ using Shared.Extensions;
 using Shared.Util;
 
 using SUI.Client.Core.Extensions;
+using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
 
 Console.Out.WriteAppName("SUI CSV File Watcher");
 Rule.Assert(args.Length == 3, "Usage: suiw <watch_directory> <output_directory> <matching_service_uri>");
-Rule.Assert(Uri.IsWellFormedUriString(args[2], UriKind.Absolute), "Invalid URL format for matching service URL.");
+
 var matchApiBaseAddress = args[2];
+Rule.Assert(Uri.IsWellFormedUriString(matchApiBaseAddress, UriKind.Absolute),
+    "Invalid URL format for matching service URL.");
+
 
 var builder = Host.CreateDefaultBuilder();
 builder.ConfigureAppSettingsJsonFile();
 builder.ConfigureServices((hostContext, services) =>
 {
-    services.AddClientCore(hostContext.Configuration, matchApiBaseAddress);
+    services.AddClientCore(hostContext.Configuration);
     services.AddLogging(configure => configure.AddConsole());
     services.Configure<CsvWatcherConfig>(x =>
     {
         x.IncomingDirectory = args[0];
         x.ProcessedDirectory = args[1];
+    });
+    services.AddHttpClient<IMatchPersonApiService, MatchPersonApiService>(client =>
+    {
+        client.BaseAddress = new Uri(matchApiBaseAddress);
+
+        if (!matchApiBaseAddress.Contains("localhost"))
+        {
+            var uri = new Uri(matchApiBaseAddress);
+            var yarpHostValue = uri.Host.Replace(".privatelink.", ".").TrimEnd('/');
+            var hostUri = $"yarp.{yarpHostValue}";
+            client.DefaultRequestHeaders.Add("Host", hostUri);
+        }
     });
 });
 
