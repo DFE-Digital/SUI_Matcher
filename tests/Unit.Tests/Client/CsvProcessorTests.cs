@@ -193,7 +193,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             x.ProcessedDirectory = _dir.ProcessedDirectoryPath;
         });
 
-        servicesCollection.AddClientCore(config, "http://localhost");
+        servicesCollection.AddClientCore(config);
         servicesCollection.AddSingleton<IMatchPersonApiService, MatchPersonServiceAdapter>(); // wires up the IMatchingService directly, without using http
 
         // core domain deps

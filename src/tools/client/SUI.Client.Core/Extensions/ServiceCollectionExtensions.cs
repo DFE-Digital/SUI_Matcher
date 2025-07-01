@@ -12,7 +12,7 @@ namespace SUI.Client.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddClientCore(this IServiceCollection services, IConfiguration configuration, string matchApiBaseAddress)
+    public static IServiceCollection AddClientCore(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddLogging(builder =>
         {
@@ -22,28 +22,8 @@ public static class ServiceCollectionExtensions
         });
 
         var mapping = configuration.GetSection("CsvMapping").Get<CsvMappingConfig>() ?? new CsvMappingConfig();
-
         services.AddSingleton(mapping);
-        services.AddSingleton(x =>
-        {
-            var client = new HttpClient
-            {
-                BaseAddress = new Uri(matchApiBaseAddress)
-            };
 
-            // Hack: until we can find a better way of routing for apps environment in azure, Envoy uses SNI and needs a HOST header to route correctly
-            var hostUri = matchApiBaseAddress;
-            if (!hostUri.Contains("localhost"))
-            {
-                var uri = new Uri(matchApiBaseAddress);
-                var removeBits = uri.Host.Replace(".privatelink.", ".").TrimEnd('/');
-                hostUri = $"yarp.{removeBits}";
-                Console.WriteLine(hostUri);
-                client.DefaultRequestHeaders.Add("Host", $"{hostUri}");
-            }
-            // Add more headers as needed
-            return client;
-        });
         services.AddSingleton<ICsvFileProcessor, CsvFileProcessor>();
         services.AddSingleton<IMatchPersonApiService, MatchPersonApiService>();
         services.AddSingleton<CsvFileWatcherService>();
