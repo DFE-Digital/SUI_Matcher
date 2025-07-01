@@ -32,6 +32,9 @@ builder.ConfigureServices((hostContext, services) =>
     {
         client.BaseAddress = new Uri(matchApiBaseAddress);
 
+        // Hack: until we can find a better way of routing for apps environment in azure.
+        // Envoy uses SNI and needs a HOST header to route correctly
+        // As we are using a private link, the host header needs to be set to the yarp hostname
         if (!matchApiBaseAddress.Contains("localhost"))
         {
             var uri = new Uri(matchApiBaseAddress);
