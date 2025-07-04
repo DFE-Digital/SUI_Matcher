@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Console;
 
 namespace Shared.Logging;
 
-public class LogConsoleFormatter() : ConsoleFormatter("custom-formatter")
+public class LogConsoleFormatter() : ConsoleFormatter(Shared.Constants.LogFormatter)
 {
     public override void Write<TState>(
         in LogEntry<TState> logEntry,

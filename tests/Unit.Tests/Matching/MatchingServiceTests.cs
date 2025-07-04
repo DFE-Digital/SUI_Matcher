@@ -289,7 +289,7 @@ public sealed class MatchingServiceTests
         var logMessages = new List<string>();
         var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddConsole(options => options.FormatterName = "custom-formatter")
+            builder.AddConsole(options => options.FormatterName = Shared.Constants.LogFormatter)
                 .AddConsoleFormatter<TestLogConsoleFormatter, TestConsoleFormatterOptions>(options =>
                 {
                     options.TestLogMessages = logMessages;
