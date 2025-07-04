@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddLogging(builder =>
         {
-            builder.AddConsole(options => options.FormatterName = "log4net")
+            builder.AddConsole(options => options.FormatterName = "custom-formatter")
                 .AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
             builder.AddProvider(new JsonFileLoggerProvider(Path.Combine(Directory.GetCurrentDirectory(), "sui-client-logs.json")));
         });
