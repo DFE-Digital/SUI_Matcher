@@ -22,7 +22,6 @@ builder.ConfigureAppSettingsJsonFile();
 builder.ConfigureServices((hostContext, services) =>
 {
     services.AddClientCore(hostContext.Configuration);
-    services.AddLogging(configure => configure.AddConsole());
     services.Configure<CsvWatcherConfig>(x =>
     {
         x.IncomingDirectory = args[0];

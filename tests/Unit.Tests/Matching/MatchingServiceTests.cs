@@ -1,28 +1,17 @@
 ﻿using System.Diagnostics;
 
-using Castle.Core.Logging;
-
 using MatchingApi.Services;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
-using Microsoft.Extensions.Options;
 
 using Moq;
 
 using Newtonsoft.Json;
 
 using Shared.Endpoint;
-using Shared.Logging;
 using Shared.Models;
 
 using Unit.Tests.Util;
-
-using Xunit.Abstractions;
-
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Unit.Tests.Matching;
 
@@ -300,7 +289,7 @@ public sealed class MatchingServiceTests
         var logMessages = new List<string>();
         var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddConsole(options => options.FormatterName = "log4net")
+            builder.AddConsole(options => options.FormatterName = Shared.Constants.LogFormatter)
                 .AddConsoleFormatter<TestLogConsoleFormatter, TestConsoleFormatterOptions>(options =>
                 {
                     options.TestLogMessages = logMessages;
