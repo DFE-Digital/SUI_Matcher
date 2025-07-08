@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 using Shared.Endpoint;
+using Shared.Logging;
 using Shared.Models;
 
 namespace Unit.Tests.Matching;
@@ -12,15 +13,16 @@ namespace Unit.Tests.Matching;
 public class MatchingServiceDemographicTests
 {
     private readonly ValidationService _validationService = new();
+    private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
+    private readonly Mock<IAuditLogger> _auditLogger = new();
 
     [Fact]
     public async Task ShouldReturnDemographics()
     {
         // Arrange
-        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
-        nhsFhir.Setup(x => x.PerformSearchByNhsId("1234567890"))
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
             .ReturnsAsync(new DemographicResult() { Result = new { Id = "1234567890" } });
-        var sut = new MatchingService(NullLogger<MatchingService>.Instance, nhsFhir.Object, _validationService);
+        var sut = new MatchingService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
 
         var request = new DemographicRequest
         {
@@ -42,8 +44,7 @@ public class MatchingServiceDemographicTests
     public async Task ShouldReturnErrors_WhenValidationErrorOccurs(string nhsId, string message)
     {
         // Arrange
-        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
-        var sut = new MatchingService(NullLogger<MatchingService>.Instance, nhsFhir.Object, _validationService);
+        var sut = new MatchingService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
 
         var request = new DemographicRequest
         {

@@ -26,6 +26,10 @@ on:
         description: The prefix for the environment
         default: 's215d01'
         type: string
+      enable_audit_logging:
+        description: Enabling will provision the audit logging infrastructure
+        default: false
+        type: boolean
 
 permissions:
   id-token: write
@@ -47,6 +51,8 @@ jobs:
       AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ vars.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
       AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
       AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
+      FeatureToggles__EnableAuditLogging: ${{ inputs.enable_audit_logging || 'false' }}
+      AZURE_ENABLE_AUDIT_LOGGING: ${{ inputs.enable_audit_logging || 'false' }}
 
     steps:
       - name: Checkout
@@ -111,7 +117,7 @@ jobs:
           resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
           templateFile: src/app-host/infra/main.bicep
 #          parametersFile: "app-host/infra/main.parameters.json"
-          additionalParameters: environmentName="${{ env.AZURE_ENV_NAME }}" environmentPrefix="${{ env.AZURE_ENV_PREFIX }}" location="${{ env.AZURE_LOCATION }}" monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}" containerAppManagedEnvironmentNumber="${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}" containerAppVnet="${{ env.AZURE_CONTAINER_APP_VNET }}" containerAppEnvSubnet="${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}" 
+          additionalParameters: environmentName="${{ env.AZURE_ENV_NAME }}" environmentPrefix="${{ env.AZURE_ENV_PREFIX }}" location="${{ env.AZURE_LOCATION }}" monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}" containerAppManagedEnvironmentNumber="${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}" containerAppVnet="${{ env.AZURE_CONTAINER_APP_VNET }}" containerAppEnvSubnet="${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}" enableAuditLogging="${{ env.FeatureToggles__EnableAuditLogging }}" 
 
       - name: Provision Infrastructure
         if: ${{ inputs.what_if == false }}

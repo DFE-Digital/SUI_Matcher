@@ -5,6 +5,7 @@ using System.Text;
 using Newtonsoft.Json;
 
 using Shared.Endpoint;
+using Shared.Logging;
 using Shared.Models;
 
 namespace MatchingApi.Services;
@@ -12,7 +13,8 @@ namespace MatchingApi.Services;
 public class MatchingService(
     ILogger<MatchingService> logger,
     INhsFhirClient nhsFhirClient,
-    IValidationService validationService) : IMatchingService
+    IValidationService validationService,
+    IAuditLogger auditLogger) : IMatchingService
 {
     public static readonly int AlgorithmVersion = 1;
 
@@ -20,7 +22,12 @@ public class MatchingService(
     {
         StoreAlgorithmVersion();
 
-        StoreUniqueSearchIdFor(personSpecification);
+        var searchId = StoreUniqueSearchIdFor(personSpecification);
+        var auditDetails = new Dictionary<string, string>
+        {
+            { "SearchId", searchId }
+        };
+        await auditLogger.LogAsync(new AuditLogEntry(AuditLogEntry.AuditLogAction.Match, auditDetails));
 
         var validationResults = validationService.Validate(personSpecification);
 
@@ -70,6 +77,7 @@ public class MatchingService(
     public async Task<DemographicResponse?> GetDemographicsAsync(DemographicRequest request)
     {
         logger.LogInformation("Searching for matching person by NHS number");
+        await auditLogger.LogAsync(new AuditLogEntry(AuditLogEntry.AuditLogAction.Demographic, null));
 
         var validationResults = validationService.Validate(request);
 
@@ -125,7 +133,7 @@ public class MatchingService(
         );
     }
 
-    private static void StoreUniqueSearchIdFor(PersonSpecification personSpecification)
+    private static string StoreUniqueSearchIdFor(PersonSpecification personSpecification)
     {
         byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(personSpecification));
         byte[] hashBytes = SHA256.HashData(bytes);
@@ -139,6 +147,8 @@ public class MatchingService(
         var hash = builder.ToString();
 
         Activity.Current?.SetBaggage("SearchId", hash);
+
+        return hash;
     }
 
     private static SearchQuery[] GetSearchQueries(PersonSpecification model)
