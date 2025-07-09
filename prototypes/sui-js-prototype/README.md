@@ -29,5 +29,7 @@ This currently only works when running locally and is not deployed anywhere on t
     app.UseCors("AllowLocalhost");
     ```
 2. Run the app host dotnet project.
-3. Run `npm run dev` within this directory and go to the browser URL http://localhost:5173
-4. There are 2 tabs on the UI that you can use to get data, enter details to get results.
+3. Create a '.env' file in this directory and add this line `VITE_API_BASE_URL=http://localhost:5000` and save.
+   This is the base URL for the API that the prototype will call.
+4. Run `npm run dev` within this directory and go to the browser URL http://localhost:5173
+5. There are 2 tabs on the UI that you can use to get data, enter details to get results.
