@@ -35,7 +35,7 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
             var result = await matchingService.GetDemographicsAsync(request);
             return result is null ? Results.BadRequest(result) : Results.Ok(result);
         });
-        
+
         if (configuration.GetValue<bool>("EnableAuth"))
         {
             demographics.RequireAuthorization("AuthPolicy");

@@ -1,7 +1,8 @@
 namespace MatchingApi;
 
-using Microsoft.Identity.Web;
 using System.Net.Http.Headers;
+
+using Microsoft.Identity.Web;
 
 public class DownstreamApiAuthHandler : DelegatingHandler
 {

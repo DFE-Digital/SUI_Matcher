@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
+
 using Shared.Extensions;
 using Shared.Util;
 
@@ -41,13 +42,13 @@ builder.ConfigureServices((hostContext, services) =>
                 hostContext.Configuration["AzureAdWatcher:TenantId"],
                 hostContext.Configuration["AzureAdWatcher:ClientId"],
                 hostContext.Configuration["AzureAdWatcher:ClientSecret"],
-                new ClientSecretCredentialOptions{AuthorityHost = new Uri(hostContext.Configuration["AzureAdWatcher:Authority"])});
+                new ClientSecretCredentialOptions { AuthorityHost = new Uri(hostContext.Configuration["AzureAdWatcher:Authority"]) });
             var tokenRequestContext = new TokenRequestContext(
                 [hostContext.Configuration["AzureAdWatcher:Scopes"]]);
             AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
         }
-        
+
         // Hack: until we can find a better way of routing for apps environment in azure.
         // Envoy uses SNI and needs a HOST header to route correctly
         // As we are using a private link, the host header needs to be set to the yarp hostname

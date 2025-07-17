@@ -66,7 +66,7 @@ public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(
             configuration["AzureAdMatching:TenantId"],
             configuration["AzureAdMatching:ClientId"],
             configuration["AzureAdMatching:ClientSecret"],
-            new ClientSecretCredentialOptions{AuthorityHost = new Uri(configuration["AzureAdMatching:Instance"])});
+            new ClientSecretCredentialOptions { AuthorityHost = new Uri(configuration["AzureAdMatching:Instance"]) });
         var tokenRequestContext = new TokenRequestContext(
             [configuration["AzureAdMatching:Scopes"]]);
         AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
@@ -74,7 +74,7 @@ public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(
 
         return client;
     }
-    
+
     protected override void OnBuilt(DistributedApplication application)
     {
         _app = application;

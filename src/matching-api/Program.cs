@@ -1,17 +1,23 @@
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Identity.Web;
+
+using Asp.Versioning.Builder;
+
+using DotNetEnv;
+
 using MatchingApi;
 using MatchingApi.Services;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Identity.Web;
+
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
 
-DotNetEnv.Env.TraversePath().Load();
+Env.TraversePath().Load();
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
@@ -25,7 +31,6 @@ if (builder.Configuration.GetValue<bool>("EnableAuth"))
         {
             builder.Configuration.Bind("AzureAdMatching", options);
             options.TokenValidationParameters.NameClaimType = "name";
-
         }, options => { builder.Configuration.Bind("AzureAdMatching", options); })
         .EnableTokenAcquisitionToCallDownstreamApi(options => { })
         .AddInMemoryTokenCaches();
@@ -42,9 +47,9 @@ builder.Services.AddSingleton<IMatchingService, MatchingService>();
 builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
 
-var client =
+IHttpClientBuilder client =
     builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(static client =>
-        client.BaseAddress = new("https+http://external-api"));
+        client.BaseAddress = new Uri("https+http://external-api"));
 
 if (builder.Configuration.GetValue<bool>("EnableAuth"))
 {
@@ -72,14 +77,14 @@ builder.Services.Configure<JsonOptions>(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
-var apiVersionSet = app.NewApiVersionSet()
+ApiVersionSet apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1))
     .ReportApiVersions()
     .Build();
 
-var versionedGroup = app
+RouteGroupBuilder versionedGroup = app
     .MapGroup("api/v{version:apiVersion}")
     .WithApiVersionSet(apiVersionSet);
 

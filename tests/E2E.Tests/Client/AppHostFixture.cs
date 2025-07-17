@@ -92,7 +92,7 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
             configuration["AzureAdWatcher:TenantId"],
             configuration["AzureAdWatcher:ClientId"],
             configuration["AzureAdWatcher:ClientSecret"],
-            new ClientSecretCredentialOptions{AuthorityHost = new Uri(configuration["AzureAdWatcher:Authority"])});
+            new ClientSecretCredentialOptions { AuthorityHost = new Uri(configuration["AzureAdWatcher:Authority"]) });
         var tokenRequestContext = new TokenRequestContext(
             [configuration["AzureAdWatcher:Scopes"]]);
         AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
