@@ -2,6 +2,9 @@ using AppHost.SwaggerUi;
 
 using Aspire.Hosting.Testing;
 
+using Azure.Core;
+using Azure.Identity;
+
 using FluentAssertions.Primitives;
 
 using WireMock.Admin.Requests;
@@ -77,6 +80,28 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
     public IWireMockAdminApi NhsAuthMockApi()
     {
         return _app!.CreateWireMockAdminClient("mock-auth-api");
+    }
+    
+    public HttpClient CreateSecureClient()
+    {
+        var client = CreateHttpClient("yarp");
+        var configuration = _app.Services.GetRequiredService<IConfiguration>();
+        if (!configuration.GetValue<bool>("EnableAuth"))
+        {
+            return client;
+        }
+
+        var clientSecretCredential = new ClientSecretCredential(
+            configuration["AzureAdWatcher:TenantId"],
+            configuration["AzureAdWatcher:ClientId"],
+            configuration["AzureAdWatcher:ClientSecret"],
+            new ClientSecretCredentialOptions{AuthorityHost = new Uri(configuration["AzureAdWatcher:Authority"])});
+        var tokenRequestContext = new TokenRequestContext(
+            [configuration["AzureAdWatcher:Scopes"]]);
+        AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
+
+        return client;
     }
 }
 

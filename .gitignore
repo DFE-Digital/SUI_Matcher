@@ -354,3 +354,5 @@ tmp/
 .env
 coverage/
 *venv*
+
+.DS_Store

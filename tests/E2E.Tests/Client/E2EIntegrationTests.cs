@@ -13,7 +13,7 @@ namespace E2E.Tests.Client;
 
 public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture tempDirectoryFixture) : IClassFixture<AppHostFixture>, IClassFixture<TempDirectoryFixture>
 {
-    private readonly HttpClient _client = fixture.CreateHttpClient("yarp");
+    private readonly HttpClient _client = fixture.CreateSecureClient();
     private readonly IWireMockAdminApi _nhsAuthMockApi = fixture.NhsAuthMockApi();
 
     [Fact]
@@ -126,9 +126,5 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
         assertions(row);
 
         await cts.CancelAsync();
-
     }
-
-
-
 }

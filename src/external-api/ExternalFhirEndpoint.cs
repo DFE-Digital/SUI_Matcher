@@ -10,8 +10,18 @@ public class ExternalFhirEndpoint(INhsFhirClient fhirClient) : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/search", async (SearchQuery query) => await fhirClient.PerformSearch(query));
-
-        app.MapGet("/demographics/{nhsId}", async (string nhsId) => await fhirClient.PerformSearchByNhsId(nhsId));
+        var configuration = app.ServiceProvider.GetRequiredService<IConfiguration>();
+        
+        var search = app.MapPost("/search", async (SearchQuery query) => await fhirClient.PerformSearch(query));
+        if (configuration.GetValue<bool>("EnableAuth"))
+        {
+            search.RequireAuthorization("AuthPolicy");
+        }
+        
+        var demographics = app.MapGet("/demographics/{nhsId}", async (string nhsId) => await fhirClient.PerformSearchByNhsId(nhsId));
+        if (configuration.GetValue<bool>("EnableAuth"))
+        {
+            demographics.RequireAuthorization("AuthPolicy");
+        }
     }
 }

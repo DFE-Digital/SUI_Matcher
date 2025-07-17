@@ -1,10 +1,10 @@
 using System.Text.Json.Serialization;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
 using MatchingApi;
 using MatchingApi.Services;
 
 using Microsoft.AspNetCore.Http.Json;
-
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
@@ -18,13 +18,39 @@ builder.AddServiceDefaults();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+if (builder.Configuration.GetValue<bool>("EnableAuth"))
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(options =>
+        {
+            builder.Configuration.Bind("AzureAdMatching", options);
+            options.TokenValidationParameters.NameClaimType = "name";
+
+        }, options => { builder.Configuration.Bind("AzureAdMatching", options); })
+        .EnableTokenAcquisitionToCallDownstreamApi(options => { })
+        .AddInMemoryTokenCaches();
+
+    builder.Services.AddAuthorization(config =>
+    {
+        config.AddPolicy("AuthPolicy", policy =>
+            policy.RequireRole("MatchingApi"));
+    });
+}
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IMatchingService, MatchingService>();
 builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
 
-builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(
-    static client => client.BaseAddress = new("https+http://external-api"));
+var client =
+    builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(static client =>
+        client.BaseAddress = new("https+http://external-api"));
+
+if (builder.Configuration.GetValue<bool>("EnableAuth"))
+{
+    builder.Services.AddTransient<DownstreamApiAuthHandler>();
+    client.AddHttpMessageHandler<DownstreamApiAuthHandler>();
+}
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
@@ -60,6 +86,11 @@ var versionedGroup = app
 app.UseExceptionHandler();
 
 app.UseRouting();
+if (builder.Configuration.GetValue<bool>("EnableAuth"))
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
 
 app.MapDefaultEndpoints();
 app.MapEndpoints(versionedGroup);

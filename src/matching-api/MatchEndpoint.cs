@@ -9,7 +9,8 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/matchperson", async (PersonSpecification? model) =>
+        var configuration = app.ServiceProvider.GetRequiredService<IConfiguration>();
+        var matchPerson = app.MapPost("/matchperson", async (PersonSpecification? model) =>
         {
             if (model is null)
             {
@@ -24,11 +25,20 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
 
             return result.Result?.MatchStatus == MatchStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
         });
+        if (configuration.GetValue<bool>("EnableAuth"))
+        {
+            matchPerson.RequireAuthorization("AuthPolicy");
+        }
 
-        app.MapGet("/demographics", async ([AsParameters] DemographicRequest request) =>
+        var demographics = app.MapGet("/demographics", async ([AsParameters] DemographicRequest request) =>
         {
             var result = await matchingService.GetDemographicsAsync(request);
             return result is null ? Results.BadRequest(result) : Results.Ok(result);
         });
+        
+        if (configuration.GetValue<bool>("EnableAuth"))
+        {
+            demographics.RequireAuthorization("AuthPolicy");
+        }
     }
 }

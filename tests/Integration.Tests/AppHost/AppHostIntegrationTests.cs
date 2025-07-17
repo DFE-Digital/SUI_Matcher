@@ -2,6 +2,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using Azure.Core;
+using Azure.Identity;
+
 using Shared.Models;
 
 using WireMock.Client;
@@ -19,7 +22,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     public AppHostIntegrationTests(AppHostFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateHttpClient("yarp");
+        _client = fixture.CreateSecureClient();
         _nhsAuthMockApi = fixture.NhsAuthMockApi();
         _httpClientJsonOptions = new JsonSerializerOptions
         {
