@@ -14,6 +14,7 @@ public static class HostBuilderExtensions
         {
             config.SetBasePath(AppContext.BaseDirectory);
             config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            config.AddEnvironmentVariables();
         });
     }
 }

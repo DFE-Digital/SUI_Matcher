@@ -10,7 +10,7 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
 
     public ExternalApiIntegrationTests(ExternalApiFixture fixture)
     {
-        _httpClient = fixture.CreateHttpClient("external-api");
+        _httpClient = fixture.CreateSecureClient();
     }
 
     [Fact]

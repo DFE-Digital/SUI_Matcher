@@ -1,30 +1,59 @@
 using System.Text.Json.Serialization;
 
+using Asp.Versioning.Builder;
+
+using DotNetEnv;
+
 using MatchingApi;
 using MatchingApi.Services;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Identity.Web;
 
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
 
-DotNetEnv.Env.TraversePath().Load();
+Env.TraversePath().Load();
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+if (builder.Configuration.GetValue<bool>("EnableAuth"))
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(options =>
+        {
+            builder.Configuration.Bind("AzureAdMatching", options);
+            options.TokenValidationParameters.NameClaimType = "name";
+        }, options => { builder.Configuration.Bind("AzureAdMatching", options); })
+        .EnableTokenAcquisitionToCallDownstreamApi(options => { })
+        .AddInMemoryTokenCaches();
+
+    builder.Services.AddAuthorizationBuilder()
+        .AddPolicy("AuthPolicy", policy =>
+            policy.RequireRole("MatchingApi"));
+}
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IMatchingService, MatchingService>();
 builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
 
-builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(
-    static client => client.BaseAddress = new("https+http://external-api"));
+IHttpClientBuilder client =
+    builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(static client =>
+        client.BaseAddress = new Uri("https+http://external-api"));
+
+if (builder.Configuration.GetValue<bool>("EnableAuth"))
+{
+    builder.Services.AddTransient<DownstreamApiAuthHandler>();
+    client.AddHttpMessageHandler<DownstreamApiAuthHandler>();
+}
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
@@ -46,20 +75,25 @@ builder.Services.Configure<JsonOptions>(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
-var apiVersionSet = app.NewApiVersionSet()
+ApiVersionSet apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1))
     .ReportApiVersions()
     .Build();
 
-var versionedGroup = app
+RouteGroupBuilder versionedGroup = app
     .MapGroup("api/v{version:apiVersion}")
     .WithApiVersionSet(apiVersionSet);
 
 app.UseExceptionHandler();
 
 app.UseRouting();
+if (builder.Configuration.GetValue<bool>("EnableAuth"))
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
 
 app.MapDefaultEndpoints();
 app.MapEndpoints(versionedGroup);

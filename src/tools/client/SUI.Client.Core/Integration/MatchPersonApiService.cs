@@ -25,7 +25,15 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
             Converters = { new JsonStringEnumConverter() }
         };
 
-        var dto = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(options);
-        return dto;
+        if (response.IsSuccessStatusCode)
+        {
+            var dto = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(options);
+            return dto;
+        }
+
+        Console.WriteLine(response.StatusCode);
+        Console.WriteLine(response.ReasonPhrase);
+        Console.WriteLine(response.Content?.ReadAsStringAsync().Result);
+        return null;
     }
 }

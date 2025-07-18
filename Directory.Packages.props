@@ -12,6 +12,8 @@
     <MartenVersion>7.10.1</MartenVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Microsoft.Identity.Web" Version="3.0.1" />
+    <PackageVersion Include="Microsoft.Identity.Web.DownstreamApi" Version="3.0.1" />
     <PackageVersion Include="Aspire.Azure.Security.KeyVault" Version="9.0.0" />
     <PackageVersion Include="Aspire.Hosting.Azure" Version="9.0.0" />
     <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="9.0.0" />

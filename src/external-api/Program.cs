@@ -5,6 +5,9 @@ using ExternalApi;
 using ExternalApi.Services;
 using ExternalApi.Util;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
+
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
@@ -49,6 +52,21 @@ builder.Services.AddSingleton<SecretClient>(_ =>
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+if (builder.Configuration.GetValue<bool>("EnableAuth"))
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(options =>
+        {
+            builder.Configuration.Bind("AzureAdExternal", options);
+            options.TokenValidationParameters.NameClaimType = "name";
+
+        }, options => { builder.Configuration.Bind("AzureAdExternal", options); });
+
+    builder.Services.AddAuthorizationBuilder()
+        .AddPolicy("AuthPolicy", policy =>
+            policy.RequireRole("ExternalApi"));
+}
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddOpenApi();
@@ -79,6 +97,11 @@ var versionedGroup = app
 app.UseExceptionHandler();
 
 app.UseRouting();
+if (builder.Configuration.GetValue<bool>("EnableAuth"))
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
 
 app.MapDefaultEndpoints();
 app.MapEndpoints(versionedGroup);

@@ -2,6 +2,9 @@ using AppHost.SwaggerUi;
 
 using Aspire.Hosting.Testing;
 
+using Azure.Core;
+using Azure.Identity;
+
 namespace Integration.Tests.External;
 
 public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(Projects.External)), IAsyncLifetime
@@ -48,6 +51,28 @@ public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(
 
         applicationBuilder.AddProject<Projects.Yarp>("yarp")
             .WithReference(matchingApi).WaitFor(matchingApi).WaitFor(NhsAuthMockService!);
+    }
+
+    public HttpClient CreateSecureClient()
+    {
+        var client = CreateHttpClient("external-api");
+        var configuration = _app!.Services.GetRequiredService<IConfiguration>();
+        if (!configuration.GetValue<bool>("EnableAuth"))
+        {
+            return client;
+        }
+
+        var clientSecretCredential = new ClientSecretCredential(
+            configuration["AzureAdMatching:TenantId"],
+            configuration["AzureAdMatching:ClientId"],
+            configuration["AzureAdMatching:ClientSecret"],
+            new ClientSecretCredentialOptions { AuthorityHost = new Uri(configuration["AzureAdMatching:Instance"] ?? string.Empty) });
+        var tokenRequestContext = new TokenRequestContext(
+            [configuration["AzureAdMatching:Scopes"] ?? string.Empty]);
+        AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
+
+        return client;
     }
 
     protected override void OnBuilt(DistributedApplication application)
