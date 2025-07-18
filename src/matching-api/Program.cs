@@ -1,8 +1,5 @@
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
-using System.Threading.Channels;
-
-using Asp.Versioning.Builder;
 
 using DotNetEnv;
 
@@ -12,13 +9,11 @@ using MatchingApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.FeatureManagement;
-using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
-using Shared.Logging;
 using Shared.Logging;
 
 Env.TraversePath().Load();
@@ -94,14 +89,14 @@ builder.Services.Configure<JsonOptions>(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-WebApplication app = builder.Build();
+var app = builder.Build();
 
-ApiVersionSet apiVersionSet = app.NewApiVersionSet()
+var apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1))
     .ReportApiVersions()
     .Build();
 
-RouteGroupBuilder versionedGroup = app
+var versionedGroup = app
     .MapGroup("api/v{version:apiVersion}")
     .WithApiVersionSet(apiVersionSet);
 
