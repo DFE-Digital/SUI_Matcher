@@ -4,8 +4,8 @@ on:
     branches:
       - main
     paths:
-      - 'src/tools/client/SUI.Client.Watcher/**'
-      - 'src/tools/dbs-response-logger/SUI.DBS.Response.Logger.Watcher/**'
+      - 'src/tools/client/**'
+      - 'src/tools/dbs-response-logger/**'
   workflow_dispatch:
     inputs:
       publish-client:
