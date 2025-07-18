@@ -30,12 +30,10 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
             var dto = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(options);
             return dto;
         }
-        else
-        {
-            Console.WriteLine(response.StatusCode);
-            Console.WriteLine(response.ReasonPhrase);
-            Console.WriteLine(response.Content?.ReadAsStringAsync().Result);
-            return null;
-        }
+
+        Console.WriteLine(response.StatusCode);
+        Console.WriteLine(response.ReasonPhrase);
+        Console.WriteLine(response.Content?.ReadAsStringAsync().Result);
+        return null;
     }
 }
