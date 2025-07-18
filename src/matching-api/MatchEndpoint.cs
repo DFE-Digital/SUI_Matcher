@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.AspNetCore.Mvc;
 
 using Shared.Endpoint;
@@ -5,6 +7,7 @@ using Shared.Models;
 
 namespace MatchingApi;
 
+[ExcludeFromCodeCoverage(Justification = "Simple endpoint mapping")]
 public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
