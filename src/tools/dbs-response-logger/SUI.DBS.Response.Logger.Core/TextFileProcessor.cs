@@ -130,8 +130,14 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
     public static string ToGender(string? value)
     {
-        var genderFromValue = value == "1" ? "Male" : "Female";
-        return !string.IsNullOrWhiteSpace(value) ? genderFromValue : "Unknown";
+        return value switch
+        {
+            "0" => "Not known",
+            "1" => "Male",
+            "2" => "Female",
+            "9" => "Not specified",
+            _ => "Unknown"
+        };
     }
 
     public static string ToPostCode(string? value)
