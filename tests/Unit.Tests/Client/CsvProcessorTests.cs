@@ -1,12 +1,16 @@
-﻿using MatchingApi.Services;
+﻿using System.Threading.Channels;
+
+using MatchingApi.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.FeatureManagement;
 
 using Moq;
 
 using Shared.Endpoint;
+using Shared.Logging;
 using Shared.Models;
 using Shared.Util;
 
@@ -199,6 +203,10 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         // core domain deps
         servicesCollection.AddSingleton<IMatchingService, MatchingService>();
         servicesCollection.AddSingleton<IValidationService, ValidationService>();
+        servicesCollection.AddSingleton<IAuditLogger, ChannelAuditLogger>();
+        servicesCollection.AddSingleton(Channel.CreateUnbounded<AuditLogEntry>());
+        servicesCollection.AddFeatureManagement();
+        servicesCollection.AddSingleton<IConfiguration>(config);
 
         configure?.Invoke(servicesCollection);
         return servicesCollection.BuildServiceProvider();

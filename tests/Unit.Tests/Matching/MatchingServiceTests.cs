@@ -9,6 +9,7 @@ using Moq;
 using Newtonsoft.Json;
 
 using Shared.Endpoint;
+using Shared.Logging;
 using Shared.Models;
 
 using Unit.Tests.Util;
@@ -17,12 +18,13 @@ namespace Unit.Tests.Matching;
 
 public sealed class MatchingServiceTests
 {
+    private readonly Mock<IAuditLogger> _auditLogger = new();
     [Fact]
     public async Task EmptyPersonModelReturnsError()
     {
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
         var validationService = new ValidationService();
-        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
 
         var result = await subj.SearchAsync(new PersonSpecification());
 
@@ -52,7 +54,7 @@ public sealed class MatchingServiceTests
             });
 
         var validationService = new ValidationService();
-        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
 
         var model = new PersonSpecification
         {
@@ -79,7 +81,7 @@ public sealed class MatchingServiceTests
         var dateOfBirth = DateOnly.Parse(dob);
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
         var validationService = new ValidationService();
-        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
 
         var model = new PersonSpecification
         {
@@ -111,7 +113,7 @@ public sealed class MatchingServiceTests
             });
 
         var validationService = new ValidationService();
-        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
 
         var model = new PersonSpecification
         {
@@ -143,7 +145,7 @@ public sealed class MatchingServiceTests
             });
 
         var validationService = new ValidationService();
-        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
 
         var model = new PersonSpecification
         {
@@ -176,7 +178,7 @@ public sealed class MatchingServiceTests
             });
 
         var validationService = new ValidationService();
-        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
 
         var model = new PersonSpecification
         {
@@ -210,7 +212,7 @@ public sealed class MatchingServiceTests
             });
 
         var validationService = new ValidationService();
-        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService);
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
 
         var model = new PersonSpecification
         {
@@ -241,7 +243,7 @@ public sealed class MatchingServiceTests
         var mockLogger = new Mock<ILogger<MatchingService>>();
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
         var validationService = new ValidationService();
-        var subj = new MatchingService(mockLogger.Object, nhsFhir.Object, validationService);
+        var subj = new MatchingService(mockLogger.Object, nhsFhir.Object, validationService, _auditLogger.Object);
 
         var eighteenYearsAgo = DateTime.UtcNow.AddYears(-18);
 
@@ -299,7 +301,7 @@ public sealed class MatchingServiceTests
         var logger = loggerFactory.CreateLogger<MatchingService>();
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
         var validationService = new ValidationService();
-        var subj = new MatchingService(logger, nhsFhir.Object, validationService);
+        var subj = new MatchingService(logger, nhsFhir.Object, validationService, _auditLogger.Object);
 
         var model = new PersonSpecification
         {

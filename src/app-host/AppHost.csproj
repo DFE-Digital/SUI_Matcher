@@ -5,6 +5,7 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<IsAspireHost>true</IsAspireHost>
+		<UserSecretsId>35d1c875-6b35-46ad-8913-aea85a53b9c2</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -12,6 +13,7 @@
 		<PackageReference Include="Aspire.Hosting.AppHost" />
 		<PackageReference Include="Aspire.Hosting.Azure" />
 		<PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
+		<PackageReference Include="Aspire.Hosting.Azure.Storage" />
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
 		<PackageReference Include="DotNetEnv" />
 		<PackageReference Include="Yarp.ReverseProxy" />

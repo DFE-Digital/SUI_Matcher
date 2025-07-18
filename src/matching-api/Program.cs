@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
-
-using Asp.Versioning.Builder;
+using System.Threading.Channels;
 
 using DotNetEnv;
 
@@ -9,11 +8,13 @@ using MatchingApi.Services;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
+using Shared.Logging;
 
 Env.TraversePath().Load();
 
@@ -45,6 +46,19 @@ builder.Services.AddSingleton<IMatchingService, MatchingService>();
 builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
 
+// Audit logging setup
+builder.Services.AddFeatureManagement();
+var auditFeatureFlag = builder.Configuration.GetValue<bool>("FeatureManagement:EnableAuditLogging");
+Console.WriteLine($"[AUDIT] Matching API started with audit logging set to {auditFeatureFlag}");
+if (auditFeatureFlag)
+{
+    builder.AddAzureTableClient("tables");
+    builder.Services.AddHostedService<AuditLogBackgroundService>();
+}
+
+builder.Services.AddSingleton(Channel.CreateUnbounded<AuditLogEntry>());
+builder.Services.AddSingleton<IAuditLogger, ChannelAuditLogger>();
+
 IHttpClientBuilder client =
     builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(static client =>
         client.BaseAddress = new Uri("https+http://external-api"));
@@ -75,14 +89,14 @@ builder.Services.Configure<JsonOptions>(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-WebApplication app = builder.Build();
+var app = builder.Build();
 
-ApiVersionSet apiVersionSet = app.NewApiVersionSet()
+var apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1))
     .ReportApiVersions()
     .Build();
 
-RouteGroupBuilder versionedGroup = app
+var versionedGroup = app
     .MapGroup("api/v{version:apiVersion}")
     .WithApiVersionSet(apiVersionSet);
 

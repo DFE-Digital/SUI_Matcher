@@ -32,6 +32,9 @@ param monitoringActionGroupEmail string
 @description('Turn on monitoring alerts')
 param turnOnAlerts bool = false
 
+@description('Enable Audit Logging feature for Aspire application')
+param enableAuditLogging bool = false
+
 var tags = {
   'azd-env-name': environmentName
   Product: 'SUI'
@@ -50,6 +53,7 @@ module resources 'resources.bicep' = {
     containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
     containerAppVnet: containerAppVnet
     containerAppEnvSubnet: containerAppEnvSubnet
+    enableAuditLogging: enableAuditLogging
   }
 }
 
@@ -83,3 +87,6 @@ output AZURE_CONTAINER_APPS_ENVIRONMENT_ID string = resources.outputs.AZURE_CONT
 output AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN string = resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN
 output APPLICATION_INSIGHTS_CONNECTION_STRING string = resources.outputs.APPLICATION_INSIGHTS_CONNECTION_STRING
 output SECRETS_VAULTURI string = secrets.outputs.vaultUri
+
+output AZURE_ENABLE_AUDIT_LOGGING bool = enableAuditLogging
+output AZURE_TABLE_STORAGE_CONNECTION_STRING string = resources.outputs.tableEndpoint
