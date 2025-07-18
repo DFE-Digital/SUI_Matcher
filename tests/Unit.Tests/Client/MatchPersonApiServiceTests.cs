@@ -47,7 +47,7 @@ public class MatchPersonApiServiceTests
         var result = await service.MatchPersonAsync(validPayload);
 
         // Assert
-        Assert.Equal(validResult.Result.NhsNumber, result.Result.NhsNumber);
+        Assert.Equal(validResult.Result.NhsNumber, result?.Result?.NhsNumber);
         handlerMock.Protected().Verify(
             "SendAsync",
             Times.Exactly(1),

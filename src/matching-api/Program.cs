@@ -35,11 +35,9 @@ if (builder.Configuration.GetValue<bool>("EnableAuth"))
         .EnableTokenAcquisitionToCallDownstreamApi(options => { })
         .AddInMemoryTokenCaches();
 
-    builder.Services.AddAuthorization(config =>
-    {
-        config.AddPolicy("AuthPolicy", policy =>
+    builder.Services.AddAuthorizationBuilder()
+        .AddPolicy("AuthPolicy", policy =>
             policy.RequireRole("MatchingApi"));
-    });
 }
 
 builder.Services.AddHttpContextAccessor();

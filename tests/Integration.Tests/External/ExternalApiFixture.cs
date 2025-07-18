@@ -56,7 +56,7 @@ public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(
     public HttpClient CreateSecureClient()
     {
         var client = CreateHttpClient("external-api");
-        var configuration = _app.Services.GetRequiredService<IConfiguration>();
+        var configuration = _app!.Services.GetRequiredService<IConfiguration>();
         if (!configuration.GetValue<bool>("EnableAuth"))
         {
             return client;
@@ -66,9 +66,9 @@ public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(
             configuration["AzureAdMatching:TenantId"],
             configuration["AzureAdMatching:ClientId"],
             configuration["AzureAdMatching:ClientSecret"],
-            new ClientSecretCredentialOptions { AuthorityHost = new Uri(configuration["AzureAdMatching:Instance"]) });
+            new ClientSecretCredentialOptions { AuthorityHost = new Uri(configuration["AzureAdMatching:Instance"] ?? string.Empty) });
         var tokenRequestContext = new TokenRequestContext(
-            [configuration["AzureAdMatching:Scopes"]]);
+            [configuration["AzureAdMatching:Scopes"] ?? string.Empty]);
         AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
 

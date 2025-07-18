@@ -33,31 +33,38 @@ builder.ConfigureServices((hostContext, services) =>
         x.IncomingDirectory = args[0];
         x.ProcessedDirectory = args[1];
     });
-    services.AddHttpClient<IMatchPersonApiService, MatchPersonApiService>(client =>
+    services.AddHttpClient<IMatchPersonApiService, MatchPersonApiService>(async void (client) =>
     {
-        client.BaseAddress = new Uri(matchApiBaseAddress);
-        if (hostContext.Configuration.GetValue<bool>("EnableAuth"))
+        try
         {
-            var clientSecretCredential = new ClientSecretCredential(
-                hostContext.Configuration["AzureAdWatcher:TenantId"],
-                hostContext.Configuration["AzureAdWatcher:ClientId"],
-                hostContext.Configuration["AzureAdWatcher:ClientSecret"],
-                new ClientSecretCredentialOptions { AuthorityHost = new Uri(hostContext.Configuration["AzureAdWatcher:Authority"]) });
-            var tokenRequestContext = new TokenRequestContext(
-                [hostContext.Configuration["AzureAdWatcher:Scopes"]]);
-            AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
-        }
+            client.BaseAddress = new Uri(matchApiBaseAddress);
+            if (hostContext.Configuration.GetValue<bool>("EnableAuth"))
+            {
+                var clientSecretCredential = new ClientSecretCredential(
+                    hostContext.Configuration["AzureAdWatcher:TenantId"],
+                    hostContext.Configuration["AzureAdWatcher:ClientId"],
+                    hostContext.Configuration["AzureAdWatcher:ClientSecret"],
+                    new ClientSecretCredentialOptions { AuthorityHost = new Uri(hostContext.Configuration["AzureAdWatcher:Authority"] ?? string.Empty) });
+                var tokenRequestContext = new TokenRequestContext(
+                    [hostContext.Configuration["AzureAdWatcher:Scopes"] ?? string.Empty]);
+                AccessToken token = await clientSecretCredential.GetTokenAsync(tokenRequestContext);
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
+            }
 
-        // Hack: until we can find a better way of routing for apps environment in azure.
-        // Envoy uses SNI and needs a HOST header to route correctly
-        // As we are using a private link, the host header needs to be set to the yarp hostname
-        if (!matchApiBaseAddress.Contains("localhost"))
+            // Hack: until we can find a better way of routing for apps environment in azure.
+            // Envoy uses SNI and needs a HOST header to route correctly
+            // As we are using a private link, the host header needs to be set to the yarp hostname
+            if (!matchApiBaseAddress.Contains("localhost"))
+            {
+                var uri = new Uri(matchApiBaseAddress);
+                var yarpHostValue = uri.Host.Replace(".privatelink.", ".").TrimEnd('/');
+                var hostUri = $"yarp.{yarpHostValue}";
+                client.DefaultRequestHeaders.Add("Host", hostUri);
+            }
+        }
+        catch (Exception e)
         {
-            var uri = new Uri(matchApiBaseAddress);
-            var yarpHostValue = uri.Host.Replace(".privatelink.", ".").TrimEnd('/');
-            var hostUri = $"yarp.{yarpHostValue}";
-            client.DefaultRequestHeaders.Add("Host", hostUri);
+            Console.WriteLine(e.Message);
         }
     });
 });

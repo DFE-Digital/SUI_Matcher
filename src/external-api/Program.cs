@@ -62,11 +62,9 @@ if (builder.Configuration.GetValue<bool>("EnableAuth"))
 
         }, options => { builder.Configuration.Bind("AzureAdExternal", options); });
 
-    builder.Services.AddAuthorization(config =>
-    {
-        config.AddPolicy("AuthPolicy", policy =>
+    builder.Services.AddAuthorizationBuilder()
+        .AddPolicy("AuthPolicy", policy =>
             policy.RequireRole("ExternalApi"));
-    });
 }
 
 builder.Services.AddHttpContextAccessor();

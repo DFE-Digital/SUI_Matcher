@@ -85,7 +85,7 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
     public HttpClient CreateSecureClient()
     {
         var client = CreateHttpClient("yarp");
-        var configuration = _app.Services.GetRequiredService<IConfiguration>();
+        var configuration = _app!.Services.GetRequiredService<IConfiguration>();
         if (!configuration.GetValue<bool>("EnableAuth"))
         {
             return client;
@@ -95,9 +95,9 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
             configuration["AzureAdWatcher:TenantId"],
             configuration["AzureAdWatcher:ClientId"],
             configuration["AzureAdWatcher:ClientSecret"],
-            new ClientSecretCredentialOptions { AuthorityHost = new Uri(configuration["AzureAdWatcher:Authority"]) });
+            new ClientSecretCredentialOptions { AuthorityHost = new Uri(configuration["AzureAdWatcher:Authority"] ?? string.Empty) });
         var tokenRequestContext = new TokenRequestContext(
-            [configuration["AzureAdWatcher:Scopes"]]);
+            [configuration["AzureAdWatcher:Scopes"] ?? string.Empty]);
         AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
 

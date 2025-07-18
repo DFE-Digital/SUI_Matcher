@@ -12,7 +12,7 @@ public class DownstreamApiAuthHandler : DelegatingHandler
     public DownstreamApiAuthHandler(ITokenAcquisition tokenAcquisition, IConfiguration configuration)
     {
         _tokenAcquisition = tokenAcquisition;
-        _downstreamApiScope = configuration.GetValue<string>("AzureAdMatching:Scopes");
+        _downstreamApiScope = configuration.GetValue<string>("AzureAdMatching:Scopes") ?? string.Empty;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
