@@ -75,7 +75,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 Gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]),
             };
 
-            
+
 
             var response = await matchPersonApi.MatchPersonAsync(payload);
 
@@ -98,7 +98,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
     }
 
-    
+
 
     private static string WriteStatsJsonFile(string outputDirectory, string ts, CsvProcessStats stats)
     {

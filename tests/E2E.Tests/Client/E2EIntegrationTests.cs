@@ -27,7 +27,7 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
             Assert.Equal("9691292211", nhsNumber);
         });
     }
-    
+
     [Fact]
     public async Task TestOneRowDbsCsvSingleMatch()
     {

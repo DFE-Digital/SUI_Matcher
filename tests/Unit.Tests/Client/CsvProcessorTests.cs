@@ -33,7 +33,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
     private readonly TempDirectoryFixture _dir = new();
 
     public required ITestOutputHelper TestContext = testOutputHelper;
-    
+
     public static class TestDataHeaders
     {
         public const string GivenName = "GivenName";
