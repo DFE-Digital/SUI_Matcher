@@ -206,13 +206,6 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
 
 public static class CsvExtensions
 {
-    public static string GetValueOrFallback(this Dictionary<string, string> record, string key, string fallback = "")
-    {
-        if (record.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
-            return value;
-        return record.GetValueOrDefault(fallback, "");
-    }
-    
     public static string GetFirstValueOrDefault(this Dictionary<string, string> record, IEnumerable<string> keys)
     {
         foreach (var key in keys)
