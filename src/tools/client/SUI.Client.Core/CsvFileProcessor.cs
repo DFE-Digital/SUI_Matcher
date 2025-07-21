@@ -65,15 +65,17 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 progressStopwatch.Restart();
             }
 
-            var payload = new MatchPersonPayload
+            MatchPersonPayload payload = new()
             {
-                Given = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
-                Family = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Family)]),
-                BirthDate = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
-                Email = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
-                AddressPostalCode = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
-                Gender = record.GetValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]),
+                Given = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
+                Family = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Family)]),
+                BirthDate = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
+                Email = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
+                AddressPostalCode = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
+                Gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]),
             };
+
+
 
             var response = await matchPersonApi.MatchPersonAsync(payload);
 
@@ -95,6 +97,8 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
 
         return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
     }
+
+
 
     private static string WriteStatsJsonFile(string outputDirectory, string ts, CsvProcessStats stats)
     {
@@ -197,5 +201,18 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         }
 
         return fileName;
+    }
+}
+
+public static class CsvExtensions
+{
+    public static string GetFirstValueOrDefault(this Dictionary<string, string> record, IEnumerable<string> keys)
+    {
+        foreach (var key in keys)
+        {
+            if (record.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+                return value;
+        }
+        return string.Empty;
     }
 }
