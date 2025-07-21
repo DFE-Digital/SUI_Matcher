@@ -232,4 +232,24 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         (await _nhsAuthMockApi.Should()).HaveReceived(2).Calls()
             .AtPath("/oauth2/token");
     }
+
+    [Fact]
+    public async Task MatchingApi_Response_IncludesExcludes_Appropriate_Headers()
+    {
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "OCTAVIA",
+            Family = "CHISLETT",
+            BirthDate = DateOnly.Parse("2008-09-20"),
+        }));
+
+        // Assert
+        Assert.True(response.IsSuccessStatusCode);
+
+        Assert.False(response.Headers.Contains("Server"));
+        Assert.True(response.Headers.Contains("Content-Security-Policy"));
+        Assert.True(response.Headers.Contains("Strict-Transport-Security"));
+        Assert.True(response.Headers.Contains("X-Frame-Options"));
+
+    }
 }

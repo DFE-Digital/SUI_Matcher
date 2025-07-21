@@ -20,6 +20,11 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+builder.WebHost.UseKestrel(options =>
+{
+    options.AddServerHeader = false;
+});
+
 builder.AddServiceDefaults();
 
 if (builder.Environment.IsDevelopment())
