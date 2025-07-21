@@ -10,12 +10,3 @@ public class MatchPersonPayload
     public string? Email { get; set; }
     public string? AddressPostalCode { get; set; }
 }
-
-public class MatchPersonPayloadFromDbsCsv
-{
-    public string? Forename { get; set; }
-    public string? Surname { get; set; }
-    public string? Dob { get; set; }
-    public string? Gender { get; set; }
-    public string? PostCode { get; set; }
-}
