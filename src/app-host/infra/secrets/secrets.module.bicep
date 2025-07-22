@@ -19,6 +19,8 @@ resource secrets 'Microsoft.KeyVault/vaults@2023-07-01' = {
       name: 'standard'
     }
     enableRbacAuthorization: true
+    enableSoftDelete: true
+    enablePurgeProtection: true
   }
 }
 
