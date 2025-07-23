@@ -2,11 +2,11 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    <AspnetVersion>9.0.2</AspnetVersion>
+    <AspnetVersion>9.0.4</AspnetVersion>
     <EfVersion>9.0.1</EfVersion>
-    <AspireVersion>9.1.0</AspireVersion>
+    <AspireVersion>9.2.0</AspireVersion>
     <OpenTelemetryVersion>1.12.0</OpenTelemetryVersion>
-    <HealthCheckVersion>8.0.2</HealthCheckVersion>
+    <HealthCheckVersion>9.0.0</HealthCheckVersion>
     <AspVersioningVersion>8.1.0</AspVersioningVersion>
     <MassTransitVersion>8.3.0</MassTransitVersion>
     <MartenVersion>7.10.1</MartenVersion>
@@ -22,7 +22,7 @@
     <PackageVersion Include="DotNetEnv" Version="3.1.1" />
     <PackageVersion Include="FluentAssertions" Version="6.12.2" />
     <PackageVersion Include="Hl7.Fhir.R4" Version="6.0.0-alpha1" />
-    <PackageVersion Include="IdentityModel" Version="5.2.0" />
+    <PackageVersion Include="IdentityModel" Version="7.0.0" />
     <PackageVersion Include="itext7" Version="9.2.0" />
     <PackageVersion Include="LettuceEncrypt" Version="1.3.3" />
     <PackageVersion Include="LettuceEncrypt.Azure" Version="1.3.3" />
@@ -94,11 +94,12 @@
     <PackageVersion Include="Aspire.Hosting.Azure" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Azure.ApplicationInsights" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.StackExchange.Redis.DistributedCaching" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Azure.Data.Tables" Version="$(AspireVersion)" />
     <!-- Aspire Custom Extensions -->
     <PackageVersion Include="WireMock.Net.Aspire" Version="1.6.7" />
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.4.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="$(AspireVersion)" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery.Abstractions" Version="$(AspireVersion)" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery.Yarp" Version="$(AspireVersion)" />
@@ -111,10 +112,10 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Healthchecks -->
-    <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="$(HealthCheckVersion)" />
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="$(HealthCheckVersion)" />
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="$(HealthCheckVersion)" />
-    <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="9.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="$(HealthCheckVersion)" />
   </ItemGroup>
   <ItemGroup>
     <!-- Testing -->
