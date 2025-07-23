@@ -88,5 +88,5 @@ output AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN string = resources.output
 output APPLICATION_INSIGHTS_CONNECTION_STRING string = resources.outputs.APPLICATION_INSIGHTS_CONNECTION_STRING
 output SECRETS_VAULTURI string = secrets.outputs.vaultUri
 
-output AZURE_ENABLE_AUDIT_LOGGING bool = enableAuditLogging
-output AZURE_TABLE_STORAGE_CONNECTION_STRING string = resources.outputs.tableEndpoint
+// output AZURE_ENABLE_AUDIT_LOGGING bool = enableAuditLogging
+// output AZURE_TABLE_STORAGE_CONNECTION_STRING string = resources.outputs.tableEndpoint
