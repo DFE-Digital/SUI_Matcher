@@ -15,11 +15,7 @@
 		<PackageReference Include="Aspire.Hosting.Azure.Storage" />
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
 		<PackageReference Include="DotNetEnv" />
-		<PackageReference Include="Yarp.ReverseProxy" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="AspNetCore.HealthChecks.Uris" />
+        <PackageReference Include="AspNetCore.HealthChecks.Uris" />
 	</ItemGroup>
 
 	<ItemGroup>

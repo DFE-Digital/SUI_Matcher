@@ -105,7 +105,14 @@ if (builder.Configuration.GetValue<bool>("EnableAuth"))
 
 app.MapDefaultEndpoints();
 app.MapEndpoints(versionedGroup);
-app.MapOpenApi();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "v1");
+    });
+}
 
 await using (var scope = app.Services.CreateAsyncScope())
 {

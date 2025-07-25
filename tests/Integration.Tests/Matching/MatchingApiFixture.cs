@@ -1,9 +1,4 @@
-using AppHost.SwaggerUi;
-
 using Integration.Tests.AppHost;
-
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Integration.Tests.Matching;
 
@@ -50,7 +45,7 @@ public sealed class MatchingApiFixture() : DistributedApplicationFactory(typeof(
 
         var matchingApi = applicationBuilder.AddProject<Projects.Matching>("matching-api")
             .WithReference(externalApi)
-            .WithSwaggerUi().WaitFor(NhsAuthMockService!);
+            .WaitFor(NhsAuthMockService!);
 
         applicationBuilder.AddProject<Projects.Yarp>("yarp")
             .WithReference(matchingApi).WaitFor(matchingApi).WaitFor(NhsAuthMockService!);
