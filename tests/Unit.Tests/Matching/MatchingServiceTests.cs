@@ -74,9 +74,9 @@ public sealed class MatchingServiceTests
     }
 
     [Theory]
-    [InlineData("2000-11-16", 3)] // non-swappable day/month in dob - so expect 5 search strategies
-    [InlineData("2000-11-10", 4)] // swappable day/month in dob - so expect 6 search strategies
-    public async Task MultpleQueryStrategiesWereUsed(string dob, int expectedSearchStrategiesUsed)
+    [InlineData("2000-11-16", 5)] // non-swappable day/month in dob - so expect 5 search strategies
+    [InlineData("2000-11-10", 6)] // swappable day/month in dob - so expect 6 search strategies
+    public async Task MultipleQueryStrategiesWereUsed(string dob, int expectedSearchStrategiesUsed)
     {
         var dateOfBirth = DateOnly.Parse(dob);
         var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
