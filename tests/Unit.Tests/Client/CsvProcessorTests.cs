@@ -34,7 +34,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
     public required ITestOutputHelper TestContext = testOutputHelper;
 
-    public static class TestDataHeaders
+    private static class TestDataHeaders
     {
         public const string GivenName = "GivenName";
         public const string Surname = "Surname";
@@ -218,6 +218,103 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         configure?.Invoke(servicesCollection);
         return servicesCollection.BuildServiceProvider();
+    }
+    
+    [Fact]
+    public async Task FileProcessor_ThrowsException_IfFileStaysLocked()
+    {
+        // ARRANGE
+        var f = new Bogus.Faker();
+        var testData = new TestData(new D
+        {
+            [TestDataHeaders.GivenName] = f.Name.FirstName(),
+            [TestDataHeaders.Surname] = f.Name.LastName(),
+            [TestDataHeaders.DOB] = f.Date.BetweenDateOnly(new DateOnly(1990, 1, 1), new DateOnly(2020, 1, 1)).ToString(Constants.DateFormat),
+            [TestDataHeaders.Email] = f.Internet.Email(),
+        }, SearchResult.Match("AAAAA1111111", 0.98m));
+
+        var mockNhsApi = new Mock<INhsFhirClient>(MockBehavior.Loose);
+        mockNhsApi.Setup(x => x.PerformSearch(It.Is<SearchQuery>(y => y.Email == testData.Data[TestDataHeaders.Email]))).Returns(() => Task.FromResult((SearchResult?)testData.SearchResult));
+
+        // ACT
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(x =>
+        {
+            x.AddSingleton(mockNhsApi.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var headers = new HashSet<string>(testData.Data.Keys);
+        string filePath = Path.Combine(_dir.IncomingDirectoryPath, "file00003.csv");
+        await CsvFileProcessor.WriteCsvAsync(filePath, headers, new List<D> { testData.Data });
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+
+        // Simulate file being locked by another process
+        await using (File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            await tcs.Task; // await processing of that file
+            await cts.CancelAsync();   // cancel the task
+            await monitoringTask; // await cancellation
+        }
+
+        // Assert exception is thrown and retries are attempted
+        Assert.NotNull(monitor.GetLastOperation().Exception);
+        Assert.IsType<IOException>(monitor.GetLastOperation().Exception);
+    }
+    
+    [Fact]
+    public async Task FileProcessor_Processes_AfterFileIsUnlocked()
+    {
+        // ARRANGE
+        var f = new Bogus.Faker();
+        var testData = new TestData(new D
+        {
+            [TestDataHeaders.GivenName] = f.Name.FirstName(),
+            [TestDataHeaders.Surname] = f.Name.LastName(),
+            [TestDataHeaders.DOB] = f.Date.BetweenDateOnly(new DateOnly(1990, 1, 1), new DateOnly(2020, 1, 1)).ToString(Constants.DateFormat),
+            [TestDataHeaders.Email] = f.Internet.Email(),
+        }, SearchResult.Match("AAAAA1111111", 0.98m));
+
+        var mockNhsApi = new Mock<INhsFhirClient>(MockBehavior.Loose);
+        mockNhsApi.Setup(x => x.PerformSearch(It.Is<SearchQuery>(y => y.Email == testData.Data[TestDataHeaders.Email]))).Returns(() => Task.FromResult((SearchResult?)testData.SearchResult));
+
+        // ACT
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(x =>
+        {
+            x.AddSingleton(mockNhsApi.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var headers = new HashSet<string>(testData.Data.Keys);
+        string filePath = Path.Combine(_dir.IncomingDirectoryPath, "file00003.csv");
+        await CsvFileProcessor.WriteCsvAsync(filePath, headers, [testData.Data]);
+        
+        monitor.Processed += (_, _) => tcs.SetResult();
+        
+        // Simulate file being locked by another process
+        await using (var stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            await Task.Delay(2000, cts.Token); // wait for retry logic to kick in
+            stream.Close();
+            await tcs.Task; // await processing of that file
+            await cts.CancelAsync();   // cancel the task
+            await monitoringTask;
+            
+        }
+
+        // Assert
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
+        
     }
 
     private class TestData(D data, SearchResult searchResult)

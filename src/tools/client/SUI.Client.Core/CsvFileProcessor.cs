@@ -12,8 +12,6 @@ using Shared.Models;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
 
-using Types = Shared.Models;
-
 namespace SUI.Client.Core;
 
 public interface ICsvFileProcessor
@@ -144,6 +142,11 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
     {
         var headers = new HashSet<string>();
         var records = new List<Dictionary<string, string>>();
+        
+        if (!await IsFileReadyAsync(filePath))
+        {
+            throw new IOException($"File {filePath} is not ready for reading.");
+        }
 
         using (var reader = new StreamReader(filePath))
         using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -173,6 +176,23 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         }
 
         return (headers, records);
+    }
+    
+    private static async Task<bool> IsFileReadyAsync(string filePath, int maxAttempts = 5, int delayMs = 1000)
+    {
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
+                return true;
+            }
+            catch (IOException)
+            {
+                await Task.Delay(delayMs);
+            }
+        }
+        return false;
     }
 
     /// <summary>
