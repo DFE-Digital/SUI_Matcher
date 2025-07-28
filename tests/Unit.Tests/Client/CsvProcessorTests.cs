@@ -219,7 +219,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         configure?.Invoke(servicesCollection);
         return servicesCollection.BuildServiceProvider();
     }
-    
+
     [Fact]
     public async Task FileProcessor_ThrowsException_IfFileStaysLocked()
     {
@@ -265,7 +265,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.NotNull(monitor.GetLastOperation().Exception);
         Assert.IsType<IOException>(monitor.GetLastOperation().Exception);
     }
-    
+
     [Fact]
     public async Task FileProcessor_Processes_AfterFileIsUnlocked()
     {
@@ -296,9 +296,9 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         var headers = new HashSet<string>(testData.Data.Keys);
         string filePath = Path.Combine(_dir.IncomingDirectoryPath, "file00003.csv");
         await CsvFileProcessor.WriteCsvAsync(filePath, headers, [testData.Data]);
-        
+
         monitor.Processed += (_, _) => tcs.SetResult();
-        
+
         // Simulate file being locked by another process
         await using (var stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
         {
@@ -307,14 +307,14 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             await tcs.Task; // await processing of that file
             await cts.CancelAsync();   // cancel the task
             await monitoringTask;
-            
+
         }
 
         // Assert
         Assert.Null(monitor.GetLastOperation().Exception);
         Assert.Equal(0, monitor.ErrorCount);
         Assert.Equal(1, monitor.ProcessedCount);
-        
+
     }
 
     private class TestData(D data, SearchResult searchResult)

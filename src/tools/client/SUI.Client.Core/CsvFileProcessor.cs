@@ -142,7 +142,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
     {
         var headers = new HashSet<string>();
         var records = new List<Dictionary<string, string>>();
-        
+
         if (!await IsFileReadyAsync(filePath))
         {
             throw new IOException($"File {filePath} is not ready for reading.");
@@ -177,7 +177,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
 
         return (headers, records);
     }
-    
+
     private static async Task<bool> IsFileReadyAsync(string filePath, int maxAttempts = 5, int delayMs = 1000)
     {
         for (int attempt = 0; attempt < maxAttempts; attempt++)
