@@ -49,12 +49,14 @@ public class MatchingService(
 
         var result = await MatchAsync(personSpecification);
 
-        LogMatchCompletion(personSpecification, result.Status);
+        LogMatchCompletion(personSpecification, result.Status, result.Score ?? 0, result.ProcessStage);
 
         logger.LogInformation("The person match request resulted in match status '{Status}' " +
+                              "and confidence score '{Score}' " +
                               "at process stage ({ProcessStage}), and the data quality was " +
                               "{QualityResult}",
             result.Status.ToString(),
+            result.Score,
             result.ProcessStage,
             JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
 
@@ -118,14 +120,17 @@ public class MatchingService(
         };
     }
 
-    private void LogMatchCompletion(PersonSpecification personSpecification, MatchStatus matchStatus)
+    private void LogMatchCompletion(PersonSpecification personSpecification, MatchStatus matchStatus, decimal score,
+        int? resultProcessStage)
     {
         var ageGroup = personSpecification.BirthDate.HasValue
             ? GetAgeGroup(personSpecification.BirthDate.Value)
             : "Unknown";
 
         logger.LogInformation(
-            "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
+            "[MATCH_COMPLETED] [ConfidenceScore={Score}] [ProcessStage={Stage}] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
+            score,
+            resultProcessStage,
             matchStatus,
             ageGroup,
             personSpecification.Gender ?? "Unknown",
@@ -251,16 +256,17 @@ public class MatchingService(
                 if (searchResult.Type == SearchResult.ResultType.Matched)
                 {
                     var status = MatchStatus.NoMatch;
-                    if (searchResult.Score.GetValueOrDefault() >= 0.95m)
+                    var score = searchResult.Score.GetValueOrDefault();
+                    if (score >= 0.95m)
                     {
                         status = MatchStatus.Match;
                     }
-                    else if (searchResult.Score.GetValueOrDefault() >= 0.85m)
+                    else if (score >= 0.85m)
                     {
                         status = MatchStatus.PotentialMatch;
                     }
 
-                    logger.LogInformation("Search query ({Query}) resulted in status '{Status}'", i, status.ToString());
+                    logger.LogInformation("Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'", i, status.ToString(), score);
 
                     return new MatchResult2(searchResult, status, i); // single match with confidence score
                 }
