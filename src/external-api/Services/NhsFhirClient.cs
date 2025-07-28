@@ -46,6 +46,9 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                     return SearchResult.Unmatched();
                 case 1:
                     LogInputAndPdsDifferences(query, (Patient)patient.Entry[0].Resource);
+
+                    logger.LogInformation("Nhs patient record confidence score {Score}", patient.Entry[0].Search.Score);
+
                     return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
                 default:
                     return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response, more than 1 entry found");
