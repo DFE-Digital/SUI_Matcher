@@ -7,18 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-      <PackageReference Include="Aspire.Azure.Data.Tables" />
-      <PackageReference Include="Aspire.Hosting.Azure.Storage" />
-      <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" />
-      <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
-      <PackageReference Include="DotNetEnv" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
-		<PackageReference Include="Asp.Versioning.Http" />
-		<PackageReference Include="FluentValidation.AspNetCore" />
-		<PackageReference Include="Microsoft.FeatureManagement.AspNetCore" />
 		<PackageReference Include="Microsoft.Identity.Web" />
 		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
   </ItemGroup>
 
 	<ItemGroup>

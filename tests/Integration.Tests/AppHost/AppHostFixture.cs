@@ -1,10 +1,7 @@
-using AppHost.SwaggerUi;
-
-using Aspire.Hosting.Testing;
-
 using Azure.Core;
 using Azure.Identity;
 
+using FluentAssertions.Execution;
 using FluentAssertions.Primitives;
 
 using WireMock.Admin.Requests;
@@ -52,7 +49,7 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
 
         var matchingApi = applicationBuilder.AddProject<Projects.Matching>("matching-api")
             .WithReference(externalApi)
-            .WithSwaggerUi().WaitFor(NhsAuthMockService);
+            .WaitFor(NhsAuthMockService);
 
         applicationBuilder.AddProject<Projects.Yarp>("yarp")
             .WithEnvironment(ctx =>
@@ -109,12 +106,12 @@ public static class WireMockExtensions
 {
     public static async Task<WireMockReceivedAssertions> Should(this IWireMockAdminApi instance)
     {
-        return new WireMockReceivedAssertions(await instance.GetRequestsAsync());
+        return new WireMockReceivedAssertions(await instance.GetRequestsAsync(), AssertionChain.GetOrCreate());
     }
 }
 
-public class WireMockReceivedAssertions(IList<LogEntryModel> logEntryModels)
-    : ReferenceTypeAssertions<IList<LogEntryModel>, WireMockReceivedAssertions>(logEntryModels)
+public class WireMockReceivedAssertions(IList<LogEntryModel> logEntryModels, AssertionChain assertionChain)
+    : ReferenceTypeAssertions<IList<LogEntryModel>, WireMockReceivedAssertions>(logEntryModels, assertionChain)
 {
     public WireMockAssertions HaveReceivedNoCalls()
     {

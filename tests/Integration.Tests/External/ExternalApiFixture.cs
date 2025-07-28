@@ -1,7 +1,3 @@
-using AppHost.SwaggerUi;
-
-using Aspire.Hosting.Testing;
-
 using Azure.Core;
 using Azure.Identity;
 
@@ -47,7 +43,7 @@ public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(
 
         var matchingApi = applicationBuilder.AddProject<Projects.Matching>("matching-api")
             .WithReference(externalApi)
-            .WithSwaggerUi().WaitFor(NhsAuthMockService!);
+            .WaitFor(NhsAuthMockService!);
 
         applicationBuilder.AddProject<Projects.Yarp>("yarp")
             .WithReference(matchingApi).WaitFor(matchingApi).WaitFor(NhsAuthMockService!);

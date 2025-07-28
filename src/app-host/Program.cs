@@ -1,5 +1,3 @@
-using AppHost.SwaggerUi;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -13,7 +11,7 @@ var secrets = builder.ExecutionContext.IsPublishMode
 
 var externalApi = builder.AddProject<Projects.External>("external-api")
     .WithReference(secrets)
-    .WithSwaggerUi();
+    .WithUrlForEndpoint("http", ep => new() { Url = "/swagger", DisplayText = "Swagger UI" });
 
 var matchingApi = builder.AddProject<Projects.Matching>("matching-api");
 
@@ -41,18 +39,12 @@ if (bool.Parse(auditLoggingFlag!))
         var table = builder.AddConnectionString("tables");
         matchingApi.WithReference(table).WaitFor(table);
     }
-
-    matchingApi
-        .WithReference(externalApi)
-        .WithSwaggerUi();
-}
-else
-{
-    matchingApi
-        .WithReference(externalApi)
-        .WithSwaggerUi();
 }
 
+matchingApi
+    .WithReference(externalApi)
+    .WithHttpHealthCheck("health")
+    .WithUrlForEndpoint("http", ep => new() { Url = "/swagger", DisplayText = "Swagger UI" });
 
 builder.AddProject<Projects.Yarp>("yarp")
     .WithReference(secrets)

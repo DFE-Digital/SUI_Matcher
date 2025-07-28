@@ -72,7 +72,7 @@ public class DataQualityEvaluatorServiceTests
     [Theory]
     [InlineData(null, QualityType.NotProvided)]
     [InlineData("valid@example.com", QualityType.Valid)]
-    public void ToQualityResult_ShouldHandleEmailQuality(string email, QualityType expectedQuality)
+    public void ToQualityResult_ShouldHandleEmailQuality(string? email, QualityType expectedQuality)
     {
         // Arrange
         var spec = new PersonSpecification { Email = email };

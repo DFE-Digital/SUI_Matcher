@@ -2,8 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 
-using IdentityModel;
-
 using Microsoft.IdentityModel.Tokens;
 
 namespace ExternalApi.Util;
@@ -29,8 +27,8 @@ public class JwtHandler : IJwtHandler
             audience,
             new List<Claim>
             {
-                new("jti", Guid.NewGuid().ToString()),
-                new(JwtClaimTypes.Subject, clientId),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new(JwtRegisteredClaimNames.Sub, clientId),
             },
             now,
             now.AddMinutes(expInMinutes),

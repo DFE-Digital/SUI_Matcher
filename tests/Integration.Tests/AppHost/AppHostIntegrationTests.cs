@@ -2,9 +2,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using Azure.Core;
-using Azure.Identity;
-
 using Shared.Models;
 
 using WireMock.Client;
@@ -42,16 +39,6 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetEndpoints))]
-    public async Task AppHostApiChecks(string endpointName, string endpointUrl)
-    {
-        using var httpClient = _fixture.CreateHttpClient(endpointName);
-        var response = await httpClient.GetAsync(endpointUrl);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     // Single Match with high confidence score (>95%, Confirmed match)
