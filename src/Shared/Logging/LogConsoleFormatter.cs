@@ -26,15 +26,15 @@ public class LogConsoleFormatter() : ConsoleFormatter(Shared.Constants.LogFormat
 
         if (searchId is not null && algorithmVersion is not null)
         {
-            textWriter.Write($"[{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [SearchId={searchId}] ");
+            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [SearchId={searchId}] ");
         }
         else if (searchId is not null)
         {
-            textWriter.Write($"[{logEntry.LogLevel}] [SearchId={searchId}] ");
+            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [SearchId={searchId}] ");
         }
         else
         {
-            textWriter.Write($"[{logEntry.LogLevel}] ");
+            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] ");
         }
 
         textWriter.WriteLine(message);
