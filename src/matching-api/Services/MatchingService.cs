@@ -16,7 +16,7 @@ public class MatchingService(
     IValidationService validationService,
     IAuditLogger auditLogger) : IMatchingService
 {
-    public static readonly int AlgorithmVersion = 1;
+    public static readonly int AlgorithmVersion = 2;
 
     public async Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification)
     {
@@ -174,7 +174,14 @@ public class MatchingService(
 
         var queries = new List<SearchQuery>
         {
-            new() // exact search
+            new() // exact search on only given, family and dob
+            {
+                ExactMatch = true,
+                Given = modelName,
+                Family = model.Family,
+                Birthdate = dob
+            },
+            new() // 1. exact search
             {
                 ExactMatch = true,
                 Given = modelName,
@@ -185,7 +192,14 @@ public class MatchingService(
                 Birthdate = dob,
                 AddressPostalcode = model.AddressPostalCode,
             },
-            new() // 1. fuzzy search with given name, family name and DOB.
+            new() // 2. fuzzy search on only given, family and dob
+            {
+                FuzzyMatch = true,
+                Given = modelName,
+                Family = model.Family,
+                Birthdate = dob
+            },
+            new() // 3. fuzzy search with given name, family name and DOB.
             {
                 FuzzyMatch = true,
                 Given = modelName,
@@ -196,7 +210,7 @@ public class MatchingService(
                 Birthdate = dob,
                 AddressPostalcode = model.AddressPostalCode,
             },
-            new() // 2. fuzzy search with given name, family name and DOB range 6 months either side of given date.
+            new() // 4. fuzzy search with given name, family name and DOB range 6 months either side of given date.
             {
                 FuzzyMatch = true, Given = modelName, Family = model.Family, Birthdate = dobRange,
             },
