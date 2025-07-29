@@ -8,7 +8,7 @@ public static class PersonSpecificationUtils
     /// <param name="value">number as string</param>
     /// <param name="defaultValue"></param>
     /// <returns>a gender if known, default value if it is not a known number. Or empty string if there is no value</returns>
-    public static string? ToGenderFromNumber(string? value, string? defaultValue = "unknown")
+    public static string ToGenderFromNumber(string? value)
     {
         if (string.IsNullOrEmpty(value))
             return string.Empty;
@@ -19,7 +19,7 @@ public static class PersonSpecificationUtils
             "1" => "male",
             "2" => "female",
             "9" => "not specified",
-            _ => defaultValue
+            _ => "unknown"
         };
     }
 }

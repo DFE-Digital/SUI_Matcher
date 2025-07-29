@@ -69,7 +69,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
             // Check to see if the gender is a number, if so, convert it to a string representation.
             if (int.TryParse(gender, out int _))
             {
-                var genderFromNumber = PersonSpecificationUtils.ToGenderFromNumber(gender, null);
+                var genderFromNumber = PersonSpecificationUtils.ToGenderFromNumber(gender);
                 gender = genderFromNumber;
                 // Update the record with the string representation
                 UpdateRecordValue(record, nameof(MatchPersonPayload.Gender), genderFromNumber);
