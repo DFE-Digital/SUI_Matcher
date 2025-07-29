@@ -20,6 +20,7 @@ public class MatchingService(
 
     public async Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification)
     {
+
         StoreAlgorithmVersion();
 
         var searchId = StoreUniqueSearchIdFor(personSpecification);
@@ -32,6 +33,7 @@ public class MatchingService(
         var validationResults = validationService.Validate(personSpecification);
 
         var dataQualityResult = DataQualityEvaluatorService.ToQualityResult(personSpecification, validationResults.Results!.ToList());
+
 
         logger.LogInformation("Person data validation resulted in: {QualityResult}",
             JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
@@ -171,7 +173,6 @@ public class MatchingService(
         var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
 
         var modelName = model.Given is not null ? new[] { model.Given } : null;
-
         var queries = new List<SearchQuery>
         {
             new() // exact search on only given, family and dob
