@@ -72,8 +72,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 var genderFromNumber = PersonSpecificationUtils.ToGenderFromNumber(gender);
                 gender = genderFromNumber;
                 // Update the record with the string representation
-                UpdateRecordValue(record, nameof(MatchPersonPayload.Gender), genderFromNumber);
-
+                record[nameof(SearchQuery.Gender)] = genderFromNumber;
             }
 
             MatchPersonPayload payload = new()
@@ -106,15 +105,6 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, stats);
 
         return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
-    }
-
-    private static void UpdateRecordValue(Dictionary<string, string> records, string recordName, string newRecordValue)
-    {
-        if (records.ContainsKey(recordName))
-        {
-            records[recordName] = newRecordValue;
-        }
-
     }
 
 
