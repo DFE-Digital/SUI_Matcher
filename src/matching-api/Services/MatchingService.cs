@@ -303,6 +303,6 @@ public class MatchingService(
 
         logger.LogInformation("Search query ({QueryLength}) resulted in status 'NoMatch'", queries.Length - 1);
 
-        return new MatchResult2(MatchStatus.NoMatch, queries.Length);
+        return new MatchResult2(MatchStatus.NoMatch, queries.Length - 1);
     }
 }
