@@ -1,6 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace SUI.Client.Watcher;
 using CommandLine;
 
+[ExcludeFromCodeCoverage(Justification = "CLI config file")]
 public class WatcherArgs
 {
     [Option('i', "input", Required = true, HelpText = "Directory to watch for incoming files.")]
