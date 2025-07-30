@@ -247,13 +247,13 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal("male", records.First()["Gender"]);
 
     }
-    
+
     [Fact]
     public async Task TestOneFileSingleMatch_GenderNotSentIfGenderFlagIsOff()
     {
         var searchResultBad = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.55m, Type = SearchResult.ResultType.Unmatched };
         var searchResultGood = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.99m, Type = SearchResult.ResultType.Matched };
-        
+
         // Mimick at least 3 calls to the PerformSearch method, showing different stages.
         _nhsFhirClient.SetupSequence(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .Returns(() => Task.FromResult<SearchResult?>(searchResultBad))
