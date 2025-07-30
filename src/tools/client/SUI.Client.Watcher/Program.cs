@@ -30,46 +30,46 @@ await argResult.WithParsedAsync(async parsedArgs =>
         services.AddClientCore(hostContext.Configuration);
         services.Configure<CsvWatcherConfig>(x =>
         {
-                x.IncomingDirectory = parsedArgs.InputDirectory;
-                x.ProcessedDirectory = parsedArgs.OutputDirectory;
-                x.EnableGenderSearch = parsedArgs.EnableGenderSearch;
+            x.IncomingDirectory = parsedArgs.InputDirectory;
+            x.ProcessedDirectory = parsedArgs.OutputDirectory;
+            x.EnableGenderSearch = parsedArgs.EnableGenderSearch;
         });
         services.AddHttpClient<IMatchPersonApiService, MatchPersonApiService>(async void (client) =>
         {
             try
             {
-                    Rule.Assert(Uri.IsWellFormedUriString(parsedArgs.ApiBaseUrl, UriKind.Absolute),
-                        "Invalid URL format for matching service URL.");
-                    client.BaseAddress = new Uri(parsedArgs.ApiBaseUrl);
+                Rule.Assert(Uri.IsWellFormedUriString(parsedArgs.ApiBaseUrl, UriKind.Absolute),
+                    "Invalid URL format for matching service URL.");
+                client.BaseAddress = new Uri(parsedArgs.ApiBaseUrl);
 
 
-                    if (hostContext.Configuration.GetValue<bool>("EnableAuth"))
-                    {
-                        var clientSecretCredential = new ClientSecretCredential(
-                            hostContext.Configuration["AzureAdWatcher:TenantId"],
-                            hostContext.Configuration["AzureAdWatcher:ClientId"],
-                            hostContext.Configuration["AzureAdWatcher:ClientSecret"],
-                            new ClientSecretCredentialOptions
-                            {
-                                AuthorityHost = new Uri(hostContext.Configuration["AzureAdWatcher:Authority"] ??
-                                                        string.Empty)
-                            });
-                        var tokenRequestContext = new TokenRequestContext(
-                            [hostContext.Configuration["AzureAdWatcher:Scopes"] ?? string.Empty]);
-                        AccessToken token = await clientSecretCredential.GetTokenAsync(tokenRequestContext);
-                        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
-                    }
+                if (hostContext.Configuration.GetValue<bool>("EnableAuth"))
+                {
+                    var clientSecretCredential = new ClientSecretCredential(
+                        hostContext.Configuration["AzureAdWatcher:TenantId"],
+                        hostContext.Configuration["AzureAdWatcher:ClientId"],
+                        hostContext.Configuration["AzureAdWatcher:ClientSecret"],
+                        new ClientSecretCredentialOptions
+                        {
+                            AuthorityHost = new Uri(hostContext.Configuration["AzureAdWatcher:Authority"] ??
+                                                    string.Empty)
+                        });
+                    var tokenRequestContext = new TokenRequestContext(
+                        [hostContext.Configuration["AzureAdWatcher:Scopes"] ?? string.Empty]);
+                    AccessToken token = await clientSecretCredential.GetTokenAsync(tokenRequestContext);
+                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
+                }
 
-                    // Hack: until we can find a better way of routing for apps environment in azure.
-                    // Envoy uses SNI and needs a HOST header to route correctly
-                    // As we are using a private link, the host header needs to be set to the yarp hostname
-                    if (!parsedArgs.ApiBaseUrl.Contains("localhost"))
-                    {
-                        var uri = new Uri(parsedArgs.ApiBaseUrl);
-                        var yarpHostValue = uri.Host.Replace(".privatelink.", ".").TrimEnd('/');
-                        var hostUri = $"yarp.{yarpHostValue}";
-                        client.DefaultRequestHeaders.Add("Host", hostUri);
-                    }
+                // Hack: until we can find a better way of routing for apps environment in azure.
+                // Envoy uses SNI and needs a HOST header to route correctly
+                // As we are using a private link, the host header needs to be set to the yarp hostname
+                if (!parsedArgs.ApiBaseUrl.Contains("localhost"))
+                {
+                    var uri = new Uri(parsedArgs.ApiBaseUrl);
+                    var yarpHostValue = uri.Host.Replace(".privatelink.", ".").TrimEnd('/');
+                    var hostUri = $"yarp.{yarpHostValue}";
+                    client.DefaultRequestHeaders.Add("Host", hostUri);
+                }
             }
             catch (Exception e)
             {

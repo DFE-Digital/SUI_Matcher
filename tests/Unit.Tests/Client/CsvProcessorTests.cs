@@ -354,7 +354,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         {
             x.IncomingDirectory = _dir.IncomingDirectoryPath;
             x.ProcessedDirectory = _dir.ProcessedDirectoryPath;
-            x.EnableGenderSearch = true;
         });
 
         servicesCollection.AddClientCore(config);

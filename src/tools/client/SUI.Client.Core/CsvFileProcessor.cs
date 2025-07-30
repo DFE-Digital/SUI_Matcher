@@ -66,11 +66,8 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 progressStopwatch.Restart();
             }
 
-            logger.LogInformation("Gender enabled: {GenderEnabled}", watcherConfig.Value.EnableGenderSearch);
+            string? gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]).ToLower();
 
-            var gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]);
-
-            // Check to see if the gender is a number, if so, convert it to a string representation.
             if (int.TryParse(gender, out int _))
             {
                 var genderFromNumber = PersonSpecificationUtils.ToGenderFromNumber(gender);
@@ -86,7 +83,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 BirthDate = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
                 Email = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
                 AddressPostalCode = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
-                Gender = gender.ToLower(),
+                Gender = watcherConfig.Value.EnableGenderSearch ? gender : null,
             };
 
 
