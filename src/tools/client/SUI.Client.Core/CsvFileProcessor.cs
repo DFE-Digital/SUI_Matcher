@@ -8,6 +8,7 @@ using CsvHelper.Configuration;
 using Microsoft.Extensions.Logging;
 
 using Shared.Models;
+using Shared.Util;
 
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
@@ -63,6 +64,17 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 progressStopwatch.Restart();
             }
 
+            var gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]);
+
+            // Check to see if the gender is a number, if so, convert it to a string representation.
+            if (int.TryParse(gender, out int _))
+            {
+                var genderFromNumber = PersonSpecificationUtils.ToGenderFromNumber(gender);
+                gender = genderFromNumber;
+                // Update the record with the string representation
+                record[nameof(SearchQuery.Gender)] = genderFromNumber;
+            }
+
             MatchPersonPayload payload = new()
             {
                 Given = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
@@ -70,9 +82,8 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 BirthDate = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
                 Email = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
                 AddressPostalCode = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
-                Gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]),
+                Gender = gender.ToLower(),
             };
-
 
 
             var response = await matchPersonApi.MatchPersonAsync(payload);
@@ -95,7 +106,6 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
 
         return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
     }
-
 
 
     private static string WriteStatsJsonFile(string outputDirectory, string ts, CsvProcessStats stats)

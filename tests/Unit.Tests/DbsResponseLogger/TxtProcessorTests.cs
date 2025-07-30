@@ -96,7 +96,7 @@ public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
         => TxtFileProcessor.ToPostCode(recordData.Record[(int)RecordColumn.PostCode]);
 
     private static string GetGender(TestData recordData)
-        => TxtFileProcessor.ToGender(recordData.Record[(int)RecordColumn.Gender]);
+        => PersonSpecificationUtils.ToGenderFromNumber(recordData.Record[(int)RecordColumn.Gender]);
 
     private static string GetAgeRange(TestData recordData)
         => TxtFileProcessor.GetAgeGroup(ToDateOnly(recordData.Record[(int)RecordColumn.BirthDate])!.Value);

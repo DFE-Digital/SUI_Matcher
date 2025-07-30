@@ -1,12 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
 using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
+
+using Shared.Util;
 
 using SUI.DBS.Response.Logger.Core.Models;
 
@@ -78,7 +79,7 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
                 "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
                 matched ? "Match" : "NoMatch",
                 ageGroup,
-                ToGender(result.Gender),
+                PersonSpecificationUtils.ToGenderFromNumber(result.Gender),
                 ToPostCode(result.PostCode)
             );
         }
@@ -127,18 +128,6 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
     private static DateOnly? ToDateOnly(string? value)
         => !string.IsNullOrWhiteSpace(value) && DateOnly.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) ? date : null;
-
-    public static string ToGender(string? value)
-    {
-        return value switch
-        {
-            "0" => "Not known",
-            "1" => "Male",
-            "2" => "Female",
-            "9" => "Not specified",
-            _ => "Unknown"
-        };
-    }
 
     public static string ToPostCode(string? value)
         => !string.IsNullOrWhiteSpace(value) ? value : "Unknown";
