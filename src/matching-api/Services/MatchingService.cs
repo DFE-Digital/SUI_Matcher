@@ -35,11 +35,13 @@ public class MatchingService(
         var dataQualityResult = DataQualityEvaluatorService.ToQualityResult(personSpecification, validationResults.Results!.ToList());
 
 
-        logger.LogInformation("Person data validation resulted in: {QualityResult}",
-            JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
+
 
         if (!HasMinDataRequirements(dataQualityResult))
         {
+            logger.LogInformation("Person data validation resulted in: {QualityResult}",
+                JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
+
             logger.LogError("The minimized data requirements for a search weren't met, returning match status 'Error'");
 
             return new PersonMatchResponse
@@ -51,7 +53,7 @@ public class MatchingService(
 
         var result = await MatchAsync(personSpecification);
 
-        LogMatchCompletion(personSpecification, result.Status, result.Score ?? 0, result.ProcessStage);
+        LogMatchCompletion(personSpecification, result.Status, dataQualityResult, result.Score ?? 0, result.ProcessStage);
 
         logger.LogInformation("The person match request resulted in match status '{Status}' " +
                               "and confidence score '{Score}' " +
@@ -122,7 +124,11 @@ public class MatchingService(
         };
     }
 
-    private void LogMatchCompletion(PersonSpecification personSpecification, MatchStatus matchStatus, decimal score,
+    private void LogMatchCompletion(
+        PersonSpecification personSpecification,
+        MatchStatus matchStatus,
+        DataQualityResult dataQualityResult,
+        decimal score,
         int? resultProcessStage)
     {
         var ageGroup = personSpecification.BirthDate.HasValue
@@ -130,13 +136,14 @@ public class MatchingService(
             : "Unknown";
 
         logger.LogInformation(
-            "[MATCH_COMPLETED] [ConfidenceScore={Score}] [ProcessStage={Stage}] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
+            "[MATCH_COMPLETED] [ConfidenceScore={Score}] [ProcessStage={Stage}] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, DataQuality: {DataQuality}",
             score,
             resultProcessStage,
             matchStatus,
             ageGroup,
             personSpecification.Gender ?? "Unknown",
-            personSpecification.AddressPostalCode ?? "Unknown"
+            personSpecification.AddressPostalCode ?? "Unknown",
+            JsonConvert.SerializeObject(dataQualityResult.ToDictionary())
         );
     }
 
@@ -285,7 +292,7 @@ public class MatchingService(
 
                     return new MatchResult2(searchResult, status, i); // single match with confidence score
                 }
-                else if (searchResult.Type == SearchResult.ResultType.MultiMatched)
+                if (searchResult.Type == SearchResult.ResultType.MultiMatched)
                 {
                     logger.LogInformation("Search query ({Query}) resulted in status 'ManyMatch'", i);
 
@@ -296,6 +303,6 @@ public class MatchingService(
 
         logger.LogInformation("Search query ({QueryLength}) resulted in status 'NoMatch'", queries.Length - 1);
 
-        return new MatchResult2(MatchStatus.NoMatch);
+        return new MatchResult2(MatchStatus.NoMatch, queries.Length);
     }
 }
