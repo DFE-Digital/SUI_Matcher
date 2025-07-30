@@ -6,12 +6,14 @@ using CsvHelper;
 using CsvHelper.Configuration;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using Shared.Models;
 using Shared.Util;
 
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
+using SUI.Client.Core.Watcher;
 
 namespace SUI.Client.Core;
 
@@ -20,7 +22,7 @@ public interface ICsvFileProcessor
     Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath);
 }
 
-public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : ICsvFileProcessor
+public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi, IOptions<CsvWatcherConfig> watcherConfig) : ICsvFileProcessor
 {
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderScore = "SUI_Score";
@@ -64,9 +66,8 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 progressStopwatch.Restart();
             }
 
-            var gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]);
+            string? gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]).ToLower();
 
-            // Check to see if the gender is a number, if so, convert it to a string representation.
             if (int.TryParse(gender, out int _))
             {
                 var genderFromNumber = PersonSpecificationUtils.ToGenderFromNumber(gender);
@@ -82,7 +83,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 BirthDate = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
                 Email = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
                 AddressPostalCode = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
-                Gender = gender.ToLower(),
+                Gender = watcherConfig.Value.EnableGenderSearch ? gender : null,
             };
 
 

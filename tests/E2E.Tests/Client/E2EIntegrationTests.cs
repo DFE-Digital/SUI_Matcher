@@ -72,7 +72,9 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
         var matchPersonApiService = new MatchPersonApiService(_client);
         var mappingConfig = new CsvMappingConfig();
         var logger = NullLogger<CsvFileProcessor>.Instance;
-        var fileProcessor = new CsvFileProcessor(logger, mappingConfig, matchPersonApiService);
+        // create IOptions<CsvWatcherConfig> if needed
+        var watcherConfig = Options.Create(new CsvWatcherConfig());
+        var fileProcessor = new CsvFileProcessor(logger, mappingConfig, matchPersonApiService, watcherConfig);
 
         var inputFileName = "single_match.csv";
         var inputFilePath = Path.Combine("Resources", "Csv", inputFileName); // Relative path
@@ -107,7 +109,8 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
         var matchPersonApiService = new MatchPersonApiService(_client);
         var mappingConfig = new CsvMappingConfig();
         var logger = NullLogger<CsvFileProcessor>.Instance;
-        var fileProcessor = new CsvFileProcessor(logger, mappingConfig, matchPersonApiService);
+        var watcherConfig = Options.Create(new CsvWatcherConfig());
+        var fileProcessor = new CsvFileProcessor(logger, mappingConfig, matchPersonApiService, watcherConfig);
 
         var appConfig = new CsvWatcherConfig()
         {

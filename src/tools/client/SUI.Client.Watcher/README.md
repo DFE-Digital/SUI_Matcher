@@ -4,5 +4,5 @@
 To run the tool, you can use the following command:
 
 ```bash
-suiw <inputDirectory> <outputDirectory> <absoluteUrlToService>
+suiw <inputDirectory> --input <outputDirectory> --output <absoluteUrlToService> --uri <uriToService> --enable-gender <optional flag to use gender in search>
 ```

@@ -249,6 +249,64 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
+    public async Task TestOneFileSingleMatch_GenderNotSentIfGenderFlagIsOff()
+    {
+        var searchResultBad = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.55m, Type = SearchResult.ResultType.Unmatched };
+        var searchResultGood = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.99m, Type = SearchResult.ResultType.Matched };
+
+        // Mimick at least 3 calls to the PerformSearch method, showing different stages.
+        _nhsFhirClient.SetupSequence(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .Returns(() => Task.FromResult<SearchResult?>(searchResultBad))
+            .Returns(() => Task.FromResult<SearchResult?>(searchResultBad))
+            .Returns(() => Task.FromResult<SearchResult?>(searchResultGood));
+
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(x =>
+        {
+            x.AddSingleton(_nhsFhirClient.Object);
+            x.Configure<CsvWatcherConfig>(wc =>
+            {
+                wc.IncomingDirectory = _dir.IncomingDirectoryPath;
+                wc.ProcessedDirectory = _dir.ProcessedDirectoryPath;
+                wc.EnableGenderSearch = false; // Disable
+            });
+        });
+
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = new D
+        {
+            [TestDataHeaders.GivenName] = "John",
+            [TestDataHeaders.Surname] = "Smith-G",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Gender] = "1",
+        };
+
+        var list = new List<D> { data };
+        var headers = new HashSet<string>(data.Keys);
+        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00004.csv"), headers, list);
+
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task; // await processing of that file
+        await cts.CancelAsync();   // cancel the task
+        await monitoringTask; // await file watcher stop
+
+        // ASSERTS
+        if (monitor.GetLastOperation().Exception != null)
+        {
+            throw monitor.GetLastOperation().Exception!;
+        }
+
+        // Will retry after not getting the first match
+        _nhsFhirClient.Verify(x => x.PerformSearch(It.Is<SearchQuery>(sq => sq.Gender == null)), Times.AtLeast(3), "The PerformSearch method should have invoked ONCE");
+    }
+
+    [Fact]
     public async Task FileProcessor_ThrowsException_IfFileStaysLocked()
     {
         // ARRANGE
@@ -354,6 +412,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         {
             x.IncomingDirectory = _dir.IncomingDirectoryPath;
             x.ProcessedDirectory = _dir.ProcessedDirectoryPath;
+            x.EnableGenderSearch = true;
         });
 
         servicesCollection.AddClientCore(config);
