@@ -303,7 +303,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         }
 
         // Will retry after not getting the first match
-        _nhsFhirClient.Verify(x => x.PerformSearch(It.Is<SearchQuery>(sq => sq.Gender == null)), Times.AtLeast(2), "The PerformSearch method should have invoked ONCE");
+        _nhsFhirClient.Verify(x => x.PerformSearch(It.Is<SearchQuery>(sq => sq.Gender == null)), Times.AtLeast(3), "The PerformSearch method should have invoked ONCE");
     }
 
     [Fact]
