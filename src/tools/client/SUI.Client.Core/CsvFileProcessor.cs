@@ -6,12 +6,14 @@ using CsvHelper;
 using CsvHelper.Configuration;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using Shared.Models;
 using Shared.Util;
 
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
+using SUI.Client.Core.Watcher;
 
 namespace SUI.Client.Core;
 
@@ -20,7 +22,7 @@ public interface ICsvFileProcessor
     Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath);
 }
 
-public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi) : ICsvFileProcessor
+public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig mapping, IMatchPersonApiService matchPersonApi, IOptions<CsvWatcherConfig> watcherConfig) : ICsvFileProcessor
 {
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderScore = "SUI_Score";
@@ -63,6 +65,8 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 logger.LogInformation("{Current} of {Total} records processed", currentRecord, totalRecords);
                 progressStopwatch.Restart();
             }
+
+            logger.LogInformation("Gender enabled: {GenderEnabled}", watcherConfig.Value.EnableGenderSearch);
 
             var gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]);
 
