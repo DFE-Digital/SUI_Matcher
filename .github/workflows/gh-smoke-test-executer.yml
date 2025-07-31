@@ -160,7 +160,7 @@ jobs:
           # Start tool as a process so it can be killed directly
           if ("${{ env.SMOKE_TEST_TYPE }}" -eq "client_batch_search") {
               $process = Start-Process -FilePath "${{ env.executable }}" `
-                  -ArgumentList "$basePathUnprocessed", "$basePathProcessed", "$serverUrl" `
+                  -ArgumentList "--input $basePathUnprocessed", "--output $basePathProcessed", "--uri $serverUrl" `
                   -WorkingDirectory $basePath `
                   -PassThru
           } else {

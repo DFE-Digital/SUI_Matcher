@@ -31,6 +31,7 @@ namespace Unit.Tests.Client;
 public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 {
     private readonly TempDirectoryFixture _dir = new();
+    private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
 
     public required ITestOutputHelper TestContext = testOutputHelper;
 
@@ -40,6 +41,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         public const string Surname = "Surname";
         public const string DOB = "DOB";
         public const string Email = "Email";
+        public const string Gender = "Gender";
     }
 
 
@@ -91,17 +93,16 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             }, SearchResult.Unmatched()),
         };
 
-        var mockNhsApi = new Mock<INhsFhirClient>(MockBehavior.Loose);
         foreach (var testDataItem in testData)
         {
-            mockNhsApi.Setup(x => x.PerformSearch(It.Is<SearchQuery>(y => y.Email == testDataItem.Data[TestDataHeaders.Email]))).Returns(() => Task.FromResult((SearchResult?)testDataItem.SearchResult));
+            _nhsFhirClient.Setup(x => x.PerformSearch(It.Is<SearchQuery>(y => y.Email == testDataItem.Data[TestDataHeaders.Email]))).Returns(() => Task.FromResult<SearchResult?>(testDataItem.SearchResult));
         }
 
         // ACT
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(x =>
         {
-            x.AddSingleton(mockNhsApi.Object);
+            x.AddSingleton(_nhsFhirClient.Object);
         });
         var monitor = provider.GetRequiredService<CsvFileMonitor>();
         var monitoringTask = monitor.StartAsync(cts.Token);
@@ -141,13 +142,12 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
     public async Task TestOneFileSingleMatch()
     {
         var searchResult = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.98m, Type = SearchResult.ResultType.Matched };
-        var mockNhsApi = new Mock<INhsFhirClient>(MockBehavior.Loose);
-        mockNhsApi.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>())).Returns(() => Task.FromResult((SearchResult?)searchResult));
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>())).Returns(() => Task.FromResult<SearchResult?>(searchResult));
 
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(x =>
         {
-            x.AddSingleton(mockNhsApi.Object);
+            x.AddSingleton(_nhsFhirClient.Object);
         });
         var monitor = provider.GetRequiredService<CsvFileMonitor>();
         var monitoringTask = monitor.StartAsync(cts.Token);
@@ -186,38 +186,124 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        mockNhsApi.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Once(), "The PerformSearch method should have invoked ONCE");
+        _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Once(), "The PerformSearch method should have invoked ONCE");
         (_, List<D> records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
         Assert.Equal(searchResult.NhsNumber, records.First()[CsvFileProcessor.HeaderNhsNo]);
         Assert.Equal(searchResult.Score.ToString(), records.First()[CsvFileProcessor.HeaderScore]);
         Assert.Equal(nameof(MatchStatus.Match), records.First()[CsvFileProcessor.HeaderStatus]);
     }
-    private ServiceProvider Bootstrap(Action<ServiceCollection>? configure = null)
-    {
-        var servicesCollection = new ServiceCollection();
-        servicesCollection.AddLogging(b => b.AddDebug().AddProvider(new TestContextLoggerProvider(TestContext)));
-        var config = new ConfigurationBuilder()
-            .Build();
 
-        servicesCollection.Configure<CsvWatcherConfig>(x =>
+    [Fact]
+    public async Task TestOneFileSingleMatch_GenderIsConverted()
+    {
+        var searchResult = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.98m, Type = SearchResult.ResultType.Matched };
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>())).Returns(() => Task.FromResult<SearchResult?>(searchResult));
+
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(x =>
         {
-            x.IncomingDirectory = _dir.IncomingDirectoryPath;
-            x.ProcessedDirectory = _dir.ProcessedDirectoryPath;
+            x.AddSingleton(_nhsFhirClient.Object);
         });
 
-        servicesCollection.AddClientCore(config);
-        servicesCollection.AddSingleton<IMatchPersonApiService, MatchPersonServiceAdapter>(); // wires up the IMatchingService directly, without using http
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
 
-        // core domain deps
-        servicesCollection.AddSingleton<IMatchingService, MatchingService>();
-        servicesCollection.AddSingleton<IValidationService, ValidationService>();
-        servicesCollection.AddSingleton<IAuditLogger, ChannelAuditLogger>();
-        servicesCollection.AddSingleton(Channel.CreateUnbounded<AuditLogEntry>());
-        servicesCollection.AddFeatureManagement();
-        servicesCollection.AddSingleton<IConfiguration>(config);
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        configure?.Invoke(servicesCollection);
-        return servicesCollection.BuildServiceProvider();
+        var data = new D
+        {
+            [TestDataHeaders.GivenName] = "John",
+            [TestDataHeaders.Surname] = "Smith-G",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Gender] = "1",
+        };
+
+        var list = new List<D> { data };
+        var headers = new HashSet<string>(data.Keys);
+        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00004.csv"), headers, list);
+
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task; // await processing of that file
+        await cts.CancelAsync();   // cancel the task
+        await monitoringTask; // await file watcher stop
+
+        // ASSERTS
+        if (monitor.GetLastOperation().Exception != null)
+        {
+            throw monitor.GetLastOperation().Exception!;
+        }
+
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
+        Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
+        Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
+        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
+        Assert.NotNull(monitor.LastResult().Stats);
+
+        (_, List<D> records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+        Assert.Equal("male", records.First()["Gender"]);
+
+    }
+
+    [Fact]
+    public async Task TestOneFileSingleMatch_GenderNotSentIfGenderFlagIsOff()
+    {
+        var searchResultBad = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.55m, Type = SearchResult.ResultType.Unmatched };
+        var searchResultGood = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.99m, Type = SearchResult.ResultType.Matched };
+
+        // Mimick at least 3 calls to the PerformSearch method, showing different stages.
+        _nhsFhirClient.SetupSequence(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .Returns(() => Task.FromResult<SearchResult?>(searchResultBad))
+            .Returns(() => Task.FromResult<SearchResult?>(searchResultBad))
+            .Returns(() => Task.FromResult<SearchResult?>(searchResultGood));
+
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(x =>
+        {
+            x.AddSingleton(_nhsFhirClient.Object);
+            x.Configure<CsvWatcherConfig>(wc =>
+            {
+                wc.IncomingDirectory = _dir.IncomingDirectoryPath;
+                wc.ProcessedDirectory = _dir.ProcessedDirectoryPath;
+                wc.EnableGenderSearch = false; // Disable
+            });
+        });
+
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = new D
+        {
+            [TestDataHeaders.GivenName] = "John",
+            [TestDataHeaders.Surname] = "Smith-G",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Gender] = "1",
+        };
+
+        var list = new List<D> { data };
+        var headers = new HashSet<string>(data.Keys);
+        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00004.csv"), headers, list);
+
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task; // await processing of that file
+        await cts.CancelAsync();   // cancel the task
+        await monitoringTask; // await file watcher stop
+
+        // ASSERTS
+        if (monitor.GetLastOperation().Exception != null)
+        {
+            throw monitor.GetLastOperation().Exception!;
+        }
+
+        // Will retry after not getting the first match
+        _nhsFhirClient.Verify(x => x.PerformSearch(It.Is<SearchQuery>(sq => sq.Gender == null)), Times.AtLeast(3), "The PerformSearch method should have invoked ONCE");
     }
 
     [Fact]
@@ -233,14 +319,13 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             [TestDataHeaders.Email] = f.Internet.Email(),
         }, SearchResult.Match("AAAAA1111111", 0.98m));
 
-        var mockNhsApi = new Mock<INhsFhirClient>(MockBehavior.Loose);
-        mockNhsApi.Setup(x => x.PerformSearch(It.Is<SearchQuery>(y => y.Email == testData.Data[TestDataHeaders.Email]))).Returns(() => Task.FromResult((SearchResult?)testData.SearchResult));
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.Is<SearchQuery>(y => y.Email == testData.Data[TestDataHeaders.Email]))).Returns(() => Task.FromResult<SearchResult?>(testData.SearchResult));
 
         // ACT
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(x =>
         {
-            x.AddSingleton(mockNhsApi.Object);
+            x.AddSingleton(_nhsFhirClient.Object);
         });
         var monitor = provider.GetRequiredService<CsvFileMonitor>();
         var monitoringTask = monitor.StartAsync(cts.Token);
@@ -279,14 +364,13 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             [TestDataHeaders.Email] = f.Internet.Email(),
         }, SearchResult.Match("AAAAA1111111", 0.98m));
 
-        var mockNhsApi = new Mock<INhsFhirClient>(MockBehavior.Loose);
-        mockNhsApi.Setup(x => x.PerformSearch(It.Is<SearchQuery>(y => y.Email == testData.Data[TestDataHeaders.Email]))).Returns(() => Task.FromResult((SearchResult?)testData.SearchResult));
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.Is<SearchQuery>(y => y.Email == testData.Data[TestDataHeaders.Email]))).Returns(() => Task.FromResult<SearchResult?>(testData.SearchResult));
 
         // ACT
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(x =>
         {
-            x.AddSingleton(mockNhsApi.Object);
+            x.AddSingleton(_nhsFhirClient.Object);
         });
         var monitor = provider.GetRequiredService<CsvFileMonitor>();
         var monitoringTask = monitor.StartAsync(cts.Token);
@@ -315,6 +399,35 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(0, monitor.ErrorCount);
         Assert.Equal(1, monitor.ProcessedCount);
 
+    }
+
+    private ServiceProvider Bootstrap(Action<ServiceCollection>? configure = null)
+    {
+        var servicesCollection = new ServiceCollection();
+        servicesCollection.AddLogging(b => b.AddDebug().AddProvider(new TestContextLoggerProvider(TestContext)));
+        var config = new ConfigurationBuilder()
+            .Build();
+
+        servicesCollection.Configure<CsvWatcherConfig>(x =>
+        {
+            x.IncomingDirectory = _dir.IncomingDirectoryPath;
+            x.ProcessedDirectory = _dir.ProcessedDirectoryPath;
+            x.EnableGenderSearch = true;
+        });
+
+        servicesCollection.AddClientCore(config);
+        servicesCollection.AddSingleton<IMatchPersonApiService, MatchPersonServiceAdapter>(); // wires up the IMatchingService directly, without using http
+
+        // core domain deps
+        servicesCollection.AddSingleton<IMatchingService, MatchingService>();
+        servicesCollection.AddSingleton<IValidationService, ValidationService>();
+        servicesCollection.AddSingleton<IAuditLogger, ChannelAuditLogger>();
+        servicesCollection.AddSingleton(Channel.CreateUnbounded<AuditLogEntry>());
+        servicesCollection.AddFeatureManagement();
+        servicesCollection.AddSingleton<IConfiguration>(config);
+
+        configure?.Invoke(servicesCollection);
+        return servicesCollection.BuildServiceProvider();
     }
 
     private class TestData(D data, SearchResult searchResult)

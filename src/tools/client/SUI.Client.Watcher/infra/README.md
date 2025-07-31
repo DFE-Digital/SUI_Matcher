@@ -116,7 +116,7 @@ $json_data | ConvertTo-Json | Out-File -FilePath "<WORKING_DIR>\appsettings.json
 
 $json_file_contents = Get-Content -Path "<WORKING_DIR>\appsettings.json"
 
-Start-Job -ScriptBlock { <WORKED_DIR>\suiw.exe <UNPROCESSED_DIR> <PROCESSED_DIR> }
+Start-Job -ScriptBlock { <WORKED_DIR>\suiw.exe --input <UNPROCESSED_DIR> --output <PROCESSED_DIR> }
 ```
 This will start the client in the background
 

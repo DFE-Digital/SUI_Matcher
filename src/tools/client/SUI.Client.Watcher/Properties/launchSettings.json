@@ -2,7 +2,7 @@
   "profiles": {
     "SUI.Client.Watcher": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\temp\\sui\\incoming\" \"C:\\temp\\sui\\incoming\\processed\" http://localhost:5000"
+      "commandLineArgs": "--input $HOME/temp/sui/incoming --output $HOME/temp/sui/incoming/processed --uri http://localhost:5000 --enable-gender"
     }
   }
 }
