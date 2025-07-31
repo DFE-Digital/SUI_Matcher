@@ -290,7 +290,7 @@ public class MatchingService(
 
                     logger.LogInformation("Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'", i, status.ToString(), score);
 
-                    return new MatchResult2(searchResult, status, i); // single match with confidence score
+                    return new MatchResult2(searchResult, status, score, i); // single match with confidence score
                 }
                 if (searchResult.Type == SearchResult.ResultType.MultiMatched)
                 {
