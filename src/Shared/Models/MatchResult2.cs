@@ -24,7 +24,7 @@ public class MatchResult2
         ProcessStage = processStage;
     }
 
-        public MatchResult2(SearchResult result, MatchStatus status, int processStage)
+    public MatchResult2(SearchResult result, MatchStatus status, int processStage)
     {
         Result = result;
         Status = status;
