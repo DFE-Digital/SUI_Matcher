@@ -8,7 +8,7 @@ public class MatchResult2
 
     public decimal? Score { get; set; }
 
-    public int? ProcessStage { get; set; }
+    public string? ProcessStage { get; set; }
 
     public MatchResult2(ValidationResponse errors)
     {
@@ -16,7 +16,16 @@ public class MatchResult2
         Errors = errors;
     }
 
-    public MatchResult2(SearchResult result, MatchStatus status, decimal score, int processStage)
+    public MatchResult2(MatchStatus status) => Status = status;
+
+    public MatchResult2(SearchResult result, MatchStatus status, string processStage)
+    {
+        Result = result;
+        Status = status;
+        ProcessStage = processStage;
+    }
+
+    public MatchResult2(SearchResult result, MatchStatus status, decimal score, string processStage)
     {
         Result = result;
         Status = status;
@@ -24,14 +33,7 @@ public class MatchResult2
         ProcessStage = processStage;
     }
 
-    public MatchResult2(SearchResult result, MatchStatus status, int processStage)
-    {
-        Result = result;
-        Status = status;
-        ProcessStage = processStage;
-    }
-
-    public MatchResult2(MatchStatus status, int processStage)
+    public MatchResult2(MatchStatus status, string processStage)
     {
         Status = status;
         ProcessStage = processStage;

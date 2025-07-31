@@ -239,4 +239,31 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         Assert.True(response.Headers.Contains("X-Frame-Options"));
 
     }
+
+    // tests if the best in the bunch of ordered queries will be returned over the initial result
+
+    [Fact]
+    public async Task MatchingApi_BestOfTheBunchSearch()
+    {
+        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
+        {
+            Given = "Joe",
+            Family = "Mock",
+            BirthDate = DateOnly.Parse("2005-10-15"),
+        }));
+
+        // Assert
+        Assert.True(response.IsSuccessStatusCode);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
+        Assert.NotNull(personMatchResponse?.Result);
+        Assert.Equal(MatchStatus.PotentialMatch, personMatchResponse.Result.MatchStatus);
+
+        var calls = (await _nhsAuthMockApi.Should()).HaveReceived(4).Calls();
+        calls.AtPathAndParamsWithResponse("/personal-demographics/FHIR/R4/Patient", new()
+        {
+            {"given", "Joe"},
+            {"family", "Mock"},
+            {"birthdate", "eq2005-10-15"},
+        });
+    }
 }

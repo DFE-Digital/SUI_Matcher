@@ -9,7 +9,7 @@ public class MatchResult
     public string? NhsNumber { get; set; }
 
     [JsonPropertyName("processStage")]
-    public int? ProcessStage { get; set; }
+    public string? ProcessStage { get; set; }
 
     [JsonPropertyName("score")]
     public decimal? Score { get; set; }
