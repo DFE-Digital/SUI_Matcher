@@ -60,7 +60,7 @@ public class MatchingService(
                               "at process stage ({ProcessStage}), and the data quality was " +
                               "{QualityResult}",
             result.Status.ToString(),
-            result.Score,
+            result.Score ?? 0,
             result.ProcessStage,
             JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
 
