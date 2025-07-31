@@ -50,4 +50,6 @@ builder.AddProject<Projects.Yarp>("yarp")
     .WithReference(secrets)
     .WithReference(matchingApi).WaitFor(matchingApi);
 
+builder.AddProject<Projects.SUI_Client_Service_Watcher>("SUI-Client-Service")
+    .WithArgs(@"incoming/", @"incoming/processed/", @"http://localhost:5000");
 await builder.Build().RunAsync();

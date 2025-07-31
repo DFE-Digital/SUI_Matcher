@@ -1,31 +1,28 @@
-﻿using Azure.Core;
+using Azure.Core;
 using Azure.Identity;
 
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
-using Shared.Extensions;
 using Shared.Util;
 
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
+using SUI.Client.Service.Watcher;
 
-Console.Out.WriteAppName("SUI CSV File Watcher");
-Rule.Assert(args.Length == 3, "Usage: suiw <watch_directory> <output_directory> <matching_service_uri>");
+Rule.Assert(args.Length == 3, "Usage: suiws <watch_directory> <output_directory> <matching_service_uri>");
 
 var matchApiBaseAddress = args[2];
 Rule.Assert(Uri.IsWellFormedUriString(matchApiBaseAddress, UriKind.Absolute),
     "Invalid URL format for matching service URL.");
-
-
-var builder = Host.CreateDefaultBuilder();
-builder.ConfigureAppSettingsJsonFile();
+var builder = Host.CreateDefaultBuilder(args);
 DotNetEnv.Env.TraversePath().Load();
 builder.ConfigureServices((hostContext, services) =>
 {
     services.AddClientCore(hostContext.Configuration);
+    services.AddWindowsService(options =>
+    {
+        options.ServiceName = "SUI-Client-Service";
+    });
+    services.AddSystemd();
     services.Configure<CsvWatcherConfig>(x =>
     {
         x.IncomingDirectory = args[0];
@@ -65,35 +62,8 @@ builder.ConfigureServices((hostContext, services) =>
             Console.WriteLine(e.Message);
         }
     });
+    services.AddHostedService<Worker>();
 });
 
 var host = builder.Build();
-var cts = new CancellationTokenSource();
-var processor = host.Services.GetRequiredService<CsvFileMonitor>();
-var processingTask = processor.StartAsync(cts.Token);
-
-const string commandHelpMessage = "Type 'q' to quit, 'stats' for statistics.";
-Console.WriteLine($"File watcher started. {commandHelpMessage}");
-bool holdAppOpen = true;
-while (holdAppOpen)
-{
-    var command = Console.ReadLine();
-    switch (command?.ToLower())
-    {
-        case "q":
-            await cts.CancelAsync();
-            holdAppOpen = false;
-            break;
-        case "stats":
-            processor.PrintStats(Console.Out);
-            continue;
-        default:
-            Console.WriteLine($"Unknown command. {commandHelpMessage}");
-            continue;
-    }
-}
-
-await processingTask;
-
-await host.StopAsync();
-cts.Dispose();
+host.Run();

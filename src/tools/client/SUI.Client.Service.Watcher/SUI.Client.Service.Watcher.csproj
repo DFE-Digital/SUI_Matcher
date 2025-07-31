@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-SUI.Client.Service.Watcher-3e69d347-749c-4ccf-a43c-d16c6dff93d8</UserSecretsId>
+        <AssemblyName>suiws</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting.Systemd"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\SUI.Client.Core\SUI.Client.Core.csproj" />
+    </ItemGroup>
+</Project>

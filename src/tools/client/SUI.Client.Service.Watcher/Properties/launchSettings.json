@@ -1,0 +1,13 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "SUI.Client.Service.Watcher": {
+      "commandName": "Project",
+      "commandLineArgs": "\"incoming/\" \"incoming/processed/\" http://localhost:5000",
+      "dotnetRunMessages": true,
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
