@@ -6,6 +6,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-SUI.Client.Service.Watcher-3e69d347-749c-4ccf-a43c-d16c6dff93d8</UserSecretsId>
         <AssemblyName>suiws</AssemblyName>
+        <IsPackable>true</IsPackable>
+        <PackageId>SUI.Client.Service.Watcher</PackageId>
+        <Title>SUI Client Service Watcher</Title>
+        <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
+        <Authors />
     </PropertyGroup>
 
     <ItemGroup>

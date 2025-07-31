@@ -27,8 +27,9 @@ on:
         required: false
         type: string
         
-env: 
+env:
   client_name: 'SUI.Client.Watcher'
+  client_service_name: 'SUI.Client.Service.Watcher'
   response_logger_name: 'SUI.DBS.Response.Logger.Watcher'
 
 jobs:
@@ -136,6 +137,21 @@ jobs:
         if: ${{ github.event.inputs.publish-client == 'true' || env.auto_publish_client == 'true' }}
         run: |
           dotnet nuget push ./nukpg/${{env.client_name}}.${{ env.CLIENT_VERSION }}.nupkg \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key ${{ secrets.NUGET_API_KEY }}
+          
+      - name: Package Client Watcher Service
+        if: ${{ github.event.inputs.publish-client == 'true' || env.auto_publish_client == 'true' }}
+        run: |
+          dotnet pack ./src/tools/client/SUI.Client.Service.Watcher/SUI.Client.Service.Watcher.csproj \
+            --configuration Release \
+            --output ./nukpg \
+            /p:Version=${{ env.CLIENT_VERSION }}
+
+      - name: Publish Client Watcher Service
+        if: ${{ github.event.inputs.publish-client == 'true' || env.auto_publish_client == 'true' }}
+        run: |
+          dotnet nuget push ./nukpg/${{env.client_service_name}}.${{ env.CLIENT_VERSION }}.nupkg \
             --source https://api.nuget.org/v3/index.json \
             --api-key ${{ secrets.NUGET_API_KEY }}
           

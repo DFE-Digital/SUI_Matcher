@@ -1,6 +1,8 @@
 using Azure.Core;
 using Azure.Identity;
 
+using CommandLine;
+
 using Shared.Util;
 
 using SUI.Client.Core.Extensions;
@@ -8,11 +10,12 @@ using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
 using SUI.Client.Service.Watcher;
 
-Rule.Assert(args.Length == 3, "Usage: suiws <watch_directory> <output_directory> <matching_service_uri>");
-
-var matchApiBaseAddress = args[2];
-Rule.Assert(Uri.IsWellFormedUriString(matchApiBaseAddress, UriKind.Absolute),
-    "Invalid URL format for matching service URL.");
+var watcherArgs= new WatcherArgs();
+var argResult = await Parser.Default.ParseArguments<WatcherArgs>(args).WithParsedAsync(parsedArgs =>
+{
+    watcherArgs = parsedArgs;
+    return Task.CompletedTask;
+});
 var builder = Host.CreateDefaultBuilder(args);
 DotNetEnv.Env.TraversePath().Load();
 builder.ConfigureServices((hostContext, services) =>
@@ -25,14 +28,15 @@ builder.ConfigureServices((hostContext, services) =>
     services.AddSystemd();
     services.Configure<CsvWatcherConfig>(x =>
     {
-        x.IncomingDirectory = args[0];
-        x.ProcessedDirectory = args[1];
+        x.IncomingDirectory = argResult.Value.InputDirectory;
+        x.ProcessedDirectory = argResult.Value.OutputDirectory;
+        x.EnableGenderSearch = argResult.Value.EnableGenderSearch;
     });
     services.AddHttpClient<IMatchPersonApiService, MatchPersonApiService>(async void (client) =>
     {
         try
         {
-            client.BaseAddress = new Uri(matchApiBaseAddress);
+            client.BaseAddress = new Uri(argResult.Value.ApiBaseUrl);
             if (hostContext.Configuration.GetValue<bool>("EnableAuth"))
             {
                 var clientSecretCredential = new ClientSecretCredential(
@@ -49,9 +53,9 @@ builder.ConfigureServices((hostContext, services) =>
             // Hack: until we can find a better way of routing for apps environment in azure.
             // Envoy uses SNI and needs a HOST header to route correctly
             // As we are using a private link, the host header needs to be set to the yarp hostname
-            if (!matchApiBaseAddress.Contains("localhost"))
+            if (!argResult.Value.ApiBaseUrl.Contains("localhost"))
             {
-                var uri = new Uri(matchApiBaseAddress);
+                var uri = new Uri(argResult.Value.ApiBaseUrl);
                 var yarpHostValue = uri.Host.Replace(".privatelink.", ".").TrimEnd('/');
                 var hostUri = $"yarp.{yarpHostValue}";
                 client.DefaultRequestHeaders.Add("Host", hostUri);
