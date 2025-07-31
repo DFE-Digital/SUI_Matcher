@@ -11,6 +11,7 @@
         <Title>SUI Client Service Watcher</Title>
         <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
         <Authors />
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,5 +22,12 @@
 
     <ItemGroup>
       <ProjectReference Include="..\SUI.Client.Core\SUI.Client.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="reinstall-service.ps1" />
+      <Content Include="reinstall-service.ps1">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 </Project>
