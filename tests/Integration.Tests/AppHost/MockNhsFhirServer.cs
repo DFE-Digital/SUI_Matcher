@@ -100,6 +100,35 @@ public sealed class MockNhsFhirServer(string baseUrl)
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
                 .WithBody(() => GetFileText("single_match_really_low_confidence.json"))));
 
+        builder.Given(b => b
+            .WithRequest(request => request
+                .UsingGet()
+                .WithPath("/personal-demographics/FHIR/R4/Patient")
+                .WithParams([
+                    ParamMatch("_fuzzy-match", "True"),
+                    ParamMatch("given", "Joe"),
+                    ParamMatch("family", "Mock"),
+                    ParamMatch("birthdate", "eq2005-10-15"),
+                ])
+            )
+            .WithResponse(response => response
+                .WithHeaders(h => h.Add("Content-Type", "application/json"))
+                .WithBody(() => GetFileText("single_match_low_confidence.json"))));
+
+        builder.Given(b => b
+            .WithRequest(request => request
+                .UsingGet()
+                .WithPath("/personal-demographics/FHIR/R4/Patient")
+                .WithParams([
+                    ParamMatch("given", "Joe"),
+                    ParamMatch("family", "Mock"),
+                    ParamMatch("birthdate", "eq2005-10-15"),
+                ])
+            )
+            .WithResponse(response => response
+                .WithHeaders(h => h.Add("Content-Type", "application/json"))
+                .WithBody(() => GetFileText("single_match_really_low_confidence.json"))));
+
         builder.Given(b => b.WithRequest(r =>
             {
                 r.UsingGet()

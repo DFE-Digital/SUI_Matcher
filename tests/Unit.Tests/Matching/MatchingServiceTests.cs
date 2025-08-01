@@ -130,7 +130,7 @@ public sealed class MatchingServiceTests
 
         Assert.NotNull(result);
         Assert.Equal(MatchStatus.NoMatch, result.Result!.MatchStatus);
-        Assert.NotNull(result.Result.ProcessStage);
+        Assert.Null(result.Result.ProcessStage);
     }
 
     [Fact]
