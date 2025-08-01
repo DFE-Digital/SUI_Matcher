@@ -16,6 +16,14 @@ public class MatchResult2
         Errors = errors;
     }
 
+    public MatchResult2(SearchResult result, MatchStatus status, decimal score, int processStage)
+    {
+        Result = result;
+        Status = status;
+        Score = score;
+        ProcessStage = processStage;
+    }
+
     public MatchResult2(SearchResult result, MatchStatus status, int processStage)
     {
         Result = result;
