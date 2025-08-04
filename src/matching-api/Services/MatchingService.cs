@@ -16,7 +16,7 @@ public class MatchingService(
     IValidationService validationService,
     IAuditLogger auditLogger) : IMatchingService
 {
-    public static readonly int AlgorithmVersion = 2;
+    public static readonly int AlgorithmVersion = 3;
 
     public async Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification)
     {
@@ -33,9 +33,6 @@ public class MatchingService(
         var validationResults = validationService.Validate(personSpecification);
 
         var dataQualityResult = DataQualityEvaluatorService.ToQualityResult(personSpecification, validationResults.Results!.ToList());
-
-
-
 
         if (!HasMinDataRequirements(dataQualityResult))
         {
@@ -60,7 +57,7 @@ public class MatchingService(
                               "at process stage ({ProcessStage}), and the data quality was " +
                               "{QualityResult}",
             result.Status.ToString(),
-            result.Score,
+            result.Score ?? 0,
             result.ProcessStage,
             JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
 
@@ -129,7 +126,7 @@ public class MatchingService(
         MatchStatus matchStatus,
         DataQualityResult dataQualityResult,
         decimal score,
-        int? resultProcessStage)
+        string? resultProcessStage)
     {
         var ageGroup = personSpecification.BirthDate.HasValue
             ? GetAgeGroup(personSpecification.BirthDate.Value)
@@ -165,7 +162,7 @@ public class MatchingService(
         return hash;
     }
 
-    private static SearchQuery[] GetSearchQueries(PersonSpecification model)
+    private static OrderedDictionary<string, SearchQuery> GetSearchQueries(PersonSpecification model)
     {
         if (!model.BirthDate.HasValue)
         {
@@ -180,47 +177,57 @@ public class MatchingService(
         var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
 
         var modelName = model.Given is not null ? new[] { model.Given } : null;
-        var queries = new List<SearchQuery>
+        var queryOrderedMap = new OrderedDictionary<string, SearchQuery>
         {
-            new() // exact search on only given, family and dob
             {
-                ExactMatch = true,
-                Given = modelName,
-                Family = model.Family,
-                Birthdate = dob
+                "ExactGFD", new() // exact search on only given, family and dob
+                {
+                    ExactMatch = true,
+                    Given = modelName,
+                    Family = model.Family,
+                    Birthdate = dob
+                }
             },
-            new() // 1. exact search
             {
-                ExactMatch = true,
-                Given = modelName,
-                Family = model.Family,
-                Email = model.Email,
-                Gender = model.Gender,
-                Phone = model.Phone,
-                Birthdate = dob,
-                AddressPostalcode = model.AddressPostalCode,
+                "ExactAll", new() // 1. exact search
+                {
+                    ExactMatch = true,
+                    Given = modelName,
+                    Family = model.Family,
+                    Email = model.Email,
+                    Gender = model.Gender,
+                    Phone = model.Phone,
+                    Birthdate = dob,
+                    AddressPostalcode = model.AddressPostalCode,
+                }
             },
-            new() // 2. fuzzy search on only given, family and dob
             {
-                FuzzyMatch = true,
-                Given = modelName,
-                Family = model.Family,
-                Birthdate = dob
+                "FuzzyGFD", new() // 2. fuzzy search on only given, family and dob
+                {
+                    FuzzyMatch = true,
+                    Given = modelName,
+                    Family = model.Family,
+                    Birthdate = dob
+                }
             },
-            new() // 3. fuzzy search with given name, family name and DOB.
             {
-                FuzzyMatch = true,
-                Given = modelName,
-                Family = model.Family,
-                Email = model.Email,
-                Gender = model.Gender,
-                Phone = model.Phone,
-                Birthdate = dob,
-                AddressPostalcode = model.AddressPostalCode,
+                "FuzzyAll", new() // 3. fuzzy search with given name, family name and DOB.
+                {
+                    FuzzyMatch = true,
+                    Given = modelName,
+                    Family = model.Family,
+                    Email = model.Email,
+                    Gender = model.Gender,
+                    Phone = model.Phone,
+                    Birthdate = dob,
+                    AddressPostalcode = model.AddressPostalCode,
+                }
             },
-            new() // 4. fuzzy search with given name, family name and DOB range 6 months either side of given date.
             {
-                FuzzyMatch = true, Given = modelName, Family = model.Family, Birthdate = dobRange,
+                "FuzzyGFDRange", new() // 4. fuzzy search with given name, family name and DOB range 6 months either side of given date.
+                {
+                    FuzzyMatch = true, Given = modelName, Family = model.Family, Birthdate = dobRange,
+                }
             },
         };
 
@@ -236,7 +243,7 @@ public class MatchingService(
                 DateTimeKind.Unspecified
             );
 
-            queries.Add(new SearchQuery
+            queryOrderedMap.Add("FuzzyAltDob", new SearchQuery
             {
                 FuzzyMatch = true,
                 Given = modelName,
@@ -249,7 +256,7 @@ public class MatchingService(
             });
         }
 
-        return [.. queries];
+        return queryOrderedMap;
     }
 
     private static bool HasMinDataRequirements(DataQualityResult dataQualityResult)
@@ -266,43 +273,91 @@ public class MatchingService(
     {
         var queries = GetSearchQueries(model);
 
-        for (var i = 0; i < queries.Length; i++)
-        {
-            var query = queries[i];
+        var bestQueryResult = new BestQueryResult();
 
-            logger.LogInformation("Performing search query ({Query}) against Nhs Fhir API", i);
+        foreach (var queryEntry in queries)
+        {
+            var queryCode = queryEntry.Key;
+            var query = queryEntry.Value;
+
+            logger.LogInformation("Performing search query ({Query}) against Nhs Fhir API", queryCode);
 
             var searchResult = await nhsFhirClient.PerformSearch(query);
             if (searchResult != null)
             {
                 if (searchResult.Type == SearchResult.ResultType.Matched)
                 {
-                    var status = MatchStatus.NoMatch;
-                    var score = searchResult.Score.GetValueOrDefault();
+                    HandleSingleMatchResult(searchResult, bestQueryResult, queryCode,
+                        out MatchStatus status, out decimal score);
+
                     if (score >= 0.95m)
                     {
-                        status = MatchStatus.Match;
+                        logger.LogInformation(
+                            "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
+                            queryCode, status.ToString(), score);
+
+                        return new MatchResult2(searchResult, status, score, queryCode); // single match with confidence score
                     }
-                    else if (score >= 0.85m)
-                    {
-                        status = MatchStatus.PotentialMatch;
-                    }
-
-                    logger.LogInformation("Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'", i, status.ToString(), score);
-
-                    return new MatchResult2(searchResult, status, i); // single match with confidence score
                 }
-                if (searchResult.Type == SearchResult.ResultType.MultiMatched)
-                {
-                    logger.LogInformation("Search query ({Query}) resulted in status 'ManyMatch'", i);
 
-                    return new MatchResult2(searchResult, MatchStatus.ManyMatch, i); // multiple matches
-                }
+                HandleMultipleMatchesResult(searchResult, bestQueryResult, queryCode);
             }
         }
 
-        logger.LogInformation("Search query ({QueryLength}) resulted in status 'NoMatch'", queries.Length - 1);
+        if (bestQueryResult.CurrentSearchResult != null)
+        {
+            logger.LogInformation("Search query ({Query}) resulted in status '{Status}'", bestQueryResult.CurrentQueryCode, bestQueryResult.CurrentStatus);
 
-        return new MatchResult2(MatchStatus.NoMatch, queries.Length - 1);
+            return new MatchResult2(bestQueryResult.CurrentSearchResult, bestQueryResult.CurrentStatus, bestQueryResult.CurrentQueryCode);
+        }
+
+        logger.LogInformation("Search algorithm resulted in status 'NoMatch'");
+
+        return new MatchResult2(MatchStatus.NoMatch);
+    }
+
+    private static void HandleSingleMatchResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode, out MatchStatus status, out decimal score)
+    {
+        status = MatchStatus.NoMatch;
+        score = searchResult.Score.GetValueOrDefault();
+        if (score >= 0.95m)
+        {
+            status = MatchStatus.Match;
+        }
+        else if (score >= 0.85m)
+        {
+            status = MatchStatus.PotentialMatch;
+        }
+
+        if (score > bestQueryResult.CurrentScore)
+        {
+            bestQueryResult.CurrentStatus = status;
+            bestQueryResult.CurrentScore = score;
+            bestQueryResult.CurrentQueryCode = queryCode;
+            bestQueryResult.CurrentSearchResult = searchResult;
+        }
+    }
+
+    private void HandleMultipleMatchesResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode)
+    {
+        if (searchResult.Type == SearchResult.ResultType.MultiMatched)
+        {
+            logger.LogInformation("Search query ({Query}) resulted in status 'ManyMatch'", queryCode);
+
+            if (bestQueryResult.CurrentScore == 0 && (int)MatchStatus.ManyMatch < (int)bestQueryResult.CurrentStatus)
+            {
+                bestQueryResult.CurrentStatus = MatchStatus.ManyMatch;
+                bestQueryResult.CurrentQueryCode = queryCode;
+                bestQueryResult.CurrentSearchResult = searchResult;
+            }
+        }
+    }
+
+    private sealed class BestQueryResult
+    {
+        public MatchStatus CurrentStatus { get; set; } = MatchStatus.NoMatch;
+        public decimal CurrentScore { get; set; } = 0;
+        public string CurrentQueryCode { get; set; } = "";
+        public SearchResult? CurrentSearchResult { get; set; }
     }
 }

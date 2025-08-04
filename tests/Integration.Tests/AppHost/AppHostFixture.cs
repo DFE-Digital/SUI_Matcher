@@ -6,6 +6,7 @@ using FluentAssertions.Primitives;
 
 using WireMock.Admin.Requests;
 using WireMock.Client;
+using WireMock.Types;
 
 namespace Integration.Tests.AppHost;
 
@@ -136,6 +137,50 @@ public class WireMockAssertions(IList<LogEntryModel> logEntryModels, int? callsC
     public void AtPath(string path)
     {
         var actualCount = logEntryModels.Count(entry => entry.Request.AbsolutePath == path);
+
+        Assert.True(callsCount == actualCount,
+            $"For path '{path}' there were {actualCount} calls, instead of the expected {callsCount}");
+    }
+
+    public void AtPathWithResponse(string path)
+    {
+        var actualCount = logEntryModels.Count(entry =>
+        {
+            Console.WriteLine(entry.Response.StatusCode);
+
+            return entry.Request.AbsolutePath == path && entry.Response.Body != null;
+        });
+
+        Assert.True(callsCount == actualCount,
+            $"For path '{path}' there were {actualCount} calls, instead of the expected {callsCount}");
+    }
+
+    public void AtPathAndParamsWithResponse(string path, Dictionary<string, string> parameters)
+    {
+        var actualCount = logEntryModels.Count(entry =>
+        {
+            var query = entry.Request.Query;
+
+            if (query == null)
+            {
+                return false;
+            }
+
+            foreach (var param in parameters)
+            {
+                if (query.TryGetValue(param.Key, out WireMockList<string>? valueList))
+                {
+                    var value = valueList.FirstOrDefault();
+
+                    if (value == null || !value.Equals(param.Value))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return entry.Request.AbsolutePath == path && entry.Response.Body != null;
+        });
 
         Assert.True(callsCount == actualCount,
             $"For path '{path}' there were {actualCount} calls, instead of the expected {callsCount}");
