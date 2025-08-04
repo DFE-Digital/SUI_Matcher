@@ -7,7 +7,7 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly CsvFileMonitor _csvFileMonitor;
 
-    public Worker(ILogger<Worker> logger, CsvFileMonitor  csvFileMonitor)
+    public Worker(ILogger<Worker> logger, CsvFileMonitor csvFileMonitor)
     {
         _logger = logger;
         _csvFileMonitor = csvFileMonitor;

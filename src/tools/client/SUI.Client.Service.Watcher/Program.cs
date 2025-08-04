@@ -8,14 +8,14 @@ using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
 using SUI.Client.Service.Watcher;
 
-var watcherArgs= new WatcherArgs();
+var watcherArgs = new WatcherArgs();
 var argResult = await Parser.Default.ParseArguments<WatcherArgs>(args).WithParsedAsync(parsedArgs =>
 {
     watcherArgs = parsedArgs;
     return Task.CompletedTask;
 });
 
-if(argResult.Errors.Any())
+if (argResult.Errors.Any())
 {
     Console.WriteLine("Invalid arguments provided. Please check the usage.");
     return;
