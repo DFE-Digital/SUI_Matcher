@@ -75,4 +75,4 @@ builder.ConfigureServices((hostContext, services) =>
 });
 
 var host = builder.Build();
-host.Run();
+await host.RunAsync();
