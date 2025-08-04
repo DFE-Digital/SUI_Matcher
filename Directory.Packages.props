@@ -51,7 +51,6 @@
     <PackageVersion Include="OxyPlot.SkiaSharp" Version="2.2.0" />
     <PackageVersion Include="QuestPDF" Version="2025.7.0" />
     <PackageVersion Include="ScottPlot" Version="5.0.55" />
-    <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.3" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0" />
     <PackageVersion Include="Net.Json.Serializer" Version="6.0.0" />
     <PackageVersion Include="CsvHelper" Version="33.1.0" />

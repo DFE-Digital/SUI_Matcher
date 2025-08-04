@@ -3,8 +3,6 @@ using Azure.Identity;
 
 using CommandLine;
 
-using Shared.Util;
-
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
@@ -16,6 +14,13 @@ var argResult = await Parser.Default.ParseArguments<WatcherArgs>(args).WithParse
     watcherArgs = parsedArgs;
     return Task.CompletedTask;
 });
+
+if(argResult.Errors.Any())
+{
+    Console.WriteLine("Invalid arguments provided. Please check the usage.");
+    return;
+}
+
 var builder = Host.CreateDefaultBuilder(args);
 DotNetEnv.Env.TraversePath().Load();
 builder.ConfigureServices((hostContext, services) =>
