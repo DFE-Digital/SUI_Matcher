@@ -308,7 +308,7 @@ public class MatchingService(
         {
             logger.LogInformation("Search query ({Query}) resulted in status '{Status}'", bestQueryResult.CurrentQueryCode, bestQueryResult.CurrentStatus);
 
-            return new MatchResult2(bestQueryResult.CurrentSearchResult, bestQueryResult.CurrentStatus, bestQueryResult.CurrentQueryCode);
+            return new MatchResult2(bestQueryResult.CurrentSearchResult, bestQueryResult.CurrentStatus, bestQueryResult.CurrentScore, bestQueryResult.CurrentQueryCode);
         }
 
         logger.LogInformation("Search algorithm resulted in status 'NoMatch'");
