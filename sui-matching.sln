@@ -51,6 +51,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{573374D2
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DbsResponseLogger", "DbsResponseLogger", "{749FFCA1-DC7E-44DB-AA84-6E65BD924032}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUI.Client.Service.Watcher", "src\tools\client\SUI.Client.Service.Watcher\SUI.Client.Service.Watcher.csproj", "{4CF833BC-2F05-447A-BAD4-57DEE36864B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -109,6 +111,10 @@ Global
 		{4EF4CD9C-08CA-41A0-95B7-B22B902DD76F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EF4CD9C-08CA-41A0-95B7-B22B902DD76F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4EF4CD9C-08CA-41A0-95B7-B22B902DD76F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CF833BC-2F05-447A-BAD4-57DEE36864B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CF833BC-2F05-447A-BAD4-57DEE36864B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CF833BC-2F05-447A-BAD4-57DEE36864B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CF833BC-2F05-447A-BAD4-57DEE36864B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -128,6 +134,7 @@ Global
 		{749FFCA1-DC7E-44DB-AA84-6E65BD924032} = {573374D2-8B4E-443F-830F-C6E3CF97DD0D}
 		{4EF4CD9C-08CA-41A0-95B7-B22B902DD76F} = {749FFCA1-DC7E-44DB-AA84-6E65BD924032}
 		{C2C00189-7E7F-4515-B06A-D1F24B355C1C} = {749FFCA1-DC7E-44DB-AA84-6E65BD924032}
+		{4CF833BC-2F05-447A-BAD4-57DEE36864B8} = {985A8CD1-C091-4B79-A5FA-D483B5DC38CD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C3003BB3-31B7-4AFA-80BD-E3FB6FBC2CAD}

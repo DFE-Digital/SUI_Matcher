@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>suiws</AssemblyName>
+        <Title>SUI Client Service Watcher</Title>
+        <Company>Department for Education</Company>
+        <PackageProjectUrl>https://github.com/DFE-Digital/SUI_Matcher</PackageProjectUrl>
+        <PackageId>SUI.Client.Service.Watcher</PackageId>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>suiws</ToolCommandName>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <UserSecretsId>dotnet-SUI.Client.Service.Watcher-3e69d347-749c-4ccf-a43c-d16c6dff93d8</UserSecretsId>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\SUI.Client.Core\SUI.Client.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="init.ps1" Pack="true" PackagePath="\tools">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+        <None Include="README.md" Pack="true" PackagePath="\">
+        </None>
+    </ItemGroup>
+</Project>

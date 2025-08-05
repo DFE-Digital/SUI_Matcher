@@ -1,7 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace SUI.Client.Watcher;
 using CommandLine;
+
+namespace SUI.Client.Core.Watcher;
 
 [ExcludeFromCodeCoverage(Justification = "CLI config file")]
 public class WatcherArgs

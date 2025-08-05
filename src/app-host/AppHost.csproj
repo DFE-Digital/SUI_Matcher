@@ -21,6 +21,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\matching-api\Matching.csproj" />
 		<ProjectReference Include="..\external-api\External.csproj" />
+		<ProjectReference Include="..\tools\client\SUI.Client.Service.Watcher\SUI.Client.Service.Watcher.csproj" />
 		<ProjectReference Include="..\Yarp\Yarp.csproj" />
 	</ItemGroup>
 
