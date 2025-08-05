@@ -11,7 +11,7 @@ var secrets = builder.ExecutionContext.IsPublishMode
 
 var externalApi = builder.AddProject<Projects.External>("external-api")
     .WithReference(secrets)
-    .WithUrlForEndpoint("http", ep => new() { Url = "/swagger", DisplayText = "Swagger UI" });
+    .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/swagger", DisplayText = "Swagger UI" });
 
 var matchingApi = builder.AddProject<Projects.Matching>("matching-api");
 
@@ -44,7 +44,7 @@ if (bool.Parse(auditLoggingFlag!))
 matchingApi
     .WithReference(externalApi)
     .WithHttpHealthCheck("health")
-    .WithUrlForEndpoint("http", ep => new() { Url = "/swagger", DisplayText = "Swagger UI" });
+    .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/swagger", DisplayText = "Swagger UI" });
 
 builder.AddProject<Projects.Yarp>("yarp")
     .WithReference(secrets)
