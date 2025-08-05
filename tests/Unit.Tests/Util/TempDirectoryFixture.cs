@@ -9,11 +9,14 @@ public class TempDirectoryFixture
         BaseDirectoryPath = Path.Combine(tempRoot, "SUI_client_tests", uniqueDirName);
 
         Directory.CreateDirectory(BaseDirectoryPath);
+        Directory.CreateDirectory(TempDirectoryPath);
         Directory.CreateDirectory(IncomingDirectoryPath);
         Directory.CreateDirectory(ProcessedDirectoryPath);
     }
 
     public string BaseDirectoryPath { get; private set; } = null!;
+
+    public string TempDirectoryPath => Path.Combine(BaseDirectoryPath, "Temp");
 
     public string IncomingDirectoryPath => Path.Combine(BaseDirectoryPath, "Incoming");
 
