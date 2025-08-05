@@ -13,7 +13,6 @@ using Shared.Util;
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Watcher;
-using SUI.Client.Watcher;
 
 Console.Out.WriteAppName("SUI CSV File Watcher");
 
