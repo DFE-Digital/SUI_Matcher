@@ -28,7 +28,7 @@ if (bool.Parse(auditLoggingFlag!))
     {
         storage.RunAsEmulator(cfg =>
         {
-            cfg.WithImageTag("3.34.0");
+            cfg.WithImageTag("3.35.0");
             cfg.WithLifetime(ContainerLifetime.Persistent);
         });
         var table = storage.AddTables("tables");

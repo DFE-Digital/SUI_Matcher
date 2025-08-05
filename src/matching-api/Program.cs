@@ -52,11 +52,7 @@ var auditFeatureFlag = builder.Configuration.GetValue<bool>("FeatureManagement:E
 Console.WriteLine($"[AUDIT] Matching API started with audit logging set to {auditFeatureFlag}");
 if (auditFeatureFlag)
 {
-    builder.AddAzureTableClient("tables", options =>
-    {
-        // healthcheck needs to be disabled due to a bug in azurite that will be fixed in the next version.
-        options.DisableHealthChecks = true;
-    });
+    builder.AddAzureTableServiceClient("tables");
     builder.Services.AddHostedService<AuditLogBackgroundService>();
 }
 
