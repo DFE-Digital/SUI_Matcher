@@ -1,3 +1,4 @@
+using Azure.Provisioning.KeyVault;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -6,7 +7,21 @@ DotNetEnv.Env.TraversePath().Load();
 var builder = DistributedApplication.CreateBuilder(args);
 
 var secrets = builder.ExecutionContext.IsPublishMode
-    ? builder.AddAzureKeyVault("secrets")
+    ? builder.AddAzureKeyVault("secrets").ConfigureInfrastructure((infra) =>
+    {
+        var keyVault = infra.GetProvisionableResources()
+            .OfType<KeyVaultService>()
+            .Single();
+
+        keyVault.Properties.Sku = new KeyVaultSku
+        {
+            Family = KeyVaultSkuFamily.A,
+            Name = KeyVaultSkuName.Standard,
+        };
+        keyVault.Properties.EnableSoftDelete = true;
+        keyVault.Properties.EnableRbacAuthorization = true;
+        keyVault.Properties.EnablePurgeProtection = true;
+    })
     : builder.AddConnectionString("secrets");
 
 var externalApi = builder.AddProject<Projects.External>("external-api")
@@ -47,7 +62,7 @@ matchingApi
     .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/swagger", DisplayText = "Swagger UI" });
 
 builder.AddProject<Projects.Yarp>("yarp")
-    .WithReference(secrets)
+    .WithExternalHttpEndpoints()
     .WithReference(matchingApi).WaitFor(matchingApi);
 
 builder.AddProject<Projects.SUI_Client_Service_Watcher>("SUI-Client-Service")
