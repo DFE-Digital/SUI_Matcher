@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
+using System.Text.Json;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +30,10 @@ public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
     public async Task TestDbsTxtResultsFile()
     {
         // ARRANGE
+        using var activity = new Activity("TestActivity");
+        activity.Start();
+        Activity.Current = activity;
+
         var f = new Bogus.Faker("en_GB");
         var testData = new List<TestData>
         {
@@ -67,14 +73,18 @@ public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
         var monitor = provider.GetRequiredService<TxtFileMonitor>();
         var monitoringTask = monitor.StartAsync(cts.Token);
 
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
         var data = testData.Select(x => x.Record).ToList();
 
-        await WriteTxtAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00002.txt"), data);
+        await WriteTxtAsync(_dir, "file0001.txt", data); // Today
+        await WriteTxtAsync(_dir, "file0002.txt", data); // yesterday
+        await WriteTxtAsync(_dir, "file0003.txt", data); // day before yesterday
+        await WriteTxtAsync(_dir, "file0004.txt", data); // last year
 
-        monitor.Processed += (_, _) => tcs.SetResult();
-        await tcs.Task; // await processing of that file
+        await WatchFile(monitor, data, () => Task.CompletedTask); // Today
+        await WatchFile(monitor, data, () => UpdateFileModifiedDate(_dir, "file0002.txt", -1)); // yesterday
+        await WatchFile(monitor, data, () => UpdateFileModifiedDate(_dir, "file0003.txt", -2)); // day before yesterday
+        await WatchFile(monitor, data, () => UpdateFileModifiedDate(_dir, "file0004.txt", -365)); // last year
+
         await cts.CancelAsync();   // cancel the task
         await monitoringTask; // await cancellation
 
@@ -84,12 +94,56 @@ public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
             throw monitor.GetLastOperation().Exception!;
         }
 
+        string[] existingFiles = Directory.GetFiles(_dir.ProcessedDirectoryPath);
+        Assert.Equal(4, existingFiles.Length);
+
         Assert.Null(monitor.GetLastOperation().Exception);
         Assert.Equal(0, monitor.ErrorCount);
-        Assert.Equal(1, monitor.ProcessedCount);
+        Assert.Equal(4, monitor.ProcessedCount);
 
-        Assert.Equal(1, logMessages.Count(x => x.Contains($"[MATCH_COMPLETED] MatchStatus: Match, AgeGroup: {GetAgeRange(testData[1])}, Gender: {GetGender(testData[1])}, Postcode: {GetPostCode(testData[1])}")));
-        Assert.Equal(1, logMessages.Count(x => x.Contains("The DBS results file has 2 records, batch search resulted in Match='1' and NoMatch='1'")));
+        var jsonLogMessages = logMessages.Select(msg =>
+            {
+                var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(msg);
+                return dict?.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value?.ToString() ?? string.Empty
+                );
+            })
+            .Where(dict => dict != null)
+            .OfType<Dictionary<string, string>>()
+            .ToList();
+
+        Assert.Equal(4, jsonLogMessages.Count(x => x["Message"].Contains($"[MATCH_COMPLETED] MatchStatus: Match, AgeGroup: {GetAgeRange(testData[1])}, Gender: {GetGender(testData[1])}, Postcode: {GetPostCode(testData[1])}")));
+        Assert.Equal(4, jsonLogMessages.Count(x => x["Message"].Contains("The DBS results file has 2 records, batch search resulted in Match='1' and NoMatch='1'")));
+
+        AssertMatchLogWithTimeStampOfDayExists(2, jsonLogMessages, 0);
+        AssertMatchLogWithTimeStampOfDayExists(2, jsonLogMessages, -1);
+        AssertMatchLogWithTimeStampOfDayExists(2, jsonLogMessages, -2);
+        AssertMatchLogWithTimeStampOfDayExists(2, jsonLogMessages, -365);
+    }
+
+    private static void AssertMatchLogWithTimeStampOfDayExists(int expectedCount, List<Dictionary<string, string>> jsonLogMessages, int relativeDay)
+    {
+        Assert.Equal(expectedCount, jsonLogMessages.Count(x =>
+        {
+            if (DateTime.TryParse(x["TimeStamp"], out DateTime timeStamp))
+            {
+                return timeStamp.Date == DateTime.Now.AddDays(relativeDay).Date &&
+                       x["Message"].Contains("[MATCH_COMPLETED]");
+            }
+
+            return false;
+        }));
+    }
+
+    private static async Task WatchFile(TxtFileMonitor monitor, List<string[]> data, Func<Task> action)
+    {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await action.Invoke();
+        EventHandler<FileProcessedEnvelope> handler = (_, _) => tcs.SetResult();
+        monitor.Processed += handler;
+        await tcs.Task; // await processing of that file
+        monitor.Processed -= handler;
     }
 
     private static string GetPostCode(TestData recordData)
@@ -108,7 +162,7 @@ public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
     private ServiceProvider Bootstrap(List<string> logMessages)
     {
         var servicesCollection = new ServiceCollection();
-        servicesCollection.AddLogging(b => b.AddDebug().AddProvider(new TestContextLoggerProvider(TestContext, logMessages)));
+        servicesCollection.AddLogging(b => b.AddDebug().AddProvider(new JsonTestContextLoggerProvider(TestContext, logMessages)));
 
         servicesCollection.Configure<TxtWatcherConfig>(x =>
         {
@@ -141,12 +195,20 @@ public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
         }
     }
 
-    private static async Task WriteTxtAsync(string fileName, List<string[]> records)
+    private static async Task WriteTxtAsync(TempDirectoryFixture dir, string fileName, List<string[]> records)
     {
-        await using var writer = new StreamWriter(fileName);
+        await using var writer = new StreamWriter(Path.Combine(dir.IncomingDirectoryPath, fileName));
         foreach (var record in records)
         {
             await writer.WriteLineAsync(string.Join(",", record.Select(item => $"\"{item}\"")));
         }
+    }
+
+    private static Task UpdateFileModifiedDate(TempDirectoryFixture dir, string fileName, int addDays)
+    {
+        var newModifiedDate = DateTime.Now.AddDays(addDays);
+        File.SetLastWriteTime(Path.Combine(dir.IncomingDirectoryPath, fileName), newModifiedDate);
+
+        return Task.CompletedTask;
     }
 }
