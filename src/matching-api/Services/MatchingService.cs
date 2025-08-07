@@ -146,7 +146,10 @@ public class MatchingService(
 
     private static string StoreUniqueSearchIdFor(PersonSpecification personSpecification)
     {
-        byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(personSpecification));
+        var data = $"{personSpecification.Given}{personSpecification.Family}" +
+                   $"{personSpecification.BirthDate}{personSpecification.Gender}{personSpecification.AddressPostalCode}";
+
+        byte[] bytes = Encoding.ASCII.GetBytes(data);
         byte[] hashBytes = SHA256.HashData(bytes);
 
         StringBuilder builder = new StringBuilder();
@@ -344,7 +347,7 @@ public class MatchingService(
         {
             logger.LogInformation("Search query ({Query}) resulted in status 'ManyMatch'", queryCode);
 
-            if (bestQueryResult.CurrentScore == 0 && (int)MatchStatus.ManyMatch < (int)bestQueryResult.CurrentStatus)
+            if (bestQueryResult.CurrentScore == 0 && (int)MatchStatus.ManyMatch <= (int)bestQueryResult.CurrentStatus)
             {
                 bestQueryResult.CurrentStatus = MatchStatus.ManyMatch;
                 bestQueryResult.CurrentQueryCode = queryCode;

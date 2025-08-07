@@ -22,8 +22,6 @@ properties:
     secrets:
       - name: app-insights-connection-string
         value: '{{ .Env.APPLICATION_INSIGHTS_CONNECTION_STRING }}'
-      - name: azure-storage-connection-string
-        value: {{ .Env.AZURE_TABLE_STORAGE_CONNECTION_STRING }}
   template:
     containers:
       - image: {{ .Image }}
@@ -49,10 +47,6 @@ properties:
             value: {{ .Env.AZURE_ENV_NAME}}
           - name: APPLICATIONINSIGHTS_CONNECTION_STRING
             secretRef: app-insights-connection-string
-          - name: FeatureManagement__EnableAuditLogging
-            value: {{ .Env.AZURE_ENABLE_AUDIT_LOGGING }}
-          - name: ConnectionStrings__tables
-            secretRef: azure-storage-connection-string
           
     scale:
       minReplicas: 1
