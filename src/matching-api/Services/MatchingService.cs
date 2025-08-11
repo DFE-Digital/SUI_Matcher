@@ -74,6 +74,20 @@ public class MatchingService(
         };
     }
 
+    public async Task<PersonMatchResponse> SearchNoLogicAsync(PersonSpecification personSpecification)
+    {
+        var result = await MatchNoLogicAsync(personSpecification);
+        return new PersonMatchResponse
+        {
+            Result = new MatchResult
+            {
+                MatchStatus = result.Status,
+                Score = result.Result?.Score,
+                ProcessStage = result.ProcessStage,
+            },
+        };
+    }
+
     private static void StoreAlgorithmVersion() =>
         Activity.Current?.SetBaggage("AlgorithmVersion", AlgorithmVersion.ToString());
 
@@ -270,6 +284,51 @@ public class MatchingService(
             Family: QualityType.Valid,
             BirthDate: QualityType.Valid
         };
+    }
+
+    private async Task<MatchResult2> MatchNoLogicAsync(PersonSpecification model)
+    {
+        var modelName = model.Given is not null ? new[] { model.Given } : null;
+        var dobRange = new[]
+        {
+            "ge" + model.BirthDate.Value.AddMonths(-6).ToString("yyyy-MM-dd"),
+            "le" + model.BirthDate.Value.AddMonths(6).ToString("yyyy-MM-dd")
+        };
+        // var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
+        var query = new SearchQuery
+        {
+            AddressPostalcode = model.AddressPostalCode,
+            Gender = model.Gender,
+            Email = model.Email,
+            Given = modelName,
+            Family = model.Family,
+            Phone = model.Phone,
+            Birthdate = dobRange,
+            FuzzyMatch = false,
+            ExactMatch = false,
+        };
+        var searchResult = await nhsFhirClient.PerformSearch(query);
+
+        logger.LogInformation(
+            "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
+            "SimpleQuery", searchResult.Type, searchResult.Score);
+        var matchStatus = MatchStatus.Error;
+        if (searchResult.Type == SearchResult.ResultType.Matched)
+        {
+            matchStatus = MatchStatus.Match;
+        }
+
+        if (searchResult.Type == SearchResult.ResultType.MultiMatched)
+        {
+            matchStatus = MatchStatus.ManyMatch;
+        }
+
+        if (searchResult.Type == SearchResult.ResultType.Unmatched)
+        {
+            matchStatus = MatchStatus.NoMatch;
+        }
+
+        return new MatchResult2(searchResult, matchStatus, searchResult.Score.GetValueOrDefault(), String.Empty);
     }
 
     private async Task<MatchResult2> MatchAsync(PersonSpecification model)

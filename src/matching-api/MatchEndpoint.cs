@@ -28,10 +28,22 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
 
             return result.Result?.MatchStatus == MatchStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
         });
-        if (configuration.GetValue<bool>("EnableAuth"))
+
+        var matchPersonNoLogic = app.MapPost("/matchpersonnologic", async (PersonSpecification? model) =>
         {
-            matchPerson.RequireAuthorization("AuthPolicy");
-        }
+            if (model is null)
+            {
+                return Results.BadRequest(new ProblemDetails
+                {
+                    Title = "Validation error",
+                    Detail = "Request payload is empty",
+                });
+            }
+
+            var result = await matchingService.SearchNoLogicAsync(model);
+
+            return result.Result?.MatchStatus == MatchStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
+        });
 
         var demographics = app.MapGet("/demographics", async ([AsParameters] DemographicRequest request) =>
         {
@@ -41,6 +53,8 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
 
         if (configuration.GetValue<bool>("EnableAuth"))
         {
+            matchPerson.RequireAuthorization("AuthPolicy");
+            matchPersonNoLogic.RequireAuthorization("AuthPolicy");
             demographics.RequireAuthorization("AuthPolicy");
         }
     }
