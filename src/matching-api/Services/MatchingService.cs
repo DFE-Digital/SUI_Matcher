@@ -17,6 +17,7 @@ public class MatchingService(
     IAuditLogger auditLogger) : IMatchingService
 {
     public static readonly int AlgorithmVersion = 3;
+    private const string? DateFormat = "yyyy-MM-dd";
 
     public async Task<PersonMatchResponse> SearchAsync(PersonSpecification personSpecification)
     {
@@ -188,10 +189,10 @@ public class MatchingService(
 
         var dobRange = new[]
         {
-            "ge" + model.BirthDate.Value.AddMonths(-6).ToString("yyyy-MM-dd"),
-            "le" + model.BirthDate.Value.AddMonths(6).ToString("yyyy-MM-dd")
+            "ge" + model.BirthDate.Value.AddMonths(-6).ToString(DateFormat),
+            "le" + model.BirthDate.Value.AddMonths(6).ToString(DateFormat)
         };
-        var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
+        var dob = new[] { "eq" + model.BirthDate.Value.ToString(DateFormat) };
 
         var modelName = model.Given is not null ? new[] { model.Given } : null;
         var queryOrderedMap = new OrderedDictionary<string, SearchQuery>
@@ -288,13 +289,18 @@ public class MatchingService(
 
     private async Task<MatchResult2> MatchNoLogicAsync(PersonSpecification model)
     {
+        if (!model.BirthDate.HasValue)
+        {
+            throw new InvalidOperationException("Birthdate is required for search queries");
+        }
+        
         var modelName = model.Given is not null ? new[] { model.Given } : null;
         var dobRange = new[]
         {
-            "ge" + model.BirthDate.Value.AddMonths(-6).ToString("yyyy-MM-dd"),
-            "le" + model.BirthDate.Value.AddMonths(6).ToString("yyyy-MM-dd")
+            "ge" + model.BirthDate.Value.AddMonths(-6).ToString(DateFormat),
+            "le" + model.BirthDate.Value.AddMonths(6).ToString(DateFormat)
         };
-        // var dob = new[] { "eq" + model.BirthDate.Value.ToString("yyyy-MM-dd") };
+        
         var query = new SearchQuery
         {
             AddressPostalcode = model.AddressPostalCode,
@@ -307,25 +313,30 @@ public class MatchingService(
             FuzzyMatch = false,
             ExactMatch = false,
         };
+        
+        var matchStatus = MatchStatus.Error;
         var searchResult = await nhsFhirClient.PerformSearch(query);
 
+        if (searchResult == null)
+        {
+            return new MatchResult2(MatchStatus.Error);
+        }
+        
         logger.LogInformation(
             "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
             "SimpleQuery", searchResult.Type, searchResult.Score);
-        var matchStatus = MatchStatus.Error;
-        if (searchResult.Type == SearchResult.ResultType.Matched)
+        
+        switch (searchResult.Type)
         {
-            matchStatus = MatchStatus.Match;
-        }
-
-        if (searchResult.Type == SearchResult.ResultType.MultiMatched)
-        {
-            matchStatus = MatchStatus.ManyMatch;
-        }
-
-        if (searchResult.Type == SearchResult.ResultType.Unmatched)
-        {
-            matchStatus = MatchStatus.NoMatch;
+            case SearchResult.ResultType.Matched:
+                matchStatus = MatchStatus.Match;
+                break;
+            case SearchResult.ResultType.MultiMatched:
+                matchStatus = MatchStatus.ManyMatch;
+                break;
+            case SearchResult.ResultType.Unmatched:
+                matchStatus = MatchStatus.NoMatch;
+                break;
         }
 
         return new MatchResult2(searchResult, matchStatus, searchResult.Score.GetValueOrDefault(), String.Empty);
