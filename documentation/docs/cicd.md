@@ -48,3 +48,5 @@ The below diagram looks at how environments are structured up until staging and 
 
 To be tested...
 Looking at using bicep files output from the aspire framework and built using github actions. This will be the case for development. For staging and production we will potentially need a different way.
+
+Currently, the deployment uses the saved bicep files to run the deployment. The bicep files are out of sync with what the aspire generator produces so currently if you need to add anything to the deployment it will have to be done manually.

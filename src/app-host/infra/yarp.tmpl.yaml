@@ -3,7 +3,8 @@ location: {{ .Env.AZURE_LOCATION }}
 identity:
   type: UserAssigned
   userAssignedIdentities:
-    "{{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}" : {}
+    ? "{{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}"
+    : {}
 properties:
   environmentId: {{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_ID }}
   configuration:
