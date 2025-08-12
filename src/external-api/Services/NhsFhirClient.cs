@@ -32,10 +32,10 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
 
                 if (isMultipleMatches)
                 {
+                    logger.LogInformation("multiple patient records found");
                     return SearchResult.MultiMatched();
                 }
 
-                logger.LogInformation("multiple patient records found");
                 return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response");
             }
 
