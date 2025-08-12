@@ -13,7 +13,6 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>suiws</ToolCommandName>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <UserSecretsId>dotnet-SUI.Client.Service.Watcher-3e69d347-749c-4ccf-a43c-d16c6dff93d8</UserSecretsId>
         <IsPackable>true</IsPackable>
     </PropertyGroup>

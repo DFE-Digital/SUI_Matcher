@@ -329,6 +329,102 @@ public sealed class MatchingServiceTests
         Assert.Contains(logMessages, x => x.Contains($"[Algorithm=v{MatchingService.AlgorithmVersion}]"));
     }
 
+    [Fact]
+    public async Task MultipleMatchesNoLogic()
+    {
+        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
+
+        nhsFhir.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult
+            {
+                Type = SearchResult.ResultType.MultiMatched
+            });
+
+        var validationService = new ValidationService();
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
+
+        var model = new PersonSpecification
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = new DateOnly(2000, 11, 11),
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        var result = await subj.SearchNoLogicAsync(model);
+
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.ManyMatch, result.Result!.MatchStatus);
+    }
+
+    [Fact]
+    public async Task NoMatchNoLogic()
+    {
+        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
+
+        nhsFhir.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult
+            {
+                Type = SearchResult.ResultType.Unmatched
+            });
+
+        var validationService = new ValidationService();
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
+
+        var model = new PersonSpecification
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = new DateOnly(2000, 11, 11),
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        var result = await subj.SearchNoLogicAsync(model);
+
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.NoMatch, result.Result!.MatchStatus);
+        Assert.Equal(String.Empty, result.Result.ProcessStage);
+    }
+
+    [Fact]
+    public async Task SingleConfirmedMatchNoLogic()
+    {
+        var nhsFhir = new Mock<INhsFhirClient>(MockBehavior.Loose);
+
+        nhsFhir.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult
+            {
+                Type = SearchResult.ResultType.Matched,
+                Score = 0.99m
+            });
+
+        var validationService = new ValidationService();
+        var subj = new MatchingService(CreateLogger(), nhsFhir.Object, validationService, _auditLogger.Object);
+
+        var model = new PersonSpecification
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = new DateOnly(2000, 11, 11),
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        var result = await subj.SearchNoLogicAsync(model);
+
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.Match, result.Result!.MatchStatus);
+        Assert.Equal(0.99m, result.Result.Score);
+    }
+
     private static Logger<MatchingService> CreateLogger() =>
          new Logger<MatchingService>(new LoggerFactory());
 }
