@@ -95,6 +95,8 @@ public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
         }
 
         string[] existingFiles = Directory.GetFiles(_dir.ProcessedDirectoryPath);
+        string[] stillExistsFiles = Directory.GetFiles(_dir.IncomingDirectoryPath);
+        Assert.Equal(4, stillExistsFiles.Length); // Proves we are not moving files, just processing them
         Assert.Equal(4, existingFiles.Length);
 
         Assert.Null(monitor.GetLastOperation().Exception);
