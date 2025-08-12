@@ -1,3 +1,5 @@
+using Azure.Provisioning.KeyVault;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -6,12 +8,26 @@ DotNetEnv.Env.TraversePath().Load();
 var builder = DistributedApplication.CreateBuilder(args);
 
 var secrets = builder.ExecutionContext.IsPublishMode
-    ? builder.AddAzureKeyVault("secrets")
+    ? builder.AddAzureKeyVault("secrets").ConfigureInfrastructure((infra) =>
+    {
+        var keyVault = infra.GetProvisionableResources()
+            .OfType<KeyVaultService>()
+            .Single();
+
+        keyVault.Properties.Sku = new KeyVaultSku
+        {
+            Family = KeyVaultSkuFamily.A,
+            Name = KeyVaultSkuName.Standard,
+        };
+        keyVault.Properties.EnableSoftDelete = true;
+        keyVault.Properties.EnableRbacAuthorization = true;
+        keyVault.Properties.EnablePurgeProtection = true;
+    })
     : builder.AddConnectionString("secrets");
 
 var externalApi = builder.AddProject<Projects.External>("external-api")
     .WithReference(secrets)
-    .WithUrlForEndpoint("http", ep => new() { Url = "/swagger", DisplayText = "Swagger UI" });
+    .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/swagger", DisplayText = "Swagger UI" });
 
 var matchingApi = builder.AddProject<Projects.Matching>("matching-api");
 
@@ -28,7 +44,7 @@ if (bool.Parse(auditLoggingFlag!))
     {
         storage.RunAsEmulator(cfg =>
         {
-            cfg.WithImageTag("3.34.0");
+            cfg.WithImageTag("3.35.0");
             cfg.WithLifetime(ContainerLifetime.Persistent);
         });
         var table = storage.AddTables("tables");
@@ -44,10 +60,10 @@ if (bool.Parse(auditLoggingFlag!))
 matchingApi
     .WithReference(externalApi)
     .WithHttpHealthCheck("health")
-    .WithUrlForEndpoint("http", ep => new() { Url = "/swagger", DisplayText = "Swagger UI" });
+    .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/swagger", DisplayText = "Swagger UI" });
 
 builder.AddProject<Projects.Yarp>("yarp")
-    .WithReference(secrets)
+    .WithExternalHttpEndpoints()
     .WithReference(matchingApi).WaitFor(matchingApi);
 
 builder.AddProject<Projects.SUI_Client_Service_Watcher>("SUI-Client-Service")
