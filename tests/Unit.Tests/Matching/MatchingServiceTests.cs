@@ -359,7 +359,7 @@ public sealed class MatchingServiceTests
         Assert.NotNull(result);
         Assert.Equal(MatchStatus.ManyMatch, result.Result!.MatchStatus);
     }
-    
+
     [Fact]
     public async Task NoMatchNoLogic()
     {
@@ -391,7 +391,7 @@ public sealed class MatchingServiceTests
         Assert.Equal(MatchStatus.NoMatch, result.Result!.MatchStatus);
         Assert.Equal(String.Empty, result.Result.ProcessStage);
     }
-    
+
     [Fact]
     public async Task SingleConfirmedMatchNoLogic()
     {
@@ -424,7 +424,7 @@ public sealed class MatchingServiceTests
         Assert.Equal(MatchStatus.Match, result.Result!.MatchStatus);
         Assert.Equal(0.99m, result.Result.Score);
     }
-    
+
     private static Logger<MatchingService> CreateLogger() =>
          new Logger<MatchingService>(new LoggerFactory());
 }
