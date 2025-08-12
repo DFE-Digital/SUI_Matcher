@@ -34,6 +34,9 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
         activity.Start();
 
+        Activity.Current?.SetBaggage("responseFileLastModified",
+            $"{File.GetLastWriteTime(filePath).Date:yyyy-MM-dd}");
+
         AssertFileExists(filePath);
 
         string[] lines = await File.ReadAllLinesAsync(filePath);
@@ -154,7 +157,10 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
     private static void StoreUniqueSearchIdFor(MatchPersonResult matchPersonResult)
     {
-        byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(matchPersonResult));
+        var data = $"{matchPersonResult.Given}{matchPersonResult.Family}" +
+                   $"{matchPersonResult.BirthDate}{matchPersonResult.Gender}{matchPersonResult.PostCode}";
+
+        byte[] bytes = Encoding.ASCII.GetBytes(data);
         byte[] hashBytes = MD5.HashData(bytes);
 
         StringBuilder builder = new();

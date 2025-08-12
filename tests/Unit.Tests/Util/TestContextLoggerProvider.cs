@@ -4,18 +4,12 @@ using Xunit.Abstractions;
 
 namespace Unit.Tests.Util;
 
-public class TestContextLoggerProvider : ILoggerProvider
+public class TestContextLoggerProvider(ITestOutputHelper testContext, List<string>? logMessages = null)
+    : ILoggerProvider
 {
-    private readonly ITestOutputHelper _testContext;
-    private readonly List<string> _logMessages;
+    private readonly List<string> _logMessages = logMessages ?? new();
 
-    public TestContextLoggerProvider(ITestOutputHelper testContext, List<string>? logMessages = null)
-    {
-        _testContext = testContext;
-        _logMessages = logMessages ?? new();
-    }
-
-    public ILogger CreateLogger(string categoryName) => new TestContextLogger(_testContext, categoryName, _logMessages);
+    public ILogger CreateLogger(string categoryName) => new TestContextLogger(testContext, categoryName, _logMessages);
 
     public void Dispose()
     {

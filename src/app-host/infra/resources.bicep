@@ -141,35 +141,35 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
     }
   }
 }
-
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = if(enableAuditLogging) {
-  name: '${environmentPrefix}${lowercaseEnvironmentName}sa01'
-  location: location
-  sku: {
-    name: 'Standard_LRS'
-  }
-  kind: 'StorageV2'
-  tags: {
-      ...tags
-      'aspire-resource-name': 'az-storage'
-  }
-  properties: {
-    accessTier: 'Hot'
-    minimumTlsVersion: 'TLS1_2'
-  }
-}
-
-
-resource tableService 'Microsoft.Storage/storageAccounts/tableServices@2023-01-01' = if(enableAuditLogging) {
-  parent: storageAccount
-  name: 'default'
-}
-
-resource tableServiceAuditTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2023-01-01' = if(enableAuditLogging) {
-  parent: tableService
-  name: 'AuditLogs'
-  properties: {}
-}
+// 
+// resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = if(enableAuditLogging) {
+//   name: '${environmentPrefix}${lowercaseEnvironmentName}sa01'
+//   location: location
+//   sku: {
+//     name: 'Standard_LRS'
+//   }
+//   kind: 'StorageV2'
+//   tags: {
+//       ...tags
+//       'aspire-resource-name': 'az-storage'
+//   }
+//   properties: {
+//     accessTier: 'Hot'
+//     minimumTlsVersion: 'TLS1_2'
+//   }
+// }
+// 
+// 
+// resource tableService 'Microsoft.Storage/storageAccounts/tableServices@2023-01-01' = if(enableAuditLogging) {
+//   parent: storageAccount
+//   name: 'default'
+// }
+// 
+// resource tableServiceAuditTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2023-01-01' = if(enableAuditLogging) {
+//   parent: tableService
+//   name: 'AuditLogs'
+//   properties: {}
+// }
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${environmentPrefix}-${lowercaseEnvironmentName}-appinsights-01'
@@ -197,11 +197,11 @@ output AZURE_CONTAINER_APPS_ENVIRONMENT_ID string = containerAppEnvironment.id
 output AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN string = containerAppEnvironment.properties.defaultDomain
 output APPLICATION_INSIGHTS_CONNECTION_STRING string = applicationInsights.properties.ConnectionString
 
-output blobEndpoint string = storageAccount.properties.primaryEndpoints.blob
-
-output queueEndpoint string = storageAccount.properties.primaryEndpoints.queue
-
-output tableEndpoint string = storageAccount.properties.primaryEndpoints.table
-
-output name string = storageAccount.name
+// output blobEndpoint string = storageAccount.properties.primaryEndpoints.blob
+// 
+// output queueEndpoint string = storageAccount.properties.primaryEndpoints.queue
+// 
+// output tableEndpoint string = storageAccount.properties.primaryEndpoints.table
+// 
+// output name string = storageAccount.name
 
