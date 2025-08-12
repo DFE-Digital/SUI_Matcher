@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.Extensions.Logging;
@@ -65,7 +66,7 @@ public class TxtFileMonitor
                     await RetryUtil.RetryAsync(() =>
                     {
                         string destPath = Path.Combine(_config.ProcessedDirectory, Path.GetFileName(filePath));
-                        File.Move(filePath, destPath);
+                        File.Copy(filePath, destPath);
                         _logger.LogInformation("File moved to Processed directory: {DestPath}", destPath);
                         Interlocked.Increment(ref _processedCount);
                         return Task.CompletedTask;
