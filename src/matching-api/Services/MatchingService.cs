@@ -293,14 +293,14 @@ public class MatchingService(
         {
             throw new InvalidOperationException("Birthdate is required for search queries");
         }
-        
+
         var modelName = model.Given is not null ? new[] { model.Given } : null;
         var dobRange = new[]
         {
             "ge" + model.BirthDate.Value.AddMonths(-6).ToString(DateFormat),
             "le" + model.BirthDate.Value.AddMonths(6).ToString(DateFormat)
         };
-        
+
         var query = new SearchQuery
         {
             AddressPostalcode = model.AddressPostalCode,
@@ -313,7 +313,7 @@ public class MatchingService(
             FuzzyMatch = false,
             ExactMatch = false,
         };
-        
+
         var matchStatus = MatchStatus.Error;
         var searchResult = await nhsFhirClient.PerformSearch(query);
 
@@ -321,11 +321,11 @@ public class MatchingService(
         {
             return new MatchResult2(MatchStatus.Error);
         }
-        
+
         logger.LogInformation(
             "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
             "SimpleQuery", searchResult.Type, searchResult.Score);
-        
+
         switch (searchResult.Type)
         {
             case SearchResult.ResultType.Matched:
