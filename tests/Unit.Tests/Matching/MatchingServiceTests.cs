@@ -377,7 +377,7 @@ public sealed class MatchingServiceTests
         var model = new PersonSpecification
         {
             AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateOnly(2000, 11, 11),
+            RawBirthDate = ["eq2000-11-11"],
             Email = "test@test.com",
             Family = "Smith",
             Given = "John",
@@ -410,7 +410,7 @@ public sealed class MatchingServiceTests
         var model = new PersonSpecification
         {
             AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateOnly(2000, 11, 11),
+            RawBirthDate = ["eq2000-11-11"],
             Email = "test@test.com",
             Family = "Smith",
             Given = "John",

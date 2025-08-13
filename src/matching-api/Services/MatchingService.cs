@@ -289,17 +289,12 @@ public class MatchingService(
 
     private async Task<MatchResult2> MatchNoLogicAsync(PersonSpecification model)
     {
-        if (!model.BirthDate.HasValue)
+        if (model.RawBirthDate?.Length == 0)
         {
-            throw new InvalidOperationException("Birthdate is required for search queries");
+            throw new InvalidOperationException("RawBirthdate is required for search queries");
         }
 
         var modelName = model.Given is not null ? new[] { model.Given } : null;
-        var dobRange = new[]
-        {
-            "ge" + model.BirthDate.Value.AddMonths(-6).ToString(DateFormat),
-            "le" + model.BirthDate.Value.AddMonths(6).ToString(DateFormat)
-        };
 
         var query = new SearchQuery
         {
@@ -309,7 +304,7 @@ public class MatchingService(
             Given = modelName,
             Family = model.Family,
             Phone = model.Phone,
-            Birthdate = dobRange,
+            Birthdate = model.RawBirthDate,
             FuzzyMatch = false,
             ExactMatch = false,
         };
