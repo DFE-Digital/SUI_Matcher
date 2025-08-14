@@ -35,6 +35,11 @@ public class PersonSpecification
     [JsonPropertyName("birthdate")]
     public DateOnly? BirthDate { get; set; }
 
+    [Required(ErrorMessage = PersonValidationConstants.BirthDateRequired)]
+    [DataType(DataType.Text, ErrorMessage = PersonValidationConstants.BirthDateInvalid)]
+    [JsonPropertyName("rawbirthdate")]
+    public string[]? RawBirthDate { get; set; }
+
     [JsonConverter(typeof(GenderToLowercaseConverter))]
     [AllowedValues("male", "female", "unknown", "other", null, ErrorMessage = PersonValidationConstants.GenderInvalid)]
     [JsonPropertyName("gender")]
