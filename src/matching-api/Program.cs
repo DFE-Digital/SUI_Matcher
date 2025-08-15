@@ -45,6 +45,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IMatchingService, MatchingService>();
 builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
+builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
 
 // Audit logging setup
 builder.Services.AddFeatureManagement();

@@ -21,7 +21,7 @@ public class MatchingServiceDemographicTests
     {
         // Arrange
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
-            .ReturnsAsync(new DemographicResult() { Result = new { Id = "1234567890" } });
+            .ReturnsAsync(new DemographicResult() { Result = new NhsPerson { NhsNumber = "1234567890" } });
         var sut = new MatchingService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
 
         var request = new DemographicRequest
