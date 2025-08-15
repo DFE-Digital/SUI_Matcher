@@ -6,5 +6,5 @@ public class ReconciliationResponse
 
     public List<string> Errors { get; set; } = [];
 
-    public List<Difference> Differences { get; set; }
+    public List<Difference>? Differences { get; set; }
 }

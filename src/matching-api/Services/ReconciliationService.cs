@@ -12,9 +12,7 @@ namespace MatchingApi.Services;
 
 public class ReconciliationService(
     ILogger<MatchingService> logger,
-    INhsFhirClient nhsFhirClient,
-    IValidationService validationService,
-    IAuditLogger auditLogger) : IReconciliationService
+    INhsFhirClient nhsFhirClient) : IReconciliationService
 {
     public async Task<ReconciliationResponse> ReconcileAsync(ReconciliationRequest reconciliationRequest)
     {
@@ -24,18 +22,18 @@ public class ReconciliationService(
             return new ReconciliationResponse { Errors = ["Missing Nhs Number"] };
         }
 
-        var result = await nhsFhirClient.PerformSearchByNhsId(reconciliationRequest.NhsNumber);
-        if (result.Result == null || !string.IsNullOrEmpty(result.ErrorMessage))
+        var data = await nhsFhirClient.PerformSearchByNhsId(reconciliationRequest.NhsNumber);
+        if (data.Result == null || !string.IsNullOrEmpty(data.ErrorMessage))
         {
             return new ReconciliationResponse
             {
-                Errors = [result.ErrorMessage ?? "Unknown error"]
+                Errors = [data.ErrorMessage ?? "Unknown error"]
             };
         }
         return new ReconciliationResponse
         {
-            Result = result.Result,
-            Differences = BuildDifferenceList(reconciliationRequest, result.Result),
+            Result = data.Result,
+            Differences = BuildDifferenceList(reconciliationRequest, data.Result),
         };
     }
 

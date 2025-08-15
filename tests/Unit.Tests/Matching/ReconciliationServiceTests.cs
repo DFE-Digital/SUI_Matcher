@@ -12,9 +12,7 @@ namespace Unit.Tests.Matching;
 
 public class ReconciliationServiceTests
 {
-    private readonly ValidationService _validationService = new();
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
-    private readonly Mock<IAuditLogger> _auditLogger = new();
 
     [Fact]
     public async Task NoNhsNumberShouldError()
@@ -22,7 +20,7 @@ public class ReconciliationServiceTests
         // Arrange
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
             .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = "1234567890" } });
-        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object);
 
         var request = new ReconciliationRequest
         {
@@ -44,7 +42,7 @@ public class ReconciliationServiceTests
         // Arrange
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
             .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = "1234567890" } });
-        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object);
 
         var request = new ReconciliationRequest
         {
@@ -67,7 +65,7 @@ public class ReconciliationServiceTests
         var errorMessage = "Person not found";
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
             .ReturnsAsync(new DemographicResult { ErrorMessage = errorMessage });
-        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object);
 
         var request = new ReconciliationRequest
         {
@@ -101,7 +99,7 @@ public class ReconciliationServiceTests
         };
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
             .ReturnsAsync(new DemographicResult { Result = nhsPerson });
-        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object);
 
         var request = new ReconciliationRequest
         {
@@ -121,9 +119,9 @@ public class ReconciliationServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Result);
-        Assert.Equal(8, result.Differences.Count);
-        Assert.Equal("NhsNumber", result.Differences[0].FieldName);
-        Assert.Equal(request.NhsNumber, result.Differences[0].Local);
-        Assert.Equal(nhsPerson.NhsNumber, result.Differences[0].Nhs);
+        Assert.Equal(8, result.Differences?.Count);
+        Assert.Equal("NhsNumber", result.Differences?[0].FieldName);
+        Assert.Equal(request.NhsNumber, result.Differences?[0].Local);
+        Assert.Equal(nhsPerson.NhsNumber, result.Differences?[0].Nhs);
     }
 }

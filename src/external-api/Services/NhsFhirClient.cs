@@ -71,6 +71,11 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             var fhirClient = fhirClientFactory.CreateFhirClient();
 
             var data = await fhirClient.ReadAsync<Patient>(ResourceIdentity.Build("Patient", nhsId));
+            if (data == null)
+            {
+                return DemographicResult();
+            }
+
             logger.LogInformation("Patient record found for Nhs number {NhsNumber}: {data}", nhsId, await data.ToJsonAsync());
             return new DemographicResult
             {
@@ -93,6 +98,11 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
         catch (Exception ex)
         {
             logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID");
+            return DemographicResult();
+        }
+
+        static DemographicResult DemographicResult()
+        {
             return new DemographicResult
             {
                 ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID"
