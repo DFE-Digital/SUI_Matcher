@@ -1,0 +1,129 @@
+using MatchingApi.Services;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
+
+using Shared.Endpoint;
+using Shared.Logging;
+using Shared.Models;
+
+namespace Unit.Tests.Matching;
+
+public class ReconciliationServiceTests
+{
+    private readonly ValidationService _validationService = new();
+    private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
+    private readonly Mock<IAuditLogger> _auditLogger = new();
+
+    [Fact]
+    public async Task NoNhsNumberShouldError()
+    {
+        // Arrange
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
+            .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = "1234567890" } });
+        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+
+        var request = new ReconciliationRequest
+        {
+        };
+
+        // Act
+        var result = await sut.ReconcileAsync(request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Result);
+        Assert.Single(result.Errors);
+        Assert.Equal("Missing Nhs Number", result.Errors[0]);
+    }
+
+    [Fact]
+    public async Task MinimalDataShouldNotError()
+    {
+        // Arrange
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
+            .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = "1234567890" } });
+        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+
+        var request = new ReconciliationRequest
+        {
+            NhsNumber = "1234567890"
+        };
+
+        // Act
+        var result = await sut.ReconcileAsync(request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Result);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public async Task PersonNotFoundShouldHandleError()
+    {
+        // Arrange
+        var errorMessage = "Person not found";
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
+            .ReturnsAsync(new DemographicResult { ErrorMessage = errorMessage });
+        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+
+        var request = new ReconciliationRequest
+        {
+            NhsNumber = "1234567890"
+        };
+
+        // Act
+        var result = await sut.ReconcileAsync(request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Result);
+        Assert.Single(result.Errors);
+        Assert.Equal(errorMessage, result.Errors[0]);
+    }
+
+    [Fact]
+    public async Task FullDataShouldReturnNoDifferences()
+    {
+        // Arrange
+        var nhsPerson = new NhsPerson
+        {
+            NhsNumber = "9999999999",
+            AddressPostalCodes = ["AB12 3CD", "BC34 5EF"],
+            FamilyNames = ["Smith", "Jones"],
+            GivenNames = ["John", "Jane"],
+            BirthDate = new DateOnly(1980, 1, 1),
+            Gender = "M",
+            PhoneNumbers = ["0123456789", "+44 123456789"],
+            Emails = ["john.smith@example", "jane.smith@example"],
+        };
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
+            .ReturnsAsync(new DemographicResult { Result = nhsPerson });
+        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+
+        var request = new ReconciliationRequest
+        {
+            NhsNumber = "1234567890",
+            AddressPostalCode = "AA11 2BB",
+            Family = "Hamilton",
+            Given = "David",
+            Gender = "Male",
+            Phone = "123454321",
+            BirthDate = new DateOnly(1990, 01, 02),
+            Email = "david.hamilton@example.com",
+        };
+
+        // Act
+        var result = await sut.ReconcileAsync(request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Result);
+        Assert.Equal(8, result.Differences.Count);
+        Assert.Equal("NhsNumber", result.Differences[0].FieldName);
+        Assert.Equal(request.NhsNumber, result.Differences[0].Local);
+        Assert.Equal(nhsPerson.NhsNumber, result.Differences[0].Nhs);
+    }
+}

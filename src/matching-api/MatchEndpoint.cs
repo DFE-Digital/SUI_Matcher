@@ -8,7 +8,7 @@ using Shared.Models;
 namespace MatchingApi;
 
 [ExcludeFromCodeCoverage(Justification = "Simple endpoint mapping")]
-public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
+public class MatchEndpoint(IMatchingService matchingService, IReconciliationService reconciliationService) : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -51,11 +51,28 @@ public class MatchEndpoint(IMatchingService matchingService) : IEndpoint
             return result is null ? Results.BadRequest(result) : Results.Ok(result);
         });
 
+        var reconciliation = app.MapPost("/reconciliation", async (ReconciliationRequest? model) =>
+        {
+            if (model is null)
+            {
+                return Results.BadRequest(new ProblemDetails
+                {
+                    Title = "Validation error",
+                    Detail = "Request payload is empty",
+                });
+            }
+
+            var result = await reconciliationService.ReconcileAsync(model);
+
+            return result is null ? Results.BadRequest(result) : Results.Ok(result);
+        });
+
         if (configuration.GetValue<bool>("EnableAuth"))
         {
             matchPerson.RequireAuthorization("AuthPolicy");
             matchPersonNoLogic.RequireAuthorization("AuthPolicy");
             demographics.RequireAuthorization("AuthPolicy");
+            reconciliation.RequireAuthorization("AuthPolicy");
         }
     }
 }

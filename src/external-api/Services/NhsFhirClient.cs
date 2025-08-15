@@ -3,9 +3,12 @@ using System.Net.Http.Headers;
 
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
+using Hl7.Fhir.Serialization;
+using Hl7.Fhir.Utility;
 
 using Shared.Endpoint;
 using Shared.Models;
+using Shared.Util;
 
 namespace ExternalApi.Services;
 
@@ -68,13 +71,29 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             var fhirClient = fhirClientFactory.CreateFhirClient();
 
             var data = await fhirClient.ReadAsync<Patient>(ResourceIdentity.Build("Patient", nhsId));
-
-            return new DemographicResult() { Result = data };
+            logger.LogInformation("Patient record found for Nhs number {NhsNumber}: {data}", nhsId, await data.ToJsonAsync());
+            return new DemographicResult
+            {
+                Result = new NhsPerson
+                {
+                    NhsNumber = data.Id,
+                    AddressPostalCodes = data.Address.Where(s => s.Period.End is null).Select(s => s.PostalCode).ToArray(),
+                    Gender = data.Gender.GetLiteral(),
+                    BirthDate = data.BirthDate.ToDateOnly(),
+                    Emails = data.Telecom
+                     .Where(s => s.System is ContactPoint.ContactPointSystem.Email && s.Period.End is null).Select(s => s.Value).ToArray(),
+                    PhoneNumbers = data.Telecom
+                     .Where(s => s.System is ContactPoint.ContactPointSystem.Phone
+                         or ContactPoint.ContactPointSystem.Sms && s.Period.End is null).Select(s => s.Value).ToArray(),
+                    FamilyNames = data.Name.Where(s => s.Period.End is null).Select(s => s.Family).ToArray(),
+                    GivenNames = data.Name.Where(s => s.Period.End is null).SelectMany(s => s.Given).ToArray(),
+                }
+            };
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID");
-            return new DemographicResult()
+            return new DemographicResult
             {
                 ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID"
             };
