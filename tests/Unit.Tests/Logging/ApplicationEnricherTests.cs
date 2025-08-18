@@ -33,6 +33,26 @@ public class ApplicationEnricherTests
     }
 
     [Fact]
+    public void Enrich_AddsReconciliationIdToCollector_WhenReconciliationIdExistsInActivity()
+    {
+        // Arrange
+        var httpContextAccessor = new HttpContextAccessor();
+        var collector = new Mock<IEnrichmentTagCollector>();
+        var enricher = new ApplicationEnricher(httpContextAccessor);
+        var activity = new Activity("TestActivity");
+        activity.AddBaggage("ReconciliationId", "12345");
+        activity.Start();
+
+        // Act
+        enricher.Enrich(collector.Object);
+
+        // Assert
+        collector.Verify(c => c.Add("ReconciliationId", "12345"), Times.Once);
+
+        activity.Stop();
+    }
+
+    [Fact]
     public void Enrich_AddsMachineNameToCollector()
     {
         // Arrange

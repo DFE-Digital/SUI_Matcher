@@ -58,7 +58,7 @@ public class ReconciliationService(
         };
     }
 
-    private string BuildReconciliationId(ReconciliationRequest reconciliationRequest)
+    private static string BuildReconciliationId(ReconciliationRequest reconciliationRequest)
     {
         var data = $"{reconciliationRequest.NhsNumber}{reconciliationRequest.Given}{reconciliationRequest.Family}" +
                    $"{reconciliationRequest.BirthDate}{reconciliationRequest.Gender}{reconciliationRequest.AddressPostalCode}{reconciliationRequest.Email}{reconciliationRequest.Phone}";
@@ -79,7 +79,7 @@ public class ReconciliationService(
         return hash;
     }
 
-    private List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson result)
+    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson result)
     {
         var differences = new List<Difference>();
         if (request.NhsNumber != result.NhsNumber)

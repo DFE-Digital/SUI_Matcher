@@ -84,7 +84,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task FullDataShouldReturnNoDifferences()
+    public async Task FullDataShouldReturnDifferences()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -124,5 +124,45 @@ public class ReconciliationServiceTests
         Assert.Equal("NhsNumber", result.Differences?[0].FieldName);
         Assert.Equal(request.NhsNumber, result.Differences?[0].Local);
         Assert.Equal(nhsPerson.NhsNumber, result.Differences?[0].Nhs);
+    }
+
+    [Fact]
+    public async Task FullDataShouldReturnNoDifferences()
+    {
+        // Arrange
+        var nhsPerson = new NhsPerson
+        {
+            NhsNumber = "1234567890",
+            AddressPostalCodes = ["aA11 2BB", "BC34 5EF"],
+            FamilyNames = ["hamilton", "Jones"],
+            GivenNames = ["david", "Jane"],
+            BirthDate = new DateOnly(1990, 1, 2),
+            Gender = "male",
+            PhoneNumbers = ["123454321", "+44 123456789"],
+            Emails = ["david.hamilton@example.com", "jane.smith@example"],
+        };
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
+            .ReturnsAsync(new DemographicResult { Result = nhsPerson });
+        var sut = new ReconciliationService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+
+        var request = new ReconciliationRequest
+        {
+            NhsNumber = "1234567890",
+            AddressPostalCode = "AA11 2BB",
+            Family = "Hamilton",
+            Given = "David",
+            Gender = "Male",
+            Phone = "123454321",
+            BirthDate = new DateOnly(1990, 01, 02),
+            Email = "david.hamilton@example.com",
+        };
+
+        // Act
+        var result = await sut.ReconcileAsync(request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Result);
+        Assert.Equal(0, result.Differences?.Count);
     }
 }

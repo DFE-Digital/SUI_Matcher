@@ -30,8 +30,6 @@ public class LogConsoleFormatterTests
         Assert.Contains("[Information] [Algorithm=v1] [SearchId=123] Test Message", output);
     }
 
-
-
     [Fact]
     public void Write_WithOnlySearchId_WritesPartialFormat()
     {
@@ -47,6 +45,23 @@ public class LogConsoleFormatterTests
 
         var output = _writer.ToString();
         Assert.Contains("[Information] [SearchId=456] Test Message", output);
+    }
+
+    [Fact]
+    public void Write_WithOnlyReconciliationId_WritesPartialFormat()
+    {
+        using var activity = new Activity("TestActivity");
+
+        activity.AddBaggage("ReconciliationId", "456");
+        activity.Start();
+        Activity.Current = activity;
+
+        var logEntry = CreateLogEntry(LogLevel.Information);
+
+        _formatter.Write(in logEntry, scopeProvider: null, _writer);
+
+        var output = _writer.ToString();
+        Assert.Contains("[Information] [ReconciliationId=456] Test Message", output);
     }
 
     [Fact]
