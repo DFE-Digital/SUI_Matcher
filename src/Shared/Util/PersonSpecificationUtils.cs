@@ -22,4 +22,25 @@ public static class PersonSpecificationUtils
             _ => "unknown"
         };
     }
+
+    public static string GetAgeGroup(DateOnly birthDate)
+    {
+        var dateOnlyNow = DateOnly.FromDateTime(DateTime.Now);
+        var age = dateOnlyNow.Year - birthDate.Year;
+        if (dateOnlyNow.DayOfYear < birthDate.DayOfYear)
+        {
+            age--;
+        }
+
+        return age switch
+        {
+            < 1 => "Less than 1 year",
+            <= 3 => "1-3 years",
+            <= 7 => "4-7 years",
+            <= 11 => "8-11 years",
+            <= 15 => "12-15 years",
+            <= 18 => "16-18 years",
+            _ => "Over 18 years"
+        };
+    }
 }

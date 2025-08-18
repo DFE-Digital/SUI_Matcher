@@ -22,6 +22,7 @@ public class LogConsoleFormatter() : ConsoleFormatter(Shared.Constants.LogFormat
         }
 
         var searchId = Activity.Current?.GetBaggageItem("SearchId");
+        var reconcilationId = Activity.Current?.GetBaggageItem("ReconciliationId");
         var algorithmVersion = Activity.Current?.GetBaggageItem("AlgorithmVersion");
 
         if (searchId is not null && algorithmVersion is not null)
@@ -31,6 +32,10 @@ public class LogConsoleFormatter() : ConsoleFormatter(Shared.Constants.LogFormat
         else if (searchId is not null)
         {
             textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [SearchId={searchId}] ");
+        }
+        else if (reconcilationId is not null)
+        {
+            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [ReconciliationId={reconcilationId}] ");
         }
         else
         {

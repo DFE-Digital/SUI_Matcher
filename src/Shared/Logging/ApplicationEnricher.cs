@@ -16,6 +16,11 @@ public class ApplicationEnricher(IHttpContextAccessor httpContextAccessor) : ILo
             collector.Add("SearchId", searchId);
         }
 
+        if (Activity.Current?.GetBaggageItem("ReconciliationId") is { } reconciliationId)
+        {
+            collector.Add("ReconciliationId", reconciliationId);
+        }
+
         collector.Add("MachineName", Environment.MachineName);
 
         var httpContext = httpContextAccessor.HttpContext;

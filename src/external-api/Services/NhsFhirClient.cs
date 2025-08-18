@@ -73,10 +73,11 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             var data = await fhirClient.ReadAsync<Patient>(ResourceIdentity.Build("Patient", nhsId));
             if (data == null)
             {
+                logger.LogInformation("Patient record not found for Nhs number");
                 return DemographicResult();
             }
 
-            logger.LogInformation("Patient record found for Nhs number {NhsNumber}: {data}", nhsId, await data.ToJsonAsync());
+            logger.LogInformation("Patient record found for Nhs number");
             return new DemographicResult
             {
                 Result = new NhsPerson

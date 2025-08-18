@@ -14,5 +14,6 @@ public class AuditLogEntry(AuditLogEntry.AuditLogAction action, Dictionary<strin
     {
         Match,
         Demographic,
+        Reconciliation,
     }
 }
