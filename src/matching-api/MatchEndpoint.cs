@@ -69,10 +69,11 @@ public class MatchEndpoint(IMatchingService matchingService, IReconciliationServ
 
         if (configuration.GetValue<bool>("EnableAuth"))
         {
-            matchPerson.RequireAuthorization("AuthPolicy");
-            matchPersonNoLogic.RequireAuthorization("AuthPolicy");
-            demographics.RequireAuthorization("AuthPolicy");
-            reconciliation.RequireAuthorization("AuthPolicy");
+            const string authPolicyName = "AuthPolicy";
+            matchPerson.RequireAuthorization(authPolicyName);
+            matchPersonNoLogic.RequireAuthorization(authPolicyName);
+            demographics.RequireAuthorization(authPolicyName);
+            reconciliation.RequireAuthorization(authPolicyName);
         }
     }
 }
