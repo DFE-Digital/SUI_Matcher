@@ -31,6 +31,10 @@ export AZURE_CONTAINER_APP_ENV_SUBNET="<Enter Subnet for Env Deployment>"
 1. Open a terminal and navigate to the directory `app-host/infra` that contains the `main.bicep` file.
 2. Log in using a service principal: [Documentation](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/reference#azd-auth-login)
    ```bash
+   az login
+   ```
+Select the right env. Then login via azd for good measure...
+   ```
    azd login
     ```
 3. Use what-if to preview what will be changed/deployed [Documentation](https://learn.microsoft.com/en-us/cli/azure/deployment/group?view=azure-cli-latest#az-deployment-group-what-if)
@@ -54,5 +58,7 @@ export AZURE_CONTAINER_APP_ENV_SUBNET="<Enter Subnet for Env Deployment>"
     ```
 
    This command will deploy the application to the specified environment.
+
+   If you haven't run the infra deploy then certain values may not be set in your environment. For instance AZURE_CONTAINER_REGISTRY_ENDPOINT. You can find these values via the console.
 
 6. Monitor the deployment progress in the terminal. If successful, you will see a message indicating that the deployment was completed.
