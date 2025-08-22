@@ -12,6 +12,8 @@ public class NhsPerson
 
     public string[] FamilyNames { get; set; } = [];
 
+    [DataType(DataType.Date, ErrorMessage = PersonValidationConstants.BirthDateInvalid)]
+    [JsonPropertyName("birthdate")]
     public DateOnly? BirthDate { get; set; }
 
     public string? Gender { get; set; }

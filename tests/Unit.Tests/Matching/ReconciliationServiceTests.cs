@@ -32,7 +32,7 @@ public class ReconciliationServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Result);
+        Assert.Null(result.Person);
         Assert.Single(result.Errors);
         Assert.Equal("Missing Nhs Number", result.Errors[0]);
     }
@@ -55,7 +55,7 @@ public class ReconciliationServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotNull(result.Result);
+        Assert.NotNull(result.Person);
         Assert.Empty(result.Errors);
     }
 
@@ -78,7 +78,7 @@ public class ReconciliationServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Result);
+        Assert.Null(result.Person);
         Assert.Single(result.Errors);
         Assert.Equal(errorMessage, result.Errors[0]);
     }
@@ -119,7 +119,7 @@ public class ReconciliationServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotNull(result.Result);
+        Assert.NotNull(result.Person);
         Assert.Equal(8, result.Differences?.Count);
         Assert.Equal("NhsNumber", result.Differences?[0].FieldName);
         Assert.Equal(request.NhsNumber, result.Differences?[0].Local);
@@ -162,7 +162,7 @@ public class ReconciliationServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotNull(result.Result);
+        Assert.NotNull(result.Person);
         Assert.Equal(0, result.Differences?.Count);
     }
 }

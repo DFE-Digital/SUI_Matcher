@@ -26,7 +26,7 @@ await argResult.WithParsedAsync(async parsedArgs =>
 
     builder.ConfigureServices((hostContext, services) =>
     {
-        services.AddClientCore(hostContext.Configuration);
+        services.AddClientCore(hostContext.Configuration, parsedArgs.EnableReconciliation);
         services.Configure<CsvWatcherConfig>(x =>
         {
             x.IncomingDirectory = parsedArgs.InputDirectory;

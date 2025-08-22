@@ -18,4 +18,7 @@ public class WatcherArgs
 
     [Option('g', "enable-gender", Required = false, HelpText = "Enable gender option.")]
     public bool EnableGenderSearch { get; set; } = false;
+
+    [Option('r', "enable-reconciliation", Required = false, HelpText = "Enable reconciliation report.")]
+    public bool EnableReconciliation { get; set; } = false;
 }
