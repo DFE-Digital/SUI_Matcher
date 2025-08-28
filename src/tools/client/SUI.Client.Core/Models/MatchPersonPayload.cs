@@ -9,4 +9,5 @@ public class MatchPersonPayload
     public string? Phone { get; set; }
     public string? Email { get; set; }
     public string? AddressPostalCode { get; set; }
+    public Dictionary<string, object> OptionalFields { get; set; } = new();
 }
