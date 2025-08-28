@@ -15,7 +15,7 @@ namespace Unit.Tests.Client;
 public class ProcessCsVFileAsyncTests
 {
     [Fact]
-    public async Task ProcessCsvFileAsync_PassesOptionalFieldsToMatchPersonAsync()
+    public async Task ProcessCsvFileAsync_PassesExistingAllOptionalFieldsToMatchPersonAsync()
     {
         var mockLogger = new Mock<ILogger<CsvFileProcessor>>();
         var mockApi = new Mock<IMatchPersonApiService>();
@@ -29,24 +29,39 @@ public class ProcessCsVFileAsyncTests
 
         var processor = new CsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
 
-        // Prepare test CSV file with optional fields
+        // Prepare test CSV file with all optional fields
         var tempDir = Path.GetTempPath();
         var filePath = Path.Combine(tempDir, "test.csv");
         var outputPath = tempDir;
-        var headers = new HashSet<string> { "Given", "Family", "ActiveCIN", "Ethnicity" };
+        var headers = new HashSet<string>
+        {
+            "Given", "Family", "ActiveCIN", "ActiveCLA", "ActiveCP", "ActiveEHM", "Ethnicity", "ImmigrationStatus"
+        };
         var records = new List<Dictionary<string, string>>
         {
-            new() { ["Given"] = "Jane", ["Family"] = "Doe", ["ActiveCIN"] = "CIN123", ["Ethnicity"] = "A1 - White-British" }
+            new()
+            {
+                ["Given"] = "Jane",
+                ["Family"] = "Doe",
+                ["ActiveCIN"] = "CIN123",
+                ["ActiveCLA"] = "CLA456",
+                ["ActiveCP"] = "CP789",
+                ["ActiveEHM"] = "EHM321",
+                ["Ethnicity"] = "A1 - White-British",
+                ["ImmigrationStatus"] = "Settled"
+            }
         };
         await CsvFileProcessor.WriteCsvAsync(filePath, headers, records);
 
         await processor.ProcessCsvFileAsync(filePath, outputPath);
 
         Assert.NotNull(capturedPayload);
-        Assert.True(capturedPayload!.OptionalFields.ContainsKey("ActiveCIN"));
-        Assert.Equal("CIN123", capturedPayload.OptionalFields["ActiveCIN"]);
-        Assert.True(capturedPayload.OptionalFields.ContainsKey("Ethnicity"));
+        Assert.Equal("CIN123", capturedPayload!.OptionalFields["ActiveCIN"]);
+        Assert.Equal("CLA456", capturedPayload.OptionalFields["ActiveCLA"]);
+        Assert.Equal("CP789", capturedPayload.OptionalFields["ActiveCP"]);
+        Assert.Equal("EHM321", capturedPayload.OptionalFields["ActiveEHM"]);
         Assert.Equal("A1 - White-British", capturedPayload.OptionalFields["Ethnicity"]);
+        Assert.Equal("Settled", capturedPayload.OptionalFields["ImmigrationStatus"]);
 
         // Clean up
         if (File.Exists(filePath))
