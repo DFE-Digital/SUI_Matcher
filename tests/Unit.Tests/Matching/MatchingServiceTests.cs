@@ -30,6 +30,39 @@ public sealed class MatchingServiceTests
     }
 
     [Fact]
+    public async Task ShouldLogOptionalProperties_WhenProvidedInPersonSpecification()
+    {
+        // Arrange
+        PersonSpecification personSpecification = new()
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = new DateOnly(2000, 11, 11),
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+            OptionalProperties = new Dictionary<string, object>
+            {
+                { "CustomProperty1", "Value1" },
+                { "CustomProperty2", "Value2" }
+            }
+        };
+
+        // Act 
+        var result = await _sut.SearchAsync(personSpecification);
+
+        // Assert
+        _loggerMock.Verify(logger => logger.Log(
+            LogLevel.Information,
+            It.IsAny<EventId>(),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("CustomProperty1") && v.ToString()!.Contains("Value1") &&
+                                          v.ToString()!.Contains("CustomProperty2") && v.ToString()!.Contains("Value2")),
+            null,
+            It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
     public async Task EmptyPersonModelReturnsError()
     {
         var result = await _sut.SearchAsync(new PersonSpecification());
