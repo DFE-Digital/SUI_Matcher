@@ -84,7 +84,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 Email = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
                 AddressPostalCode = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
                 Gender = watcherConfig.Value.EnableGenderSearch ? gender : null,
-                OptionalFields = GetOptionalFields(record)
+                OptionalProperties = GetOptionalFields(record)
             };
 
             var response = await matchPersonApi.MatchPersonAsync(payload);

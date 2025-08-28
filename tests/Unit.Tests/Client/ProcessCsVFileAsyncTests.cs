@@ -56,12 +56,12 @@ public class ProcessCsVFileAsyncTests
         await processor.ProcessCsvFileAsync(filePath, outputPath);
 
         Assert.NotNull(capturedPayload);
-        Assert.Equal("CIN123", capturedPayload!.OptionalFields["ActiveCIN"]);
-        Assert.Equal("CLA456", capturedPayload.OptionalFields["ActiveCLA"]);
-        Assert.Equal("CP789", capturedPayload.OptionalFields["ActiveCP"]);
-        Assert.Equal("EHM321", capturedPayload.OptionalFields["ActiveEHM"]);
-        Assert.Equal("A1 - White-British", capturedPayload.OptionalFields["Ethnicity"]);
-        Assert.Equal("Settled", capturedPayload.OptionalFields["ImmigrationStatus"]);
+        Assert.Equal("CIN123", capturedPayload!.OptionalProperties["ActiveCIN"]);
+        Assert.Equal("CLA456", capturedPayload.OptionalProperties["ActiveCLA"]);
+        Assert.Equal("CP789", capturedPayload.OptionalProperties["ActiveCP"]);
+        Assert.Equal("EHM321", capturedPayload.OptionalProperties["ActiveEHM"]);
+        Assert.Equal("A1 - White-British", capturedPayload.OptionalProperties["Ethnicity"]);
+        Assert.Equal("Settled", capturedPayload.OptionalProperties["ImmigrationStatus"]);
 
         // Clean up
         if (File.Exists(filePath))
