@@ -50,7 +50,7 @@ public sealed class MatchingServiceTests
         };
 
         // Act 
-        var result = await _sut.SearchAsync(personSpecification);
+        await _sut.SearchAsync(personSpecification);
 
         // Assert
         _loggerMock.Verify(logger => logger.Log(

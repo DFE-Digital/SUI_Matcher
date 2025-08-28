@@ -9,6 +9,8 @@ using Shared.Logging;
 using Shared.Models;
 using Shared.Util;
 
+using JsonSerializer = System.Text.Json.JsonSerializer;
+
 namespace MatchingApi.Services;
 
 public class MatchingService(
@@ -138,7 +140,7 @@ public class MatchingService(
             personSpecification.Gender ?? "Unknown",
             personSpecification.AddressPostalCode ?? "Unknown",
             JsonConvert.SerializeObject(dataQualityResult.ToDictionary()),
-            JsonConvert.SerializeObject(personSpecification.OptionalProperties)
+            JsonSerializer.Serialize(personSpecification.OptionalProperties)
         );
     }
 
