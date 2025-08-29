@@ -9,6 +9,8 @@ using Shared.Logging;
 using Shared.Models;
 using Shared.Util;
 
+using JsonSerializer = System.Text.Json.JsonSerializer;
+
 namespace MatchingApi.Services;
 
 public class MatchingService(
@@ -130,14 +132,15 @@ public class MatchingService(
             : "Unknown";
 
         logger.LogInformation(
-            "[MATCH_COMPLETED] [ConfidenceScore={Score}] [ProcessStage={Stage}] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, DataQuality: {DataQuality}",
+            "[MATCH_COMPLETED] [ConfidenceScore={Score}] [ProcessStage={Stage}] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, DataQuality: {DataQuality}, OptionalProperties: {OptionalProperties}",
             score,
             resultProcessStage,
             matchStatus,
             ageGroup,
             personSpecification.Gender ?? "Unknown",
             personSpecification.AddressPostalCode ?? "Unknown",
-            JsonConvert.SerializeObject(dataQualityResult.ToDictionary())
+            JsonConvert.SerializeObject(dataQualityResult.ToDictionary()),
+            JsonSerializer.Serialize(personSpecification.OptionalProperties)
         );
     }
 

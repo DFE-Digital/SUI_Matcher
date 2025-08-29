@@ -84,8 +84,8 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
                 Email = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
                 AddressPostalCode = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
                 Gender = watcherConfig.Value.EnableGenderSearch ? gender : null,
+                OptionalProperties = GetOptionalFields(record)
             };
-
 
             var response = await matchPersonApi.MatchPersonAsync(payload);
 
@@ -106,6 +106,46 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, stats);
 
         return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
+    }
+
+    private static Dictionary<string, object> GetOptionalFields(Dictionary<string, string> record)
+    {
+        // As we cannot guarantee the presence of these fields in the CSV, we will check and only add them if they exist and are non-empty.
+        var optionalFields = new Dictionary<string, object>();
+        var activeCin = record.GetFirstValueOrDefault(["ActiveCIN"]);
+        var activeCla = record.GetFirstValueOrDefault(["ActiveCLA"]);
+        var activeCp = record.GetFirstValueOrDefault(["ActiveCP"]);
+        var activeEhm = record.GetFirstValueOrDefault(["ActiveEHM"]);
+        var ethnicity = record.GetFirstValueOrDefault(["Ethnicity"]);
+        var immigrationStatus = record.GetFirstValueOrDefault(["ImmigrationStatus"]);
+        if (!string.IsNullOrWhiteSpace(activeCin))
+        {
+            optionalFields.TryAdd("ActiveCIN", activeCin);
+        }
+        if (!string.IsNullOrWhiteSpace(activeCla))
+        {
+            optionalFields.TryAdd("ActiveCLA", activeCla);
+        }
+        if (!string.IsNullOrWhiteSpace(activeCp))
+        {
+            optionalFields.TryAdd("ActiveCP", activeCp);
+        }
+        if (!string.IsNullOrWhiteSpace(activeEhm))
+        {
+            optionalFields.TryAdd("ActiveEHM", activeEhm);
+        }
+
+        if (!string.IsNullOrWhiteSpace(ethnicity))
+        {
+            optionalFields.TryAdd("Ethnicity", ethnicity);
+        }
+
+        if (!string.IsNullOrWhiteSpace(immigrationStatus))
+        {
+            optionalFields.TryAdd("ImmigrationStatus", immigrationStatus);
+        }
+
+        return optionalFields;
     }
 
 
