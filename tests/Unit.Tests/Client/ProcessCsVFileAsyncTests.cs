@@ -78,7 +78,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
         };
         var tempDir = Path.GetTempPath();
         var watcherConfig =
-            Options.Create(new CsvWatcherConfig() { SuccessfulMatchedDirectory = $"{tempDir}/Processed/Matched" });
+            Options.Create(new CsvWatcherConfig() { MatchedRecordsDirectory = $"{tempDir}/Processed/Matched" });
 
         mockApi.SetupSequence(x => x.MatchPersonAsync(It.IsAny<MatchPersonPayload>()))
             .ReturnsAsync(new PersonMatchResponse()
