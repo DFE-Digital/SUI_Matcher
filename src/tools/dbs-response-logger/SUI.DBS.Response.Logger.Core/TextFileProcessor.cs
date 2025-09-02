@@ -157,8 +157,15 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
     private static void StoreUniqueSearchIdFor(MatchPersonResult matchPersonResult)
     {
+        var gender = PersonSpecificationUtils.ToGenderFromNumber(matchPersonResult.Gender);
+
+        if (!DateOnly.TryParseExact(matchPersonResult.BirthDate, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var birthDate))
+        {
+            birthDate = DateOnly.MinValue;
+        }
+        var birthDateString = birthDate == DateOnly.MinValue ? string.Empty : birthDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
         var data = $"{matchPersonResult.Given}{matchPersonResult.Family}" +
-                   $"{matchPersonResult.BirthDate}{matchPersonResult.Gender}{matchPersonResult.PostCode}";
+                   $"{birthDateString}{gender}{matchPersonResult.PostCode}";
 
         byte[] bytes = Encoding.ASCII.GetBytes(data);
         byte[] hashBytes = SHA256.HashData(bytes);
