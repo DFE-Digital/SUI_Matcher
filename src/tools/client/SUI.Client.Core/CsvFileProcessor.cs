@@ -123,10 +123,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
     {
         if (!string.IsNullOrEmpty(watcherConfig.Value.MatchedRecordsDirectory))
         {
-            if (!Directory.Exists(watcherConfig.Value.MatchedRecordsDirectory))
-            {
-                Directory.CreateDirectory(watcherConfig.Value.MatchedRecordsDirectory);
-            }
+            Directory.CreateDirectory(watcherConfig.Value.MatchedRecordsDirectory);
 
             var successOutputFilePath = GetOutputFileName(ts, watcherConfig.Value.MatchedRecordsDirectory, Path.GetFileName(filePath), "matched");
             var matchedRecords = records.Where(x => x.TryGetValue(HeaderStatus, out var status) && status == nameof(MatchStatus.Match)).ToList();
