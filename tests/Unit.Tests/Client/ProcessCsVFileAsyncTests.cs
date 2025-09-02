@@ -14,8 +14,8 @@ namespace Unit.Tests.Client;
 
 public class ProcessCsVFileAsyncTests : IDisposable
 {
-    private List<string> _testFiles = new();
-    
+    private readonly List<string> _testFiles = [];
+
     [Fact]
     public async Task ProcessCsvFileAsync_PassesExistingAllOptionalFieldsToMatchPersonAsync()
     {
@@ -137,15 +137,15 @@ public class ProcessCsVFileAsyncTests : IDisposable
         Assert.Single(_testFiles);
 
         var content = await File.ReadAllLinesAsync(_testFiles.First());
-        
+
         Assert.Equal(2, content.Length); // Header + 1 record with Match
-        
+
         var contentRowSplit = content[1].Split(",");
         Assert.Contains("123467890", contentRowSplit.Last()); // First and only record should have NhsNumber
         Assert.Equal("L1", contentRowSplit.First()); // First and only record should have NhsNumber
-        
+
     }
-    
+
     public void Dispose()
     {
         // Cleanup any resources if necessary

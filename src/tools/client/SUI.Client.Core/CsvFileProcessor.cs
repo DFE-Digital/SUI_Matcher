@@ -41,7 +41,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
 
         var outputDirectory = Path.Combine(outputPath, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(filePath)));
         Directory.CreateDirectory(outputDirectory);
-        
+
 
         var stats = new CsvProcessStats();
         (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
@@ -100,12 +100,12 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         progressStopwatch.Stop();
 
         await CreateMatchedCsvIfEnabled(filePath, ts, records, headers);
-        
+
 
         var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
         await WriteCsvAsync(outputFilePath, headers, records);
-        
+
         var pdfReport = PdfReportGenerator.GenerateReport(stats, GetOutputFileName(ts, outputDirectory, "report.pdf"));
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, stats);
 
@@ -123,11 +123,11 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
     {
         if (!string.IsNullOrEmpty(watcherConfig.Value.MatchedRecordsDirectory))
         {
-            if(!Directory.Exists(watcherConfig.Value.MatchedRecordsDirectory)) 
+            if (!Directory.Exists(watcherConfig.Value.MatchedRecordsDirectory))
             {
                 Directory.CreateDirectory(watcherConfig.Value.MatchedRecordsDirectory);
             }
-            
+
             var successOutputFilePath = GetOutputFileName(ts, watcherConfig.Value.MatchedRecordsDirectory, Path.GetFileName(filePath), "matched");
             var matchedRecords = records.Where(x => x.TryGetValue(HeaderStatus, out var status) && status == nameof(MatchStatus.Match)).ToList();
             logger.LogInformation("Writing matched records CSV file to: {SuccessOutputFilePath}. Matched record count {Count}", successOutputFilePath, matchedRecords.Count);
@@ -215,7 +215,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         var extension = Path.GetExtension(fileName);
         return Path.Combine(outputDirectory, $"{filenameWithoutExt}_output_{timestamp}{extension}");
     }
-    
+
     private static string GetOutputFileName(string timestamp, string outputDirectory, string fileName, string fileSuffix)
     {
         var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);

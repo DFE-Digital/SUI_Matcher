@@ -249,60 +249,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public async Task ShouldOutputSuccessMatchesWithNhsNumber_WhenConfigHasDirectorySet()
-    {
-        var searchResultBad = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.55m, Type = SearchResult.ResultType.Unmatched };
-        var searchResultSuccess = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.99m, Type = SearchResult.ResultType.Matched };
-        
-        _nhsFhirClient.SetupSequence(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .Returns(() => Task.FromResult<SearchResult?>(searchResultBad))
-            .Returns(() => Task.FromResult<SearchResult?>(searchResultSuccess));
-        
-        var cts = new CancellationTokenSource();
-        var provider = Bootstrap(x =>
-        {
-            x.AddSingleton(_nhsFhirClient.Object);
-            x.Configure<CsvWatcherConfig>(wc =>
-            {
-                wc.IncomingDirectory = _dir.IncomingDirectoryPath;
-                wc.ProcessedDirectory = _dir.ProcessedDirectoryPath;
-                wc.EnableGenderSearch = false; // Disable
-            });
-        });
-        
-        var monitor = provider.GetRequiredService<CsvFileMonitor>();
-        var monitoringTask = monitor.StartAsync(cts.Token);
-
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        
-        var data = new D
-        {
-            [TestDataHeaders.GivenName] = "John",
-            [TestDataHeaders.Surname] = "Smith-G",
-            [TestDataHeaders.DOB] = "2000-04-01",
-            [TestDataHeaders.Email] = "test@test.com",
-            [TestDataHeaders.Gender] = "1",
-        };
-
-        var list = new List<D> { data };
-        var headers = new HashSet<string>(data.Keys);
-        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00007.csv"), headers, list);
-        
-        monitor.Processed += (_, _) => tcs.SetResult();
-        await tcs.Task; // await processing of that file
-        await cts.CancelAsync();   // cancel the task
-        await monitoringTask; // await file watcher stop
-
-        // ASSERTS
-        if (monitor.GetLastOperation().Exception != null)
-        {
-            throw monitor.GetLastOperation().Exception!;
-        }
-        
-        // Read the output CSV file
-    }
-
-    [Fact]
     public async Task TestOneFileSingleMatch_GenderNotSentIfGenderFlagIsOff()
     {
         var searchResultBad = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.55m, Type = SearchResult.ResultType.Unmatched };
