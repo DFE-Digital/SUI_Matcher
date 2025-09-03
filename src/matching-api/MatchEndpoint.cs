@@ -2,8 +2,13 @@ using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.AspNetCore.Mvc;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 using Shared.Endpoint;
 using Shared.Models;
+
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace MatchingApi;
 
@@ -63,8 +68,15 @@ public class MatchEndpoint(IMatchingService matchingService, IReconciliationServ
             }
 
             var result = await reconciliationService.ReconcileAsync(model);
-
-            return result is null ? Results.BadRequest(result) : Results.Ok(result);
+            var options = new JsonSerializerSettings()
+            {
+                Converters = new List<JsonConverter>
+                {
+                    new StringEnumConverter()
+                }
+            };
+            var json = JsonConvert.SerializeObject(result, options);
+            return result is null ? Results.BadRequest(result) : Results.Content(json, "application/json");
         });
 
         if (configuration.GetValue<bool>("EnableAuth"))

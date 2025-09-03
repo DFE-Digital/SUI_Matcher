@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 
-using Shared.Converter;
-
 namespace Shared.Models;
 
 public class NhsPerson

@@ -16,7 +16,7 @@ public abstract class CsvFileProcessorBase
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 
-    protected static string WriteStatsJsonFile(string outputDirectory, string ts, CsvProcessStats stats)
+    protected static string WriteStatsJsonFile(string outputDirectory, string ts, object stats)
     {
         var statsJsonFileName = MatchingCsvFileProcessor.GetOutputFileName(ts, outputDirectory, "stats.json");
         File.WriteAllText(statsJsonFileName, JsonSerializer.Serialize(stats, MatchingCsvFileProcessor.JsonSerializerOptions));

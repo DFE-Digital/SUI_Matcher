@@ -35,7 +35,7 @@ public class MatchingCsvFileProcessor(
         var outputDirectory = Path.Combine(outputPath, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(filePath)));
         Directory.CreateDirectory(outputDirectory);
 
-        var stats = new CsvProcessStats();
+        var stats = new MatchingCsvProcessStats();
         (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
 
         headers.Add(HeaderStatus);
@@ -106,7 +106,7 @@ public class MatchingCsvFileProcessor(
         return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
     }
 
-    private static void RecordStats(CsvProcessStats stats, PersonMatchResponse? response)
+    private static void RecordStats(MatchingCsvProcessStats stats, PersonMatchResponse? response)
     {
         stats.Count++;
         switch (response?.Result?.MatchStatus)

@@ -1,3 +1,5 @@
+using Newtonsoft.Json.Converters;
+
 namespace Shared.Models;
 
 public class ReconciliationResponse
@@ -8,5 +10,6 @@ public class ReconciliationResponse
 
     public List<Difference>? Differences { get; set; }
 
+    [JsonConverter(typeof(StringEnumConverter))]
     public ReconciliationStatus Status { get; set; }
 }

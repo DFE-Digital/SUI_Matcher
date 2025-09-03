@@ -37,7 +37,7 @@ public class ReconciliationCsvFileProcessor(
         var outputDirectory = Path.Combine(outputPath, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(filePath)));
         Directory.CreateDirectory(outputDirectory);
 
-        var stats = new CsvProcessStats();
+        var stats = new ReconciliationCsvProcessStats();
         (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
 
         headers.Add(HeaderNhsNo);
@@ -115,32 +115,32 @@ public class ReconciliationCsvFileProcessor(
         await WriteCsvAsync(outputFilePath, headers, records);
 
         string[] categories = ["Errored", "No Differences", "One Difference", "Many Differences", "Superseded NHS Number"];
-        double[] values = [stats.ErroredCount, stats.CountMatched, stats.CountPotentialMatch, stats.CountManyMatch, stats.CountNoMatch];
+        double[] values = [stats.ErroredCount, stats.NoDifferenceCount, stats.OneDifferenceCount, stats.ManyDifferencesCount, stats.SupersededNhsNumber];
         var pdfReport = PdfReportGenerator.GenerateReport(GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"), "Reconciliation Report", categories, values);
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, stats);
 
         return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
     }
 
-    private static void RecordStats(CsvProcessStats stats, ReconciliationResponse? response)
+    private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response)
     {
         stats.Count++;
         switch (response?.Status)
         {
             case ReconciliationStatus.NoDifferences:
-                stats.CountMatched++;
+                stats.NoDifferenceCount++;
                 break;
 
             case ReconciliationStatus.ManyDifferences:
-                stats.CountManyMatch++;
+                stats.ManyDifferencesCount++;
                 break;
 
             case ReconciliationStatus.SupersededNhsNumber:
-                stats.CountNoMatch++;
+                stats.SupersededNhsNumber++;
                 break;
 
             case ReconciliationStatus.OneDifference:
-                stats.CountPotentialMatch++;
+                stats.OneDifferenceCount++;
                 break;
             case ReconciliationStatus.Error:
                 stats.ErroredCount++;
