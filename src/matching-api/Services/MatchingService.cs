@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Security.Cryptography;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -27,7 +26,7 @@ public class MatchingService(
 
         StoreAlgorithmVersion();
 
-        var searchId = StoreUniqueSearchIdFor(personSpecification);
+        var searchId = HashUtil.StoreUniqueSearchIdFor(personSpecification);
         var auditDetails = new Dictionary<string, string>
         {
             { "SearchId", searchId }
@@ -142,27 +141,6 @@ public class MatchingService(
             JsonConvert.SerializeObject(dataQualityResult.ToDictionary()),
             JsonSerializer.Serialize(personSpecification.OptionalProperties)
         );
-    }
-
-    private static string StoreUniqueSearchIdFor(PersonSpecification personSpecification)
-    {
-        var data = $"{personSpecification.Given}{personSpecification.Family}" +
-                   $"{personSpecification.BirthDate}{personSpecification.Gender}{personSpecification.AddressPostalCode}";
-
-        byte[] bytes = Encoding.ASCII.GetBytes(data);
-        byte[] hashBytes = SHA256.HashData(bytes);
-
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < hashBytes.Length; i++)
-        {
-            builder.Append(hashBytes[i].ToString("x2"));
-        }
-
-        var hash = builder.ToString();
-
-        Activity.Current?.SetBaggage("SearchId", hash);
-
-        return hash;
     }
 
     private static OrderedDictionary<string, SearchQuery> GetSearchQueries(PersonSpecification model)
