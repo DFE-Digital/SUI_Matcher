@@ -42,6 +42,7 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         var outputDirectory = Path.Combine(outputPath, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(filePath)));
         Directory.CreateDirectory(outputDirectory);
 
+
         var stats = new CsvProcessStats();
         (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
 
@@ -98,6 +99,9 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
 
         progressStopwatch.Stop();
 
+        await CreateMatchedCsvIfEnabled(filePath, ts, records, headers);
+
+
         var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
         await WriteCsvAsync(outputFilePath, headers, records);
@@ -106,6 +110,26 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, stats);
 
         return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
+    }
+
+    /// <summary>
+    /// Creates a new file with only 'Match' status into a specified directory
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="ts"></param>
+    /// <param name="records"></param>
+    /// <param name="headers"></param>
+    private async Task CreateMatchedCsvIfEnabled(string filePath, string ts, List<Dictionary<string, string>> records, HashSet<string> headers)
+    {
+        if (!string.IsNullOrEmpty(watcherConfig.Value.MatchedRecordsDirectory))
+        {
+            Directory.CreateDirectory(watcherConfig.Value.MatchedRecordsDirectory);
+
+            var successOutputFilePath = GetOutputFileName(ts, watcherConfig.Value.MatchedRecordsDirectory, Path.GetFileName(filePath), "matched");
+            var matchedRecords = records.Where(x => x.TryGetValue(HeaderStatus, out var status) && status == nameof(MatchStatus.Match)).ToList();
+            logger.LogInformation("Writing matched records CSV file to: {SuccessOutputFilePath}. Matched record count {Count}", successOutputFilePath, matchedRecords.Count);
+            await WriteCsvAsync(successOutputFilePath, headers, matchedRecords);
+        }
     }
 
     private static Dictionary<string, object> GetOptionalFields(Dictionary<string, string> record)
@@ -187,6 +211,13 @@ public class CsvFileProcessor(ILogger<CsvFileProcessor> logger, CsvMappingConfig
         var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
         var extension = Path.GetExtension(fileName);
         return Path.Combine(outputDirectory, $"{filenameWithoutExt}_output_{timestamp}{extension}");
+    }
+
+    private static string GetOutputFileName(string timestamp, string outputDirectory, string fileName, string fileSuffix)
+    {
+        var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+        var extension = Path.GetExtension(fileName);
+        return Path.Combine(outputDirectory, $"{filenameWithoutExt}_{fileSuffix}_output_{timestamp}{extension}");
     }
 
     public static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(string filePath)
