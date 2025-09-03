@@ -225,6 +225,7 @@ Makes the external calls to the NHS PDS endpoints. Will get secerts from keyvaul
 
 ### Search Criteria
 
+Below there is reference to scoring. This scoring is the confidence score that is returned by the NHS when we perform a search. More information can be found about that in the scoring section here: [PDS FHIR Search](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient)
 ```mermaid
 ---
 title: Matching conditions flow
@@ -265,13 +266,16 @@ stateDiagram-v2
 
 ```
 
-The search critera being used for the start of the pilot is as below, and is subject to change as real-world data and match rates are evaluated.
+The search critera being used for the pilot is as below, and is subject to change as real-world data and match rates are evaluated.
 
 | Rule Order   | Search       | Example        | Returns       |
 | :---         | :---         |     :---       |          :--- |
-| 1 | fuzzy search with given name, family name and DOB. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 2 | fuzzy search with given name, family name and DOB range 6 months either side of given date. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1961-01-09` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES |
-| 3 | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES |
+| 1 | Exact search with given name, family name and DOB. | `_exact-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 2 | Exact search with all provided values. | `_exact-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 3 | fuzzy search with given name, family name and DOB. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 4 | fuzzy search with all provided values. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09` `gender`=`male` `address-postalcode`=`WN4 9BP` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 5 | fuzzy search with given name, family name and DOB range 6 months either side of given date. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1961-01-09` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES |
+| 6 | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES |
 
 Definition of fuzzy search is defined here: [NHS FHIR API Search](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient).
 

@@ -161,19 +161,17 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
                    $"{matchPersonResult.BirthDate}{matchPersonResult.Gender}{matchPersonResult.PostCode}";
 
         byte[] bytes = Encoding.ASCII.GetBytes(data);
-        byte[] hashBytes = MD5.HashData(bytes);
+        byte[] hashBytes = SHA256.HashData(bytes);
 
-        StringBuilder builder = new();
+        StringBuilder builder = new StringBuilder();
 
-        foreach (var t in hashBytes)
+        for (int i = 0; i < hashBytes.Length; i++)
         {
-            builder.Append(t.ToString("x2"));
+            builder.Append(hashBytes[i].ToString("x2"));
         }
 
         var hash = builder.ToString();
 
         Activity.Current?.SetBaggage("SearchId", hash);
     }
-
-
 }

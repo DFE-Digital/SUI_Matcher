@@ -28,7 +28,7 @@ jobs:
         run: dotnet format --verify-no-changes --verbosity diagnostic
 
       - name: Setup Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: "microsoft"
           java-version: 21

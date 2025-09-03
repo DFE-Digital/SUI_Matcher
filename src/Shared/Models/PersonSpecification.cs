@@ -56,4 +56,7 @@ public class PersonSpecification
     [RegularExpression("^(([A-Z][0-9]{1,2})|(([A-Z][A-HJ-Y][0-9]{1,2})|(([A-Z][0-9][A-Z])|([A-Z][A-HJ-Y][0-9]?[A-Z])))) [0-9][A-Z]{2}$", ErrorMessage = PersonValidationConstants.PostCodeInvalid)]
     [JsonPropertyName("addresspostalcode")]
     public string? AddressPostalCode { get; set; }
+
+    [JsonPropertyName("optionalProperties")]
+    public Dictionary<string, object> OptionalProperties { get; set; } = new();
 }

@@ -32,6 +32,7 @@ await argResult.WithParsedAsync(async parsedArgs =>
             x.IncomingDirectory = parsedArgs.InputDirectory;
             x.ProcessedDirectory = parsedArgs.OutputDirectory;
             x.EnableGenderSearch = parsedArgs.EnableGenderSearch;
+            x.MatchedRecordsDirectory = parsedArgs.MatchedRecordsDirectory;
         });
         services.AddHttpClient<IMatchPersonApiService, MatchPersonApiService>(async void (client) =>
         {
