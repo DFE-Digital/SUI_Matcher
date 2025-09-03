@@ -7,9 +7,8 @@ using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 
+using Shared.Models;
 using Shared.Util;
-
-using SUI.DBS.Response.Logger.Core.Models;
 
 namespace SUI.DBS.Response.Logger.Core;
 
@@ -61,7 +60,7 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
             var result = ParseMatchPersonResult(recordColumns, recordData);
 
-            StoreUniqueSearchIdFor(result);
+            HashUtil.StoreUniqueSearchIdFor(result);
 
             var matched = !string.IsNullOrWhiteSpace(result.NhsNumber);
 
@@ -74,16 +73,18 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
                 ++noMatches;
             }
 
-            var ageGroup = !string.IsNullOrWhiteSpace(result.BirthDate)
-                ? GetAgeGroup(ToDateOnly(result.BirthDate)!.Value)
-                : "Unknown";
+            var ageGroup = "Unknown";
+            if (result.BirthDate.HasValue)
+            {
+                ageGroup = GetAgeGroup(result.BirthDate.Value);
+            }
 
             logger.LogInformation(
                 "[MATCH_COMPLETED] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}",
                 matched ? "Match" : "NoMatch",
                 ageGroup,
                 PersonSpecificationUtils.ToGenderFromNumber(result.Gender),
-                ToPostCode(result.PostCode)
+                ToPostCode(result.AddressPostalCode)
             );
         }
 
@@ -112,13 +113,13 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
                     result.Family = column;
                     break;
                 case RecordColumn.BirthDate:
-                    result.BirthDate = column;
+                    result.BirthDate = ToDateOnly(column);
                     break;
                 case RecordColumn.Gender:
                     result.Gender = column;
                     break;
                 case RecordColumn.PostCode:
-                    result.PostCode = column;
+                    result.AddressPostalCode = column;
                     break;
                 case RecordColumn.NhsNumber:
                     result.NhsNumber = column;
@@ -128,10 +129,8 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
         return result;
     }
-
     private static DateOnly? ToDateOnly(string? value)
         => !string.IsNullOrWhiteSpace(value) && DateOnly.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) ? date : null;
-
     public static string ToPostCode(string? value)
         => !string.IsNullOrWhiteSpace(value) ? value : "Unknown";
     public static string GetAgeGroup(DateOnly birthDate)
@@ -153,25 +152,5 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
             <= 18 => "16-18 years",
             _ => "Over 18 years"
         };
-    }
-
-    private static void StoreUniqueSearchIdFor(MatchPersonResult matchPersonResult)
-    {
-        var data = $"{matchPersonResult.Given}{matchPersonResult.Family}" +
-                   $"{matchPersonResult.BirthDate}{matchPersonResult.Gender}{matchPersonResult.PostCode}";
-
-        byte[] bytes = Encoding.ASCII.GetBytes(data);
-        byte[] hashBytes = SHA256.HashData(bytes);
-
-        StringBuilder builder = new StringBuilder();
-
-        for (int i = 0; i < hashBytes.Length; i++)
-        {
-            builder.Append(hashBytes[i].ToString("x2"));
-        }
-
-        var hash = builder.ToString();
-
-        Activity.Current?.SetBaggage("SearchId", hash);
     }
 }
