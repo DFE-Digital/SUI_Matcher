@@ -7,8 +7,8 @@ using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 
-using Shared.Util;
 using Shared.Models;
+using Shared.Util;
 
 namespace SUI.DBS.Response.Logger.Core;
 

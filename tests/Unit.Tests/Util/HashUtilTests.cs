@@ -1,7 +1,9 @@
 using System;
 using System.Globalization;
+
 using Shared.Models;
 using Shared.Util;
+
 using Xunit;
 
 namespace Unit.Tests.Util;
@@ -58,7 +60,7 @@ public class HashUtilTest
     [InlineData("1")] // assuming ToGenderFromNumber("1") returns "male"
     [InlineData("")]
     [InlineData(null)]
-    public void StoreUniqueSearchIdFor_HandlesGenderVariants(string genderInput)
+    public void StoreUniqueSearchIdFor_HandlesGenderVariants(string? genderInput)
     {
         var person = new PersonSpecification
         {
