@@ -7,42 +7,40 @@ namespace Shared.Util;
 
 public static class HashUtil
 {
-    public static string StoreUniqueSearchIdFor(PersonSpecification personSpecification)
+    private static string FormatGender(string inputGender)
     {
-        var given = string.IsNullOrWhiteSpace(personSpecification.Given) ? "" : personSpecification.Given!.ToLowerInvariant();
-        var family = string.IsNullOrWhiteSpace(personSpecification.Family) ? "" : personSpecification.Family!.ToLowerInvariant();
-
         string gender = "";
-        if (string.IsNullOrWhiteSpace(personSpecification.Gender))
+        if (string.IsNullOrWhiteSpace(inputGender))
         {
             gender = "";
         }
-        else if (int.TryParse(personSpecification.Gender, out _))
+        else if (int.TryParse(inputGender, out _))
         {
-            gender = PersonSpecificationUtils.ToGenderFromNumber(personSpecification.Gender);
+            gender = PersonSpecificationUtils.ToGenderFromNumber(inputGender);
         }
         else
         {
-            gender = personSpecification.Gender!;
+            gender = inputGender!;
         }
-
-        string birthDate = "";
-        if (personSpecification.BirthDate is DateOnly date)
+        return gender;
+    }
+    private static string FormatPostalCode(string inputPostalCode)
+    {
+        if (string.IsNullOrWhiteSpace(inputPostalCode))
         {
-            birthDate = date.ToString("dd/MM/yyyy");
+            return "";
         }
+        return new string(inputPostalCode
+            .Where(c => !char.IsWhiteSpace(c))
+            .ToArray())
+            .ToLowerInvariant();
+    }
 
-        string postalCode = "";
-        if (!string.IsNullOrWhiteSpace(personSpecification.AddressPostalCode))
-        {
-            postalCode = new string(personSpecification.AddressPostalCode
-                .Where(c => !char.IsWhiteSpace(c))
-                .ToArray())
-                .ToLowerInvariant();
-        }
+    private static string FormatName(string name) => string.IsNullOrWhiteSpace(name) ? "" : name!.ToLowerInvariant();
+    private static string FormatBirthDate(DateOnly? birthDate) => birthDate is DateOnly date ? date.ToString("dd/MM/yyyy") : "";
 
-        var data = $"{given}{family}{birthDate}{gender}{postalCode}";
-
+    private static string CreateHash(string data)
+    {
         byte[] bytes = Encoding.ASCII.GetBytes(data);
         byte[] hashBytes = SHA256.HashData(bytes);
 
@@ -52,62 +50,41 @@ public static class HashUtil
             builder.Append(hashBytes[i].ToString("x2"));
         }
 
-        var hash = builder.ToString();
+        return builder.ToString();
+    }
+    private static string PrepareDataString(string given, string family, string birthDate, string gender, string postalCode)
+    {
+        return $"{given}{family}{birthDate}{gender}{postalCode}";
+    }
+
+    public static string StoreUniqueSearchIdFor(PersonSpecification personSpecification)
+    {
+        var given = FormatName(personSpecification.Given!);
+        var family = FormatName(personSpecification.Family!);
+        var gender = FormatGender(personSpecification.Gender!);
+        var birthDate = FormatBirthDate(personSpecification.BirthDate!);
+        var postalCode = FormatPostalCode(personSpecification.AddressPostalCode!);
+
+        var data = PrepareDataString(given, family, birthDate, gender, postalCode);
+        var hash = CreateHash(data);
 
         Activity.Current?.SetBaggage("SearchId", hash);
-
         return hash;
     }
 
     public static string StoreUniqueSearchIdFor(MatchPersonResult personSpecification)
     {
-        var given = string.IsNullOrWhiteSpace(personSpecification.Given) ? "" : personSpecification.Given!.ToLowerInvariant();
-        var family = string.IsNullOrWhiteSpace(personSpecification.Family) ? "" : personSpecification.Family!.ToLowerInvariant();
+        var given = FormatName(personSpecification.Given!);
+        var family = FormatName(personSpecification.Family!);
+        var gender = FormatGender(personSpecification.Gender!);
+        var birthDate = FormatBirthDate(personSpecification.BirthDate!);
+        var postalCode = FormatPostalCode(personSpecification.AddressPostalCode!);
 
-        string gender = "";
-        if (string.IsNullOrWhiteSpace(personSpecification.Gender))
-        {
-            gender = "";
-        }
-        else if (int.TryParse(personSpecification.Gender, out _))
-        {
-            gender = PersonSpecificationUtils.ToGenderFromNumber(personSpecification.Gender);
-        }
-        else
-        {
-            gender = personSpecification.Gender!;
-        }
-
-        string birthDate = "";
-        if (personSpecification.BirthDate is DateOnly date)
-        {
-            birthDate = date.ToString("dd/MM/yyyy");
-        }
-
-        string postalCode = "";
-        if (!string.IsNullOrWhiteSpace(personSpecification.AddressPostalCode))
-        {
-            postalCode = new string(personSpecification.AddressPostalCode
-                .Where(c => !char.IsWhiteSpace(c))
-                .ToArray())
-                .ToLowerInvariant();
-        }
-
-        var data = $"{given}{family}{birthDate}{gender}{postalCode}";
-
-        byte[] bytes = Encoding.ASCII.GetBytes(data);
-        byte[] hashBytes = SHA256.HashData(bytes);
-
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < hashBytes.Length; i++)
-        {
-            builder.Append(hashBytes[i].ToString("x2"));
-        }
-
-        var hash = builder.ToString();
+        var data = PrepareDataString(given, family, birthDate, gender, postalCode);
+        var hash = CreateHash(data);
 
         Activity.Current?.SetBaggage("SearchId", hash);
-
         return hash;
     }
+
 }
