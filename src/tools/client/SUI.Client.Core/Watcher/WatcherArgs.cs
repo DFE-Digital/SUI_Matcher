@@ -21,7 +21,7 @@ public class WatcherArgs
 
     [Option('r', "enable-reconciliation", Required = false, HelpText = "Enable reconciliation report.")]
     public bool EnableReconciliation { get; set; } = false;
-    
+
     [Option('m', "matched-dir", Required = false, HelpText = "Directory to write matched records to. If not set, this feature is disabled.")]
     public string? MatchedRecordsDirectory { get; set; }
 }
