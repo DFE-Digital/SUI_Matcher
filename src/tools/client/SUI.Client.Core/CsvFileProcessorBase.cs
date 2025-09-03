@@ -18,8 +18,8 @@ public abstract class CsvFileProcessorBase
 
     protected static string WriteStatsJsonFile(string outputDirectory, string ts, object stats)
     {
-        var statsJsonFileName = MatchingCsvFileProcessor.GetOutputFileName(ts, outputDirectory, "stats.json");
-        File.WriteAllText(statsJsonFileName, JsonSerializer.Serialize(stats, MatchingCsvFileProcessor.JsonSerializerOptions));
+        var statsJsonFileName = GetOutputFileName(ts, outputDirectory, "stats.json");
+        File.WriteAllText(statsJsonFileName, JsonSerializer.Serialize(stats, JsonSerializerOptions));
         return statsJsonFileName;
     }
 
@@ -30,12 +30,19 @@ public abstract class CsvFileProcessorBase
         return Path.Combine(outputDirectory, $"{filenameWithoutExt}_output_{timestamp}{extension}");
     }
 
+    protected static string GetOutputFileName(string timestamp, string outputDirectory, string fileName, string fileSuffix)
+    {
+        var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+        var extension = Path.GetExtension(fileName);
+        return Path.Combine(outputDirectory, $"{filenameWithoutExt}_{fileSuffix}_output_{timestamp}{extension}");
+    }
+
     public static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(string filePath)
     {
         var headers = new HashSet<string>();
         var records = new List<Dictionary<string, string>>();
 
-        if (!await MatchingCsvFileProcessor.IsFileReadyAsync(filePath))
+        if (!await IsFileReadyAsync(filePath))
         {
             throw new IOException($"File {filePath} is not ready for reading.");
         }

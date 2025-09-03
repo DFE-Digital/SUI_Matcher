@@ -19,7 +19,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
     [Fact]
     public async Task ProcessCsvFileAsync_PassesExistingAllOptionalFieldsToMatchPersonAsync()
     {
-        var mockLogger = new Mock<ILogger<CsvFileProcessor>>();
+        var mockLogger = new Mock<ILogger<MatchingCsvFileProcessor>>();
         var mockApi = new Mock<IMatchPersonApiService>();
         var mapping = new CsvMappingConfig { /* set up mappings as needed */ };
         var watcherConfig = Options.Create(new CsvWatcherConfig { EnableGenderSearch = true });
@@ -29,7 +29,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
             .Callback<MatchPersonPayload>(p => capturedPayload = p)
             .ReturnsAsync(new PersonMatchResponse());
 
-        var processor = new CsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
+        var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
 
         // Prepare test CSV file with all optional fields
         var tempDir = Path.GetTempPath();
@@ -53,7 +53,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 ["ImmigrationStatus"] = "Settled"
             }
         };
-        await CsvFileProcessor.WriteCsvAsync(filePath, headers, records);
+        await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, records);
         _testFiles.Add(filePath);
 
         await processor.ProcessCsvFileAsync(filePath, outputPath);
@@ -70,7 +70,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
     [Fact]
     public async Task ProcessCsvFileAsync_ShouldOutputSuccessfulMatchedResults_ToSuccessOutputDirectory()
     {
-        var mockLogger = new Mock<ILogger<CsvFileProcessor>>();
+        var mockLogger = new Mock<ILogger<MatchingCsvFileProcessor>>();
         var mockApi = new Mock<IMatchPersonApiService>();
         var mapping = new CsvMappingConfig
         {
@@ -94,8 +94,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 Result = new MatchResult() { MatchStatus = MatchStatus.ManyMatch }
             });
 
-        var processor = new CsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
-
+        var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
 
         var filePath = Path.Combine(tempDir, "test.csv");
         var outputPath = tempDir;
@@ -127,8 +126,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
             }
         };
 
-
-        await CsvFileProcessor.WriteCsvAsync(filePath, headers, records);
+        await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, records);
         await processor.ProcessCsvFileAsync(filePath, outputPath);
 
         // Assert
@@ -143,7 +141,6 @@ public class ProcessCsVFileAsyncTests : IDisposable
         var contentRowSplit = content[1].Split(",");
         Assert.Contains("123467890", contentRowSplit.Last()); // First and only record should have NhsNumber
         Assert.Equal("L1", contentRowSplit.First()); // First and only record should have NhsNumber
-
     }
 
     public void Dispose()

@@ -440,7 +440,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             [TestDataHeaders.GivenName] = "John",
             [TestDataHeaders.Surname] = "Smith",
             [TestDataHeaders.DOB] = "2000-04-01",
-            [TestDataHeaders.Gender] = "Male",
+            [TestDataHeaders.Gender] = "1",
             [TestDataHeaders.PostCode] = "ab12 3ed",
             [TestDataHeaders.Email] = "test@test.com",
             [TestDataHeaders.Phone] = "0789 1234567"

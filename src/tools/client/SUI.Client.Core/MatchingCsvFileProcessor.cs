@@ -80,8 +80,8 @@ public class MatchingCsvFileProcessor(
                     record.GetFirstValueOrDefault(
                         mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
                 Gender = watcherConfig.Value.EnableGenderSearch ? gender : null,
+                OptionalProperties = GetOptionalFields(record),
             };
-
 
             var response = await matchPersonApi.MatchPersonAsync(payload);
 
@@ -94,6 +94,8 @@ public class MatchingCsvFileProcessor(
 
         progressStopwatch.Stop();
 
+        await CreateMatchedCsvIfEnabled(filePath, ts, records, headers);
+
         var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
         await WriteCsvAsync(outputFilePath, headers, records);
@@ -104,6 +106,66 @@ public class MatchingCsvFileProcessor(
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, stats);
 
         return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
+    }
+
+    /// <summary>
+    /// Creates a new file with only 'Match' status into a specified directory
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="ts"></param>
+    /// <param name="records"></param>
+    /// <param name="headers"></param>
+    private async Task CreateMatchedCsvIfEnabled(string filePath, string ts, List<Dictionary<string, string>> records, HashSet<string> headers)
+    {
+        if (!string.IsNullOrEmpty(watcherConfig.Value.MatchedRecordsDirectory))
+        {
+            Directory.CreateDirectory(watcherConfig.Value.MatchedRecordsDirectory);
+
+            var successOutputFilePath = GetOutputFileName(ts, watcherConfig.Value.MatchedRecordsDirectory, Path.GetFileName(filePath), "matched");
+            var matchedRecords = records.Where(x => x.TryGetValue(HeaderStatus, out var status) && status == nameof(MatchStatus.Match)).ToList();
+            logger.LogInformation("Writing matched records CSV file to: {SuccessOutputFilePath}. Matched record count {Count}", successOutputFilePath, matchedRecords.Count);
+            await WriteCsvAsync(successOutputFilePath, headers, matchedRecords);
+        }
+    }
+
+    private static Dictionary<string, object> GetOptionalFields(Dictionary<string, string> record)
+    {
+        // As we cannot guarantee the presence of these fields in the CSV, we will check and only add them if they exist and are non-empty.
+        var optionalFields = new Dictionary<string, object>();
+        var activeCin = record.GetFirstValueOrDefault(["ActiveCIN"]);
+        var activeCla = record.GetFirstValueOrDefault(["ActiveCLA"]);
+        var activeCp = record.GetFirstValueOrDefault(["ActiveCP"]);
+        var activeEhm = record.GetFirstValueOrDefault(["ActiveEHM"]);
+        var ethnicity = record.GetFirstValueOrDefault(["Ethnicity"]);
+        var immigrationStatus = record.GetFirstValueOrDefault(["ImmigrationStatus"]);
+        if (!string.IsNullOrWhiteSpace(activeCin))
+        {
+            optionalFields.TryAdd("ActiveCIN", activeCin);
+        }
+        if (!string.IsNullOrWhiteSpace(activeCla))
+        {
+            optionalFields.TryAdd("ActiveCLA", activeCla);
+        }
+        if (!string.IsNullOrWhiteSpace(activeCp))
+        {
+            optionalFields.TryAdd("ActiveCP", activeCp);
+        }
+        if (!string.IsNullOrWhiteSpace(activeEhm))
+        {
+            optionalFields.TryAdd("ActiveEHM", activeEhm);
+        }
+
+        if (!string.IsNullOrWhiteSpace(ethnicity))
+        {
+            optionalFields.TryAdd("Ethnicity", ethnicity);
+        }
+
+        if (!string.IsNullOrWhiteSpace(immigrationStatus))
+        {
+            optionalFields.TryAdd("ImmigrationStatus", immigrationStatus);
+        }
+
+        return optionalFields;
     }
 
     private static void RecordStats(MatchingCsvProcessStats stats, PersonMatchResponse? response)
