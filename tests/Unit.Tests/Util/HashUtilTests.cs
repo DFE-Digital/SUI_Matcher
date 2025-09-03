@@ -42,7 +42,7 @@ public class HashUtilTest
 
         var person2 = new PersonSpecification
         {
-            Given = "john", // changed
+            Given = "john",
             Family = "doe",
             Gender = "male",
             BirthDate = new DateOnly(1990, 1, 1),
@@ -88,10 +88,22 @@ public class HashUtilTest
             AddressPostalCode = "AB1 2CD"
         };
 
+        var matchResult = new MatchPersonResult
+        {
+            Given = "John",
+            Family = "Doe",
+            Gender = "",
+            BirthDate = new DateOnly(1990, 1, 1),
+            AddressPostalCode = "AB1 2CD"
+        };
+
         var hash = HashUtil.StoreUniqueSearchIdFor(person);
-        var hash1 = "d888422b6ca4e379b54bc61d65f054215d1f277273b212c402a884532a14cb57";
+        var hash1 = "11a67a22bfd96862741aaa727373cc9eaf9e90731f582cc9c4f09fa6dc2c604c";
+        var hash2 = HashUtil.StoreUniqueSearchIdFor(matchResult);
 
         Assert.False(string.IsNullOrWhiteSpace(hash));
+        Assert.Equal(hash, hash1);
+        Assert.Equal(hash1, hash2);
     }
 
     [Fact]
