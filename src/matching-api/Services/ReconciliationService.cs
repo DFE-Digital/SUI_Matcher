@@ -118,22 +118,22 @@ public class ReconciliationService(
             });
         }
 
-        if (!result.Emails.Contains(request.Email, StringComparer.OrdinalIgnoreCase))
+        if (result.Emails.Length == 0 && !String.IsNullOrEmpty(request.Email) || result.Emails.Length > 0 && !result.Emails.Contains(request.Email, StringComparer.OrdinalIgnoreCase))
         {
             differences.Add(new Difference { FieldName = nameof(request.Email), Local = request.Email, Nhs = string.Join(", ", result.Emails) });
         }
 
-        if (!result.PhoneNumbers.Contains(request.Phone, StringComparer.OrdinalIgnoreCase))
+        if (result.PhoneNumbers.Length == 0 && !String.IsNullOrEmpty(request.Phone) || result.PhoneNumbers.Length > 0 && !result.PhoneNumbers.Contains(request.Phone, StringComparer.OrdinalIgnoreCase))
         {
             differences.Add(new Difference { FieldName = nameof(request.Phone), Local = request.Phone, Nhs = string.Join(", ", result.PhoneNumbers) });
         }
 
-        if (!result.GivenNames.Contains(request.Given, StringComparer.OrdinalIgnoreCase))
+        if (result.GivenNames.Length == 0 && !String.IsNullOrEmpty(request.Given) || result.GivenNames.Length > 0 && !result.GivenNames.Contains(request.Given, StringComparer.OrdinalIgnoreCase))
         {
             differences.Add(new Difference { FieldName = nameof(request.Given), Local = request.Given, Nhs = string.Join(", ", result.GivenNames) });
         }
 
-        if (!result.FamilyNames.Contains(request.Family, StringComparer.OrdinalIgnoreCase))
+        if (result.FamilyNames.Length == 0 && !String.IsNullOrEmpty(request.Family) || result.FamilyNames.Length > 0 && !result.FamilyNames.Contains(request.Family, StringComparer.OrdinalIgnoreCase))
         {
             differences.Add(new Difference { FieldName = nameof(request.Family), Local = request.Family, Nhs = string.Join(", ", result.FamilyNames) });
         }
@@ -143,7 +143,7 @@ public class ReconciliationService(
             differences.Add(new Difference { FieldName = nameof(request.Gender), Local = request.Gender, Nhs = result.Gender });
         }
 
-        if (!result.AddressPostalCodes.Contains(request.AddressPostalCode, StringComparer.OrdinalIgnoreCase))
+        if (result.AddressPostalCodes.Length == 0 && !String.IsNullOrEmpty(request.AddressPostalCode) || result.AddressPostalCodes.Length > 0 && !result.AddressPostalCodes.Contains(request.AddressPostalCode, StringComparer.OrdinalIgnoreCase))
         {
             differences.Add(new Difference { FieldName = nameof(request.AddressPostalCode), Local = request.AddressPostalCode, Nhs = string.Join(", ", result.AddressPostalCodes) });
         }
