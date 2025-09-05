@@ -1,8 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
 
-using Shared.Util;
-
-namespace MatchingApi;
+namespace Shared.Util;
 
 public class CustomDateOnlyConverter : JsonConverter<DateOnly?>
 {

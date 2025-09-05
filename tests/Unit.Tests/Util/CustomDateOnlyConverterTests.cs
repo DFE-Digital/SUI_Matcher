@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-using MatchingApi;
+using Shared.Util;
 
-namespace Unit.Tests.Matching;
+namespace Unit.Tests.Util;
 
 public class CustomDateOnlyConverterTests
 {

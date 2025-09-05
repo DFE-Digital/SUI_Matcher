@@ -2,10 +2,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-
 using Shared.Models;
+using Shared.Util;
 
 using SUI.Client.Core.Models;
 
@@ -46,15 +44,12 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
     {
         var response = await httpClient.PostAsJsonAsync("/matching/api/v1/reconciliation", payload);
 
-        var options = new JsonSerializerSettings
-        {
-            Converters = { new StringEnumConverter() }
-        };
-
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadAsStringAsync();
-            var dto = JsonConvert.DeserializeObject<ReconciliationResponse>(result, options);
+            var dto = await response.Content.ReadFromJsonAsync<ReconciliationResponse>(new JsonSerializerOptions
+            {
+                // Converters = { new CustomDateOnlyConverter() }
+            });
             return dto;
         }
 
