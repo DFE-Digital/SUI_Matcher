@@ -12,7 +12,7 @@ namespace SUI.Client.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddClientCore(this IServiceCollection services, IConfiguration configuration, bool enableReconciliation)
+    public static IServiceCollection AddClientCore(this IServiceCollection services, IConfiguration configuration, bool enableReconciliationMode)
     {
         services.AddLogging(builder =>
         {
@@ -23,7 +23,7 @@ public static class ServiceCollectionExtensions
 
         var mapping = configuration.GetSection("CsvMapping").Get<CsvMappingConfig>() ?? new CsvMappingConfig();
         services.AddSingleton(mapping);
-        if (enableReconciliation)
+        if (enableReconciliationMode)
         {
             services.AddSingleton<ICsvFileProcessor, ReconciliationCsvFileProcessor>();
         }
