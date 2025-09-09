@@ -43,4 +43,16 @@ public static class PersonSpecificationUtils
             _ => "Over 18 years"
         };
     }
+
+    public static bool IsAgeEighteenOrUnder(DateOnly birthDate)
+    {
+        var dateOnlyNow = DateOnly.FromDateTime(DateTime.Now);
+        var age = dateOnlyNow.Year - birthDate.Year;
+        if (dateOnlyNow.DayOfYear < birthDate.DayOfYear)
+        {
+            age--;
+        }
+
+        return age <= 18;
+    }
 }

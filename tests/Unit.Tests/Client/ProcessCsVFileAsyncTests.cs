@@ -104,26 +104,31 @@ public class ProcessCsVFileAsyncTests : IDisposable
             "Id",
             "Given",
             "Family",
+            "DOB"
         };
+        var dob = DateTime.Now.AddYears(-10).ToString(ClientConstants.AcceptedCsvDateFormats.First());
         var records = new List<Dictionary<string, string>>
         {
             new()
             {
                 ["Id"] = "L1",
                 ["Given"] = "John",
-                ["Family"] = "Smith"
+                ["Family"] = "Smith",
+                ["DOB"] = dob
             },
             new()
             {
                 ["Id"] = "L2",
                 ["Given"] = "Jane",
-                ["Family"] = "Doe"
+                ["Family"] = "Doe",
+                ["DOB"] = dob
             },
             new()
             {
                 ["Id"] = "L3",
                 ["Given"] = "Jim",
-                ["Family"] = "Beam"
+                ["Family"] = "Beam",
+                ["DOB"] = dob
             }
         };
 
@@ -144,6 +149,87 @@ public class ProcessCsVFileAsyncTests : IDisposable
         Assert.Contains("123467890", contentRowSplit.Last()); // First and only record should have NhsNumber
         Assert.Equal("L1", contentRowSplit.First()); // First and only record should have NhsNumber
 
+    }
+
+    [Fact]
+    public async Task ProcessCsvFileAsync_ShouldOutputSuccessfulMatchedResults_ToSuccessOutputDirectory_WhenOnlyAChildAgeGroup()
+    {
+        var mockLogger = new Mock<ILogger<CsvFileProcessor>>();
+        var mockApi = new Mock<IMatchPersonApiService>();
+        var mapping = new CsvMappingConfig
+        {
+            /* set up mappings as needed */
+        };
+        var tempDir = Path.GetTempPath();
+        var watcherConfig =
+            Options.Create(new CsvWatcherConfig() { MatchedRecordsDirectory = $"{tempDir}/Processed/Matched" });
+
+        mockApi.SetupSequence(x => x.MatchPersonAsync(It.IsAny<MatchPersonPayload>()))
+            .ReturnsAsync(new PersonMatchResponse()
+            {
+                Result = new MatchResult() { MatchStatus = MatchStatus.Match, NhsNumber = "123467890" }
+            })
+            .ReturnsAsync(new PersonMatchResponse()
+            {
+                Result = new MatchResult() { MatchStatus = MatchStatus.Match, NhsNumber = "0987654321" }
+            })
+            .ReturnsAsync(new PersonMatchResponse()
+            {
+                Result = new MatchResult() { MatchStatus = MatchStatus.Match, NhsNumber = "1029384756" }
+            });
+
+        var processor = new CsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
+
+
+        var filePath = Path.Combine(tempDir, "test.csv");
+        var outputPath = tempDir;
+        var headers = new HashSet<string>
+        {
+            "DOB",
+            "Id",
+            "Given",
+            "Family"
+        };
+        var records = new List<Dictionary<string, string>>
+        {
+            new()
+            {
+                ["Id"] = "L1",
+                ["Given"] = "John",
+                ["Family"] = "Smith",
+                ["DOB"] = DateTime.Now.AddYears(-19).ToString(ClientConstants.AcceptedCsvDateFormats.First()) // Not Child age
+            },
+            new()
+            {
+                ["Id"] = "L2",
+                ["Given"] = "Jane",
+                ["Family"] = "Doe",
+                ["DOB"] = DateTime.Now.AddYears(-3).ToString(ClientConstants.AcceptedCsvDateFormats.First()) // Child age
+            },
+            new()
+            {
+                ["Id"] = "L3",
+                ["Given"] = "Jim",
+                ["Family"] = "Beam",
+                ["DOB"] = DateTime.Now.AddYears(-1).ToString(ClientConstants.AcceptedCsvDateFormats.First()) // Child age
+            }
+        };
+
+
+        await CsvFileProcessor.WriteCsvAsync(filePath, headers, records);
+        await processor.ProcessCsvFileAsync(filePath, outputPath);
+
+        // Assert
+        var files = Directory.EnumerateFiles($"{tempDir}/Processed/Matched", "*.csv").ToList();
+        _testFiles.AddRange(files);
+        Assert.Single(_testFiles);
+
+        var content = await File.ReadAllLinesAsync(_testFiles.First());
+
+        Assert.Equal(3, content.Length); // Header + 1 record with Match
+
+        var contentRowSplit = content[1].Split(",");
+        Assert.DoesNotContain("123467890", contentRowSplit.Last());
     }
 
     public void Dispose()
