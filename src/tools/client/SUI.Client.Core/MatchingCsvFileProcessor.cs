@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -79,9 +80,24 @@ public class MatchingCsvFileProcessor(
             Directory.CreateDirectory(watcherConfig.Value.MatchedRecordsDirectory);
 
             var successOutputFilePath = GetOutputFileName(ts, watcherConfig.Value.MatchedRecordsDirectory, Path.GetFileName(filePath), "matched");
-            var matchedRecords = records.Where(x => x.TryGetValue(HeaderStatus, out var status) && status == nameof(MatchStatus.Match)).ToList();
-            logger.LogInformation("Writing matched records CSV file to: {SuccessOutputFilePath}. Matched record count {Count}", successOutputFilePath, matchedRecords.Count);
-            await WriteCsvAsync(successOutputFilePath, headers, matchedRecords);
+            var matchedRecords = records
+                .Where(x => x.TryGetValue(HeaderStatus, out var status) && status == nameof(MatchStatus.Match))
+                .ToList();
+
+            // We only want to include matched records for under 19s in the output file.
+            // As we cannot guarantee the date format in the input file, we will attempt to parse using a range of common UK date formats.
+            // IF we encounter another format in the future, we can add configuration to specify which format to use.
+            var birthDateColumn = mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]
+                .FirstOrDefault(headers.Contains);
+
+            var underNineteens = matchedRecords
+                .Where(x => birthDateColumn != null
+                            && x.TryGetValue(birthDateColumn, out var dobStr)
+                            && DateOnly.TryParseExact(dobStr, ClientConstants.AcceptedCsvDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dob)
+                            && PersonSpecificationUtils.IsAgeEighteenOrUnder(dob))
+                .ToList();
+            logger.LogInformation("Writing matched records CSV file to: {SuccessOutputFilePath}. Matched record count {Count}", successOutputFilePath, underNineteens.Count);
+            await WriteCsvAsync(successOutputFilePath, headers, underNineteens);
         }
     }
 
