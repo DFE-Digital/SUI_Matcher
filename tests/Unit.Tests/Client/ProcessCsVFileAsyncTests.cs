@@ -151,7 +151,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
     [Fact]
     public async Task ProcessCsvFileAsync_ShouldOutputSuccessfulMatchedResults_ToSuccessOutputDirectory_WhenOnlyAChildAgeGroup()
     {
-        var mockLogger = new Mock<ILogger<CsvFileProcessor>>();
+        var mockLogger = new Mock<ILogger<MatchingCsvFileProcessor>>();
         var mockApi = new Mock<IMatchPersonApiService>();
         var mapping = new CsvMappingConfig
         {
@@ -175,7 +175,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 Result = new MatchResult() { MatchStatus = MatchStatus.Match, NhsNumber = "1029384756" }
             });
 
-        var processor = new CsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
+        var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
 
 
         var filePath = Path.Combine(tempDir, "test.csv");
@@ -213,7 +213,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
         };
 
 
-        await CsvFileProcessor.WriteCsvAsync(filePath, headers, records);
+        await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, records);
         await processor.ProcessCsvFileAsync(filePath, outputPath);
 
         // Assert
