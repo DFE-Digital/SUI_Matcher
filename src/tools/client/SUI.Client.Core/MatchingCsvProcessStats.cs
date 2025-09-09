@@ -1,6 +1,8 @@
-﻿namespace SUI.Client.Core;
+﻿using SUI.Client.Core.Models;
 
-public class MatchingCsvProcessStats
+namespace SUI.Client.Core;
+
+public class MatchingCsvProcessStats : IStats
 {
     public int Count { get; set; }
     public int ErroredCount { get; set; }

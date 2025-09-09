@@ -85,7 +85,7 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                     NhsNumber = data.Id,
                     AddressPostalCodes = data.Address.Where(s => s.Period.End is null).Select(s => s.PostalCode).ToArray(),
                     Gender = data.Gender.GetLiteral(),
-                    BirthDate = data.BirthDate.ToDateOnly([Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish]),
+                    BirthDate = data.BirthDate,
                     Emails = data.Telecom
                      .Where(s => s.System is ContactPoint.ContactPointSystem.Email && s.Period.End is null).Select(s => s.Value).ToArray(),
                     PhoneNumbers = data.Telecom

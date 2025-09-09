@@ -93,7 +93,7 @@ public class ReconciliationServiceTests
             AddressPostalCodes = ["AB12 3CD", "BC34 5EF"],
             FamilyNames = ["Smith", "Jones"],
             GivenNames = ["John", "Jane"],
-            BirthDate = new DateOnly(1980, 1, 1),
+            BirthDate = "19800101",
             Gender = "M",
             PhoneNumbers = ["0123456789", "+44 123456789"],
             Emails = ["john.smith@example", "jane.smith@example"],
@@ -137,7 +137,7 @@ public class ReconciliationServiceTests
             AddressPostalCodes = ["AB12 3CD", "BC34 5EF"],
             FamilyNames = ["Smith", "Jones"],
             GivenNames = ["John", "Jane"],
-            BirthDate = new DateOnly(1980, 1, 1),
+            BirthDate = "19800101",
             Gender = "M",
             PhoneNumbers = ["0123456789", "+44 123456789"],
             Emails = ["john.smith@example", "jane.smith@example"],
@@ -167,7 +167,7 @@ public class ReconciliationServiceTests
         Assert.Equal(7, result.Differences?.Count);
         Assert.Equal("BirthDate", result.Differences?[0].FieldName);
         Assert.Equal(request.BirthDate?.ToString("yyyy-MM-dd"), result.Differences?[0].Local);
-        Assert.Equal(nhsPerson.BirthDate?.ToString("yyyy-MM-dd"), result.Differences?[0].Nhs);
+        Assert.Equal(nhsPerson.BirthDate, result.Differences?[0].Nhs);
         Assert.Equal(ReconciliationStatus.ManyDifferences, result.Status);
     }
 
@@ -181,7 +181,7 @@ public class ReconciliationServiceTests
             AddressPostalCodes = ["aA11 2BB", "BC34 5EF"],
             FamilyNames = ["hamilton", "Jones"],
             GivenNames = ["david", "Jane"],
-            BirthDate = new DateOnly(1990, 1, 2),
+            BirthDate = "19900102",
             Gender = "male",
             PhoneNumbers = ["123454321", "+44 123456789"],
             Emails = ["david.hamilton@example.com", "jane.smith@example"],
@@ -222,7 +222,7 @@ public class ReconciliationServiceTests
             AddressPostalCodes = ["aA11 2BB", "BC34 5EF"],
             FamilyNames = ["hamilton", "Jones"],
             GivenNames = ["david", "Jane"],
-            BirthDate = new DateOnly(1990, 1, 2),
+            BirthDate = "19900102",
             Gender = "male",
             PhoneNumbers = ["123454321", "+44 123456789"],
             Emails = ["david.hamilton@example.com", "jane.smith@example"],

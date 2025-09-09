@@ -48,7 +48,8 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
         {
             var dto = await response.Content.ReadFromJsonAsync<ReconciliationResponse>(new JsonSerializerOptions
             {
-                // Converters = { new CustomDateOnlyConverter() }
+                Converters = { new CustomDateOnlyConverter() },
+                PropertyNameCaseInsensitive = true,
             });
             return dto;
         }

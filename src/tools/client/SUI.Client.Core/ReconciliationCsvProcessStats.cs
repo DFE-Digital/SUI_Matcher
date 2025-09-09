@@ -1,6 +1,8 @@
-﻿namespace SUI.Client.Core;
+﻿using SUI.Client.Core.Models;
 
-public class ReconciliationCsvProcessStats
+namespace SUI.Client.Core;
+
+public class ReconciliationCsvProcessStats : IStats
 {
     public int Count { get; set; }
     public int ErroredCount { get; set; }
@@ -27,8 +29,8 @@ public class ReconciliationCsvProcessStats
     private double ComputePercentage(int count) => Count == 0 ? 0 : Math.Round((double)count / Count * 100, 2);
 
     public double ErroredPercentage => _erroredPercentage.Value;
-    public double MatchedPercentage => _noDifferencePercentage.Value;
-    public double PotentialMatchPercentage => _oneDifferencePercentage.Value;
-    public double ManyMatchPercentage => _manyDifferencesPercentage.Value;
-    public double NoMatchPercentage => _supersededNhsNumberPercentage.Value;
+    public double NoDifferencePercentage => _noDifferencePercentage.Value;
+    public double OneDifferencePercentage => _oneDifferencePercentage.Value;
+    public double ManyDifferencesPercentage => _manyDifferencesPercentage.Value;
+    public double SupersededNhsNumberPercentage => _supersededNhsNumberPercentage.Value;
 }

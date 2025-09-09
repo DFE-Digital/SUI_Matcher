@@ -414,7 +414,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 NhsNumber = "AAAAA1111111",
                 GivenNames = ["John"],
                 FamilyNames = ["Smith"],
-                BirthDate = new DateOnly(2000, 04, 01),
+                BirthDate = "20000401",
                 Gender = "Male",
                 AddressPostalCodes = ["ab12 3ed"],
                 Emails = ["test@test.com"],
@@ -475,7 +475,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(demographicResult.Result.NhsNumber, records.First()[ReconciliationCsvFileProcessor.HeaderNhsNo]);
         Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderGivenName], demographicResult.Result.GivenNames);
         Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderFamilyName], demographicResult.Result.FamilyNames);
-        Assert.Equal(demographicResult.Result.BirthDate.ToString(), records.First()[ReconciliationCsvFileProcessor.HeaderBirthDate]);
+        Assert.Equal(demographicResult.Result.BirthDate, records.First()[ReconciliationCsvFileProcessor.HeaderBirthDate]);
         Assert.Equal(demographicResult.Result.Gender, records.First()[ReconciliationCsvFileProcessor.HeaderGender]);
         Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderAddressPostalCode], demographicResult.Result.AddressPostalCodes);
         Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderEmail], demographicResult.Result.Emails);
