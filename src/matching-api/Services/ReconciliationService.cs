@@ -39,8 +39,8 @@ public class ReconciliationService(
                 Errors = [data.ErrorMessage ?? "Unknown error"]
             };
         }
-        var ageGroup = !string.IsNullOrEmpty(data.Result.BirthDate)
-            ? PersonSpecificationUtils.GetAgeGroup(data.Result.BirthDate.ToDateOnly([Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish])!.Value)
+        var ageGroup = data.Result.BirthDate.HasValue
+            ? PersonSpecificationUtils.GetAgeGroup(data.Result.BirthDate.Value)
             : "Unknown";
 
         var differences = BuildDifferenceList(reconciliationRequest, data.Result);
@@ -108,13 +108,13 @@ public class ReconciliationService(
             differences.Add(new Difference { FieldName = nameof(request.NhsNumber), Local = request.NhsNumber, Nhs = result.NhsNumber });
         }
 
-        if (request.BirthDate != result.BirthDate.ToDateOnly([Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish]))
+        if (request.BirthDate != result.BirthDate)
         {
             differences.Add(new Difference
             {
                 FieldName = nameof(request.BirthDate),
                 Local = request.BirthDate?.ToString("yyyy-MM-dd"),
-                Nhs = result.BirthDate,
+                Nhs = result.BirthDate?.ToString("yyyy-MM-dd"),
             });
         }
 

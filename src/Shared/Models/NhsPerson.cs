@@ -10,7 +10,8 @@ public class NhsPerson
 
     public string[] FamilyNames { get; set; } = [];
 
-    public string? BirthDate { get; set; }
+    [JsonConverter(typeof(CustomDateOnlyConverter))]
+    public DateOnly? BirthDate { get; set; }
 
     public string? Gender { get; set; }
 

@@ -58,7 +58,7 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderNhsNo] = response?.Person?.NhsNumber ?? "-";
         record[HeaderGivenName] = string.Join(" - ", response?.Person?.GivenNames ?? ["-"]);
         record[HeaderFamilyName] = string.Join(" - ", response?.Person?.FamilyNames ?? ["-"]);
-        record[HeaderBirthDate] = response?.Person?.BirthDate ?? "-";
+        record[HeaderBirthDate] = response?.Person?.BirthDate.ToString() ?? "-";
         record[HeaderGender] = response?.Person?.Gender ?? "-";
         record[HeaderAddressPostalCode] = string.Join(" - ", response?.Person?.AddressPostalCodes ?? ["-"]);
         record[HeaderEmail] = string.Join(" - ", response?.Person?.Emails ?? ["-"]);
