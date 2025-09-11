@@ -21,8 +21,8 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
     {
         await TestAsync("single_match.csv", x =>
         {
-            var matchStatus = x[CsvFileProcessor.HeaderStatus];
-            var nhsNumber = x[CsvFileProcessor.HeaderNhsNo];
+            var matchStatus = x[MatchingCsvFileProcessor.HeaderStatus];
+            var nhsNumber = x[MatchingCsvFileProcessor.HeaderNhsNo];
             Assert.Equal(nameof(MatchStatus.Match), matchStatus);
             Assert.Equal("9691292211", nhsNumber);
         });
@@ -33,8 +33,8 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
     {
         await TestAsync("single_match_from_dbs_headers.csv", x =>
         {
-            var matchStatus = x[CsvFileProcessor.HeaderStatus];
-            var nhsNumber = x[CsvFileProcessor.HeaderNhsNo];
+            var matchStatus = x[MatchingCsvFileProcessor.HeaderStatus];
+            var nhsNumber = x[MatchingCsvFileProcessor.HeaderNhsNo];
             Assert.Equal(nameof(MatchStatus.Match), matchStatus);
             Assert.Equal("9691292211", nhsNumber);
         });
@@ -45,8 +45,8 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
     {
         await TestAsync("single_match_low_confidence.csv", x =>
         {
-            var matchStatus = x[CsvFileProcessor.HeaderStatus];
-            var nhsNumber = x[CsvFileProcessor.HeaderNhsNo];
+            var matchStatus = x[MatchingCsvFileProcessor.HeaderStatus];
+            var nhsNumber = x[MatchingCsvFileProcessor.HeaderNhsNo];
             Assert.Equal(nameof(MatchStatus.PotentialMatch), matchStatus);
             Assert.Equal("9691292211", nhsNumber);
         });
@@ -58,8 +58,8 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
     {
         await TestAsync("single_match_really_low_confidence.csv", x =>
         {
-            var matchStatus = x[CsvFileProcessor.HeaderStatus];
-            var nhsNumber = x[CsvFileProcessor.HeaderNhsNo];
+            var matchStatus = x[MatchingCsvFileProcessor.HeaderStatus];
+            var nhsNumber = x[MatchingCsvFileProcessor.HeaderNhsNo];
             Assert.Equal(nameof(MatchStatus.NoMatch), matchStatus);
             Assert.Equal("9691292211", nhsNumber);
         });
@@ -71,10 +71,10 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
         // Arrange
         var matchPersonApiService = new MatchPersonApiService(_client);
         var mappingConfig = new CsvMappingConfig();
-        var logger = NullLogger<CsvFileProcessor>.Instance;
+        var logger = NullLogger<MatchingCsvFileProcessor>.Instance;
         // create IOptions<CsvWatcherConfig> if needed
         var watcherConfig = Options.Create(new CsvWatcherConfig());
-        var fileProcessor = new CsvFileProcessor(logger, mappingConfig, matchPersonApiService, watcherConfig);
+        var fileProcessor = new MatchingCsvFileProcessor(logger, mappingConfig, matchPersonApiService, watcherConfig);
 
         var inputFileName = "single_match.csv";
         var inputFilePath = Path.Combine("Resources", "Csv", inputFileName); // Relative path
@@ -108,9 +108,9 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
 
         var matchPersonApiService = new MatchPersonApiService(_client);
         var mappingConfig = new CsvMappingConfig();
-        var logger = NullLogger<CsvFileProcessor>.Instance;
+        var logger = NullLogger<MatchingCsvFileProcessor>.Instance;
         var watcherConfig = Options.Create(new CsvWatcherConfig());
-        var fileProcessor = new CsvFileProcessor(logger, mappingConfig, matchPersonApiService, watcherConfig);
+        var fileProcessor = new MatchingCsvFileProcessor(logger, mappingConfig, matchPersonApiService, watcherConfig);
 
         var appConfig = new CsvWatcherConfig()
         {

@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-
-using Shared.Converter;
+using Shared.Util;
 
 namespace Shared.Models;
 
@@ -12,6 +10,7 @@ public class NhsPerson
 
     public string[] FamilyNames { get; set; } = [];
 
+    [JsonConverter(typeof(CustomDateOnlyConverter))]
     public DateOnly? BirthDate { get; set; }
 
     public string? Gender { get; set; }

@@ -1,4 +1,6 @@
-﻿using SUI.Client.Core.Models;
+﻿using Shared.Models;
+
+using SUI.Client.Core.Models;
 
 namespace SUI.Client.Core;
 
@@ -13,5 +15,7 @@ public class CsvMappingConfig
         [nameof(MatchPersonPayload.Email)] = ["Email"],
         [nameof(MatchPersonPayload.AddressPostalCode)] = ["PostCode", "PostalCode"],
         [nameof(MatchPersonPayload.Gender)] = ["Gender"],
+        [nameof(ReconciliationRequest.NhsNumber)] = ["NhsNumber"],
+        [nameof(ReconciliationRequest.Phone)] = ["Phone", "PhoneNumber"],
     };
 }

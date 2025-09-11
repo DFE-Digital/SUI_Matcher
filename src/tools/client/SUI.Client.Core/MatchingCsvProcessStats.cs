@@ -1,6 +1,8 @@
-﻿namespace SUI.Client.Core;
+﻿using SUI.Client.Core.Models;
 
-public class CsvProcessStats
+namespace SUI.Client.Core;
+
+public class MatchingCsvProcessStats : IStats
 {
     public int Count { get; set; }
     public int ErroredCount { get; set; }
@@ -15,7 +17,7 @@ public class CsvProcessStats
     private readonly Lazy<double> _manyMatchPercentage;
     private readonly Lazy<double> _noMatchPercentage;
 
-    public CsvProcessStats()
+    public MatchingCsvProcessStats()
     {
         _erroredPercentage = new Lazy<double>(() => ComputePercentage(ErroredCount));
         _matchedPercentage = new Lazy<double>(() => ComputePercentage(CountMatched));

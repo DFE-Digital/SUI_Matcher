@@ -25,7 +25,7 @@ var builder = Host.CreateDefaultBuilder(args);
 DotNetEnv.Env.TraversePath().Load();
 builder.ConfigureServices((hostContext, services) =>
 {
-    services.AddClientCore(hostContext.Configuration);
+    services.AddClientCore(hostContext.Configuration, watcherArgs.EnableReconciliation);
     services.AddWindowsService(options =>
     {
         options.ServiceName = "SUI-Client-Service";

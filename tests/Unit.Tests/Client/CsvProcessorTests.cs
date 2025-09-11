@@ -42,6 +42,9 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         public const string DOB = "DOB";
         public const string Email = "Email";
         public const string Gender = "Gender";
+        public const string NhsNumber = "NhsNumber";
+        public const string PostCode = "PostCode";
+        public static string Phone = "Phone";
     }
 
 
@@ -100,7 +103,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         // ACT
         var cts = new CancellationTokenSource();
-        var provider = Bootstrap(x =>
+        var provider = Bootstrap(false, x =>
         {
             x.AddSingleton(_nhsFhirClient.Object);
         });
@@ -112,7 +115,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         var data = testData.Select(x => x.Data).ToList();
         var headers = new HashSet<string>(data.First().Keys);
 
-        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00002.csv"), headers, data);
+        await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00002.csv"), headers, data);
 
         monitor.Processed += (_, _) => tcs.SetResult();
         await tcs.Task; // await processing of that file
@@ -133,7 +136,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        var (_, records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+        var (_, records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
 
         Assert.NotNull(records);
     }
@@ -145,7 +148,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>())).Returns(() => Task.FromResult<SearchResult?>(searchResult));
 
         var cts = new CancellationTokenSource();
-        var provider = Bootstrap(x =>
+        var provider = Bootstrap(false, x =>
         {
             x.AddSingleton(_nhsFhirClient.Object);
         });
@@ -165,7 +168,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         var list = new List<D> { data };
         var headers = new HashSet<string>(data.Keys);
 
-        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
+        await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
 
         monitor.Processed += (_, _) => tcs.SetResult();
         await tcs.Task; // await processing of that file
@@ -187,10 +190,10 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.NotNull(monitor.LastResult().Stats);
 
         _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Once(), "The PerformSearch method should have invoked ONCE");
-        (_, List<D> records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
-        Assert.Equal(searchResult.NhsNumber, records.First()[CsvFileProcessor.HeaderNhsNo]);
-        Assert.Equal(searchResult.Score.ToString(), records.First()[CsvFileProcessor.HeaderScore]);
-        Assert.Equal(nameof(MatchStatus.Match), records.First()[CsvFileProcessor.HeaderStatus]);
+        (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+        Assert.Equal(searchResult.NhsNumber, records.First()[MatchingCsvFileProcessor.HeaderNhsNo]);
+        Assert.Equal(searchResult.Score.ToString(), records.First()[MatchingCsvFileProcessor.HeaderScore]);
+        Assert.Equal(nameof(MatchStatus.Match), records.First()[MatchingCsvFileProcessor.HeaderStatus]);
     }
 
     [Fact]
@@ -200,7 +203,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>())).Returns(() => Task.FromResult<SearchResult?>(searchResult));
 
         var cts = new CancellationTokenSource();
-        var provider = Bootstrap(x =>
+        var provider = Bootstrap(false, x =>
         {
             x.AddSingleton(_nhsFhirClient.Object);
         });
@@ -221,7 +224,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         var list = new List<D> { data };
         var headers = new HashSet<string>(data.Keys);
-        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00004.csv"), headers, list);
+        await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00004.csv"), headers, list);
 
 
         monitor.Processed += (_, _) => tcs.SetResult();
@@ -243,7 +246,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        (_, List<D> records) = await CsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+        (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
         Assert.Equal("male", records.First()["Gender"]);
 
     }
@@ -261,7 +264,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             .Returns(() => Task.FromResult<SearchResult?>(searchResultGood));
 
         var cts = new CancellationTokenSource();
-        var provider = Bootstrap(x =>
+        var provider = Bootstrap(false, x =>
         {
             x.AddSingleton(_nhsFhirClient.Object);
             x.Configure<CsvWatcherConfig>(wc =>
@@ -288,7 +291,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         var list = new List<D> { data };
         var headers = new HashSet<string>(data.Keys);
-        await CsvFileProcessor.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00004.csv"), headers, list);
+        await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00004.csv"), headers, list);
 
 
         monitor.Processed += (_, _) => tcs.SetResult();
@@ -323,7 +326,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         // ACT
         var cts = new CancellationTokenSource();
-        var provider = Bootstrap(x =>
+        var provider = Bootstrap(false, x =>
         {
             x.AddSingleton(_nhsFhirClient.Object);
         });
@@ -334,7 +337,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         var headers = new HashSet<string>(testData.Data.Keys);
         string filePath = Path.Combine(_dir.IncomingDirectoryPath, "file00003.csv");
-        await CsvFileProcessor.WriteCsvAsync(filePath, headers, new List<D> { testData.Data });
+        await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, new List<D> { testData.Data });
 
         monitor.Processed += (_, _) => tcs.SetResult();
 
@@ -368,7 +371,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         // ACT
         var cts = new CancellationTokenSource();
-        var provider = Bootstrap(x =>
+        var provider = Bootstrap(false, x =>
         {
             x.AddSingleton(_nhsFhirClient.Object);
         });
@@ -379,7 +382,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         var headers = new HashSet<string>(testData.Data.Keys);
         string filePath = Path.Combine(_dir.IncomingDirectoryPath, "file00003.csv");
-        await CsvFileProcessor.WriteCsvAsync(filePath, headers, [testData.Data]);
+        await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, [testData.Data]);
 
         monitor.Processed += (_, _) => tcs.SetResult();
 
@@ -401,7 +404,86 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
     }
 
-    private ServiceProvider Bootstrap(Action<ServiceCollection>? configure = null)
+    [Fact]
+    public async Task TestOneFileReconciliation()
+    {
+        var demographicResult = new DemographicResult
+        {
+            Result = new NhsPerson
+            {
+                NhsNumber = "AAAAA1111111",
+                GivenNames = ["John"],
+                FamilyNames = ["Smith"],
+                BirthDate = new DateOnly(2000, 04, 01),
+                Gender = "Male",
+                AddressPostalCodes = ["ab12 3ed"],
+                Emails = ["test@test.com"],
+                PhoneNumbers = ["0789 1234567"],
+            }
+        };
+
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
+
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(true, x =>
+        {
+            x.AddSingleton(_nhsFhirClient.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = new D
+        {
+            [TestDataHeaders.NhsNumber] = "AAAAA1111111",
+            [TestDataHeaders.GivenName] = "John",
+            [TestDataHeaders.Surname] = "Smith",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Gender] = "1",
+            [TestDataHeaders.PostCode] = "ab12 3ed",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Phone] = "0789 1234567"
+        };
+
+        var list = new List<D> { data };
+        var headers = new HashSet<string>(data.Keys);
+
+        await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task; // await processing of that file
+        await cts.CancelAsync();   // cancel the task
+        await monitoringTask; // await cancellation
+
+        // ASSERTS
+        if (monitor.GetLastOperation().Exception != null)
+        {
+            throw monitor.GetLastOperation().Exception!;
+        }
+
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
+        Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
+        Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
+        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
+        Assert.NotNull(monitor.LastResult().Stats);
+
+        _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once(), "The PerformSearchByNhsId method should have invoked ONCE");
+        (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+        Assert.Equal(demographicResult.Result.NhsNumber, records.First()[ReconciliationCsvFileProcessor.HeaderNhsNo]);
+        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderGivenName], demographicResult.Result.GivenNames);
+        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderFamilyName], demographicResult.Result.FamilyNames);
+        Assert.Equal(demographicResult.Result.BirthDate.ToString(), records.First()[ReconciliationCsvFileProcessor.HeaderBirthDate]);
+        Assert.Equal(demographicResult.Result.Gender, records.First()[ReconciliationCsvFileProcessor.HeaderGender]);
+        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderAddressPostalCode], demographicResult.Result.AddressPostalCodes);
+        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderEmail], demographicResult.Result.Emails);
+        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderPhone], demographicResult.Result.PhoneNumbers);
+        Assert.Equal(nameof(ReconciliationStatus.NoDifferences), records.First()[ReconciliationCsvFileProcessor.HeaderStatus]);
+    }
+
+    private ServiceProvider Bootstrap(bool enableReconciliation, Action<ServiceCollection>? configure = null)
     {
         var servicesCollection = new ServiceCollection();
         servicesCollection.AddLogging(b => b.AddDebug().AddProvider(new TestContextLoggerProvider(TestContext)));
@@ -415,11 +497,12 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             x.EnableGenderSearch = true;
         });
 
-        servicesCollection.AddClientCore(config);
+        servicesCollection.AddClientCore(config, enableReconciliation);
         servicesCollection.AddSingleton<IMatchPersonApiService, MatchPersonServiceAdapter>(); // wires up the IMatchingService directly, without using http
 
         // core domain deps
         servicesCollection.AddSingleton<IMatchingService, MatchingService>();
+        servicesCollection.AddSingleton<IReconciliationService, ReconciliationService>();
         servicesCollection.AddSingleton<IValidationService, ValidationService>();
         servicesCollection.AddSingleton<IAuditLogger, ChannelAuditLogger>();
         servicesCollection.AddSingleton(Channel.CreateUnbounded<AuditLogEntry>());

@@ -2,9 +2,12 @@ namespace Shared.Models;
 
 public class ReconciliationResponse
 {
-    public dynamic? Result { get; set; }
+    public NhsPerson? Person { get; set; }
 
     public List<string> Errors { get; set; } = [];
 
     public List<Difference>? Differences { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public ReconciliationStatus Status { get; set; }
 }

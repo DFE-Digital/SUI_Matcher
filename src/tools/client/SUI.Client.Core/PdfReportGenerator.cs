@@ -9,19 +9,16 @@ namespace SUI.Client.Core;
 
 public static class PdfReportGenerator
 {
-    public static string GenerateReport(CsvProcessStats stats, string filePath)
+    public static string GenerateReport(string filePath, string title, string[] categories, double[] values)
     {
         QuestPDF.Settings.License = LicenseType.Community;
-
-        string[] categories = { "Errored", "Matched", "Potential Match", "Many Match", "No Match" };
-        double[] values = { stats.ErroredCount, stats.CountMatched, stats.CountPotentialMatch, stats.CountManyMatch, stats.CountNoMatch };
 
         Document.Create(container =>
         {
             container.Page(page =>
             {
                 page.Margin(20);
-                page.Header().Text("CSV Processing Report").Bold().FontSize(20).AlignCenter();
+                page.Header().Text(title).Bold().FontSize(20).AlignCenter();
 
                 page.Content().Column(col =>
                 {
