@@ -15,7 +15,7 @@ public class CsvMappingConfig
         [nameof(MatchPersonPayload.Email)] = ["Email"],
         [nameof(MatchPersonPayload.AddressPostalCode)] = ["PostCode", "PostalCode"],
         [nameof(MatchPersonPayload.Gender)] = ["Gender"],
-        [nameof(ReconciliationRequest.NhsNumber)] = ["NhsNumber"],
+        [nameof(ReconciliationRequest.NhsNumber)] = ["NhsNumber", "NHSNumber"],
         [nameof(ReconciliationRequest.Phone)] = ["Phone", "PhoneNumber"],
     };
 }
