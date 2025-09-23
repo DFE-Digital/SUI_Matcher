@@ -29,7 +29,7 @@ public class MatchEndpoint(IMatchingService matchingService, IReconciliationServ
             return result.Result?.MatchStatus == MatchStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
         });
 
-        var matchPersonNoLogic = app.MapPost("/matchpersonnologic", async (PersonSpecification? model) =>
+        var matchPersonNoLogic = app.MapPost("/matchpersonnologic", async (PersonSpecificationForNoLogic? model) =>
         {
             if (model is null)
             {
