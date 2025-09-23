@@ -64,7 +64,9 @@ public abstract class CsvFileProcessorBase(ILogger<CsvFileProcessorBase> logger,
 
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, stats);
         var pdfReport = GeneratePdfReport(stats, ts, outputDirectory);
-        return new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
+        var csvResult = new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, stats, outputDirectory);
+        stats.ResetStats();
+        return csvResult;
     }
 
     public static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(

@@ -33,4 +33,14 @@ public class ReconciliationCsvProcessStats : IStats
     public double OneDifferencePercentage => _oneDifferencePercentage.Value;
     public double ManyDifferencesPercentage => _manyDifferencesPercentage.Value;
     public double SupersededNhsNumberPercentage => _supersededNhsNumberPercentage.Value;
+
+    public void ResetStats()
+    {
+        Count = 0;
+        ErroredCount = 0;
+        NoDifferenceCount = 0;
+        OneDifferenceCount = 0;
+        ManyDifferencesCount = 0;
+        SupersededNhsNumber = 0;
+    }
 }

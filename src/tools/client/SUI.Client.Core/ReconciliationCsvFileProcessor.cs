@@ -114,7 +114,7 @@ public class ReconciliationCsvFileProcessor(
             case ReconciliationStatus.OneDifference:
                 stats.OneDifferenceCount++;
                 break;
-            case ReconciliationStatus.Error:
+            default:
                 stats.ErroredCount++;
                 break;
         }

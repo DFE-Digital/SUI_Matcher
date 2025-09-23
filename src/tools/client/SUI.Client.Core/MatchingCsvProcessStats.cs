@@ -33,4 +33,13 @@ public class MatchingCsvProcessStats : IStats
     public double PotentialMatchPercentage => _potentialMatchPercentage.Value;
     public double ManyMatchPercentage => _manyMatchPercentage.Value;
     public double NoMatchPercentage => _noMatchPercentage.Value;
+    public void ResetStats()
+    {
+        Count = 0;
+        ErroredCount = 0;
+        CountMatched = 0;
+        CountPotentialMatch = 0;
+        CountManyMatch = 0;
+        CountNoMatch = 0;
+    }
 }

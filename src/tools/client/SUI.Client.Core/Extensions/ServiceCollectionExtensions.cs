@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
         {
             builder.AddConsole(options => options.FormatterName = Shared.Constants.LogFormatter)
                 .AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
-            builder.AddProvider(new JsonFileLoggerProvider(Path.Combine(Directory.GetCurrentDirectory(), "sui-client-logs.json")));
+            builder.AddProvider(new JsonFileLoggerProvider(Path.Combine(Directory.GetCurrentDirectory(), enableReconciliationMode ? "sui-reconciliation-logs.json" : "sui-client-logs.json")));
         });
 
         var mapping = configuration.GetSection("CsvMapping").Get<CsvMappingConfig>() ?? new CsvMappingConfig();
