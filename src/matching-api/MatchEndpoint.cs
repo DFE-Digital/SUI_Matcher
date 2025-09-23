@@ -63,7 +63,7 @@ public class MatchEndpoint(IMatchingService matchingService, IReconciliationServ
             }
 
             var result = await reconciliationService.ReconcileAsync(model);
-            return result is null ? Results.BadRequest(result) : Results.Ok(result);
+            return result.Status == ReconciliationStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
         });
 
         if (configuration.GetValue<bool>("EnableAuth"))
