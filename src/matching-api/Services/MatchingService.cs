@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Text;
 
 using Newtonsoft.Json;
 
@@ -77,7 +76,7 @@ public class MatchingService(
         };
     }
 
-    public async Task<PersonMatchResponse> SearchNoLogicAsync(PersonSpecification personSpecification)
+    public async Task<PersonMatchResponse> SearchNoLogicAsync(PersonSpecificationForNoLogic personSpecification)
     {
         var result = await MatchNoLogicAsync(personSpecification);
         return new PersonMatchResponse
@@ -250,7 +249,7 @@ public class MatchingService(
         };
     }
 
-    private async Task<MatchResult2> MatchNoLogicAsync(PersonSpecification model)
+    private async Task<MatchResult2> MatchNoLogicAsync(PersonSpecificationForNoLogic model)
     {
         if (model.RawBirthDate?.Length == 0)
         {
@@ -268,8 +267,8 @@ public class MatchingService(
             Family = model.Family,
             Phone = model.Phone,
             Birthdate = model.RawBirthDate,
-            FuzzyMatch = false,
-            ExactMatch = false,
+            FuzzyMatch = model.FuzzyMatch,
+            ExactMatch = model.ExactMatch
         };
 
         var matchStatus = MatchStatus.Error;

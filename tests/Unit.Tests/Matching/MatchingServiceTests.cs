@@ -356,7 +356,7 @@ public sealed class MatchingServiceTests
                 Type = SearchResult.ResultType.MultiMatched
             });
 
-        var model = new PersonSpecification
+        var model = new PersonSpecificationForNoLogic
         {
             AddressPostalCode = "TQ12 5HH",
             BirthDate = new DateOnly(2000, 11, 11),
@@ -382,7 +382,7 @@ public sealed class MatchingServiceTests
                 Type = SearchResult.ResultType.Unmatched
             });
 
-        var model = new PersonSpecification
+        var model = new PersonSpecificationForNoLogic
         {
             AddressPostalCode = "TQ12 5HH",
             RawBirthDate = ["eq2000-11-11"],
@@ -410,7 +410,7 @@ public sealed class MatchingServiceTests
                 Score = 0.99m
             });
 
-        var model = new PersonSpecification
+        var model = new PersonSpecificationForNoLogic
         {
             AddressPostalCode = "TQ12 5HH",
             RawBirthDate = ["eq2000-11-11"],
