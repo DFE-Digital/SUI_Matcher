@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
+using Shared;
 using Shared.Logging;
 
 namespace Unit.Tests.Logging;
@@ -28,6 +29,25 @@ public class LogConsoleFormatterTests
 
         var output = _writer.ToString();
         Assert.Contains("[Information] [Algorithm=v1] [SearchId=123] Test Message", output);
+    }
+    
+    [Fact]
+    public void Write_WithSearchIdAndAlgorithmVersionAndStrategyName_WritesFullFormat()
+    {
+        using var activity = new Activity("TestActivity");
+
+        activity.AddBaggage("SearchId", "123");
+        activity.AddBaggage("AlgorithmVersion", "1");
+        activity.AddBaggage(SharedConstants.SearchStrategy.LogName, "strat1");
+        activity.Start();
+        Activity.Current = activity;
+
+        var logEntry = CreateLogEntry(LogLevel.Information);
+
+        _formatter.Write(in logEntry, scopeProvider: null, _writer);
+
+        var output = _writer.ToString();
+        Assert.Contains("[Information] [Algorithm=v1] [SearchStrategy=strat1] [SearchId=123] Test Message", output);
     }
 
     [Fact]
