@@ -4,11 +4,12 @@ using Shared.Models;
 namespace MatchingApi.Search;
 
 /// <summary>
-/// Quite a broad strategy that uses a variety of exact and fuzzy searches with different combinations of parameters.
+/// Non-Fuzzy and Fuzzy search with different combinations of parameters.
+/// Includes DOB range in non-fuzzy search and postcode in fuzzy search.
 /// </summary>
-public class SearchStrategy1 : ISearchStrategy
+public class SearchStrategy2 : ISearchStrategy
 {
-    private const int AlgorithmVersion = 3;
+    private const int AlgorithmVersion = 1;
 
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
     {
@@ -22,46 +23,28 @@ public class SearchStrategy1 : ISearchStrategy
             "ge" + model.BirthDate.Value.AddMonths(-6).ToString(SharedConstants.SearchQuery.DateFormat),
             "le" + model.BirthDate.Value.AddMonths(6).ToString(SharedConstants.SearchQuery.DateFormat)
         };
+        
         var dob = new[] { "eq" + model.BirthDate.Value.ToString(SharedConstants.SearchQuery.DateFormat) };
 
         var modelName = model.Given is not null ? new[] { model.Given } : null;
         var queryOrderedMap = new OrderedDictionary<string, SearchQuery>
         {
             {
-                "ExactGFD", new() // exact search on only given, family and dob
+                "NonFuzzyGFD", new SearchQuery() // 1. non-fuzzy search on only given, family and dob
                 {
-                    ExactMatch = true,
-                    Given = modelName,
-                    Family = model.Family,
-                    Birthdate = dob
+                    ExactMatch = false, Given = modelName, Family = model.Family, Birthdate = dob
                 }
             },
             {
-                "ExactAll", new() // 1. exact search
+                "NonFuzzyGFDRange", new SearchQuery() // 2. non-fuzzy search on only given, family and dob range
                 {
-                    ExactMatch = true,
-                    Given = modelName,
-                    Family = model.Family,
-                    Email = model.Email,
-                    Gender = model.Gender,
-                    Phone = model.Phone,
-                    Birthdate = dob,
-                    AddressPostalcode = model.AddressPostalCode,
+                    ExactMatch = false, Given = modelName, Family = model.Family, Birthdate = dobRange
                 }
             },
             {
-                "FuzzyGFD", new() // 2. fuzzy search on only given, family and dob
+                "NonFuzzyAll", new SearchQuery() // 3. non-fuzzy search
                 {
-                    FuzzyMatch = true,
-                    Given = modelName,
-                    Family = model.Family,
-                    Birthdate = dob
-                }
-            },
-            {
-                "FuzzyAll", new() // 3. fuzzy search with given name, family name and DOB.
-                {
-                    FuzzyMatch = true,
+                    ExactMatch = false,
                     Given = modelName,
                     Family = model.Family,
                     Email = model.Email,
@@ -72,7 +55,34 @@ public class SearchStrategy1 : ISearchStrategy
                 }
             },
             {
-                "FuzzyGFDRange", new() // 4. fuzzy search with given name, family name and DOB range 6 months either side of given date.
+                "FuzzyGFD", new SearchQuery() // 4. fuzzy search on only given, family and dob
+                {
+                    FuzzyMatch = true, Given = modelName, Family = model.Family, Birthdate = dob
+                }
+            },
+            {
+                "FuzzyAll", new SearchQuery() // 5. fuzzy search with given name, family name and DOB.
+                {
+                    FuzzyMatch = true,
+                    Given = modelName,
+                    Family = model.Family,
+                    Email = model.Email,
+                    Gender = model.Gender,
+                    Phone = model.Phone,
+                    Birthdate = dob,
+                    AddressPostalcode = model.AddressPostalCode,
+                }
+            },
+            {
+                "FuzzyGFDRangePostcode",
+                new SearchQuery() // 6. fuzzy search with given name, family name and DOB range either side of given date.
+                {
+                    FuzzyMatch = true, Given = modelName, Family = model.Family, Birthdate = dobRange, AddressPostalcode = model.AddressPostalCode
+                }
+            },
+            {
+                "FuzzyGFDRange",
+                new SearchQuery() // 7. fuzzy search with given name, family name and DOB range either side of given date.
                 {
                     FuzzyMatch = true, Given = modelName, Family = model.Family, Birthdate = dobRange,
                 }
@@ -81,7 +91,7 @@ public class SearchStrategy1 : ISearchStrategy
 
         // Only applicable if dob day is less than or equal to 12
         if (model.BirthDate.Value.Day <=
-            12) // 5. fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12.
+            12) // fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12.
         {
             var altDob = new DateTime(
                 model.BirthDate.Value.Year,
