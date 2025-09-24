@@ -431,4 +431,38 @@ public sealed class MatchingServiceTests
         Assert.Equal(MatchStatus.Match, result.Result!.MatchStatus);
         Assert.Equal(0.99m, result.Result.Score);
     }
+
+    [Fact]
+    public async Task ShouldPickSecondStrategyIfSpecifiedInSearchSpecification()
+    {
+        // Arrange
+        var eighteenYearsAgo = DateTime.UtcNow.AddYears(-10);
+
+        var model = new SearchSpecification
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = new DateOnly(eighteenYearsAgo.Year, eighteenYearsAgo.Month, eighteenYearsAgo.Day),
+            Family = "Smith",
+            Given = "John",
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy2
+        };
+
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult
+            {
+                Type = SearchResult.ResultType.Matched,
+                Score = 0.99m
+            });
+
+        using var activity = new Activity("TestActivity");
+        activity.Start();
+
+        // Act
+        await _sut.SearchAsync(model);
+        
+        // Assert
+        _nhsFhirClient.Verify(x => x.PerformSearch(It.Is<SearchQuery>(q =>
+            (q.FuzzyMatch == null || q.FuzzyMatch == false) && q.ExactMatch == false)));
+        
+    }
 }
