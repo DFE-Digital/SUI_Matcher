@@ -15,8 +15,10 @@ public class SearchStrategy2 : ISearchStrategy
         var queryBuilder = new SearchQueryBuilder(model);
         queryBuilder.AddNonFuzzyGfd();
         queryBuilder.AddNonFuzzyGfdRange();
+        queryBuilder.AddNonFuzzyAllPostcodeWildcard();
         queryBuilder.AddNonFuzzyAll();
         queryBuilder.AddFuzzyGfd();
+        queryBuilder.AddFuzzyGfdRangePostcodeWildcard();
         queryBuilder.AddFuzzyGfdRangePostcode();
         queryBuilder.AddFuzzyAll(); 
         queryBuilder.TryAddFuzzyAltDob(); 

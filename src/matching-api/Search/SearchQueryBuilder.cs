@@ -28,11 +28,30 @@ public class SearchQueryBuilder
     ];
     private string[] Dob => ["eq" + _model.BirthDate!.Value.ToString(SharedConstants.SearchQuery.DateFormat)];
 
+    /// <summary>
+    /// See <see href="https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient"/>
+    /// for postcode search details and using wildcard.
+    /// </summary>
+    /// <returns></returns>
+    private string? PostcodeWildcard()
+    {
+        if (!string.IsNullOrEmpty(_model.AddressPostalCode))
+        {
+            var postcode = _model.AddressPostalCode.Length > 2
+                ? string.Concat(_model.AddressPostalCode.AsSpan(0, 2), "*")
+                : _model.AddressPostalCode;
+
+            return postcode;
+        }
+        
+        return null;
+    }
+
     public void AddNonFuzzyGfd()
     {
         _queries.Add("NonFuzzyGFD", new SearchQuery()
         {
-            ExactMatch = false, Given = ModelName, Family = _model.Family, Birthdate = Dob
+            ExactMatch = false, Given = ModelName, Family = _model.Family, Birthdate = Dob, History = true
         });
     }
     
@@ -40,7 +59,7 @@ public class SearchQueryBuilder
     {
         _queries.Add("NonFuzzyGFDRange", new SearchQuery()
         {
-            ExactMatch = false, Given = ModelName, Family = _model.Family, Birthdate = DobRange
+            ExactMatch = false, Given = ModelName, Family = _model.Family, Birthdate = DobRange, History = true
         });
     }
 
@@ -55,7 +74,24 @@ public class SearchQueryBuilder
             Gender = _model.Gender,
             Phone = _model.Phone,
             Birthdate = Dob,
-            AddressPostalcode = _model.AddressPostalCode,
+            AddressPostalcode = _model.AddressPostalCode, 
+            History = true
+        });
+    }
+    
+    public void AddNonFuzzyAllPostcodeWildcard()
+    {
+        _queries.Add("NonFuzzyAllPostcodeWildcard", new SearchQuery()
+        {
+            ExactMatch = false,
+            Given = ModelName,
+            Family = _model.Family,
+            Email = _model.Email,
+            Gender = _model.Gender,
+            Phone = _model.Phone,
+            Birthdate = Dob,
+            AddressPostalcode = PostcodeWildcard(), 
+            History = true
         });
     }
     
@@ -82,6 +118,19 @@ public class SearchQueryBuilder
         });
     }
     
+    public void AddFuzzyGfdRangePostcodeWildcard()
+    {
+        _queries.Add("FuzzyGFDRangePostcodeWildcard",
+            new SearchQuery()
+            {
+                FuzzyMatch = true, 
+                Given = ModelName, 
+                Family = _model.Family, 
+                Birthdate = DobRange, 
+                AddressPostalcode = PostcodeWildcard()
+            });
+    }
+    
     public void AddFuzzyGfdRangePostcode()
     {
         _queries.Add("FuzzyGFDRangePostcode",
@@ -91,7 +140,7 @@ public class SearchQueryBuilder
                 Given = ModelName, 
                 Family = _model.Family, 
                 Birthdate = DobRange, 
-                AddressPostalcode = _model?.AddressPostalCode
+                AddressPostalcode = _model.AddressPostalCode
             });
     }
 
