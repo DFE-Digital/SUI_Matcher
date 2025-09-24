@@ -9,7 +9,7 @@ public static class SearchStrategyFactory
         {
             { SharedConstants.SearchStrategy.Strategies.Strategy1, new SearchStrategy1() },
             { SharedConstants.SearchStrategy.Strategies.Strategy2, new SearchStrategy2() },
-            { SharedConstants.SearchStrategy.Strategies.Strategy3, new SearchStrategy3() }
+            { SharedConstants.SearchStrategy.Strategies.Strategy3, new SearchStrategy3() },
         };
 
     public static ISearchStrategy Get(string name)
