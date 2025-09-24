@@ -16,13 +16,13 @@ public class SearchStrategy3 : ISearchStrategy
         queryBuilder.AddNonFuzzyGfd();
         queryBuilder.AddNonFuzzyGfdRange();
         queryBuilder.AddNonFuzzyAllPostcodeWildcard();
-        queryBuilder.AddNonFuzzyAll(); 
+        queryBuilder.AddNonFuzzyAll();
         queryBuilder.AddFuzzyGfd();
         queryBuilder.AddFuzzyGfdRangePostcodeWildcard();
-        queryBuilder.AddFuzzyGfdRangePostcode(); 
-        queryBuilder.AddFuzzyAll(); 
-        queryBuilder.TryAddFuzzyAltDob(); 
-        
+        queryBuilder.AddFuzzyGfdRangePostcode();
+        queryBuilder.AddFuzzyAll();
+        queryBuilder.TryAddFuzzyAltDob();
+
         return queryBuilder.Build();
     }
 

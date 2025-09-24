@@ -459,10 +459,10 @@ public sealed class MatchingServiceTests
 
         // Act
         await _sut.SearchAsync(model);
-        
+
         // Assert
         _nhsFhirClient.Verify(x => x.PerformSearch(It.Is<SearchQuery>(q =>
             (q.FuzzyMatch == null || q.FuzzyMatch == false) && q.ExactMatch == false)));
-        
+
     }
 }

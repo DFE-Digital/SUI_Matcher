@@ -30,7 +30,7 @@ public class LogConsoleFormatterTests
         var output = _writer.ToString();
         Assert.Contains("[Information] [Algorithm=v1] [SearchId=123] Test Message", output);
     }
-    
+
     [Fact]
     public void Write_WithSearchIdAndAlgorithmVersionAndStrategyName_WritesFullFormat()
     {

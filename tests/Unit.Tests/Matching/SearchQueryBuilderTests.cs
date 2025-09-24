@@ -18,14 +18,14 @@ public class SearchQueryBuilderTests
         });
 
         builder.AddFuzzyGfdRangePostcodeWildcard();
-        
+
         var result = builder.Build();
 
         var query = result.ContainsKey("FuzzyGFDRangePostcodeWildcard");
         Assert.True(query);
         Assert.Equal(expected, result.Values.First().AddressPostalcode);
     }
-    
+
     [Fact]
     public void ShouldIncludeHistoryOnNonFuzzyQueries()
     {
@@ -39,7 +39,7 @@ public class SearchQueryBuilderTests
         builder.AddNonFuzzyGfd();
         builder.AddNonFuzzyGfdRange();
         builder.AddNonFuzzyAll();
-        
+
         var result = builder.Build();
 
         foreach (var query in result.Values)

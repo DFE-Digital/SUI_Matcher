@@ -19,7 +19,7 @@ public class SearchQueryBuilder
         _model = model;
         _dobRange = dobRange;
     }
-    
+
     private string[]? ModelName => _model.Given is not null ? [_model.Given] : null;
     private string[] DobRange =>
     [
@@ -43,7 +43,7 @@ public class SearchQueryBuilder
 
             return postcode;
         }
-        
+
         return null;
     }
 
@@ -51,15 +51,23 @@ public class SearchQueryBuilder
     {
         _queries.Add("NonFuzzyGFD", new SearchQuery()
         {
-            ExactMatch = false, Given = ModelName, Family = _model.Family, Birthdate = Dob, History = true
+            ExactMatch = false,
+            Given = ModelName,
+            Family = _model.Family,
+            Birthdate = Dob,
+            History = true
         });
     }
-    
+
     public void AddNonFuzzyGfdRange()
     {
         _queries.Add("NonFuzzyGFDRange", new SearchQuery()
         {
-            ExactMatch = false, Given = ModelName, Family = _model.Family, Birthdate = DobRange, History = true
+            ExactMatch = false,
+            Given = ModelName,
+            Family = _model.Family,
+            Birthdate = DobRange,
+            History = true
         });
     }
 
@@ -74,11 +82,11 @@ public class SearchQueryBuilder
             Gender = _model.Gender,
             Phone = _model.Phone,
             Birthdate = Dob,
-            AddressPostalcode = _model.AddressPostalCode, 
+            AddressPostalcode = _model.AddressPostalCode,
             History = true
         });
     }
-    
+
     public void AddNonFuzzyAllPostcodeWildcard()
     {
         _queries.Add("NonFuzzyAllPostcodeWildcard", new SearchQuery()
@@ -90,16 +98,19 @@ public class SearchQueryBuilder
             Gender = _model.Gender,
             Phone = _model.Phone,
             Birthdate = Dob,
-            AddressPostalcode = PostcodeWildcard(), 
+            AddressPostalcode = PostcodeWildcard(),
             History = true
         });
     }
-    
+
     public void AddFuzzyGfd()
     {
         _queries.Add("FuzzyGFD", new SearchQuery()
         {
-            FuzzyMatch = true, Given = ModelName, Family = _model.Family, Birthdate = Dob
+            FuzzyMatch = true,
+            Given = ModelName,
+            Family = _model.Family,
+            Birthdate = Dob
         });
     }
 
@@ -117,29 +128,29 @@ public class SearchQueryBuilder
             AddressPostalcode = _model.AddressPostalCode
         });
     }
-    
+
     public void AddFuzzyGfdRangePostcodeWildcard()
     {
         _queries.Add("FuzzyGFDRangePostcodeWildcard",
             new SearchQuery()
             {
-                FuzzyMatch = true, 
-                Given = ModelName, 
-                Family = _model.Family, 
-                Birthdate = DobRange, 
+                FuzzyMatch = true,
+                Given = ModelName,
+                Family = _model.Family,
+                Birthdate = DobRange,
                 AddressPostalcode = PostcodeWildcard()
             });
     }
-    
+
     public void AddFuzzyGfdRangePostcode()
     {
         _queries.Add("FuzzyGFDRangePostcode",
             new SearchQuery()
             {
-                FuzzyMatch = true, 
-                Given = ModelName, 
-                Family = _model.Family, 
-                Birthdate = DobRange, 
+                FuzzyMatch = true,
+                Given = ModelName,
+                Family = _model.Family,
+                Birthdate = DobRange,
                 AddressPostalcode = _model.AddressPostalCode
             });
     }
@@ -149,13 +160,13 @@ public class SearchQueryBuilder
         _queries.Add("FuzzyGFDRange",
             new SearchQuery()
             {
-                FuzzyMatch = true, 
-                Given = ModelName, 
-                Family = _model.Family, 
+                FuzzyMatch = true,
+                Given = ModelName,
+                Family = _model.Family,
                 Birthdate = DobRange
             });
     }
-    
+
     public void AddExactGfd()
     {
         _queries.Add("ExactGFD", new SearchQuery()
@@ -208,7 +219,7 @@ public class SearchQueryBuilder
             });
         }
     }
-    
+
     public OrderedDictionary<string, SearchQuery> Build()
     {
         return _queries;
