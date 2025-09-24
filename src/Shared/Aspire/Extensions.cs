@@ -52,7 +52,7 @@ public static class Extensions
     {
         builder.Logging.EnableEnrichment();
         builder.Services.AddLogEnricher<ApplicationEnricher>();
-        builder.Logging.AddConsole(options => options.FormatterName = Shared.Constants.LogFormatter).AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
+        builder.Logging.AddConsole(options => options.FormatterName = Shared.SharedConstants.LogFormatter).AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
         builder.Logging.AddOpenTelemetry(logging =>
         {
             logging.IncludeFormattedMessage = true;

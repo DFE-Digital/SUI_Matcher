@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 
+using MatchingApi.Search;
 using MatchingApi.Services;
 
 using Microsoft.Extensions.Logging;
@@ -8,6 +9,7 @@ using Moq;
 
 using Newtonsoft.Json;
 
+using Shared;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
@@ -33,7 +35,7 @@ public sealed class MatchingServiceTests
     public async Task ShouldLogOptionalProperties_WhenProvidedInPersonSpecification()
     {
         // Arrange
-        PersonSpecification personSpecification = new()
+        SearchSpecification personSpecification = new()
         {
             AddressPostalCode = "TQ12 5HH",
             BirthDate = new DateOnly(2000, 11, 11),
@@ -65,7 +67,7 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task EmptyPersonModelReturnsError()
     {
-        var result = await _sut.SearchAsync(new PersonSpecification());
+        var result = await _sut.SearchAsync(new SearchSpecification());
 
         Assert.NotNull(result);
         Assert.Equal(MatchStatus.Error, result.Result!.MatchStatus);
@@ -90,7 +92,7 @@ public sealed class MatchingServiceTests
                 Type = SearchResult.ResultType.MultiMatched
             });
 
-        var model = new PersonSpecification
+        var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
             BirthDate = new DateOnly(2000, 11, 11),
@@ -116,7 +118,7 @@ public sealed class MatchingServiceTests
 
 
 
-        var model = new PersonSpecification
+        var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
             BirthDate = dateOfBirth,
@@ -146,7 +148,7 @@ public sealed class MatchingServiceTests
 
 
 
-        var model = new PersonSpecification
+        var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
             BirthDate = new DateOnly(2000, 11, 11),
@@ -177,7 +179,7 @@ public sealed class MatchingServiceTests
 
 
 
-        var model = new PersonSpecification
+        var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
             BirthDate = new DateOnly(2000, 11, 11),
@@ -208,7 +210,7 @@ public sealed class MatchingServiceTests
 
 
 
-        var model = new PersonSpecification
+        var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
             BirthDate = new DateOnly(2000, 11, 11),
@@ -240,7 +242,7 @@ public sealed class MatchingServiceTests
 
 
 
-        var model = new PersonSpecification
+        var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
             BirthDate = new DateOnly(2000, 11, 11),
@@ -268,7 +270,7 @@ public sealed class MatchingServiceTests
         // Arrange
         var eighteenYearsAgo = DateTime.UtcNow.AddYears(-18);
 
-        var model = new PersonSpecification
+        var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
             BirthDate = new DateOnly(eighteenYearsAgo.Year, eighteenYearsAgo.Month, eighteenYearsAgo.Day),
@@ -312,7 +314,7 @@ public sealed class MatchingServiceTests
         var logMessages = new List<string>();
         var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddConsole(options => options.FormatterName = Shared.Constants.LogFormatter)
+            builder.AddConsole(options => options.FormatterName = Shared.SharedConstants.LogFormatter)
                 .AddConsoleFormatter<TestLogConsoleFormatter, TestConsoleFormatterOptions>(options =>
                 {
                     options.TestLogMessages = logMessages;
@@ -322,12 +324,14 @@ public sealed class MatchingServiceTests
         var logger = loggerFactory.CreateLogger<MatchingService>();
         _sut = new MatchingService(logger, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
 
-        var model = new PersonSpecification
+        var model = new SearchSpecification
         {
             BirthDate = new DateOnly(1970, 1, 1),
             Family = "Smith",
             Given = "John",
         };
+        var searchFactory = SearchStrategyFactory.Get(SharedConstants.SearchStrategy.Strategies.Strategy1);
+        var algoId = searchFactory.GetAlgorithmVersion();
 
         _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(new SearchResult
@@ -344,7 +348,7 @@ public sealed class MatchingServiceTests
 
         // Assert
         Assert.NotEmpty(logMessages);
-        Assert.Contains(logMessages, x => x.Contains($"[Algorithm=v{MatchingService.AlgorithmVersion}]"));
+        Assert.Contains(logMessages, x => x.Contains($"[Algorithm=v{algoId}]"));
     }
 
     [Fact]

@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddLogging(builder =>
         {
-            builder.AddConsole(options => options.FormatterName = Shared.Constants.LogFormatter)
+            builder.AddConsole(options => options.FormatterName = Shared.SharedConstants.LogFormatter)
                 .AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
             builder.AddProvider(new JsonFileLoggerProvider(Path.Combine(Directory.GetCurrentDirectory(), enableReconciliationMode ? "sui-reconciliation-logs.json" : "sui-client-logs.json")));
         });

@@ -13,7 +13,7 @@ public class MatchEndpoint(IMatchingService matchingService, IReconciliationServ
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         var configuration = app.ServiceProvider.GetRequiredService<IConfiguration>();
-        var matchPerson = app.MapPost("/matchperson", async (PersonSpecification? model) =>
+        var matchPerson = app.MapPost("/matchperson", async (SearchSpecification? model) =>
         {
             if (model is null)
             {

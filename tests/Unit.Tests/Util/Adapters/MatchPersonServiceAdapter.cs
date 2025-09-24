@@ -11,7 +11,7 @@ public class MatchPersonServiceAdapter(IMatchingService matchingService, IReconc
 {
     public async Task<PersonMatchResponse?> MatchPersonAsync(MatchPersonPayload payload)
     {
-        return await matchingService.SearchAsync(new PersonSpecification
+        return await matchingService.SearchAsync(new SearchSpecification
         {
             AddressPostalCode = payload.AddressPostalCode,
             Family = payload.Family,
