@@ -2,7 +2,7 @@
   "profiles": {
     "SUI.Client.Watcher": {
       "commandName": "Project",
-      "commandLineArgs": "--input $HOME/temp/sui/incoming --output $HOME/temp/sui/incoming/processed --uri http://localhost:5000 --enable-gender"
+      "commandLineArgs": "--input $HOME/temp/sui/incoming --output $HOME/temp/sui/incoming/processed --uri http://localhost:5000 --enable-gender -s strategy1"
     },
     "Reconciliation": {
       "commandName": "Project",
