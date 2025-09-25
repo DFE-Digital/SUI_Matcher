@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Console;
 
 namespace Shared.Logging;
 
-public class LogConsoleFormatter() : ConsoleFormatter(Shared.Constants.LogFormatter)
+public class LogConsoleFormatter() : ConsoleFormatter(Shared.SharedConstants.LogFormatter)
 {
     public override void Write<TState>(
         in LogEntry<TState> logEntry,
@@ -24,8 +24,13 @@ public class LogConsoleFormatter() : ConsoleFormatter(Shared.Constants.LogFormat
         var searchId = Activity.Current?.GetBaggageItem("SearchId");
         var reconcilationId = Activity.Current?.GetBaggageItem("ReconciliationId");
         var algorithmVersion = Activity.Current?.GetBaggageItem("AlgorithmVersion");
+        var strategy = Activity.Current?.GetBaggageItem(SharedConstants.SearchStrategy.LogName);
 
-        if (searchId is not null && algorithmVersion is not null)
+        if (searchId is not null && algorithmVersion is not null && !string.IsNullOrEmpty(strategy))
+        {
+            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [{SharedConstants.SearchStrategy.LogName}={strategy}] [SearchId={searchId}] ");
+        }
+        else if (searchId is not null && algorithmVersion is not null)
         {
             textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [SearchId={searchId}] ");
         }

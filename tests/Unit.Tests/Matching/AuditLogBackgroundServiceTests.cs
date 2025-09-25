@@ -47,7 +47,7 @@ public class AuditLogBackgroundServiceTests
         mockTableServiceClient
             .Setup(x => x.CreateTableIfNotExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Mock.Of<Response<TableItem>>());
-        mockTableServiceClient.Setup(x => x.GetTableClient(Constants.AuditLog.AzStorageTableName)).Returns(mockTableClient.Object);
+        mockTableServiceClient.Setup(x => x.GetTableClient(SharedConstants.AuditLog.AzStorageTableName)).Returns(mockTableClient.Object);
 
 
         // Use mockTableClient.Object in your service
@@ -71,7 +71,7 @@ public class AuditLogBackgroundServiceTests
             && entity.ContainsKey("Metadata")
             && entity.PartitionKey == $"TestUser_{DateTime.UtcNow:yyyy-MM-dd}"),
             It.IsAny<CancellationToken>()), Times.Once);
-        mockTableServiceClient.Verify(x => x.CreateTableIfNotExistsAsync(Constants.AuditLog.AzStorageTableName, It.IsAny<CancellationToken>()), Times.Once);
+        mockTableServiceClient.Verify(x => x.CreateTableIfNotExistsAsync(SharedConstants.AuditLog.AzStorageTableName, It.IsAny<CancellationToken>()), Times.Once);
         _httpContextAccessor.Verify(x => x.HttpContext, Times.Once);
     }
 
@@ -91,7 +91,7 @@ public class AuditLogBackgroundServiceTests
         mockTableServiceClient
             .Setup(x => x.CreateTableIfNotExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Mock.Of<Response<TableItem>>());
-        mockTableServiceClient.Setup(x => x.GetTableClient(Constants.AuditLog.AzStorageTableName)).Returns(mockTableClient.Object);
+        mockTableServiceClient.Setup(x => x.GetTableClient(SharedConstants.AuditLog.AzStorageTableName)).Returns(mockTableClient.Object);
 
 
         // Use mockTableClient.Object in your service
