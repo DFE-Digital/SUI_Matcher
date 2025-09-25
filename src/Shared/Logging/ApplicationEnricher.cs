@@ -16,6 +16,16 @@ public class ApplicationEnricher(IHttpContextAccessor httpContextAccessor) : ILo
             collector.Add("SearchId", searchId);
         }
 
+        if (Activity.Current?.GetBaggageItem("AlgorithmVersion") is { } algorithmVersion)
+        {
+            collector.Add("AlgorithmVersion", algorithmVersion);
+        }
+
+        if (Activity.Current?.GetBaggageItem(SharedConstants.SearchStrategy.LogName) is { } searchStrategy)
+        {
+            collector.Add(SharedConstants.SearchStrategy.LogName, searchStrategy);
+        }
+
         if (Activity.Current?.GetBaggageItem("ReconciliationId") is { } reconciliationId)
         {
             collector.Add("ReconciliationId", reconciliationId);

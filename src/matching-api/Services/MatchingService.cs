@@ -22,12 +22,10 @@ public class MatchingService(
 {
     public async Task<PersonMatchResponse> SearchAsync(SearchSpecification searchSpecification)
     {
+        var searchId = HashUtil.StoreUniqueSearchIdFor(searchSpecification);
         var searchStrategy = SearchStrategyFactory.Get(searchSpecification.SearchStrategy);
-        logger.LogInformation("Using search strategy: {Strategy}", searchSpecification.SearchStrategy);
-
         StoreAlgorithmVersion(searchStrategy.GetAlgorithmVersion(), searchSpecification.SearchStrategy);
 
-        var searchId = HashUtil.StoreUniqueSearchIdFor(searchSpecification);
         var auditDetails = new Dictionary<string, string>
         {
             { "SearchId", searchId }
@@ -92,12 +90,12 @@ public class MatchingService(
         };
     }
 
-    private static void StoreAlgorithmVersion(int versionNumber, string searchStrategy)
+    private void StoreAlgorithmVersion(int versionNumber, string searchStrategy)
     {
         Activity.Current?.SetBaggage("AlgorithmVersion", versionNumber.ToString());
         Activity.Current?.SetBaggage(SharedConstants.SearchStrategy.LogName, searchStrategy);
+        logger.LogInformation("StoreAlgorithmVersion: Version: {Version}, Strategy {Strategy}", versionNumber, searchStrategy);
     }
-
 
     public async Task<DemographicResponse?> GetDemographicsAsync(DemographicRequest request)
     {
