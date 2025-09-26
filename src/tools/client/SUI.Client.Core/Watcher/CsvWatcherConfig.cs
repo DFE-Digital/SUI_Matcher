@@ -9,4 +9,5 @@ public class CsvWatcherConfig
     public int RetryDelayMs { get; set; } = 1000;
     public int ProcessingDelayMs { get; set; } = 500;
     public bool EnableGenderSearch { get; set; } = false;
+    public string? SearchStrategy { get; set; }
 }

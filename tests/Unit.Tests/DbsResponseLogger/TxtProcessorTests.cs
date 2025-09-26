@@ -30,7 +30,7 @@ public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
     public async Task TestDbsTxtResultsFile()
     {
         // ARRANGE
-        using var activity = new Activity("TestActivity");
+        using var activity = new Activity("TestActivity2");
         activity.Start();
         Activity.Current = activity;
 

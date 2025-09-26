@@ -3,7 +3,7 @@ using Shared.Models;
 namespace MatchingApi.Search;
 
 /// <summary>
-/// Non fuzzy and fuzzy searches with a smaller DOB range of 1 month
+/// Evolving strategy, iteratively improved based on performance and feedback.
 /// </summary>
 public class SearchStrategy3 : ISearchStrategy
 {
@@ -11,17 +11,9 @@ public class SearchStrategy3 : ISearchStrategy
 
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
     {
-        // Reduce dob range to 1
-        var queryBuilder = new SearchQueryBuilder(model, dobRange: 1);
-        queryBuilder.AddNonFuzzyGfd();
-        queryBuilder.AddNonFuzzyGfdRange();
-        queryBuilder.AddNonFuzzyAllPostcodeWildcard();
+        var queryBuilder = new SearchQueryBuilder(model, dobRange: 6);
         queryBuilder.AddNonFuzzyAll();
-        queryBuilder.AddFuzzyGfd();
-        queryBuilder.AddFuzzyGfdRangePostcodeWildcard();
-        queryBuilder.AddFuzzyGfdRangePostcode();
         queryBuilder.AddFuzzyAll();
-        queryBuilder.TryAddFuzzyAltDob();
 
         return queryBuilder.Build();
     }

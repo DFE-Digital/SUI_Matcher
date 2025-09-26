@@ -270,7 +270,7 @@ stateDiagram-v2
 
 We use multiple strategies, strategy 1 being the default and defined below. Other strategies may be used in the future for testing purposes.
 
-#### Strategy 1 (Default)
+#### Strategy 1 (Default and stable)
 
 The search critera being used for the pilot is as below, and is subject to change as real-world data and match rates are evaluated.
 
@@ -295,13 +295,18 @@ An alternative strategy is currently under testing is defined below. This uses N
 | 4 | non-fuzzy search with all provided values.                                                                 | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`, `history=true` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 | 5 | fuzzy search with given name, family name and DOB.                                                         | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                                   | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 | 6 | fuzzy search with given name, family name, DOB range, postcode as wildcard.                                | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN*`            | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 7 | guzzy search with given name, family name, DOB range, postcode.                                            | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`        | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 7 | fuzzy search with given name, family name, DOB range, postcode.                                            | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`        | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 | 8 | fuzzy search with all provided values.                                                                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                  | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 | 9 | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06`                                                                   | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 
 #### Strategy 3
 
-Is the same as strategy 2 but with a reduced DOB range, going from 6 months either side to 1 months either side.
+This is a fast iterativly evolving strategy only for testing. This documentation will be updated as the strategy is defined.
+
+| Rule Order | Search                                     | Example                                                                                                                                                  | Returns |
+|:-----------|:-------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------| :--- |
+| 1          | non-fuzzy search with all provided values. | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`, `history=true` | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 2          | fuzzy search with all provided values.     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                  | One of: <br> [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 
 Definition of fuzzy search is defined here: [NHS FHIR API Search](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient).
 

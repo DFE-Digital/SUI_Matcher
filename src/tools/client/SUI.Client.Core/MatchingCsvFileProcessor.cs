@@ -48,6 +48,7 @@ public class MatchingCsvFileProcessor(
                     mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
             Gender = watcherConfig.Value.EnableGenderSearch ? gender : null,
             OptionalProperties = GetOptionalFields(record),
+            SearchStrategy = watcherConfig.Value.SearchStrategy
         };
 
         var response = await matchPersonApi.MatchPersonAsync(payload);

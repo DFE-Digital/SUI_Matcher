@@ -10,4 +10,7 @@ public class MatchPersonPayload
     public string? Email { get; set; }
     public string? AddressPostalCode { get; set; }
     public Dictionary<string, object> OptionalProperties { get; set; } = new();
+
+    // Form of configuration. See API docs
+    public string? SearchStrategy { get; set; }
 }

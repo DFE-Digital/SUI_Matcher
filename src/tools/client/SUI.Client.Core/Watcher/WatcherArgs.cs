@@ -24,4 +24,7 @@ public class WatcherArgs
 
     [Option('m', "matched-dir", Required = false, HelpText = "Directory to write matched records to. If not set, this feature is disabled.")]
     public string? MatchedRecordsDirectory { get; set; }
+
+    [Option('s', "search-strategy", Required = false, HelpText = "Choose only if you understand the different algorithms in the API")]
+    public string? SearchStrategy { get; set; }
 }
