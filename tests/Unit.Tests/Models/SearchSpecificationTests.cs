@@ -16,7 +16,7 @@ public class SearchSpecificationTests
         {
             SearchStrategy = val!
         };
-        
+
         // Act
         Assert.Equal(SharedConstants.SearchStrategy.Strategies.Strategy1, personSpecification.SearchStrategy);
     }
@@ -29,7 +29,7 @@ public class SearchSpecificationTests
         {
             SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy2
         };
-        
+
         // Act
         Assert.Equal(SharedConstants.SearchStrategy.Strategies.Strategy2, personSpecification.SearchStrategy);
     }
