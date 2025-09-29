@@ -22,6 +22,7 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderGender = "SUI_Gender";
     public const string HeaderEmail = "SUI_Email";
     public const string HeaderPhone = "SUI_Phone";
+    public const string HeaderDifferences = "SUI_Differences";
     public const string HeaderStatus = "SUI_Status";
 
     protected override async Task ProcessRecord(Dictionary<string, string> record, IStats stats)
@@ -63,6 +64,7 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderAddressPostalCode] = string.Join(" - ", response?.Person?.AddressPostalCodes ?? ["-"]);
         record[HeaderEmail] = string.Join(" - ", response?.Person?.Emails ?? ["-"]);
         record[HeaderPhone] = string.Join(" - ", response?.Person?.PhoneNumbers ?? ["-"]);
+        record[HeaderDifferences] = string.Join(" - ", response?.Differences?.Select(x => x.FieldName) ?? ["-"]);
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
 
         RecordStats((ReconciliationCsvProcessStats)stats, response);
@@ -78,6 +80,7 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderAddressPostalCode);
         headers.Add(HeaderEmail);
         headers.Add(HeaderPhone);
+        headers.Add(HeaderDifferences);
         headers.Add(HeaderStatus);
     }
 
@@ -89,8 +92,8 @@ public class ReconciliationCsvFileProcessor(
     protected override string GeneratePdfReport(IStats stats, string ts, string outputDirectory)
     {
         var localStats = (ReconciliationCsvProcessStats)stats;
-        string[] categories = ["Errored", "No Differences", "One Difference", "Many Differences", "Superseded NHS Number"];
-        double[] values = [localStats.ErroredCount, localStats.NoDifferenceCount, localStats.OneDifferenceCount, localStats.ManyDifferencesCount, localStats.SupersededNhsNumber];
+        string[] categories = ["Errored", "No Differences", "One Difference", "Many Differences", "Superseded NHS Number", "Invalid NHS Number", "Patient Not Found", "Missing NHS Number"];
+        double[] values = [localStats.ErroredCount, localStats.NoDifferenceCount, localStats.OneDifferenceCount, localStats.ManyDifferencesCount, localStats.SupersededNhsNumber, localStats.InvalidNhsNumber, localStats.PatientNotFound, localStats.MissingNhsNumber];
         return PdfReportGenerator.GenerateReport(GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"), "Reconciliation Report", categories, values);
     }
 
@@ -113,6 +116,15 @@ public class ReconciliationCsvFileProcessor(
 
             case ReconciliationStatus.OneDifference:
                 stats.OneDifferenceCount++;
+                break;
+            case ReconciliationStatus.InvalidNhsNumber:
+                stats.InvalidNhsNumber++;
+                break;
+            case ReconciliationStatus.PatientNotFound:
+                stats.PatientNotFound++;
+                break;
+            case ReconciliationStatus.MissingNhsNumber:
+                stats.MissingNhsNumber++;
                 break;
             default:
                 stats.ErroredCount++;

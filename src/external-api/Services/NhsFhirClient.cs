@@ -93,20 +93,40 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                          or ContactPoint.ContactPointSystem.Sms && s.Period.End is null).Select(s => s.Value).ToArray(),
                     FamilyNames = data.Name.Where(s => s.Period.End is null).Select(s => s.Family).ToArray(),
                     GivenNames = data.Name.Where(s => s.Period.End is null).SelectMany(s => s.Given).ToArray(),
-                }
+                },
+                Status = Status.Success
             };
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID");
-            return DemographicResult();
+            var status = Status.Error;
+            var fhirError = string.Empty;
+            if (ex is FhirOperationException fex)
+            {
+                if (fex.Outcome != null && fex.Outcome.Issue.Count > 0 && fex.Outcome.Issue[0].Details.Coding.Count > 0)
+                {
+                    fhirError = $" - {fex.Outcome.Issue[0].Details.Coding[0].Display}";
+                    if (fex.Outcome.Issue[0].Details.Coding[0].Code is "INVALID_NHS_NUMBER" or "INVALID_RESOURCE_ID")
+                    {
+                        status = Status.InvalidNhsNumber;
+                    }
+
+                    if (fex.Outcome.Issue[0].Details.Coding[0].Code is "PATIENT_NOT_FOUND")
+                    {
+                        status = Status.PatientNotFound;
+                    }
+                }
+            }
+            logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID{fhirError}", fhirError);
+            return DemographicResult(fhirError, status);
         }
 
-        static DemographicResult DemographicResult()
+        static DemographicResult DemographicResult(string fhirError = "", Status status = Status.Error)
         {
             return new DemographicResult
             {
-                ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID"
+                ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID" + fhirError,
+                Status = status
             };
         }
     }

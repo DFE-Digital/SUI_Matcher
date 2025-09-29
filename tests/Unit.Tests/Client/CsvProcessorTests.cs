@@ -411,7 +411,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         {
             Result = new NhsPerson
             {
-                NhsNumber = "AAAAA1111111",
+                NhsNumber = "9449305552",
                 GivenNames = ["John"],
                 FamilyNames = ["Smith"],
                 BirthDate = new DateOnly(2000, 04, 01),
@@ -436,7 +436,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         var data = new D
         {
-            [TestDataHeaders.NhsNumber] = "AAAAA1111111",
+            [TestDataHeaders.NhsNumber] = "9449305552",
             [TestDataHeaders.GivenName] = "John",
             [TestDataHeaders.Surname] = "Smith",
             [TestDataHeaders.DOB] = "2000-04-01",
@@ -446,7 +446,67 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             [TestDataHeaders.Phone] = "0789 1234567"
         };
 
-        var list = new List<D> { data };
+        var data2 = new D
+        {
+            [TestDataHeaders.NhsNumber] = "9449305552",
+            [TestDataHeaders.GivenName] = "Dave",
+            [TestDataHeaders.Surname] = "Smith",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Gender] = "1",
+            [TestDataHeaders.PostCode] = "ab12 3ed",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Phone] = "0789 1234567"
+        };
+
+        var data3 = new D
+        {
+            [TestDataHeaders.NhsNumber] = "9449305552",
+            [TestDataHeaders.GivenName] = "Dave",
+            [TestDataHeaders.Surname] = "Wilkes",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Gender] = "1",
+            [TestDataHeaders.PostCode] = "ab12 3ed",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Phone] = "0789 1234567"
+        };
+
+        var data4 = new D
+        {
+            [TestDataHeaders.NhsNumber] = "9691914913",
+            [TestDataHeaders.GivenName] = "Dave",
+            [TestDataHeaders.Surname] = "Wilkes",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Gender] = "1",
+            [TestDataHeaders.PostCode] = "ab12 3ed",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Phone] = "0789 1234567"
+        };
+
+        var data5 = new D
+        {
+            [TestDataHeaders.NhsNumber] = "",
+            [TestDataHeaders.GivenName] = "Dave",
+            [TestDataHeaders.Surname] = "Wilkes",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Gender] = "1",
+            [TestDataHeaders.PostCode] = "ab12 3ed",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Phone] = "0789 1234567"
+        };
+
+        var data6 = new D
+        {
+            [TestDataHeaders.NhsNumber] = "99999999",
+            [TestDataHeaders.GivenName] = "Dave",
+            [TestDataHeaders.Surname] = "Wilkes",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Gender] = "1",
+            [TestDataHeaders.PostCode] = "ab12 3ed",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Phone] = "0789 1234567"
+        };
+
+        var list = new List<D> { data, data2, data3, data4, data5, data6 };
         var headers = new HashSet<string>(data.Keys);
 
         await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
@@ -470,17 +530,36 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once(), "The PerformSearchByNhsId method should have invoked ONCE");
+        _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Exactly(4), "The PerformSearchByNhsId method should have invoked four times");
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
-        Assert.Equal(demographicResult.Result.NhsNumber, records.First()[ReconciliationCsvFileProcessor.HeaderNhsNo]);
-        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderGivenName], demographicResult.Result.GivenNames);
-        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderFamilyName], demographicResult.Result.FamilyNames);
-        Assert.Equal(demographicResult.Result.BirthDate.ToString(), records.First()[ReconciliationCsvFileProcessor.HeaderBirthDate]);
-        Assert.Equal(demographicResult.Result.Gender, records.First()[ReconciliationCsvFileProcessor.HeaderGender]);
-        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderAddressPostalCode], demographicResult.Result.AddressPostalCodes);
-        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderEmail], demographicResult.Result.Emails);
-        Assert.Contains(records.First()[ReconciliationCsvFileProcessor.HeaderPhone], demographicResult.Result.PhoneNumbers);
-        Assert.Equal(nameof(ReconciliationStatus.NoDifferences), records.First()[ReconciliationCsvFileProcessor.HeaderStatus]);
+
+        Assert.Equal(demographicResult.Result.NhsNumber, records[0][ReconciliationCsvFileProcessor.HeaderNhsNo]);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderGivenName], demographicResult.Result.GivenNames);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderFamilyName], demographicResult.Result.FamilyNames);
+        Assert.Equal(demographicResult.Result.BirthDate.ToString(), records[0][ReconciliationCsvFileProcessor.HeaderBirthDate]);
+        Assert.Equal(demographicResult.Result.Gender, records[0][ReconciliationCsvFileProcessor.HeaderGender]);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderAddressPostalCode], demographicResult.Result.AddressPostalCodes);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderEmail], demographicResult.Result.Emails);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderPhone], demographicResult.Result.PhoneNumbers);
+        Assert.Equal(nameof(ReconciliationStatus.NoDifferences), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderDifferences], String.Empty);
+
+        Assert.DoesNotContain(records[1][TestDataHeaders.GivenName], demographicResult.Result.GivenNames);
+        Assert.Equal(nameof(ReconciliationStatus.OneDifference), records[1][ReconciliationCsvFileProcessor.HeaderStatus]);
+        Assert.Equal("Given", records[1][ReconciliationCsvFileProcessor.HeaderDifferences]);
+
+        Assert.DoesNotContain(records[2][TestDataHeaders.Surname], demographicResult.Result.FamilyNames);
+        Assert.Equal(nameof(ReconciliationStatus.ManyDifferences), records[2][ReconciliationCsvFileProcessor.HeaderStatus]);
+        Assert.Contains(records[2][ReconciliationCsvFileProcessor.HeaderDifferences], "Given - Family");
+
+        Assert.Equal(demographicResult.Result.NhsNumber, records[3][ReconciliationCsvFileProcessor.HeaderNhsNo]);
+        Assert.Equal(nameof(ReconciliationStatus.SupersededNhsNumber), records[3][ReconciliationCsvFileProcessor.HeaderStatus]);
+        Assert.Contains(records[3][ReconciliationCsvFileProcessor.HeaderDifferences], "NhsNumber - Given - Family");
+
+        Assert.Equal("-", records[4][ReconciliationCsvFileProcessor.HeaderNhsNo]);
+        Assert.Equal(nameof(ReconciliationStatus.MissingNhsNumber), records[4][ReconciliationCsvFileProcessor.HeaderStatus]);
+
+        Assert.Equal(nameof(ReconciliationStatus.InvalidNhsNumber), records[5][ReconciliationCsvFileProcessor.HeaderStatus]);
     }
 
     private ServiceProvider Bootstrap(bool enableReconciliation, Action<ServiceCollection>? configure = null)

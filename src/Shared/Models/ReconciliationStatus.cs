@@ -6,5 +6,8 @@ public enum ReconciliationStatus
     ManyDifferences,
     OneDifference,
     SupersededNhsNumber,
+    MissingNhsNumber,
+    InvalidNhsNumber,
+    PatientNotFound,
     Error
 }

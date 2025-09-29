@@ -43,20 +43,11 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
     public async Task<ReconciliationResponse?> ReconcilePersonAsync(ReconciliationRequest payload)
     {
         var response = await httpClient.PostAsJsonAsync("/matching/api/v1/reconciliation", payload);
-
-        if (response.IsSuccessStatusCode)
+        var dto = await response.Content.ReadFromJsonAsync<ReconciliationResponse>(new JsonSerializerOptions
         {
-            var dto = await response.Content.ReadFromJsonAsync<ReconciliationResponse>(new JsonSerializerOptions
-            {
-                Converters = { new CustomDateOnlyConverter() },
-                PropertyNameCaseInsensitive = true,
-            });
-            return dto;
-        }
-
-        Console.WriteLine(response.StatusCode);
-        Console.WriteLine(response.ReasonPhrase);
-        Console.WriteLine(response.Content.ReadAsStringAsync().Result);
-        return null;
+            Converters = { new CustomDateOnlyConverter() },
+            PropertyNameCaseInsensitive = true,
+        });
+        return dto;
     }
 }

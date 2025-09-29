@@ -23,9 +23,6 @@ public class FhirClientFactory(ILogger<FhirClientFactory> logger, ITokenService 
         if (fhirClient.RequestHeaders != null)
         {
             var accessToken = tokenService.GetBearerToken().Result;
-
-            logger.LogInformation("Retrieved Nhs Digital FHIR API access token");
-
             fhirClient.RequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             fhirClient.RequestHeaders.Add("X-Request-ID", Guid.NewGuid().ToString());
         }

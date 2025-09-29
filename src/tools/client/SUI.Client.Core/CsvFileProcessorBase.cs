@@ -51,6 +51,7 @@ public abstract class CsvFileProcessorBase(ILogger<CsvFileProcessorBase> logger,
             }
 
             await ProcessRecord(record, stats);
+            Thread.Sleep(250);
         }
 
         progressStopwatch.Stop();
