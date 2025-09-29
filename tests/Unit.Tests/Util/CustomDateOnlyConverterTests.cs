@@ -47,4 +47,14 @@ public class CustomDateOnlyConverterTests
 
         Assert.Equal("null", result);
     }
+
+    [Fact]
+    public void ReturnsCorrectDateOnly_WhenValidDateStringProvided()
+    {
+        var dateString = "20/09/2008";
+        var result = dateString.ToDateOnly([Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish]);
+
+        Assert.NotNull(result);
+        Assert.Equal(new DateOnly(2008, 09, 20), result);
+    }
 }
