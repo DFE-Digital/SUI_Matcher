@@ -75,15 +75,15 @@ public class TxtProcessorTests(ITestOutputHelper testOutputHelper)
 
         var data = testData.Select(x => x.Record).ToList();
 
-        await WriteTxtAsync(_dir, "file0001.txt", data); // Today
-        await WriteTxtAsync(_dir, "file0002.txt", data); // yesterday
-        await WriteTxtAsync(_dir, "file0003.txt", data); // day before yesterday
-        await WriteTxtAsync(_dir, "file0004.txt", data); // last year
+        await WriteTxtAsync(_dir, "txt_process_file0001.txt", data); // Today
+        await WriteTxtAsync(_dir, "txt_process_file0002.txt", data); // yesterday
+        await WriteTxtAsync(_dir, "txt_process_file0003.txt", data); // day before yesterday
+        await WriteTxtAsync(_dir, "txt_process_file0004.txt", data); // last year
 
         await WatchFile(monitor, data, () => Task.CompletedTask); // Today
-        await WatchFile(monitor, data, () => UpdateFileModifiedDate(_dir, "file0002.txt", -1)); // yesterday
-        await WatchFile(monitor, data, () => UpdateFileModifiedDate(_dir, "file0003.txt", -2)); // day before yesterday
-        await WatchFile(monitor, data, () => UpdateFileModifiedDate(_dir, "file0004.txt", -365)); // last year
+        await WatchFile(monitor, data, () => UpdateFileModifiedDate(_dir, "txt_process_file0002.txt", -1)); // yesterday
+        await WatchFile(monitor, data, () => UpdateFileModifiedDate(_dir, "txt_process_file0003.txt", -2)); // day before yesterday
+        await WatchFile(monitor, data, () => UpdateFileModifiedDate(_dir, "txt_process_file0004.txt", -365)); // last year
 
         await cts.CancelAsync();   // cancel the task
         await monitoringTask; // await cancellation
