@@ -33,9 +33,9 @@ public static class NhsNumberValidator
         return characters.Select(int.Parse).ToList();
     }
 
-    private static int ExtractChecksum(IReadOnlyList<int> characters) => characters[NhsNumberLength - 1];
+    private static int ExtractChecksum(List<int> characters) => characters[NhsNumberLength - 1];
 
-    private static int CalculateWeightedTotal(IReadOnlyCollection<int> characters)
+    private static int CalculateWeightedTotal(List<int> characters)
     {
         var position = 0;
         var lastCharacter = characters.Count;

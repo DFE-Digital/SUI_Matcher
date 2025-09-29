@@ -92,7 +92,7 @@ public class TokenService(
         };
         var content = new FormUrlEncodedContent(values);
 
-        logger.LogDebug("Requesting token from " + authAddress);
+        logger.LogDebug("Requesting token from {AuthAddress}", authAddress);
 
         var response = await _httpClient.PostAsync(authAddress, content);
 

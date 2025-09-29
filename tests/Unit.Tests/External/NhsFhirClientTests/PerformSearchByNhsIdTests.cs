@@ -38,7 +38,7 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         // Assert
         Assert.NotNull(result);
         Assert.Null(result.Result);
-        Assert.True(string.IsNullOrEmpty(result.ErrorMessage) == false);
+        Assert.False(string.IsNullOrEmpty(result.ErrorMessage));
     }
 
     [Fact]
@@ -57,6 +57,6 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         // Assert
         Assert.NotNull(result);
         Assert.Null(result.Result);
-        Assert.True(string.IsNullOrEmpty(result.ErrorMessage) == false);
+        Assert.False(string.IsNullOrEmpty(result.ErrorMessage));
     }
 }

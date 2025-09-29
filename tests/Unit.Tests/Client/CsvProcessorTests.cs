@@ -550,11 +550,11 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         Assert.DoesNotContain(records[2][TestDataHeaders.Surname], demographicResult.Result.FamilyNames);
         Assert.Equal(nameof(ReconciliationStatus.ManyDifferences), records[2][ReconciliationCsvFileProcessor.HeaderStatus]);
-        Assert.Contains(records[2][ReconciliationCsvFileProcessor.HeaderDifferences], "Given - Family");
+        Assert.Contains("Given - Family", records[2][ReconciliationCsvFileProcessor.HeaderDifferences]);
 
         Assert.Equal(demographicResult.Result.NhsNumber, records[3][ReconciliationCsvFileProcessor.HeaderNhsNo]);
         Assert.Equal(nameof(ReconciliationStatus.SupersededNhsNumber), records[3][ReconciliationCsvFileProcessor.HeaderStatus]);
-        Assert.Contains(records[3][ReconciliationCsvFileProcessor.HeaderDifferences], "NhsNumber - Given - Family");
+        Assert.Contains("NhsNumber - Given - Family", records[3][ReconciliationCsvFileProcessor.HeaderDifferences]);
 
         Assert.Equal("-", records[4][ReconciliationCsvFileProcessor.HeaderNhsNo]);
         Assert.Equal(nameof(ReconciliationStatus.MissingNhsNumber), records[4][ReconciliationCsvFileProcessor.HeaderStatus]);

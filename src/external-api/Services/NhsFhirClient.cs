@@ -101,20 +101,17 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
         {
             var status = Status.Error;
             var fhirError = string.Empty;
-            if (ex is FhirOperationException fex)
+            if (ex is FhirOperationException { Outcome: not null } fex && fex.Outcome.Issue.Count > 0 && fex.Outcome.Issue[0].Details.Coding.Count > 0)
             {
-                if (fex.Outcome != null && fex.Outcome.Issue.Count > 0 && fex.Outcome.Issue[0].Details.Coding.Count > 0)
+                fhirError = $" - {fex.Outcome.Issue[0].Details.Coding[0].Display}";
+                if (fex.Outcome.Issue[0].Details.Coding[0].Code is "INVALID_NHS_NUMBER" or "INVALID_RESOURCE_ID")
                 {
-                    fhirError = $" - {fex.Outcome.Issue[0].Details.Coding[0].Display}";
-                    if (fex.Outcome.Issue[0].Details.Coding[0].Code is "INVALID_NHS_NUMBER" or "INVALID_RESOURCE_ID")
-                    {
-                        status = Status.InvalidNhsNumber;
-                    }
+                    status = Status.InvalidNhsNumber;
+                }
 
-                    if (fex.Outcome.Issue[0].Details.Coding[0].Code is "PATIENT_NOT_FOUND")
-                    {
-                        status = Status.PatientNotFound;
-                    }
+                if (fex.Outcome.Issue[0].Details.Coding[0].Code is "PATIENT_NOT_FOUND")
+                {
+                    status = Status.PatientNotFound;
                 }
             }
             logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID{FhirError}", fhirError);
