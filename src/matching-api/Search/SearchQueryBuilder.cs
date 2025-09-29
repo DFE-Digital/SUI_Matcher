@@ -128,6 +128,19 @@ public class SearchQueryBuilder
             AddressPostalcode = _model.AddressPostalCode
         });
     }
+    
+    public void AddFuzzyGfdPostcodeWildcard()
+    {
+        _queries.Add("FuzzyGFDPostcodeWildcard",
+            new SearchQuery()
+            {
+                FuzzyMatch = true,
+                Given = ModelName,
+                Family = _model.Family,
+                Birthdate = DobRange,
+                AddressPostalcode = PostcodeWildcard()
+            });
+    }
 
     public void AddFuzzyGfdRangePostcodeWildcard()
     {
@@ -224,4 +237,6 @@ public class SearchQueryBuilder
     {
         return _queries;
     }
+
+    
 }
