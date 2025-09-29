@@ -117,7 +117,7 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                     }
                 }
             }
-            logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID{fhirError}", fhirError);
+            logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID{FhirError}", fhirError);
             return DemographicResult(fhirError, status);
         }
 
