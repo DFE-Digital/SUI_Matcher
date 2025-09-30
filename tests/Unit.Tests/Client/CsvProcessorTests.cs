@@ -481,7 +481,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderEmail], demographicResult.Result.Emails);
         Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderPhone], demographicResult.Result.PhoneNumbers);
         Assert.Equal(nameof(ReconciliationStatus.NoDifferences), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
-        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderDifferences], String.Empty);
+        Assert.Contains(String.Empty, records[0][ReconciliationCsvFileProcessor.HeaderDifferences]);
     }
 
     [Fact]
@@ -703,7 +703,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         Assert.Equal(demographicResult.Result.NhsNumber, records[0][ReconciliationCsvFileProcessor.HeaderNhsNo]);
         Assert.Equal(nameof(ReconciliationStatus.SupersededNhsNumber), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
-        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderDifferences], "NhsNumber - Given - Family");
+        Assert.Contains("NhsNumber - Given - Family", records[0][ReconciliationCsvFileProcessor.HeaderDifferences]);
     }
 
     [Fact]

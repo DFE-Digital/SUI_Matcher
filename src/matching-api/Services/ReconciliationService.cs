@@ -136,13 +136,14 @@ public class ReconciliationService(
             differences.Add(new Difference { FieldName = nameof(request.NhsNumber), Local = request.NhsNumber, Nhs = result.NhsNumber });
         }
 
+        const string dateFormat = "yyyy-MM-dd";
         if (request.BirthDate.HasValue && !result.BirthDate.HasValue || !request.BirthDate.HasValue && result.BirthDate.HasValue)
         {
             differences.Add(new Difference
             {
                 FieldName = nameof(request.BirthDate),
-                Local = request.BirthDate?.ToString("yyyy-MM-dd"),
-                Nhs = result.BirthDate?.ToString("yyyy-MM-dd")
+                Local = request.BirthDate?.ToString(dateFormat),
+                Nhs = result.BirthDate?.ToString(dateFormat)
             });
         }
         else if (request.BirthDate.HasValue && result.BirthDate.HasValue && request.BirthDate.Value.CompareTo(result.BirthDate.Value) != 0)
@@ -150,8 +151,8 @@ public class ReconciliationService(
             differences.Add(new Difference
             {
                 FieldName = nameof(request.BirthDate),
-                Local = request.BirthDate?.ToString("yyyy-MM-dd"),
-                Nhs = result.BirthDate?.ToString("yyyy-MM-dd")
+                Local = request.BirthDate?.ToString(dateFormat),
+                Nhs = result.BirthDate?.ToString(dateFormat)
             });
         }
 
