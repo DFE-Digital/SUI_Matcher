@@ -51,6 +51,7 @@ public abstract class CsvFileProcessorBase(ILogger<CsvFileProcessorBase> logger,
             }
 
             await ProcessRecord(record, stats);
+            // this delay is to try and stop requests getting throttled by the FHIR api.
             await Task.Delay(250);
         }
 
