@@ -24,14 +24,42 @@ public class ReconciliationService(
             { "SearchId", reconciliationId }
         };
         await auditLogger.LogAsync(new AuditLogEntry(AuditLogEntry.AuditLogAction.Reconciliation, auditDetails));
-        if (reconciliationRequest.NhsNumber == null)
+        if (string.IsNullOrEmpty(reconciliationRequest.NhsNumber))
         {
             logger.LogError("Reconcile request missing Nhs Number");
-            return new ReconciliationResponse { Errors = ["Missing Nhs Number"] };
+            return new ReconciliationResponse
+            {
+                Status = ReconciliationStatus.MissingNhsNumber,
+                Errors = ["Missing Nhs Number"]
+            };
         }
-
+        if (!NhsNumberValidator.Validate(reconciliationRequest.NhsNumber))
+        {
+            logger.LogError("NHS Number Validation failed");
+            return new ReconciliationResponse
+            {
+                Status = ReconciliationStatus.InvalidNhsNumber,
+                Errors = ["The NHS Number was not valid"]
+            };
+        }
         var data = await nhsFhirClient.PerformSearchByNhsId(reconciliationRequest.NhsNumber);
-        if (data.Result == null || !string.IsNullOrEmpty(data.ErrorMessage))
+        if (data.Status == Status.InvalidNhsNumber || !NhsNumberValidator.Validate(reconciliationRequest.NhsNumber))
+        {
+            return new ReconciliationResponse
+            {
+                Status = ReconciliationStatus.InvalidNhsNumber,
+                Errors = [data.ErrorMessage ?? "Unknown error"]
+            };
+        }
+        if (data.Status == Status.PatientNotFound)
+        {
+            return new ReconciliationResponse
+            {
+                Status = ReconciliationStatus.PatientNotFound,
+                Errors = [data.ErrorMessage ?? "Unknown error"]
+            };
+        }
+        if (data.Status == Status.Error || data.Result == null)
         {
             return new ReconciliationResponse
             {
@@ -108,13 +136,23 @@ public class ReconciliationService(
             differences.Add(new Difference { FieldName = nameof(request.NhsNumber), Local = request.NhsNumber, Nhs = result.NhsNumber });
         }
 
-        if (request.BirthDate != result.BirthDate)
+        const string dateFormat = "yyyy-MM-dd";
+        if (request.BirthDate.HasValue && !result.BirthDate.HasValue || !request.BirthDate.HasValue && result.BirthDate.HasValue)
         {
             differences.Add(new Difference
             {
                 FieldName = nameof(request.BirthDate),
-                Local = request.BirthDate?.ToString("yyyy-MM-dd"),
-                Nhs = result.BirthDate?.ToString("yyyy-MM-dd"),
+                Local = request.BirthDate?.ToString(dateFormat),
+                Nhs = result.BirthDate?.ToString(dateFormat)
+            });
+        }
+        else if (request.BirthDate.HasValue && result.BirthDate.HasValue && request.BirthDate.Value.CompareTo(result.BirthDate.Value) != 0)
+        {
+            differences.Add(new Difference
+            {
+                FieldName = nameof(request.BirthDate),
+                Local = request.BirthDate?.ToString(dateFormat),
+                Nhs = result.BirthDate?.ToString(dateFormat)
             });
         }
 

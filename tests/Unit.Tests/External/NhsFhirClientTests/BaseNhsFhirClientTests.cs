@@ -1,3 +1,5 @@
+using System.Net;
+
 using ExternalApi.Services;
 
 using Hl7.Fhir.Model;
@@ -57,7 +59,36 @@ public class BaseNhsFhirClientTests
         {
             var resource = new Patient
             {
-                Id = "123"
+                Id = "123",
+                Name = [new HumanName("Smith", ["John"])
+                {
+                    Period = new Period
+                    {
+                        Start = "01/01/2001",
+                        End = null
+                    }
+                }],
+                Telecom =
+                [
+                    new ContactPoint(ContactPoint.ContactPointSystem.Email, ContactPoint.ContactPointUse.Home,
+                        "test@test.com")
+                    {
+                        Period = new Period
+                        {
+                            Start = "01/01/2001",
+                            End = null
+                        }
+                    },
+                    new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Home,
+                        "0123456789")
+                    {
+                        Period = new Period
+                        {
+                            Start = "01/01/2001",
+                            End = null
+                        }
+                    }
+                ]
             } as TResource;
             return Task.FromResult(resource);
         }
@@ -106,8 +137,11 @@ public class BaseNhsFhirClientTests
 
 public class TestFhirClientError : FhirClient
 {
-    public TestFhirClientError(string endpoint, FhirClientSettings settings = null!, HttpMessageHandler messageHandler = null!) : base(endpoint, settings, messageHandler)
+    private readonly string _errorCode;
+
+    public TestFhirClientError(string endpoint, string errorCode = "", FhirClientSettings settings = null!, HttpMessageHandler messageHandler = null!) : base(endpoint, settings, messageHandler)
     {
+        _errorCode = errorCode;
     }
 
     public override Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
@@ -119,6 +153,9 @@ public class TestFhirClientError : FhirClient
         CancellationToken? ct = null) where TResource : class
     {
 
-        throw new Exception("Error occurred while performing read");
+        throw new FhirOperationException("Error occurred while performing search", HttpStatusCode.BadRequest, new OperationOutcome
+        {
+            Issue = [new OperationOutcome.IssueComponent { Details = new CodeableConcept("FHIR", _errorCode) }]
+        });
     }
 }

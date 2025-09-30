@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text.Json.Nodes;
 
-using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 
 using ExternalApi.Util;
@@ -17,7 +16,13 @@ public interface ITokenService
     Task Initialise();
 }
 
-public class TokenService : ITokenService
+public class TokenService(
+    IOptions<NhsAuthConfigOptions> options,
+    ILogger<TokenService> logger,
+    IJwtHandler jwtHandler,
+    IHttpClientFactory httpClientFactory,
+    SecretClient secretClient)
+    : ITokenService
 {
     protected static class NhsDigitalKeyConstants
     {
@@ -28,28 +33,14 @@ public class TokenService : ITokenService
     }
 
     // Key vault Client
-    private readonly SecretClient _secretClient;
-    private readonly int _accountTokenExpiresInMinutes;
+    private readonly int _accountTokenExpiresInMinutes = options.Value.NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES ?? NhsDigitalKeyConstants.AccountTokenExpiresInMinutes;
     private string? _privateKey;
     private string? _clientId;
     private string? _kid;
 
     private string? _accessToken;
     private DateTimeOffset _accessTokenExpiration;
-    private readonly ILogger<TokenService> _logger;
-    private readonly HttpClient _httpClient;
-    private readonly IJwtHandler _jwtHandler;
-
-    public TokenService(IOptions<NhsAuthConfigOptions> options, ILogger<TokenService> logger, IJwtHandler jwtHandler, IHttpClientFactory httpClientFactory, SecretClient secretClient)
-    {
-        _logger = logger;
-        _httpClient = httpClientFactory.CreateClient("nhs-auth-api");
-        _jwtHandler = jwtHandler;
-
-        _secretClient = secretClient;
-
-        _accountTokenExpiresInMinutes = options.Value.NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES ?? NhsDigitalKeyConstants.AccountTokenExpiresInMinutes;
-    }
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("nhs-auth-api");
 
     public async Task<string> GetBearerToken()
     {
@@ -60,12 +51,12 @@ public class TokenService : ITokenService
 
         if (_accessToken != null && _accessTokenExpiration > DateTimeOffset.UtcNow)
         {
-            _logger.LogDebug("Found existing none expired access token found");
+            logger.LogDebug("Found existing none expired access token found");
 
             return _accessToken;
         }
 
-        _logger.LogDebug("Getting new access token from Nhs Digital oauth2 endpoint");
+        logger.LogDebug("Getting new access token from Nhs Digital oauth2 endpoint");
 
         // Perform request to NHS auth endpoint
         _accessTokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_accountTokenExpiresInMinutes);
@@ -84,14 +75,14 @@ public class TokenService : ITokenService
 
     protected virtual async Task<string?> GetSecretMaterial(string secretName)
     {
-        KeyVaultSecret secret = await _secretClient.GetSecretAsync(secretName);
+        KeyVaultSecret secret = await secretClient.GetSecretAsync(secretName);
         return secret.Value;
     }
 
     private async Task<string?> AccessToken(int expInMinutes = 1)
     {
         var authAddress = _httpClient.BaseAddress!.ToString();
-        var jwt = _jwtHandler.GenerateJwt(_privateKey!, authAddress, _clientId!, _kid!, expInMinutes);
+        var jwt = jwtHandler.GenerateJwt(_privateKey!, authAddress, _clientId!, _kid!, expInMinutes);
 
         var values = new Dictionary<string, string>
         {
@@ -101,7 +92,7 @@ public class TokenService : ITokenService
         };
         var content = new FormUrlEncodedContent(values);
 
-        Console.WriteLine("Requesting token from " + authAddress);
+        logger.LogDebug("Requesting token from {AuthAddress}", authAddress);
 
         var response = await _httpClient.PostAsync(authAddress, content);
 
@@ -110,10 +101,11 @@ public class TokenService : ITokenService
             throw new HttpRequestException("Authentication failed. \n" + response.Content);
         }
 
+        logger.LogInformation("Retrieved Nhs Digital FHIR API access token");
+
         var resBody = await response.Content.ReadAsStringAsync();
         var parsed = JsonNode.Parse(resBody);
 
         return parsed?["access_token"]?.ToString();
-
     }
 }

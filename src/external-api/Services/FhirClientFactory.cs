@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 
-using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 
 namespace ExternalApi.Services;
@@ -12,7 +11,7 @@ public interface IFhirClientFactory
 }
 
 [ExcludeFromCodeCoverage(Justification = "Cannot test third party library")]
-public class FhirClientFactory(ILogger<FhirClientFactory> logger, ITokenService tokenService, IConfiguration config) : IFhirClientFactory
+public class FhirClientFactory(ITokenService tokenService, IConfiguration config) : IFhirClientFactory
 {
     public FhirClient CreateFhirClient()
     {
@@ -23,9 +22,6 @@ public class FhirClientFactory(ILogger<FhirClientFactory> logger, ITokenService 
         if (fhirClient.RequestHeaders != null)
         {
             var accessToken = tokenService.GetBearerToken().Result;
-
-            logger.LogInformation("Retrieved Nhs Digital FHIR API access token");
-
             fhirClient.RequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             fhirClient.RequestHeaders.Add("X-Request-ID", Guid.NewGuid().ToString());
         }

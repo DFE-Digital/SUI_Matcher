@@ -101,4 +101,48 @@ public class MatchPersonApiServiceTests
         );
         Assert.Null(result);
     }
+
+    [Fact]
+    public async Task ReconcilePerson_GivenAValidRequestAndResponseReturnsCorrectDto()
+    {
+        // Arrange
+        var validResult = new ReconciliationResponse { Person = new NhsPerson { NhsNumber = "12345" } };
+        var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
+        handlerMock
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .ReturnsAsync(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = JsonContent.Create(validResult),
+            })
+            .Verifiable();
+        var httpClient = new HttpClient(handlerMock.Object)
+        {
+            BaseAddress = new Uri("http://localhost:5000/")
+        };
+        var validPayload = new ReconciliationRequest
+        {
+            NhsNumber = "12345"
+        };
+
+        // Act
+        var service = new MatchPersonApiService(httpClient);
+        var result = await service.ReconcilePersonAsync(validPayload);
+
+        // Assert
+        Assert.Equal(validResult.Person.NhsNumber, result?.Person?.NhsNumber);
+        handlerMock.Protected().Verify(
+            "SendAsync",
+            Times.Exactly(1),
+            ItExpr.Is<HttpRequestMessage>(req =>
+                req.Method == HttpMethod.Post
+            ),
+            ItExpr.IsAny<CancellationToken>()
+        );
+    }
 }
