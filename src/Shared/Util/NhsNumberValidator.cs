@@ -18,8 +18,8 @@ public static class NhsNumberValidator
 
         if (IsAnInvalidLength(number)) return false;
 
-        var characters = ExplodeNumber(number);
-        var checkSum = ExtractChecksum(characters);
+        var characters = ConvertStringToDigits(number);
+        var checkSum = ExtractCheckDigit(characters);
         var weightedTotal = CalculateWeightedTotal(characters);
         var remainder = CalculateRemainder(weightedTotal);
         return RemainderAndChecksumMatch(remainder, checkSum);
@@ -27,13 +27,13 @@ public static class NhsNumberValidator
 
     private static bool IsAnInvalidLength(string number) => number.Length != NhsNumberLength;
 
-    private static List<int> ExplodeNumber(string number)
+    private static List<int> ConvertStringToDigits(string number)
     {
         var characters = number.Select(x => new string(x, 1)).ToList();
         return characters.Select(int.Parse).ToList();
     }
 
-    private static int ExtractChecksum(List<int> characters) => characters[NhsNumberLength - 1];
+    private static int ExtractCheckDigit(List<int> characters) => characters[NhsNumberLength - 1];
 
     private static int CalculateWeightedTotal(List<int> characters)
     {
@@ -46,9 +46,9 @@ public static class NhsNumberValidator
 
     private static int CalculateRemainder(int weightedTotal) => weightedTotal % RemainderConstant;
 
-    private static bool RemainderAndChecksumMatch(int remainder, int checkSum)
+    private static bool RemainderAndChecksumMatch(int remainder, int checkDigit)
     {
         var actual = remainder == 0 ? 0 : RemainderConstant - remainder;
-        return actual == checkSum;
+        return actual == checkDigit;
     }
 }

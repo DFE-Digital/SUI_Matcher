@@ -117,15 +117,15 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID{FhirError}", fhirError);
             return DemographicResult(fhirError, status);
         }
+    }
 
-        static DemographicResult DemographicResult(string fhirError = "", Status status = Status.Error)
+    private static DemographicResult DemographicResult(string fhirError = "", Status status = Status.Error)
+    {
+        return new DemographicResult
         {
-            return new DemographicResult
-            {
-                ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID" + fhirError,
-                Status = status
-            };
-        }
+            ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID" + fhirError,
+            Status = status
+        };
     }
 
     private void LogInputAndPdsDifferences(SearchQuery query, Patient patient)

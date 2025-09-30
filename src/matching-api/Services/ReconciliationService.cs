@@ -136,13 +136,22 @@ public class ReconciliationService(
             differences.Add(new Difference { FieldName = nameof(request.NhsNumber), Local = request.NhsNumber, Nhs = result.NhsNumber });
         }
 
-        if (request.BirthDate.HasValue && !result.BirthDate.HasValue || !request.BirthDate.HasValue && result.BirthDate.HasValue || request.BirthDate.HasValue && result.BirthDate.HasValue && request.BirthDate.Value.CompareTo(result.BirthDate.Value) != 0)
+        if (request.BirthDate.HasValue && !result.BirthDate.HasValue || !request.BirthDate.HasValue && result.BirthDate.HasValue)
         {
             differences.Add(new Difference
             {
                 FieldName = nameof(request.BirthDate),
                 Local = request.BirthDate?.ToString("yyyy-MM-dd"),
-                Nhs = result.BirthDate?.ToString("yyyy-MM-dd"),
+                Nhs = result.BirthDate?.ToString("yyyy-MM-dd")
+            });
+        }
+        else if (request.BirthDate.HasValue && result.BirthDate.HasValue && request.BirthDate.Value.CompareTo(result.BirthDate.Value) != 0)
+        {
+            differences.Add(new Difference
+            {
+                FieldName = nameof(request.BirthDate),
+                Local = request.BirthDate?.ToString("yyyy-MM-dd"),
+                Nhs = result.BirthDate?.ToString("yyyy-MM-dd")
             });
         }
 
