@@ -83,16 +83,16 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                 Result = new NhsPerson
                 {
                     NhsNumber = data.Id,
-                    AddressPostalCodes = data.Address.Where(s => s.Period.End is null).Select(s => s.PostalCode).ToArray(),
+                    AddressPostalCodes = data.Address.Where(s => s.Period?.End is null).Select(s => s.PostalCode).ToArray(),
                     Gender = data.Gender.GetLiteral(),
                     BirthDate = data.BirthDate.ToDateOnly([Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish]),
                     Emails = data.Telecom
-                     .Where(s => s.System is ContactPoint.ContactPointSystem.Email && s.Period.End is null).Select(s => s.Value).ToArray(),
+                     .Where(s => s.System is ContactPoint.ContactPointSystem.Email && s.Period?.End is null).Select(s => s.Value).ToArray(),
                     PhoneNumbers = data.Telecom
                      .Where(s => s.System is ContactPoint.ContactPointSystem.Phone
-                         or ContactPoint.ContactPointSystem.Sms && s.Period.End is null).Select(s => s.Value).ToArray(),
-                    FamilyNames = data.Name.Where(s => s.Period.End is null).Select(s => s.Family).ToArray(),
-                    GivenNames = data.Name.Where(s => s.Period.End is null).SelectMany(s => s.Given).ToArray(),
+                         or ContactPoint.ContactPointSystem.Sms && s.Period?.End is null).Select(s => s.Value).ToArray(),
+                    FamilyNames = data.Name.Where(s => s.Period?.End is null).Select(s => s.Family).ToArray(),
+                    GivenNames = data.Name.Where(s => s.Period?.End is null).SelectMany(s => s.Given).ToArray(),
                 },
                 Status = Status.Success
             };
