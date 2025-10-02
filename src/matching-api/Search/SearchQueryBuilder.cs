@@ -70,6 +70,20 @@ public class SearchQueryBuilder
             History = true
         });
     }
+    
+    public void AddNonFuzzyGfdRangePostcode(bool usePostcodeWildcard = false)
+    {
+        var name = usePostcodeWildcard ? "NonFuzzyGFDRangePostcodeWildcard" : "NonFuzzyGFDRangePostcode";
+        _queries.Add(name, new SearchQuery()
+        {
+            ExactMatch = false,
+            Given = ModelName,
+            Family = _model.Family,
+            Birthdate = DobRange,
+            AddressPostalcode = usePostcodeWildcard ? PostcodeWildcard() : _model.AddressPostalCode,
+            History = true
+        });
+    }
 
     public void AddNonFuzzyAll()
     {
