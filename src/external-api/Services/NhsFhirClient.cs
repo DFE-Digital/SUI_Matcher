@@ -44,7 +44,10 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                 case 0:
                     return SearchResult.Unmatched();
                 case 1:
-                    LogInputAndPdsDifferences(query, patient.Entry[0].Resource as Patient);
+                    if (patient.Entry[0].Resource is Patient patientObj)
+                    {
+                        LogInputAndPdsDifferences(query, patientObj);
+                    }
 
                     logger.LogInformation("Nhs patient record confidence score {Score}", patient.Entry[0].Search?.Score);
 
@@ -124,13 +127,8 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
         };
     }
 
-    private void LogInputAndPdsDifferences(SearchQuery query, Patient? patient)
+    private void LogInputAndPdsDifferences(SearchQuery query, Patient patient)
     {
-        if (patient == null)
-        {
-            return;
-        }
-
         var differentFields = FieldComparerService.ComparePatientFields(query, patient);
 
         logger.LogInformation(

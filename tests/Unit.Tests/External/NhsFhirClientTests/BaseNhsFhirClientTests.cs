@@ -88,6 +88,10 @@ public class BaseNhsFhirClientTests
                             End = null
                         }
                     }
+                ],
+                Address =
+                [
+                    new Address() { Period = null, PostalCode = "LS123ED" }
                 ]
             } as TResource;
             return Task.FromResult(resource);
@@ -112,6 +116,29 @@ public class BaseNhsFhirClientTests
                 new OperationOutcome.IssueComponent()
                 {
                     Code = OperationOutcome.IssueType.MultipleMatches
+                }
+            ]
+        };
+    }
+
+    protected class UnknownCaseFhirClient : FhirClient
+    {
+        public UnknownCaseFhirClient(string endpoint, FhirClientSettings settings = null!, HttpMessageHandler messageHandler = null!) : base(endpoint, settings, messageHandler)
+        {
+        }
+
+        public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
+        {
+            return await Task.FromResult<Bundle?>(null);
+        }
+
+        public override Resource? LastBodyAsResource => new OperationOutcome()
+        {
+            Issue =
+            [
+                new OperationOutcome.IssueComponent()
+                {
+                    Code = OperationOutcome.IssueType.Conflict
                 }
             ]
         };
