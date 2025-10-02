@@ -1,9 +1,5 @@
-using System.Collections;
-using System.Net.Http.Headers;
-
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
-using Hl7.Fhir.Serialization;
 using Hl7.Fhir.Utility;
 
 using Shared.Endpoint;
@@ -48,11 +44,11 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                 case 0:
                     return SearchResult.Unmatched();
                 case 1:
-                    LogInputAndPdsDifferences(query, (Patient)patient.Entry[0].Resource);
+                    LogInputAndPdsDifferences(query, patient.Entry[0].Resource as Patient);
 
-                    logger.LogInformation("Nhs patient record confidence score {Score}", patient.Entry[0].Search.Score);
+                    logger.LogInformation("Nhs patient record confidence score {Score}", patient.Entry[0].Search?.Score);
 
-                    return SearchResult.Match(patient.Entry[0].Resource.Id, patient.Entry[0].Search.Score);
+                    return SearchResult.Match(patient.Entry[0].Resource?.Id ?? string.Empty, patient.Entry[0].Search?.Score);
                 default:
                     return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response, more than 1 entry found");
             }
@@ -82,17 +78,17 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             {
                 Result = new NhsPerson
                 {
-                    NhsNumber = data.Id,
-                    AddressPostalCodes = data.Address.Where(s => s.Period?.End is null).Select(s => s.PostalCode).ToArray(),
+                    NhsNumber = data.Id ?? String.Empty,
+                    AddressPostalCodes = data.Address.Where(s => s.Period?.End == null && s.PostalCode != null).Select(s => s.PostalCode).OfType<string>().ToArray(),
                     Gender = data.Gender.GetLiteral(),
                     BirthDate = data.BirthDate.ToDateOnly([Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish]),
                     Emails = data.Telecom
-                     .Where(s => s.System is ContactPoint.ContactPointSystem.Email && s.Period?.End is null).Select(s => s.Value).ToArray(),
+                     .Where(s => s.System is ContactPoint.ContactPointSystem.Email && s.Period?.End is null).Select(s => s.Value).OfType<string>().ToArray(),
                     PhoneNumbers = data.Telecom
                      .Where(s => s.System is ContactPoint.ContactPointSystem.Phone
-                         or ContactPoint.ContactPointSystem.Sms && s.Period?.End is null).Select(s => s.Value).ToArray(),
-                    FamilyNames = data.Name.Where(s => s.Period?.End is null).Select(s => s.Family).ToArray(),
-                    GivenNames = data.Name.Where(s => s.Period?.End is null).SelectMany(s => s.Given).ToArray(),
+                         or ContactPoint.ContactPointSystem.Sms && s.Period?.End is null).Select(s => s.Value).OfType<string>().ToArray(),
+                    FamilyNames = data.Name.Where(s => s.Period?.End is null).Select(s => s.Family).OfType<string>().ToArray(),
+                    GivenNames = data.Name.Where(s => s.Period?.End is null).SelectMany(s => s.Given).OfType<string>().ToArray(),
                 },
                 Status = Status.Success
             };
@@ -101,15 +97,15 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
         {
             var status = Status.Error;
             var fhirError = string.Empty;
-            if (ex is FhirOperationException { Outcome: not null } fex && fex.Outcome.Issue.Count > 0 && fex.Outcome.Issue[0].Details.Coding.Count > 0)
+            if (ex is FhirOperationException { Outcome: not null } fex && fex.Outcome.Issue.Count > 0 && fex.Outcome?.Issue[0].Details?.Coding.Count > 0)
             {
-                fhirError = $" - {fex.Outcome.Issue[0].Details.Coding[0].Display}";
-                if (fex.Outcome.Issue[0].Details.Coding[0].Code is "INVALID_NHS_NUMBER" or "INVALID_RESOURCE_ID")
+                fhirError = $" - {fex.Outcome?.Issue[0].Details?.Coding[0].Display}";
+                if (fex.Outcome?.Issue[0].Details?.Coding[0].Code is "INVALID_NHS_NUMBER" or "INVALID_RESOURCE_ID")
                 {
                     status = Status.InvalidNhsNumber;
                 }
 
-                if (fex.Outcome.Issue[0].Details.Coding[0].Code is "PATIENT_NOT_FOUND")
+                if (fex.Outcome?.Issue[0].Details?.Coding[0].Code is "PATIENT_NOT_FOUND")
                 {
                     status = Status.PatientNotFound;
                 }
@@ -128,8 +124,13 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
         };
     }
 
-    private void LogInputAndPdsDifferences(SearchQuery query, Patient patient)
+    private void LogInputAndPdsDifferences(SearchQuery query, Patient? patient)
     {
+        if (patient == null)
+        {
+            return;
+        }
+
         var differentFields = FieldComparerService.ComparePatientFields(query, patient);
 
         logger.LogInformation(
