@@ -13,14 +13,14 @@ public class SearchStrategy2 : ISearchStrategy
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
     {
         var queryBuilder = new SearchQueryBuilder(model);
-        queryBuilder.AddNonFuzzyGfd();
-        queryBuilder.AddNonFuzzyGfdRange();
+        queryBuilder.AddNonFuzzyGfd(); // 1
+        queryBuilder.AddNonFuzzyGfdRange(); // 4
         queryBuilder.AddNonFuzzyAllPostcodeWildcard();
-        queryBuilder.AddNonFuzzyAll();
-        queryBuilder.AddFuzzyGfd();
+        queryBuilder.AddNonFuzzyAll(); // 6
+        queryBuilder.AddFuzzyGfd(); // 2
         queryBuilder.AddFuzzyGfdRangePostcodeWildcard();
-        queryBuilder.AddFuzzyGfdRangePostcode();
-        queryBuilder.AddFuzzyAll();
+        queryBuilder.AddFuzzyGfdRangePostcode(); // 5
+        queryBuilder.AddFuzzyAll(); // 3
         queryBuilder.TryAddFuzzyAltDob();
 
         return queryBuilder.Build();
