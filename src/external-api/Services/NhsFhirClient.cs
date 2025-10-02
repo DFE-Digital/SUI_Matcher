@@ -102,13 +102,14 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             var fhirError = string.Empty;
             if (ex is FhirOperationException { Outcome: not null } fex && fex.Outcome.Issue.Count > 0 && fex.Outcome?.Issue[0].Details?.Coding.Count > 0)
             {
-                fhirError = $" - {fex.Outcome?.Issue[0].Details?.Coding[0].Display}";
-                if (fex.Outcome?.Issue[0].Details?.Coding[0].Code is "INVALID_NHS_NUMBER" or "INVALID_RESOURCE_ID")
+                Coding coding = fex.Outcome.Issue[0].Details!.Coding[0];
+                fhirError = $" - {coding.Display}";
+                if (coding.Code is "INVALID_NHS_NUMBER" or "INVALID_RESOURCE_ID")
                 {
                     status = Status.InvalidNhsNumber;
                 }
 
-                if (fex.Outcome?.Issue[0].Details?.Coding[0].Code is "PATIENT_NOT_FOUND")
+                if (coding.Code is "PATIENT_NOT_FOUND")
                 {
                     status = Status.PatientNotFound;
                 }
