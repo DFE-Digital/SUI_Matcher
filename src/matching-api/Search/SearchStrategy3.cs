@@ -7,11 +7,7 @@ namespace MatchingApi.Search;
 /// </summary>
 public class SearchStrategy3 : ISearchStrategy
 {
-    private const int AlgorithmVersion = 14;
-    // Results so far
-    // V2 = Only 1 record difference to V1 but no additional Matches
-    // V3 = Only 1 record difference to V1 and V2 but no additional Matches
-    // V4 = 20-25%% increase in Matches
+    private const int AlgorithmVersion = 15;
 
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
     {
@@ -38,6 +34,7 @@ public class SearchStrategy3 : ISearchStrategy
             12 => Version12(queryBuilder),
             13 => Version13(queryBuilder),
             14 => Version14(queryBuilder),
+            15 => Version15(queryBuilder),
             _ => throw new ArgumentOutOfRangeException(nameof(version), $"Unsupported version: {version}")
         };
     }
@@ -234,8 +231,31 @@ public class SearchStrategy3 : ISearchStrategy
         return queryBuilder.Build();
     }
     
-    // Consider: Final version will contain wildcards just to see if they help at all
-    // To ponder on: Should we try and swap day and month round? it shows that there is a data issue and should be investigated.
+    private static OrderedDictionary<string, SearchQuery> Version15(SearchQueryBuilder queryBuilder)
+    {
+        // Ordered strictly by observed performance from v14 - order by most matches found
+        // This includes the non-fuzzy and fuzzy postcode wildcards at the end to see if they add anything
+
+        queryBuilder.AddNonFuzzyGfd(); 
+        
+        queryBuilder.AddFuzzyGfd(); 
+        
+        queryBuilder.AddFuzzyAll(); 
+    
+        queryBuilder.AddNonFuzzyGfdRange();
+        
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false); 
+        
+        queryBuilder.AddFuzzyGfdRange();
+    
+        queryBuilder.AddFuzzyGfdRangePostcode();
+        
+        // Not expecting much from these two based on version testing, but they might pick up a few more
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: true); 
+        queryBuilder.AddFuzzyGfdRangePostcodeWildcard();
+
+        return queryBuilder.Build();
+    }
 
     public int GetAlgorithmVersion()
     {
