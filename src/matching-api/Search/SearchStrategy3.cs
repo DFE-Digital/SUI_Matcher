@@ -7,7 +7,7 @@ namespace MatchingApi.Search;
 /// </summary>
 public class SearchStrategy3 : ISearchStrategy
 {
-    private const int AlgorithmVersion = 13;
+    private const int AlgorithmVersion = 14;
     // Results so far
     // V2 = Only 1 record difference to V1 but no additional Matches
     // V3 = Only 1 record difference to V1 and V2 but no additional Matches
@@ -37,6 +37,7 @@ public class SearchStrategy3 : ISearchStrategy
             11 => Version11(queryBuilder),
             12 => Version12(queryBuilder),
             13 => Version13(queryBuilder),
+            14 => Version14(queryBuilder),
             _ => throw new ArgumentOutOfRangeException(nameof(version), $"Unsupported version: {version}")
         };
     }
