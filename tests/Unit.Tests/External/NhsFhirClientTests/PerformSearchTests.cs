@@ -55,7 +55,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
     }
 
     [Fact]
-    public async Task ShouldGetSearchResultsError_WhenMatchTypeNotMultipleMatches()
+    public async Task ShouldGetSearchResultsError_WhenMoreThanOneEntryIsFound()
     {
         // Arrange
         var searchQuery = new SearchQuery { Family = "Doe", Given = ["John"], Birthdate = ["eq1980-01-01"], };
