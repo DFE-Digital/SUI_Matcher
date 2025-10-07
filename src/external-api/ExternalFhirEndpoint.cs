@@ -18,7 +18,7 @@ public class ExternalFhirEndpoint(INhsFhirClient fhirClient) : IEndpoint
             search.RequireAuthorization("AuthPolicy");
         }
 
-        var demographics = app.MapPost("/demographics", async (DemographicsRequest request) => await fhirClient.PerformSearchByNhsId(request.NhsNumber));
+        var demographics = app.MapPost("/demographics", async (DemographicRequest request) => await fhirClient.PerformSearchByNhsId(request.NhsNumber));
         if (configuration.GetValue<bool>("EnableAuth"))
         {
             demographics.RequireAuthorization("AuthPolicy");

@@ -17,11 +17,11 @@ public class NhsFhirClientApiWrapper(HttpClient httpClient) : INhsFhirClient
         return await response.Content.ReadFromJsonAsync<SearchResult>();
     }
 
-    public async Task<DemographicResult> PerformSearchByNhsId(string nhsId)
+    public async Task<DemographicResult> PerformSearchByNhsId(string? nhsId)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/demographics")
         {
-            Content = JsonContent.Create(new DemographicsRequest { NhsNumber = nhsId })
+            Content = JsonContent.Create(new DemographicRequest { NhsNumber = nhsId })
         };
         var response = await httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

@@ -279,7 +279,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task NullDataShouldReturnSevenBothDifferences()
+    public async Task NullDataShouldReturnSevenDifferencesWithEachFieldSetAsBothInDifferenceString()
     {
         // Arrange
         var nhsPerson = new NhsPerson
