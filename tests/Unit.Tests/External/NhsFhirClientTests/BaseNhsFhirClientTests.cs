@@ -60,18 +60,61 @@ public class BaseNhsFhirClientTests
             var resource = new Patient
             {
                 Id = "123",
-                Name = [new HumanName("Smith", ["John"])
-                {
-                    Period = new Period
+                Name =
+                [
+                    new HumanName("Smith", ["John"])
                     {
-                        Start = "01/01/2001",
-                        End = null
+                        Period = null
+                    },
+                    new HumanName("Smith", ["John"])
+                    {
+                        Period = new Period
+                        {
+                            Start = "01/01/2001",
+                            End = null
+                        }
+                    },
+                    new HumanName("Smith", ["John"])
+                    {
+                        Period = new Period
+                        {
+                            Start = "01/01/2001",
+                            End = "01/01/2002"
+                        }
                     }
-                }],
+                ],
                 Telecom =
                 [
                     new ContactPoint(ContactPoint.ContactPointSystem.Email, ContactPoint.ContactPointUse.Home,
-                        "test@test.com")
+                        "test1@test.com")
+                    {
+                        Period = null
+                    },
+                    new ContactPoint(ContactPoint.ContactPointSystem.Email, ContactPoint.ContactPointUse.Home,
+                        "test2@test.com")
+                    {
+                        Period = new Period
+                        {
+                            Start = "01/01/2001",
+                            End = null
+                        }
+                    },
+                    new ContactPoint(ContactPoint.ContactPointSystem.Email, ContactPoint.ContactPointUse.Home,
+                        "test3@test.com")
+                    {
+                        Period = new Period
+                        {
+                            Start = "01/01/2001",
+                            End = "01/01/2002"
+                        }
+                    },
+                    new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Home,
+                        "0123456789")
+                    {
+                        Period = null
+                    },
+                    new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Home,
+                        "0123456780")
                     {
                         Period = new Period
                         {
@@ -80,14 +123,21 @@ public class BaseNhsFhirClientTests
                         }
                     },
                     new ContactPoint(ContactPoint.ContactPointSystem.Phone, ContactPoint.ContactPointUse.Home,
-                        "0123456789")
+                        "0123456785")
                     {
                         Period = new Period
                         {
                             Start = "01/01/2001",
-                            End = null
+                            End = "01/01/2002"
                         }
                     }
+                ],
+                Address =
+                [
+                    new Address { Period = null, PostalCode = "LS123ED" },
+                    new Address { Period = new Period { Start = "2001-09-01" }, PostalCode = null },
+                    new Address { Period = new Period { Start = "2001-09-01", End = null}, PostalCode = "LS123EF" },
+                    new Address { Period = new Period { Start = "2001-09-01", End = "2002-09-01"}, PostalCode = "LS123EF" }
                 ]
             } as TResource;
             return Task.FromResult(resource);
@@ -112,6 +162,29 @@ public class BaseNhsFhirClientTests
                 new OperationOutcome.IssueComponent()
                 {
                     Code = OperationOutcome.IssueType.MultipleMatches
+                }
+            ]
+        };
+    }
+
+    protected class UnknownCaseFhirClient : FhirClient
+    {
+        public UnknownCaseFhirClient(string endpoint, FhirClientSettings settings = null!, HttpMessageHandler messageHandler = null!) : base(endpoint, settings, messageHandler)
+        {
+        }
+
+        public override async Task<Bundle?> SearchAsync<TResource>(SearchParams q, CancellationToken? ct = null)
+        {
+            return await Task.FromResult<Bundle?>(null);
+        }
+
+        public override Resource? LastBodyAsResource => new OperationOutcome()
+        {
+            Issue =
+            [
+                new OperationOutcome.IssueComponent()
+                {
+                    Code = OperationOutcome.IssueType.Conflict
                 }
             ]
         };

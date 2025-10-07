@@ -55,6 +55,26 @@ public class PerformSearchTests : BaseNhsFhirClientTests
     }
 
     [Fact]
+    public async Task ShouldGetSearchResultsError_WhenMoreThanOneEntryIsFound()
+    {
+        // Arrange
+        var searchQuery = new SearchQuery { Family = "Doe", Given = ["John"], Birthdate = ["eq1980-01-01"], };
+
+        var testFhirClient = new UnknownCaseFhirClient("https://fhir.api.endpoint");
+        _fhirClientFactory.Setup(f => f.CreateFhirClient())
+            .Returns(testFhirClient);
+
+        var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
+
+        // Act
+        var result = await client.PerformSearch(searchQuery);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(SearchResult.ResultType.Error, result.Type);
+    }
+
+    [Fact]
     public async Task ShouldGetSearchResultsUnmatched_WhenNoMatches()
     {
         // Arrange
