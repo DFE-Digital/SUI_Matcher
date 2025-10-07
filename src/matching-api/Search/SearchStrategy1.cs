@@ -9,8 +9,9 @@ namespace MatchingApi.Search;
 public class SearchStrategy1 : ISearchStrategy
 {
     private const int AlgorithmVersion = 3;
+    private static readonly int[] AllAlgorithmVersions = [1, 2, 3];
 
-    public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
+    public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model, int? version = null)
     {
         var queryBuilder = new SearchQueryBuilder(model, dobRange: 6);
         queryBuilder.AddExactGfd();
@@ -26,5 +27,10 @@ public class SearchStrategy1 : ISearchStrategy
     public int GetAlgorithmVersion()
     {
         return AlgorithmVersion;
+    }
+
+    public int[] GetAllAlgorithmVersions()
+    {
+        return AllAlgorithmVersions;
     }
 }
