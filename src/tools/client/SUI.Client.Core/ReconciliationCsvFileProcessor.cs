@@ -130,30 +130,13 @@ public class ReconciliationCsvFileProcessor(
                 stats.NoDifferenceCount++;
                 break;
             case ReconciliationStatus.Differences:
-                if (Regex.IsMatch(differenceList, @"\bBirthDate\b(?!:)")) { stats.BirthDateCount++; }
-                if (differenceList.Contains("BirthDate:NHS")) { stats.BirthDateNhsCount++; }
-                if (differenceList.Contains("BirthDate:LA")) { stats.BirthDateLaCount++; }
-                if (differenceList.Contains("BirthDate:Both")) { stats.BirthDateBothCount++; }
-                if (Regex.IsMatch(differenceList, @"\bEmail\b(?!:)")) { stats.EmailCount++; }
-                if (differenceList.Contains("Email:NHS")) { stats.EmailNhsCount++; }
-                if (differenceList.Contains("Email:LA")) { stats.EmailLaCount++; }
-                if (differenceList.Contains("Email:Both")) { stats.EmailBothCount++; }
-                if (Regex.IsMatch(differenceList, @"\bPhone\b(?!:)")) { stats.PhoneCount++; }
-                if (differenceList.Contains("Phone:NHS")) { stats.PhoneNhsCount++; }
-                if (differenceList.Contains("Phone:LA")) { stats.PhoneLaCount++; }
-                if (differenceList.Contains("Phone:Both")) { stats.PhoneBothCount++; }
-                if (Regex.IsMatch(differenceList, @"\bGiven\b(?!:)")) { stats.GivenNameCount++; }
-                if (differenceList.Contains("Given:NHS")) { stats.GivenNameNhsCount++; }
-                if (differenceList.Contains("Given:LA")) { stats.GivenNameLaCount++; }
-                if (differenceList.Contains("Given:Both")) { stats.GivenNameBothCount++; }
-                if (Regex.IsMatch(differenceList, @"\bFamily\b(?!:)")) { stats.FamilyNameCount++; }
-                if (differenceList.Contains("Family:NHS")) { stats.FamilyNameNhsCount++; }
-                if (differenceList.Contains("Family:LA")) { stats.FamilyNameLaCount++; }
-                if (differenceList.Contains("Family:Both")) { stats.FamilyNameBothCount++; }
-                if (Regex.IsMatch(differenceList, @"\bAddressPostalCode\b(?!:)")) { stats.PostCodeCount++; }
-                if (differenceList.Contains("AddressPostalCode:NHS")) { stats.PostCodeNhsCount++; }
-                if (differenceList.Contains("AddressPostalCode:LA")) { stats.PostCodeLaCount++; }
-                if (differenceList.Contains("AddressPostalCode:Both")) { stats.PostCodeBothCount++; }
+                UpdateStatsForField(differenceList, stats, "BirthDate", s => s.BirthDateCount++, s => s.BirthDateNhsCount++, s => s.BirthDateLaCount++, s => s.BirthDateBothCount++);
+                UpdateStatsForField(differenceList, stats, "Email", s => s.EmailCount++, s => s.EmailNhsCount++, s => s.EmailLaCount++, s => s.EmailBothCount++);
+                UpdateStatsForField(differenceList, stats, "Phone", s => s.PhoneCount++, s => s.PhoneNhsCount++, s => s.PhoneLaCount++, s => s.PhoneBothCount++);
+                UpdateStatsForField(differenceList, stats, "Given", s => s.GivenNameCount++, s => s.GivenNameNhsCount++, s => s.GivenNameLaCount++, s => s.GivenNameBothCount++);
+                UpdateStatsForField(differenceList, stats, "Family", s => s.FamilyNameCount++, s => s.FamilyNameNhsCount++, s => s.FamilyNameLaCount++, s => s.FamilyNameBothCount++);
+                UpdateStatsForField(differenceList, stats, "AddressPostalCode", s => s.PostCodeCount++, s => s.PostCodeNhsCount++, s => s.PostCodeLaCount++, s => s.PostCodeBothCount++);
+
                 stats.DifferencesCount++;
                 break;
             case ReconciliationStatus.SupersededNhsNumber:
@@ -172,5 +155,22 @@ public class ReconciliationCsvFileProcessor(
                 stats.ErroredCount++;
                 break;
         }
+    }
+
+    private static void UpdateStatsForField(
+        string differenceList,
+        ReconciliationCsvProcessStats stats,
+        string fieldName,
+        Action<ReconciliationCsvProcessStats> incrementPlain,
+        Action<ReconciliationCsvProcessStats> incrementNhs,
+        Action<ReconciliationCsvProcessStats> incrementLa,
+        Action<ReconciliationCsvProcessStats> incrementBoth)
+    {
+        var plainRegex = new Regex($@"\b{fieldName}\b(?!:)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(10));
+
+        if (plainRegex.IsMatch(differenceList)) { incrementPlain(stats); }
+        if (differenceList.Contains($"{fieldName}:NHS")) { incrementNhs(stats); }
+        if (differenceList.Contains($"{fieldName}:LA")) { incrementLa(stats); }
+        if (differenceList.Contains($"{fieldName}:Both")) { incrementBoth(stats); }
     }
 }
