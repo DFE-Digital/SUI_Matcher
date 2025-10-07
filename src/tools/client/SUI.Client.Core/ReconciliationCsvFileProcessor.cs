@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text.RegularExpressions;
+
+using Microsoft.Extensions.Logging;
 
 using Shared.Models;
 using Shared.Util;
@@ -64,10 +66,12 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderAddressPostalCode] = string.Join(" - ", response?.Person?.AddressPostalCodes ?? ["-"]);
         record[HeaderEmail] = string.Join(" - ", response?.Person?.Emails ?? ["-"]);
         record[HeaderPhone] = string.Join(" - ", response?.Person?.PhoneNumbers ?? ["-"]);
-        record[HeaderDifferences] = string.Join(" - ", response?.Differences?.Select(x => x.FieldName) ?? ["-"]);
+        var differenceList = response?.DifferenceString ?? "-";
+        record[HeaderDifferences] = differenceList;
+
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
 
-        RecordStats((ReconciliationCsvProcessStats)stats, response);
+        RecordStats((ReconciliationCsvProcessStats)stats, response, differenceList);
     }
 
     protected override void AddExtraCsvHeaders(HashSet<string> headers)
@@ -92,12 +96,32 @@ public class ReconciliationCsvFileProcessor(
     protected override string GeneratePdfReport(IStats stats, string ts, string outputDirectory)
     {
         var localStats = (ReconciliationCsvProcessStats)stats;
-        string[] categories = ["Errored", "No Differences", "One Difference", "Many Differences", "Superseded NHS Number", "Invalid NHS Number", "Patient Not Found", "Missing NHS Number"];
-        double[] values = [localStats.ErroredCount, localStats.NoDifferenceCount, localStats.OneDifferenceCount, localStats.ManyDifferencesCount, localStats.SupersededNhsNumber, localStats.InvalidNhsNumber, localStats.PatientNotFound, localStats.MissingNhsNumber];
+        string[] categories =
+        [
+            "Errored", "No Differences", "Superseded NHS Number", "Invalid NHS Number",
+            "Patient Not Found", "Missing NHS Number", "Differences",
+            "Birthdate differences", "Birthdate missing NHS", "Birthdate missing LA", "Birthdate Missing Both",
+            "Email differences", "Email missing NHS", "Email missing LA", "Email Missing Both",
+            "Phone differences", "Phone missing NHS", "Phone missing LA", "Phone Missing Both",
+            "Given Name differences", "Given Name missing NHS", "Given Name missing LA", "Given Name Missing Both",
+            "Family Name differences", "Family Name missing NHS", "Family Name missing LA", "Family Name Missing Both",
+            "Postcode differences", "Postcode missing NHS", "Postcode missing LA", "Postcode Missing Both",
+        ];
+        double[] values =
+        [
+            localStats.ErroredCount, localStats.NoDifferenceCount, localStats.SupersededNhsNumber,
+            localStats.InvalidNhsNumber, localStats.PatientNotFound, localStats.MissingNhsNumber, localStats.DifferencesCount,
+            localStats.BirthDateCount, localStats.BirthDateNhsCount, localStats.BirthDateLaCount, localStats.BirthDateBothCount,
+            localStats.EmailCount, localStats.EmailNhsCount, localStats.EmailLaCount, localStats.EmailBothCount,
+            localStats.PhoneCount, localStats.PhoneNhsCount, localStats.PhoneLaCount, localStats.PhoneBothCount,
+            localStats.GivenNameCount, localStats.GivenNameNhsCount, localStats.GivenNameLaCount, localStats.GivenNameBothCount,
+            localStats.FamilyNameCount, localStats.FamilyNameNhsCount, localStats.FamilyNameLaCount, localStats.FamilyNameBothCount,
+            localStats.PostCodeCount, localStats.PostCodeNhsCount, localStats.PostCodeLaCount, localStats.PostCodeBothCount
+        ];
         return PdfReportGenerator.GenerateReport(GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"), "Reconciliation Report", categories, values);
     }
 
-    private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response)
+    private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, string differenceList)
     {
         stats.Count++;
         switch (response?.Status)
@@ -105,17 +129,35 @@ public class ReconciliationCsvFileProcessor(
             case ReconciliationStatus.NoDifferences:
                 stats.NoDifferenceCount++;
                 break;
-
-            case ReconciliationStatus.ManyDifferences:
-                stats.ManyDifferencesCount++;
+            case ReconciliationStatus.Differences:
+                if (Regex.IsMatch(differenceList, @"\bBirthDate\b(?!:)")) { stats.BirthDateCount++; }
+                if (differenceList.Contains("BirthDate:NHS")) { stats.BirthDateNhsCount++; }
+                if (differenceList.Contains("BirthDate:LA")) { stats.BirthDateLaCount++; }
+                if (differenceList.Contains("BirthDate:Both")) { stats.BirthDateBothCount++; }
+                if (Regex.IsMatch(differenceList, @"\bEmail\b(?!:)")) { stats.EmailCount++; }
+                if (differenceList.Contains("Email:NHS")) { stats.EmailNhsCount++; }
+                if (differenceList.Contains("Email:LA")) { stats.EmailLaCount++; }
+                if (differenceList.Contains("Email:Both")) { stats.EmailBothCount++; }
+                if (Regex.IsMatch(differenceList, @"\bPhone\b(?!:)")) { stats.PhoneCount++; }
+                if (differenceList.Contains("Phone:NHS")) { stats.PhoneNhsCount++; }
+                if (differenceList.Contains("Phone:LA")) { stats.PhoneLaCount++; }
+                if (differenceList.Contains("Phone:Both")) { stats.PhoneBothCount++; }
+                if (Regex.IsMatch(differenceList, @"\bGiven\b(?!:)")) { stats.GivenNameCount++; }
+                if (differenceList.Contains("Given:NHS")) { stats.GivenNameNhsCount++; }
+                if (differenceList.Contains("Given:LA")) { stats.GivenNameLaCount++; }
+                if (differenceList.Contains("Given:Both")) { stats.GivenNameBothCount++; }
+                if (Regex.IsMatch(differenceList, @"\bFamily\b(?!:)")) { stats.FamilyNameCount++; }
+                if (differenceList.Contains("Family:NHS")) { stats.FamilyNameNhsCount++; }
+                if (differenceList.Contains("Family:LA")) { stats.FamilyNameLaCount++; }
+                if (differenceList.Contains("Family:Both")) { stats.FamilyNameBothCount++; }
+                if (Regex.IsMatch(differenceList, @"\bAddressPostalCode\b(?!:)")) { stats.PostCodeCount++; }
+                if (differenceList.Contains("AddressPostalCode:NHS")) { stats.PostCodeNhsCount++; }
+                if (differenceList.Contains("AddressPostalCode:LA")) { stats.PostCodeLaCount++; }
+                if (differenceList.Contains("AddressPostalCode:Both")) { stats.PostCodeBothCount++; }
+                stats.DifferencesCount++;
                 break;
-
             case ReconciliationStatus.SupersededNhsNumber:
                 stats.SupersededNhsNumber++;
-                break;
-
-            case ReconciliationStatus.OneDifference:
-                stats.OneDifferenceCount++;
                 break;
             case ReconciliationStatus.InvalidNhsNumber:
                 stats.InvalidNhsNumber++;

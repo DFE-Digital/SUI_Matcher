@@ -3,8 +3,7 @@
 public enum ReconciliationStatus
 {
     NoDifferences,
-    ManyDifferences,
-    OneDifference,
+    Differences,
     SupersededNhsNumber,
     MissingNhsNumber,
     InvalidNhsNumber,

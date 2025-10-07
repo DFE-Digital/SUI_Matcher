@@ -160,10 +160,10 @@ public class ReconciliationServiceTests
             NhsNumber = "9449305552",
             AddressPostalCodes = ["AB12 3CD", "BC34 5EF"],
             FamilyNames = ["Smith", "Jones"],
-            GivenNames = ["John", "Jane"],
+            GivenNames = [],
             BirthDate = new DateOnly(1980, 1, 1),
             Gender = "M",
-            PhoneNumbers = ["0123456789", "+44 123456789"],
+            PhoneNumbers = [],
             Emails = ["john.smith@example", "jane.smith@example"],
         };
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
@@ -174,11 +174,11 @@ public class ReconciliationServiceTests
         {
             NhsNumber = "9449305552",
             AddressPostalCode = "AA11 2BB",
-            Family = "Hamilton",
+            Family = "",
             Given = "David",
             Gender = "Male",
-            Phone = "123454321",
-            BirthDate = new DateOnly(1990, 01, 02),
+            Phone = "",
+            BirthDate = null,
             Email = "david.hamilton@example.com",
         };
 
@@ -192,7 +192,8 @@ public class ReconciliationServiceTests
         Assert.Equal("BirthDate", result.Differences?[0].FieldName);
         Assert.Equal(request.BirthDate?.ToString("yyyy-MM-dd"), result.Differences?[0].Local);
         Assert.Equal(nhsPerson.BirthDate?.ToString("yyyy-MM-dd"), result.Differences?[0].Nhs);
-        Assert.Equal(ReconciliationStatus.ManyDifferences, result.Status);
+        Assert.Equal(ReconciliationStatus.Differences, result.Status);
+        Assert.Equal("BirthDate:LA - Gender - Given:NHS - Family:LA - Email - Phone:Both - AddressPostalCode", result.DifferenceString);
     }
 
     [Fact]
@@ -233,7 +234,7 @@ public class ReconciliationServiceTests
         Assert.NotNull(result);
         Assert.NotNull(result.Person);
         Assert.Equal(1, result.Differences?.Count);
-        Assert.Equal(ReconciliationStatus.OneDifference, result.Status);
+        Assert.Equal(ReconciliationStatus.Differences, result.Status);
     }
 
     [Fact]
@@ -278,7 +279,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task NullDataShouldReturnNoDifferences()
+    public async Task NullDataShouldReturnSevenBothDifferences()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -314,7 +315,8 @@ public class ReconciliationServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Person);
-        Assert.Equal(0, result.Differences?.Count);
-        Assert.Equal(ReconciliationStatus.NoDifferences, result.Status);
+        Assert.Equal(7, result.Differences?.Count);
+        Assert.Equal(ReconciliationStatus.Differences, result.Status);
+        Assert.Equal("BirthDate:Both - Gender:Both - Given:Both - Family:Both - Email:Both - Phone:Both - AddressPostalCode:Both", result.DifferenceString);
     }
 }

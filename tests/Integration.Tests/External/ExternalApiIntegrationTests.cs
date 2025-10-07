@@ -98,7 +98,7 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
         const string validNhsNumber = "9000000009";
 
         // Act
-        var response = await _httpClient.GetAsync($"/api/v1/demographics/{validNhsNumber}");
+        var response = await _httpClient.PostAsJsonAsync("/api/v1/demographics", new DemographicsRequest { NhsNumber = validNhsNumber });
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<DemographicResponse>();
@@ -114,7 +114,7 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
         const string invalidNhsNumber = "9000000012";
 
         // Act
-        var response = await _httpClient.GetAsync($"/api/v1/demographics/{invalidNhsNumber}");
+        var response = await _httpClient.PostAsJsonAsync("/api/v1/demographics", new DemographicsRequest { NhsNumber = invalidNhsNumber });
         response.EnsureSuccessStatusCode();
 
         // Assert

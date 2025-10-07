@@ -19,10 +19,7 @@ public class ReconciliationService(
     public async Task<ReconciliationResponse> ReconcileAsync(ReconciliationRequest reconciliationRequest)
     {
         var reconciliationId = BuildReconciliationId(reconciliationRequest);
-        var auditDetails = new Dictionary<string, string>
-        {
-            { "SearchId", reconciliationId }
-        };
+        var auditDetails = new Dictionary<string, string> { { "SearchId", reconciliationId } };
         await auditLogger.LogAsync(new AuditLogEntry(AuditLogEntry.AuditLogAction.Reconciliation, auditDetails));
         if (string.IsNullOrEmpty(reconciliationRequest.NhsNumber))
         {
@@ -33,6 +30,7 @@ public class ReconciliationService(
                 Errors = ["Missing Nhs Number"]
             };
         }
+
         if (!NhsNumberValidator.Validate(reconciliationRequest.NhsNumber))
         {
             logger.LogError("NHS Number Validation failed");
@@ -42,6 +40,7 @@ public class ReconciliationService(
                 Errors = ["The NHS Number was not valid"]
             };
         }
+
         var data = await nhsFhirClient.PerformSearchByNhsId(reconciliationRequest.NhsNumber);
         if (data.Status == Status.InvalidNhsNumber || !NhsNumberValidator.Validate(reconciliationRequest.NhsNumber))
         {
@@ -51,6 +50,7 @@ public class ReconciliationService(
                 Errors = [data.ErrorMessage ?? "Unknown error"]
             };
         }
+
         if (data.Status == Status.PatientNotFound)
         {
             return new ReconciliationResponse
@@ -59,6 +59,7 @@ public class ReconciliationService(
                 Errors = [data.ErrorMessage ?? "Unknown error"]
             };
         }
+
         if (data.Status == Status.Error || data.Result == null)
         {
             return new ReconciliationResponse
@@ -67,11 +68,13 @@ public class ReconciliationService(
                 Errors = [data.ErrorMessage ?? "Unknown error"]
             };
         }
+
         var ageGroup = data.Result.BirthDate.HasValue
             ? PersonSpecificationUtils.GetAgeGroup(data.Result.BirthDate.Value)
             : "Unknown";
 
         var differences = BuildDifferenceList(reconciliationRequest, data.Result);
+        var differenceString = BuildDifferences(differences);
 
         var status = ReconciliationStatus.Error;
         if (differences.Any(x => x.FieldName == nameof(reconciliationRequest.NhsNumber)))
@@ -82,20 +85,17 @@ public class ReconciliationService(
         {
             status = ReconciliationStatus.NoDifferences;
         }
-        else if (differences.Count == 1)
+        else if (differences.Count > 0)
         {
-            status = ReconciliationStatus.OneDifference;
+            status = ReconciliationStatus.Differences;
         }
-        else if (differences.Count > 1)
-        {
-            status = ReconciliationStatus.ManyDifferences;
-        }
+
         logger.LogInformation(
             "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status {Status}",
             ageGroup,
             reconciliationRequest.Gender ?? "Unknown",
             reconciliationRequest.AddressPostalCode ?? "Unknown",
-            JsonConvert.SerializeObject(differences.Select(x => x.FieldName)),
+            JsonConvert.SerializeObject(differenceString),
             status
         );
 
@@ -103,6 +103,7 @@ public class ReconciliationService(
         {
             Person = data.Result,
             Differences = differences,
+            DifferenceString = differenceString,
             Status = status,
         };
     }
@@ -116,9 +117,9 @@ public class ReconciliationService(
         byte[] hashBytes = SHA256.HashData(bytes);
 
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < hashBytes.Length; i++)
+        foreach (var t in hashBytes)
         {
-            builder.Append(hashBytes[i].ToString("x2"));
+            builder.Append(t.ToString("x2"));
         }
 
         var hash = builder.ToString();
@@ -128,64 +129,104 @@ public class ReconciliationService(
         return hash;
     }
 
+    private static string BuildDifferences(List<Difference>? differences)
+    {
+        var result = string.Empty;
+        if (differences == null)
+        {
+            return result;
+        }
+
+        foreach (var difference in differences)
+        {
+            if (string.IsNullOrEmpty(difference.Local) && string.IsNullOrEmpty(difference.Nhs))
+            {
+                result += $"{difference.FieldName}:Both";
+            }
+            else if (string.IsNullOrEmpty(difference.Local))
+            {
+                result += $"{difference.FieldName}:LA";
+            }
+            else if (string.IsNullOrEmpty(difference.Nhs))
+            {
+                result += $"{difference.FieldName}:NHS";
+            }
+            else
+            {
+                result += $"{difference.FieldName}";
+            }
+
+            result += " - ";
+        }
+
+        if (result.EndsWith(" - "))
+        {
+            result = result.Substring(0, result.Length - 3);
+        }
+
+        return result;
+    }
+
     private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson result)
     {
         var differences = new List<Difference>();
-        if (request.NhsNumber != result.NhsNumber)
+
+        // The main method remains clean, with all logic in the helpers
+        AddDifferenceIfUnequal(differences, nameof(request.NhsNumber), request.NhsNumber, result.NhsNumber);
+        AddDifferenceIfUnequal(differences, nameof(request.BirthDate), request.BirthDate, result.BirthDate);
+        AddDifferenceIfUnequal(differences, nameof(request.Gender), request.Gender, result.Gender);
+        AddDifferenceIfUnequal(differences, nameof(request.Given), request.Given, result.GivenNames);
+        AddDifferenceIfUnequal(differences, nameof(request.Family), request.Family, result.FamilyNames);
+        AddDifferenceIfUnequal(differences, nameof(request.Email), request.Email, result.Emails);
+        AddDifferenceIfUnequal(differences, nameof(request.Phone), request.Phone, result.PhoneNumbers);
+        AddDifferenceIfUnequal(differences, nameof(request.AddressPostalCode), request.AddressPostalCode, result.AddressPostalCodes);
+
+        return differences;
+    }
+
+    private static void AddDifferenceIfUnequal(List<Difference> diffs, string fieldName, string? local, string? nhs)
+    {
+        bool areTheSame = !string.IsNullOrEmpty(local)
+                          && !string.IsNullOrEmpty(nhs)
+                          && local.Equals(nhs, StringComparison.OrdinalIgnoreCase);
+
+        if (!areTheSame)
         {
-            differences.Add(new Difference { FieldName = nameof(request.NhsNumber), Local = request.NhsNumber, Nhs = result.NhsNumber });
+            diffs.Add(new Difference { FieldName = fieldName, Local = local, Nhs = nhs });
+        }
+    }
+
+    private static void AddDifferenceIfUnequal(List<Difference> diffs, string fieldName, DateOnly? local, DateOnly? nhs)
+    {
+        bool areTheSame = local.HasValue
+                          && nhs.HasValue
+                          && local.Value == nhs.Value;
+
+        if (areTheSame)
+        {
+            return;
         }
 
         const string dateFormat = "yyyy-MM-dd";
-        if (request.BirthDate.HasValue && !result.BirthDate.HasValue || !request.BirthDate.HasValue && result.BirthDate.HasValue)
+        diffs.Add(new Difference
         {
-            differences.Add(new Difference
-            {
-                FieldName = nameof(request.BirthDate),
-                Local = request.BirthDate?.ToString(dateFormat),
-                Nhs = result.BirthDate?.ToString(dateFormat)
-            });
-        }
-        else if (request.BirthDate.HasValue && result.BirthDate.HasValue && request.BirthDate.Value.CompareTo(result.BirthDate.Value) != 0)
+            FieldName = fieldName,
+            Local = local?.ToString(dateFormat),
+            Nhs = nhs?.ToString(dateFormat)
+        });
+    }
+
+    private static void AddDifferenceIfUnequal(List<Difference> diffs, string fieldName, string? local, string[] nhsValues)
+    {
+        bool areTheSame = !string.IsNullOrEmpty(local)
+                          && nhsValues.Any()
+                          && nhsValues.Contains(local, StringComparer.OrdinalIgnoreCase);
+
+        if (areTheSame)
         {
-            differences.Add(new Difference
-            {
-                FieldName = nameof(request.BirthDate),
-                Local = request.BirthDate?.ToString(dateFormat),
-                Nhs = result.BirthDate?.ToString(dateFormat)
-            });
+            return;
         }
 
-        if (result.Emails.Length == 0 && !String.IsNullOrEmpty(request.Email) || result.Emails.Length > 0 && !result.Emails.Contains(request.Email, StringComparer.OrdinalIgnoreCase))
-        {
-            differences.Add(new Difference { FieldName = nameof(request.Email), Local = request.Email, Nhs = string.Join(", ", result.Emails) });
-        }
-
-        if (result.PhoneNumbers.Length == 0 && !String.IsNullOrEmpty(request.Phone) || result.PhoneNumbers.Length > 0 && !result.PhoneNumbers.Contains(request.Phone, StringComparer.OrdinalIgnoreCase))
-        {
-            differences.Add(new Difference { FieldName = nameof(request.Phone), Local = request.Phone, Nhs = string.Join(", ", result.PhoneNumbers) });
-        }
-
-        if (result.GivenNames.Length == 0 && !String.IsNullOrEmpty(request.Given) || result.GivenNames.Length > 0 && !result.GivenNames.Contains(request.Given, StringComparer.OrdinalIgnoreCase))
-        {
-            differences.Add(new Difference { FieldName = nameof(request.Given), Local = request.Given, Nhs = string.Join(", ", result.GivenNames) });
-        }
-
-        if (result.FamilyNames.Length == 0 && !String.IsNullOrEmpty(request.Family) || result.FamilyNames.Length > 0 && !result.FamilyNames.Contains(request.Family, StringComparer.OrdinalIgnoreCase))
-        {
-            differences.Add(new Difference { FieldName = nameof(request.Family), Local = request.Family, Nhs = string.Join(", ", result.FamilyNames) });
-        }
-
-        if (!String.Equals(request.Gender, result.Gender, StringComparison.OrdinalIgnoreCase))
-        {
-            differences.Add(new Difference { FieldName = nameof(request.Gender), Local = request.Gender, Nhs = result.Gender });
-        }
-
-        if (result.AddressPostalCodes.Length == 0 && !String.IsNullOrEmpty(request.AddressPostalCode) || result.AddressPostalCodes.Length > 0 && !result.AddressPostalCodes.Contains(request.AddressPostalCode, StringComparer.OrdinalIgnoreCase))
-        {
-            differences.Add(new Difference { FieldName = nameof(request.AddressPostalCode), Local = request.AddressPostalCode, Nhs = string.Join(", ", result.AddressPostalCodes) });
-        }
-
-        return differences;
+        diffs.Add(new Difference { FieldName = fieldName, Local = local, Nhs = string.Join(", ", nhsValues) });
     }
 }

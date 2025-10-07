@@ -19,7 +19,10 @@ public class NhsFhirClientApiWrapper(HttpClient httpClient) : INhsFhirClient
 
     public async Task<DemographicResult> PerformSearchByNhsId(string nhsId)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/demographics/{nhsId}");
+        var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/demographics")
+        {
+            Content = JsonContent.Create(new DemographicsRequest { NhsNumber = nhsId })
+        };
         var response = await httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
