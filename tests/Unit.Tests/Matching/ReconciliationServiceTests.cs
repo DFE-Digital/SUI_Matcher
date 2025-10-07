@@ -16,7 +16,7 @@ public class ReconciliationServiceTests
     private readonly Mock<IAuditLogger> _auditLogger = new(MockBehavior.Loose);
 
     [Fact]
-    public async Task NoNhsNumberShouldError()
+    public async Task ReconcileAsync_WhenNhsNumberIsMissing_ReturnsError()
     {
         // Arrange
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
@@ -38,7 +38,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task MinimalDataShouldNotError()
+    public async Task ReconcileAsync_WithMinimalData_ShouldNotError()
     {
         // Arrange
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
@@ -60,7 +60,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task InvalidNhsNumberShouldHandleError()
+    public async Task ReconcileAsync_WhenNhsNumberIsInvalid_ReturnsError()
     {
         // Arrange
         var errorMessage = "The NHS Number was not valid";
@@ -84,7 +84,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task PersonNotFoundShouldHandleError()
+    public async Task ReconcileAsync_WhenPersonNotFound_ReturnsError()
     {
         // Arrange
         var errorMessage = "Person not found";
@@ -108,7 +108,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task FullDataShouldReturnSupersededNhsNumber()
+    public async Task ReconcileAsync_WhenNhsNumberIsSuperseded_ReturnsSupersededStatus()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -152,7 +152,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task FullDataShouldReturnManyDifferences()
+    public async Task ReconcileAsync_WithFullDataAndMultipleMismatches_ReturnsDifferences()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -197,7 +197,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task FullDataShouldReturnOneDifference()
+    public async Task ReconcileAsync_WithOneMismatch_ReturnsDifference()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -238,7 +238,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task FullDataShouldReturnNoDifferences()
+    public async Task ReconcileAsync_WithMatchingData_ReturnsNoDifferences()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -279,7 +279,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task NullDataShouldReturnSevenDifferencesWithEachFieldSetAsBothInDifferenceString()
+    public async Task ReconcileAsync_WithNullData_ReturnsAllFieldsAsDifferences()
     {
         // Arrange
         var nhsPerson = new NhsPerson
