@@ -16,7 +16,7 @@ public class SearchStrategy3 : ISearchStrategy
 
         return VersionFactory(AlgorithmVersion, queryBuilder);
     }
-    
+
     private static OrderedDictionary<string, SearchQuery> VersionFactory(int version, SearchQueryBuilder queryBuilder)
     {
         return version switch
@@ -40,7 +40,7 @@ public class SearchStrategy3 : ISearchStrategy
             _ => throw new ArgumentOutOfRangeException(nameof(version), $"Unsupported version: {version}")
         };
     }
-    
+
     /// <summary>
     /// Simplest test to establish a baseline using all fields in both fuzzy and non-fuzzy
     /// </summary>
@@ -52,7 +52,7 @@ public class SearchStrategy3 : ISearchStrategy
         queryBuilder.AddFuzzyAll();
         return queryBuilder.Build();
     }
-    
+
     /// <summary>
     ///  Uses Fuzzy and non-fuzzy all fields but adds a Non-Fuzzy all fields with postcode wildcard first to see if that helps
     /// </summary>
@@ -65,7 +65,7 @@ public class SearchStrategy3 : ISearchStrategy
         queryBuilder.AddFuzzyAll();
         return queryBuilder.Build();
     }
-    
+
     /// <summary>
     ///  Uses Fuzzy and non-fuzzy all fields but adds a Non-Fuzzy all fields with postcode wildcard first
     /// </summary>
@@ -79,7 +79,7 @@ public class SearchStrategy3 : ISearchStrategy
         queryBuilder.AddFuzzyAll();
         return queryBuilder.Build();
     }
-    
+
     /// <summary>
     ///  Uses Fuzzy and non-fuzzy all fields and adds a non fuzzy GFD with DOB range at the start
     /// </summary>
@@ -106,7 +106,7 @@ public class SearchStrategy3 : ISearchStrategy
         queryBuilder.AddFuzzyAll();
         return queryBuilder.Build();
     }
-    
+
     /// <summary>
     ///  Uses Fuzzy and non-fuzzy all fields and adds a non-fuzzy GFD with DOB range and postcode at the start
     /// </summary>
@@ -120,7 +120,7 @@ public class SearchStrategy3 : ISearchStrategy
         queryBuilder.AddFuzzyAll();
         return queryBuilder.Build();
     }
-    
+
     /// <summary>
     /// Uses Fuzzy and non-fuzzy all fields and adds a non-fuzzy GFD with DOB range, postcode and postcode wildcard at the start
     /// </summary>
@@ -135,7 +135,7 @@ public class SearchStrategy3 : ISearchStrategy
         queryBuilder.AddFuzzyAll();
         return queryBuilder.Build();
     }
-    
+
     /// <summary>
     /// Uses Fuzzy and non-fuzzy all fields and adds a fuzzy GFD with DOB range, postcode and postcode wildcard at the start
     /// </summary>
@@ -150,7 +150,7 @@ public class SearchStrategy3 : ISearchStrategy
         queryBuilder.AddFuzzyAll();
         return queryBuilder.Build();
     }
-    
+
     /// <summary>
     /// Uses Fuzzy and non-fuzzy all fields and adds a fuzzy and non-fuzzy GFD with DOB range, postcode and postcode wildcard
     /// </summary>
@@ -180,16 +180,16 @@ public class SearchStrategy3 : ISearchStrategy
         queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false); // 4
         queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: true); // ? didn't show up in logs
         queryBuilder.AddNonFuzzyAll(); // 6
-        
+
         // Fuzzy next
         queryBuilder.AddFuzzyGfd(); // 2
         queryBuilder.AddFuzzyGfdRangePostcode(); // 5
         queryBuilder.AddFuzzyGfdRangePostcodeWildcard(); // 7
         queryBuilder.AddFuzzyAll(); // 3
-        
+
         return queryBuilder.Build();
     }
-    
+
     // V11 will use a Dob range for first non-fuzzy GFD
     /// <summary>
     ///  Uses Fuzzy and non-fuzzy all fields, fuzzy and non-fuzzy GFD, a fuzzy and non-fuzzy GFD with DOB range
@@ -203,118 +203,118 @@ public class SearchStrategy3 : ISearchStrategy
     {
         // Ordered strictly by observed performance from v1-v10 v10, with AddNonFuzzyGfdRange added back in as it did well in v4
 
-        queryBuilder.AddNonFuzzyGfd(); 
-    
+        queryBuilder.AddNonFuzzyGfd();
+
         queryBuilder.AddNonFuzzyGfdRange();
 
-        queryBuilder.AddFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyAll(); 
-        
-        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false); 
-    
-        queryBuilder.AddFuzzyGfdRangePostcode(); 
-    
-        queryBuilder.AddNonFuzzyAll(); 
+        queryBuilder.AddFuzzyGfd();
+
+        queryBuilder.AddFuzzyAll();
+
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false);
+
+        queryBuilder.AddFuzzyGfdRangePostcode();
+
+        queryBuilder.AddNonFuzzyAll();
 
         return queryBuilder.Build();
     }
-    
+
     private static OrderedDictionary<string, SearchQuery> Version12(SearchQueryBuilder queryBuilder)
     {
         // Ordered strictly by observed performance from v11 - order by most matches found
         // Direct comparison of V11 to see if changing order makes a difference
 
-        queryBuilder.AddNonFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyAll(); 
-    
+        queryBuilder.AddNonFuzzyGfd();
+
+        queryBuilder.AddFuzzyGfd();
+
+        queryBuilder.AddFuzzyAll();
+
         queryBuilder.AddNonFuzzyGfdRange();
-        
-        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false); 
-    
-        queryBuilder.AddFuzzyGfdRangePostcode(); 
-    
+
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false);
+
+        queryBuilder.AddFuzzyGfdRangePostcode();
+
         queryBuilder.AddNonFuzzyAll(); // <- got no results at all in v11. Shows that the other queries pick up everything this would have found.
 
         return queryBuilder.Build();
     }
-    
+
     // V13 will contain AddFuzzyGfdRange() and the more optimal ordering based on V11 and V12 results
-    
+
     private static OrderedDictionary<string, SearchQuery> Version13(SearchQueryBuilder queryBuilder)
     {
         // Ordered strictly by observed performance from v12 - order by most matches found
         // Removed NonFuzzyAll as it found no additional records in V11 and V12
         // Added AddFuzzyGfdRange() to see how it effects things
 
-        queryBuilder.AddNonFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyAll(); 
-    
+        queryBuilder.AddNonFuzzyGfd();
+
+        queryBuilder.AddFuzzyGfd();
+
+        queryBuilder.AddFuzzyAll();
+
         queryBuilder.AddNonFuzzyGfdRange();
-        
+
         queryBuilder.AddFuzzyGfdRange(); // New addition
-        
-        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false); 
-    
-        queryBuilder.AddFuzzyGfdRangePostcode(); 
+
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false);
+
+        queryBuilder.AddFuzzyGfdRangePostcode();
 
         return queryBuilder.Build();
     }
-    
+
     private static OrderedDictionary<string, SearchQuery> Version14(SearchQueryBuilder queryBuilder)
     {
         // Ordered strictly by observed performance from v13 - order by most matches found
         // Moved AddFuzzyGfdRange down as it found less than NonFuzzyGfdRangePostcode
 
-        queryBuilder.AddNonFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyAll(); 
-    
+        queryBuilder.AddNonFuzzyGfd();
+
+        queryBuilder.AddFuzzyGfd();
+
+        queryBuilder.AddFuzzyAll();
+
         queryBuilder.AddNonFuzzyGfdRange();
-        
-        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false); 
-        
+
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false);
+
         queryBuilder.AddFuzzyGfdRange();
-    
+
         queryBuilder.AddFuzzyGfdRangePostcode();
 
         return queryBuilder.Build();
     }
-    
+
     private static OrderedDictionary<string, SearchQuery> Version15(SearchQueryBuilder queryBuilder)
     {
         // Ordered strictly by observed performance from v14 - order by most matches found
         // This includes the non-fuzzy and fuzzy postcode wildcards at the end to see if they add anything
 
-        queryBuilder.AddNonFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyAll(); 
-    
+        queryBuilder.AddNonFuzzyGfd();
+
+        queryBuilder.AddFuzzyGfd();
+
+        queryBuilder.AddFuzzyAll();
+
         queryBuilder.AddNonFuzzyGfdRange();
-        
-        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false); 
-        
+
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false);
+
         queryBuilder.AddFuzzyGfdRange();
-    
+
         queryBuilder.AddFuzzyGfdRangePostcode();
-        
+
         // Not expecting much from these two based on version testing, but they might pick up a few more
-        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: true); 
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: true);
         queryBuilder.AddFuzzyGfdRangePostcodeWildcard();
 
         return queryBuilder.Build();
     }
-    
+
     /// <summary>
     /// Same as v15 but with AddNonFuzzyGfdPostcode at the start to see if it still matches
     /// </summary>
@@ -323,21 +323,21 @@ public class SearchStrategy3 : ISearchStrategy
     private static OrderedDictionary<string, SearchQuery> Version16(SearchQueryBuilder queryBuilder)
     {
         queryBuilder.AddNonFuzzyGfdPostcode(); // Compared to V15 this is the only change. Replaced AddNonFuzzyGfd at the start with this.
-        
-        queryBuilder.AddFuzzyGfd(); 
-        
-        queryBuilder.AddFuzzyAll(); 
-    
+
+        queryBuilder.AddFuzzyGfd();
+
+        queryBuilder.AddFuzzyAll();
+
         queryBuilder.AddNonFuzzyGfdRange();
-        
-        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false); 
-        
+
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false);
+
         queryBuilder.AddFuzzyGfdRange();
-    
+
         queryBuilder.AddFuzzyGfdRangePostcode();
-        
+
         // These are useful when the postcodes may be incorrect from source data
-        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: true); 
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: true);
         queryBuilder.AddFuzzyGfdRangePostcodeWildcard();
 
         return queryBuilder.Build();

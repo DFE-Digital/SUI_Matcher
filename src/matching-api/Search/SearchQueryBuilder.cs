@@ -58,7 +58,7 @@ public class SearchQueryBuilder
             History = true
         });
     }
-    
+
     public void AddNonFuzzyGfdPostcode()
     {
         _queries.Add("NonFuzzyGFDPostcode", new SearchQuery()
@@ -83,7 +83,7 @@ public class SearchQueryBuilder
             History = true
         });
     }
-    
+
     public void AddNonFuzzyGfdRangePostcode(bool usePostcodeWildcard = false)
     {
         var name = usePostcodeWildcard ? "NonFuzzyGFDRangePostcodeWildcard" : "NonFuzzyGFDRangePostcode";
@@ -155,7 +155,7 @@ public class SearchQueryBuilder
             AddressPostalcode = _model.AddressPostalCode
         });
     }
-    
+
     public void AddFuzzyGfdPostcodeWildcard()
     {
         _queries.Add("FuzzyGFDPostcodeWildcard",
@@ -265,5 +265,5 @@ public class SearchQueryBuilder
         return _queries;
     }
 
-    
+
 }
