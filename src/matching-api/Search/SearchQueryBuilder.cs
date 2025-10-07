@@ -59,6 +59,19 @@ public class SearchQueryBuilder
         });
     }
 
+    public void AddNonFuzzyGfdPostcode()
+    {
+        _queries.Add("NonFuzzyGFDPostcode", new SearchQuery()
+        {
+            ExactMatch = false,
+            Given = ModelName,
+            Family = _model.Family,
+            Birthdate = Dob,
+            AddressPostalcode = _model.AddressPostalCode,
+            History = true
+        });
+    }
+
     public void AddNonFuzzyGfdRange()
     {
         _queries.Add("NonFuzzyGFDRange", new SearchQuery()
@@ -67,6 +80,20 @@ public class SearchQueryBuilder
             Given = ModelName,
             Family = _model.Family,
             Birthdate = DobRange,
+            History = true
+        });
+    }
+
+    public void AddNonFuzzyGfdRangePostcode(bool usePostcodeWildcard = false)
+    {
+        var name = usePostcodeWildcard ? "NonFuzzyGFDRangePostcodeWildcard" : "NonFuzzyGFDRangePostcode";
+        _queries.Add(name, new SearchQuery()
+        {
+            ExactMatch = false,
+            Given = ModelName,
+            Family = _model.Family,
+            Birthdate = DobRange,
+            AddressPostalcode = usePostcodeWildcard ? PostcodeWildcard() : _model.AddressPostalCode,
             History = true
         });
     }
@@ -127,6 +154,19 @@ public class SearchQueryBuilder
             Birthdate = Dob,
             AddressPostalcode = _model.AddressPostalCode
         });
+    }
+
+    public void AddFuzzyGfdPostcodeWildcard()
+    {
+        _queries.Add("FuzzyGFDPostcodeWildcard",
+            new SearchQuery()
+            {
+                FuzzyMatch = true,
+                Given = ModelName,
+                Family = _model.Family,
+                Birthdate = DobRange,
+                AddressPostalcode = PostcodeWildcard()
+            });
     }
 
     public void AddFuzzyGfdRangePostcodeWildcard()
@@ -224,4 +264,6 @@ public class SearchQueryBuilder
     {
         return _queries;
     }
+
+
 }
