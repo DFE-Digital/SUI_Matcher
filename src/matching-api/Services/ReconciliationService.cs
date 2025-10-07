@@ -76,7 +76,7 @@ public class ReconciliationService(
         var differences = BuildDifferenceList(reconciliationRequest, data.Result);
         var differenceString = BuildDifferences(differences);
 
-        var status = ReconciliationStatus.Error;
+        ReconciliationStatus status;
         if (differences.Any(x => x.FieldName == nameof(reconciliationRequest.NhsNumber)))
         {
             status = ReconciliationStatus.SupersededNhsNumber;
@@ -85,7 +85,7 @@ public class ReconciliationService(
         {
             status = ReconciliationStatus.NoDifferences;
         }
-        else if (differences.Count > 0)
+        else
         {
             status = ReconciliationStatus.Differences;
         }
@@ -131,40 +131,35 @@ public class ReconciliationService(
 
     private static string BuildDifferences(List<Difference>? differences)
     {
-        var result = string.Empty;
+        var sb = new StringBuilder();
         if (differences == null)
         {
-            return result;
+            return sb.ToString();
         }
 
         foreach (var difference in differences)
         {
             if (string.IsNullOrEmpty(difference.Local) && string.IsNullOrEmpty(difference.Nhs))
             {
-                result += $"{difference.FieldName}:Both";
+                sb.Append($"{difference.FieldName}:Both");
             }
             else if (string.IsNullOrEmpty(difference.Local))
             {
-                result += $"{difference.FieldName}:LA";
+                sb.Append($"{difference.FieldName}:LA");
             }
             else if (string.IsNullOrEmpty(difference.Nhs))
             {
-                result += $"{difference.FieldName}:NHS";
+                sb.Append($"{difference.FieldName}:NHS");
             }
             else
             {
-                result += $"{difference.FieldName}";
+                sb.Append($"{difference.FieldName}");
             }
 
-            result += " - ";
+            sb.Append(" - ");
         }
 
-        if (result.EndsWith(" - "))
-        {
-            result = result.Substring(0, result.Length - 3);
-        }
-
-        return result;
+        return sb.ToString().EndsWith(" - ") ? sb.ToString(0, sb.Length - 3) : sb.ToString();
     }
 
     private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson result)
@@ -219,7 +214,7 @@ public class ReconciliationService(
     private static void AddDifferenceIfUnequal(List<Difference> diffs, string fieldName, string? local, string[] nhsValues)
     {
         bool areTheSame = !string.IsNullOrEmpty(local)
-                          && nhsValues.Any()
+                          && nhsValues.Length > 0
                           && nhsValues.Contains(local, StringComparer.OrdinalIgnoreCase);
 
         if (areTheSame)
