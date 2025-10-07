@@ -58,6 +58,19 @@ public class SearchQueryBuilder
             History = true
         });
     }
+    
+    public void AddNonFuzzyGfdPostcode()
+    {
+        _queries.Add("NonFuzzyGFDPostcode", new SearchQuery()
+        {
+            ExactMatch = false,
+            Given = ModelName,
+            Family = _model.Family,
+            Birthdate = Dob,
+            AddressPostalcode = _model.AddressPostalCode,
+            History = true
+        });
+    }
 
     public void AddNonFuzzyGfdRange()
     {
