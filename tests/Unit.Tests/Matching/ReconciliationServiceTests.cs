@@ -16,7 +16,7 @@ public class ReconciliationServiceTests
     private readonly Mock<IAuditLogger> _auditLogger = new(MockBehavior.Loose);
 
     [Fact]
-    public async Task NoNhsNumberShouldError()
+    public async Task ReconcileAsync_WhenNhsNumberIsMissing_ReturnsError()
     {
         // Arrange
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
@@ -38,7 +38,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task MinimalDataShouldNotError()
+    public async Task ReconcileAsync_WithMinimalData_ShouldNotError()
     {
         // Arrange
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
@@ -60,7 +60,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task InvalidNhsNumberShouldHandleError()
+    public async Task ReconcileAsync_WhenNhsNumberIsInvalid_ReturnsError()
     {
         // Arrange
         var errorMessage = "The NHS Number was not valid";
@@ -84,7 +84,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task PersonNotFoundShouldHandleError()
+    public async Task ReconcileAsync_WhenPersonNotFound_ReturnsError()
     {
         // Arrange
         var errorMessage = "Person not found";
@@ -108,7 +108,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task FullDataShouldReturnSupersededNhsNumber()
+    public async Task ReconcileAsync_WhenNhsNumberIsSuperseded_ReturnsSupersededStatus()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -152,7 +152,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task FullDataShouldReturnManyDifferences()
+    public async Task ReconcileAsync_WithFullDataAndMultipleMismatches_ReturnsDifferences()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -160,10 +160,10 @@ public class ReconciliationServiceTests
             NhsNumber = "9449305552",
             AddressPostalCodes = ["AB12 3CD", "BC34 5EF"],
             FamilyNames = ["Smith", "Jones"],
-            GivenNames = ["John", "Jane"],
+            GivenNames = [],
             BirthDate = new DateOnly(1980, 1, 1),
             Gender = "M",
-            PhoneNumbers = ["0123456789", "+44 123456789"],
+            PhoneNumbers = [],
             Emails = ["john.smith@example", "jane.smith@example"],
         };
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
@@ -174,11 +174,11 @@ public class ReconciliationServiceTests
         {
             NhsNumber = "9449305552",
             AddressPostalCode = "AA11 2BB",
-            Family = "Hamilton",
+            Family = "",
             Given = "David",
             Gender = "Male",
-            Phone = "123454321",
-            BirthDate = new DateOnly(1990, 01, 02),
+            Phone = "",
+            BirthDate = null,
             Email = "david.hamilton@example.com",
         };
 
@@ -192,11 +192,12 @@ public class ReconciliationServiceTests
         Assert.Equal("BirthDate", result.Differences?[0].FieldName);
         Assert.Equal(request.BirthDate?.ToString("yyyy-MM-dd"), result.Differences?[0].Local);
         Assert.Equal(nhsPerson.BirthDate?.ToString("yyyy-MM-dd"), result.Differences?[0].Nhs);
-        Assert.Equal(ReconciliationStatus.ManyDifferences, result.Status);
+        Assert.Equal(ReconciliationStatus.Differences, result.Status);
+        Assert.Equal("BirthDate:LA - Gender - Given:NHS - Family:LA - Email - Phone:Both - AddressPostalCode", result.DifferenceString);
     }
 
     [Fact]
-    public async Task FullDataShouldReturnOneDifference()
+    public async Task ReconcileAsync_WithOneMismatch_ReturnsDifference()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -233,11 +234,11 @@ public class ReconciliationServiceTests
         Assert.NotNull(result);
         Assert.NotNull(result.Person);
         Assert.Equal(1, result.Differences?.Count);
-        Assert.Equal(ReconciliationStatus.OneDifference, result.Status);
+        Assert.Equal(ReconciliationStatus.Differences, result.Status);
     }
 
     [Fact]
-    public async Task FullDataShouldReturnNoDifferences()
+    public async Task ReconcileAsync_WithMatchingData_ReturnsNoDifferences()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -278,7 +279,7 @@ public class ReconciliationServiceTests
     }
 
     [Fact]
-    public async Task NullDataShouldReturnNoDifferences()
+    public async Task ReconcileAsync_WithNullData_ReturnsAllFieldsAsDifferences()
     {
         // Arrange
         var nhsPerson = new NhsPerson
@@ -314,7 +315,8 @@ public class ReconciliationServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Person);
-        Assert.Equal(0, result.Differences?.Count);
-        Assert.Equal(ReconciliationStatus.NoDifferences, result.Status);
+        Assert.Equal(7, result.Differences?.Count);
+        Assert.Equal(ReconciliationStatus.Differences, result.Status);
+        Assert.Equal("BirthDate:Both - Gender:Both - Given:Both - Family:Both - Email:Both - Phone:Both - AddressPostalCode:Both", result.DifferenceString);
     }
 }

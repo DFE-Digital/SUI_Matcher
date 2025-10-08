@@ -553,7 +553,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once, "The PerformSearchByNhsId method should have been invoked once");
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
 
-        Assert.Equal(nameof(ReconciliationStatus.OneDifference), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
+        Assert.Equal(nameof(ReconciliationStatus.Differences), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
         Assert.DoesNotContain(records[0][TestDataHeaders.GivenName], demographicResult.Result.GivenNames);
         Assert.Equal("Given", records[0][ReconciliationCsvFileProcessor.HeaderDifferences]);
     }
@@ -628,7 +628,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
 
         Assert.DoesNotContain(records[0][TestDataHeaders.Surname], demographicResult.Result.FamilyNames);
-        Assert.Equal(nameof(ReconciliationStatus.ManyDifferences), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
+        Assert.Equal(nameof(ReconciliationStatus.Differences), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
         Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderDifferences], "Given - Family");
     }
 
