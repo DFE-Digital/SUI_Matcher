@@ -1,5 +1,7 @@
 using MatchingApi.Search;
 
+using OxyPlot;
+
 using Shared;
 using Shared.Models;
 
@@ -7,6 +9,13 @@ namespace Unit.Tests.Matching;
 
 public class SearchStrategyTests
 {
+    private SearchSpecification _searchSpecification = new()
+    {
+        Given = "John",
+        Family = "Doe",
+        BirthDate = DateOnly.FromDateTime(DateTime.Today),
+    };
+    
     [Theory]
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy1, typeof(SearchStrategy1))]
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy2, typeof(SearchStrategy2))]
@@ -28,19 +37,78 @@ public class SearchStrategyTests
     {
         var strategy = new SearchStrategy3();
         var versions = strategy.GetAllAlgorithmVersions();
-        var spec = new SearchSpecification
-        {
-            Given = "John",
-            Family = "Doe",
-            BirthDate = DateOnly.FromDateTime(new DateTime(2010, 1, 1)),
-            AddressPostalCode = "AB12 3CD"
-        };
 
         foreach (var version in versions)
         {
-            var exception = Record.Exception(() => strategy.BuildQuery(spec, version));
+            var sut = new SearchStrategy3(version);
+            var exception = Record.Exception(() => sut.BuildQuery(_searchSpecification));
             Assert.Null(exception);
         }
+    }
+    
+    [Fact]
+    public void SearchStrategy2_ShouldHaveNoDuplicateKeyExceptions()
+    {
+        var versions = new SearchStrategy2().GetAllAlgorithmVersions();
+
+        foreach (var version in versions)
+        {
+            var sut = new SearchStrategy3(version);
+            var exception = Record.Exception(() => sut.BuildQuery(_searchSpecification));
+            Assert.Null(exception);
+        }
+    }
+    
+    [Fact]
+    public void SearchStrategy1_ShouldHaveNoDuplicateKeyExceptions()
+    {
+        var versions = new SearchStrategy1().GetAllAlgorithmVersions();
+
+        foreach (var version in versions)
+        {
+            var sut = new SearchStrategy1(version);
+            var exception = Record.Exception(() => sut.BuildQuery(_searchSpecification));
+            Assert.Null(exception);
+        }
+    }
+
+    [Fact]
+    public void SearchStrategy1_ShouldSetCorrectVersion_WhenSettingVersion()
+    {
+        var strategy = new SearchStrategy1(1);
+        Assert.Equal(1, strategy.GetAlgorithmVersion());
+    }
+    
+    [Fact]
+    public void SearchStrategy2_ShouldSetCorrectVersion_WhenSettingVersion()
+    {
+        var strategy = new SearchStrategy2(1);
+        Assert.Equal(1, strategy.GetAlgorithmVersion());
+    }
+    
+    [Fact]
+    public void SearchStrategy3_ShouldSetCorrectVersion_WhenSettingVersion()
+    {
+        var strategy = new SearchStrategy3(13);
+        Assert.Equal(13, strategy.GetAlgorithmVersion());
+    }
+
+    [Fact]
+    public void SearchStrategy1_ShouldThrowException_WhenVersionIsOutOfRange()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SearchStrategy1(999));
+    }
+
+    [Fact]
+    public void SearchStrategy2_ShouldThrowException_WhenVersionIsOutOfRange()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SearchStrategy2(-1));
+    }
+
+    [Fact]
+    public void SearchStrategy3_ShouldThrowException_WhenVersionIsOutOfRange()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SearchStrategy3(1234));
     }
 
 }

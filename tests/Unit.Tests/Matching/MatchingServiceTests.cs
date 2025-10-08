@@ -329,9 +329,8 @@ public sealed class MatchingServiceTests
             BirthDate = new DateOnly(1970, 1, 1),
             Family = "Smith",
             Given = "John",
+            StrategyVersion = 2
         };
-        var searchFactory = SearchStrategyFactory.Get(SharedConstants.SearchStrategy.Strategies.Strategy1);
-        var algoId = searchFactory.GetAlgorithmVersion();
 
         _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(new SearchResult
@@ -348,7 +347,7 @@ public sealed class MatchingServiceTests
 
         // Assert
         Assert.NotEmpty(logMessages);
-        Assert.Contains(logMessages, x => x.Contains($"[Algorithm=v{algoId}]"));
+        Assert.Contains(logMessages, x => x.Contains("[Algorithm=v2]"));
     }
 
     [Fact]

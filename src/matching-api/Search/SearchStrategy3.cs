@@ -5,17 +5,25 @@ namespace MatchingApi.Search;
 /// <summary>
 /// Evolving strategy, iteratively improved based on performance and feedback.
 /// </summary>
-public class SearchStrategy3 : ISearchStrategy
+public class SearchStrategy3: ISearchStrategy
 {
     // Version 14 so far is the most optimal based on observed performance.
-    private const int AlgorithmVersion = 14;
-    private static readonly int[] AllVersions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    private int AlgorithmVersion { get; }
+    private static readonly IReadOnlyCollection<int?> AllVersions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
-    public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model, int? version = null)
+    public SearchStrategy3(int? version = null)
+    {
+        AlgorithmVersion = version ?? 14;
+        if (!AllVersions.Contains(AlgorithmVersion))
+            throw new ArgumentOutOfRangeException(nameof(version),
+                $"Version {version} not supported for {nameof(SearchStrategy1)}");
+    }
+
+    public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
     {
         var queryBuilder = new SearchQueryBuilder(model, dobRange: 6);
 
-        return VersionFactory(version ?? AlgorithmVersion, queryBuilder);
+        return VersionFactory(AlgorithmVersion, queryBuilder);
     }
 
     private static OrderedDictionary<string, SearchQuery> VersionFactory(int version, SearchQueryBuilder queryBuilder)
@@ -349,7 +357,7 @@ public class SearchStrategy3 : ISearchStrategy
         return AlgorithmVersion;
     }
 
-    public int[] GetAllAlgorithmVersions()
+    public IReadOnlyCollection<int?> GetAllAlgorithmVersions()
     {
         return AllVersions;
     }
