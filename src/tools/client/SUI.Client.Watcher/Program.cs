@@ -34,6 +34,7 @@ await argResult.WithParsedAsync(async parsedArgs =>
             x.EnableGenderSearch = parsedArgs.EnableGenderSearch;
             x.MatchedRecordsDirectory = parsedArgs.MatchedRecordsDirectory;
             x.SearchStrategy = parsedArgs.SearchStrategy;
+            x.StrategyVersion = parsedArgs.StrategyVersion;
         });
         services.AddHttpClient<IMatchPersonApiService, MatchPersonApiService>(async void (client) =>
         {
