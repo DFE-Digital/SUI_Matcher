@@ -64,7 +64,7 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
         }
     }
 
-    public async Task<DemographicResult> PerformSearchByNhsId(string nhsId)
+    public async Task<DemographicResult> PerformSearchByNhsId(string? nhsId)
     {
         try
         {

@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text.RegularExpressions;
+
+using Microsoft.Extensions.Logging;
 
 using Shared.Models;
 using Shared.Util;
@@ -64,10 +66,12 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderAddressPostalCode] = string.Join(" - ", response?.Person?.AddressPostalCodes ?? ["-"]);
         record[HeaderEmail] = string.Join(" - ", response?.Person?.Emails ?? ["-"]);
         record[HeaderPhone] = string.Join(" - ", response?.Person?.PhoneNumbers ?? ["-"]);
-        record[HeaderDifferences] = string.Join(" - ", response?.Differences?.Select(x => x.FieldName) ?? ["-"]);
+        var differenceList = response?.DifferenceString ?? "-";
+        record[HeaderDifferences] = differenceList;
+
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
 
-        RecordStats((ReconciliationCsvProcessStats)stats, response);
+        RecordStats((ReconciliationCsvProcessStats)stats, response, differenceList);
     }
 
     protected override void AddExtraCsvHeaders(HashSet<string> headers)
@@ -92,12 +96,32 @@ public class ReconciliationCsvFileProcessor(
     protected override string GeneratePdfReport(IStats stats, string ts, string outputDirectory)
     {
         var localStats = (ReconciliationCsvProcessStats)stats;
-        string[] categories = ["Errored", "No Differences", "One Difference", "Many Differences", "Superseded NHS Number", "Invalid NHS Number", "Patient Not Found", "Missing NHS Number"];
-        double[] values = [localStats.ErroredCount, localStats.NoDifferenceCount, localStats.OneDifferenceCount, localStats.ManyDifferencesCount, localStats.SupersededNhsNumber, localStats.InvalidNhsNumber, localStats.PatientNotFound, localStats.MissingNhsNumber];
+        string[] categories =
+        [
+            "Errored", "No Differences", "Superseded NHS Number", "Invalid NHS Number",
+            "Patient Not Found", "Missing NHS Number", "Differences",
+            "Birthdate differences", "Birthdate missing NHS", "Birthdate missing LA", "Birthdate Missing Both",
+            "Email differences", "Email missing NHS", "Email missing LA", "Email Missing Both",
+            "Phone differences", "Phone missing NHS", "Phone missing LA", "Phone Missing Both",
+            "Given Name differences", "Given Name missing NHS", "Given Name missing LA", "Given Name Missing Both",
+            "Family Name differences", "Family Name missing NHS", "Family Name missing LA", "Family Name Missing Both",
+            "Postcode differences", "Postcode missing NHS", "Postcode missing LA", "Postcode Missing Both",
+        ];
+        double[] values =
+        [
+            localStats.ErroredCount, localStats.NoDifferenceCount, localStats.SupersededNhsNumber,
+            localStats.InvalidNhsNumber, localStats.PatientNotFound, localStats.MissingNhsNumber, localStats.DifferencesCount,
+            localStats.BirthDateCount, localStats.BirthDateNhsCount, localStats.BirthDateLaCount, localStats.BirthDateBothCount,
+            localStats.EmailCount, localStats.EmailNhsCount, localStats.EmailLaCount, localStats.EmailBothCount,
+            localStats.PhoneCount, localStats.PhoneNhsCount, localStats.PhoneLaCount, localStats.PhoneBothCount,
+            localStats.GivenNameCount, localStats.GivenNameNhsCount, localStats.GivenNameLaCount, localStats.GivenNameBothCount,
+            localStats.FamilyNameCount, localStats.FamilyNameNhsCount, localStats.FamilyNameLaCount, localStats.FamilyNameBothCount,
+            localStats.PostCodeCount, localStats.PostCodeNhsCount, localStats.PostCodeLaCount, localStats.PostCodeBothCount
+        ];
         return PdfReportGenerator.GenerateReport(GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"), "Reconciliation Report", categories, values);
     }
 
-    private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response)
+    private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, string differenceList)
     {
         stats.Count++;
         switch (response?.Status)
@@ -105,17 +129,18 @@ public class ReconciliationCsvFileProcessor(
             case ReconciliationStatus.NoDifferences:
                 stats.NoDifferenceCount++;
                 break;
+            case ReconciliationStatus.Differences:
+                UpdateStatsForField(differenceList, stats, "BirthDate", s => s.BirthDateCount++, s => s.BirthDateNhsCount++, s => s.BirthDateLaCount++, s => s.BirthDateBothCount++);
+                UpdateStatsForField(differenceList, stats, "Email", s => s.EmailCount++, s => s.EmailNhsCount++, s => s.EmailLaCount++, s => s.EmailBothCount++);
+                UpdateStatsForField(differenceList, stats, "Phone", s => s.PhoneCount++, s => s.PhoneNhsCount++, s => s.PhoneLaCount++, s => s.PhoneBothCount++);
+                UpdateStatsForField(differenceList, stats, "Given", s => s.GivenNameCount++, s => s.GivenNameNhsCount++, s => s.GivenNameLaCount++, s => s.GivenNameBothCount++);
+                UpdateStatsForField(differenceList, stats, "Family", s => s.FamilyNameCount++, s => s.FamilyNameNhsCount++, s => s.FamilyNameLaCount++, s => s.FamilyNameBothCount++);
+                UpdateStatsForField(differenceList, stats, "AddressPostalCode", s => s.PostCodeCount++, s => s.PostCodeNhsCount++, s => s.PostCodeLaCount++, s => s.PostCodeBothCount++);
 
-            case ReconciliationStatus.ManyDifferences:
-                stats.ManyDifferencesCount++;
+                stats.DifferencesCount++;
                 break;
-
             case ReconciliationStatus.SupersededNhsNumber:
                 stats.SupersededNhsNumber++;
-                break;
-
-            case ReconciliationStatus.OneDifference:
-                stats.OneDifferenceCount++;
                 break;
             case ReconciliationStatus.InvalidNhsNumber:
                 stats.InvalidNhsNumber++;
@@ -130,5 +155,22 @@ public class ReconciliationCsvFileProcessor(
                 stats.ErroredCount++;
                 break;
         }
+    }
+
+    private static void UpdateStatsForField(
+        string differenceList,
+        ReconciliationCsvProcessStats stats,
+        string fieldName,
+        Action<ReconciliationCsvProcessStats> incrementPlain,
+        Action<ReconciliationCsvProcessStats> incrementNhs,
+        Action<ReconciliationCsvProcessStats> incrementLa,
+        Action<ReconciliationCsvProcessStats> incrementBoth)
+    {
+        var plainRegex = new Regex($@"\b{fieldName}\b(?!:)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(10));
+
+        if (plainRegex.IsMatch(differenceList)) { incrementPlain(stats); }
+        if (differenceList.Contains($"{fieldName}:NHS")) { incrementNhs(stats); }
+        if (differenceList.Contains($"{fieldName}:LA")) { incrementLa(stats); }
+        if (differenceList.Contains($"{fieldName}:Both")) { incrementBoth(stats); }
     }
 }

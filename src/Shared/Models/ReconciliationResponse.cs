@@ -10,4 +10,6 @@ public class ReconciliationResponse
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ReconciliationStatus Status { get; set; }
+
+    public string DifferenceString { get; set; } = String.Empty;
 }
