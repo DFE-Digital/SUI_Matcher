@@ -32,6 +32,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 {
     private readonly TempDirectoryFixture _dir = new();
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
+    private readonly Mock<IMatchingService> _matchingService = new(MockBehavior.Loose);
 
     public required ITestOutputHelper TestContext = testOutputHelper;
 
@@ -46,7 +47,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         public const string PostCode = "PostCode";
         public static string Phone = "Phone";
     }
-
 
     [Fact]
     public async Task TestCsvBatchFile()
@@ -420,12 +420,21 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 PhoneNumbers = ["0789 1234567"],
             }
         };
-
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(
+            new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.Match,
+                    NhsNumber = demographicResult.Result.NhsNumber,
+                }
+            });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
 
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(true, x =>
         {
+            x.AddSingleton(_matchingService.Object);
             x.AddSingleton(_nhsFhirClient.Object);
         });
         var monitor = provider.GetRequiredService<CsvFileMonitor>();
@@ -501,12 +510,21 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 PhoneNumbers = ["0789 1234567"],
             }
         };
-
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(
+            new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.Match,
+                    NhsNumber = demographicResult.Result.NhsNumber,
+                }
+            });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
 
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(true, x =>
         {
+            x.AddSingleton(_matchingService.Object);
             x.AddSingleton(_nhsFhirClient.Object);
         });
         var monitor = provider.GetRequiredService<CsvFileMonitor>();
@@ -575,12 +593,20 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 PhoneNumbers = ["0789 1234567"],
             }
         };
-
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(
+            new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.ManyMatch,
+                }
+            });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
 
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(true, x =>
         {
+            x.AddSingleton(_matchingService.Object);
             x.AddSingleton(_nhsFhirClient.Object);
         });
         var monitor = provider.GetRequiredService<CsvFileMonitor>();
@@ -629,7 +655,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         Assert.DoesNotContain(records[0][TestDataHeaders.Surname], demographicResult.Result.FamilyNames);
         Assert.Equal(nameof(ReconciliationStatus.Differences), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
-        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderDifferences], "Given - Family");
+        Assert.Equal("Given - Family - MatchingNhsNumber:NHS", records[0][ReconciliationCsvFileProcessor.HeaderDifferences]);
     }
 
     [Fact]
@@ -649,12 +675,20 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 PhoneNumbers = ["0789 1234567"],
             }
         };
-
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(
+            new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.PotentialMatch,
+                }
+            });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
 
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(true, x =>
         {
+            x.AddSingleton(_matchingService.Object);
             x.AddSingleton(_nhsFhirClient.Object);
         });
         var monitor = provider.GetRequiredService<CsvFileMonitor>();

@@ -6,7 +6,7 @@ using Shared.Converter;
 
 namespace Shared.Models;
 
-public class ReconciliationRequest : PersonSpecification
+public class ReconciliationRequest : SearchSpecification
 {
     [Required(ErrorMessage = "NHS number is required")]
     [StringLength(10, MinimumLength = 10, ErrorMessage = "NHS number must be 10 characters long")]

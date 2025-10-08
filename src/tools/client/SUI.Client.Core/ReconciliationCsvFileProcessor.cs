@@ -26,6 +26,8 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderPhone = "SUI_Phone";
     public const string HeaderDifferences = "SUI_Differences";
     public const string HeaderStatus = "SUI_Status";
+    public const string HeaderMatchStatus = "SUI_MatchStatus";
+    public const string HeaderMatchNhsNumber = "SUI_MatchNhsNumber";
 
     protected override async Task ProcessRecord(Dictionary<string, string> record, IStats stats)
     {
@@ -68,8 +70,9 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderPhone] = string.Join(" - ", response?.Person?.PhoneNumbers ?? ["-"]);
         var differenceList = response?.DifferenceString ?? "-";
         record[HeaderDifferences] = differenceList;
-
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
+        record[HeaderMatchNhsNumber] = response?.MatchingResult?.NhsNumber ?? "-";
+        record[HeaderMatchStatus] = response?.MatchingResult?.MatchStatus.ToString() ?? "-";
 
         RecordStats((ReconciliationCsvProcessStats)stats, response, differenceList);
     }
@@ -86,6 +89,8 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderPhone);
         headers.Add(HeaderDifferences);
         headers.Add(HeaderStatus);
+        headers.Add(HeaderMatchStatus);
+        headers.Add(HeaderMatchNhsNumber);
     }
 
     protected override Task CreateMatchedCsvIfEnabled(string filePath, string ts, List<Dictionary<string, string>> records, HashSet<string> headers)
@@ -106,6 +111,8 @@ public class ReconciliationCsvFileProcessor(
             "Given Name differences", "Given Name missing NHS", "Given Name missing LA", "Given Name Missing Both",
             "Family Name differences", "Family Name missing NHS", "Family Name missing LA", "Family Name Missing Both",
             "Postcode differences", "Postcode missing NHS", "Postcode missing LA", "Postcode Missing Both",
+            "Matching Status Match", "Matching Status Potential Match", "Matching Status No Match",
+            "Matching Status Many Match", "Matching Status Error"
         ];
         double[] values =
         [
@@ -116,7 +123,9 @@ public class ReconciliationCsvFileProcessor(
             localStats.PhoneCount, localStats.PhoneNhsCount, localStats.PhoneLaCount, localStats.PhoneBothCount,
             localStats.GivenNameCount, localStats.GivenNameNhsCount, localStats.GivenNameLaCount, localStats.GivenNameBothCount,
             localStats.FamilyNameCount, localStats.FamilyNameNhsCount, localStats.FamilyNameLaCount, localStats.FamilyNameBothCount,
-            localStats.PostCodeCount, localStats.PostCodeNhsCount, localStats.PostCodeLaCount, localStats.PostCodeBothCount
+            localStats.PostCodeCount, localStats.PostCodeNhsCount, localStats.PostCodeLaCount, localStats.PostCodeBothCount,
+            localStats.MatchingStatusMatch, localStats.MatchingStatusPotentialMatch, localStats.MatchingStatusNoMatch,
+            localStats.MatchingStatusManyMatch, localStats.MatchingStatusError
         ];
         return PdfReportGenerator.GenerateReport(GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"), "Reconciliation Report", categories, values);
     }
@@ -124,6 +133,25 @@ public class ReconciliationCsvFileProcessor(
     private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, string differenceList)
     {
         stats.Count++;
+        switch (response?.MatchingResult?.MatchStatus)
+        {
+            case MatchStatus.Match:
+                stats.MatchingStatusMatch++;
+                break;
+            case MatchStatus.NoMatch:
+                stats.MatchingStatusNoMatch++;
+                break;
+            case MatchStatus.PotentialMatch:
+                stats.MatchingStatusPotentialMatch++;
+                break;
+            case MatchStatus.ManyMatch:
+                stats.MatchingStatusManyMatch++;
+                break;
+            default:
+                stats.MatchingStatusError++;
+                break;
+        }
+
         switch (response?.Status)
         {
             case ReconciliationStatus.NoDifferences:

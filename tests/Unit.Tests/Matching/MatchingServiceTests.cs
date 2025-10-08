@@ -314,7 +314,7 @@ public sealed class MatchingServiceTests
         var logMessages = new List<string>();
         var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddConsole(options => options.FormatterName = Shared.SharedConstants.LogFormatter)
+            builder.AddConsole(options => options.FormatterName = SharedConstants.LogFormatter)
                 .AddConsoleFormatter<TestLogConsoleFormatter, TestConsoleFormatterOptions>(options =>
                 {
                     options.TestLogMessages = logMessages;

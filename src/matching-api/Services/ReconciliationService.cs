@@ -12,6 +12,7 @@ using Shared.Util;
 namespace MatchingApi.Services;
 
 public class ReconciliationService(
+    IMatchingService matchingService,
     ILogger<MatchingService> logger,
     INhsFhirClient nhsFhirClient,
     IAuditLogger auditLogger) : IReconciliationService
@@ -41,8 +42,10 @@ public class ReconciliationService(
             };
         }
 
+        var matchingResponse = await matchingService.SearchAsync(reconciliationRequest, false);
+
         var data = await nhsFhirClient.PerformSearchByNhsId(reconciliationRequest.NhsNumber);
-        if (data.Status == Status.InvalidNhsNumber || !NhsNumberValidator.Validate(reconciliationRequest.NhsNumber))
+        if (data.Status == Status.InvalidNhsNumber)
         {
             return new ReconciliationResponse
             {
@@ -73,7 +76,7 @@ public class ReconciliationService(
             ? PersonSpecificationUtils.GetAgeGroup(data.Result.BirthDate.Value)
             : "Unknown";
 
-        var differences = BuildDifferenceList(reconciliationRequest, data.Result);
+        var differences = BuildDifferenceList(reconciliationRequest, data.Result, matchingResponse);
         var differenceString = BuildDifferences(differences);
 
         ReconciliationStatus status;
@@ -91,12 +94,13 @@ public class ReconciliationService(
         }
 
         logger.LogInformation(
-            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status {Status}",
+            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status {Status}, Matching Status: {MatchingStatus}",
             ageGroup,
             reconciliationRequest.Gender ?? "Unknown",
             reconciliationRequest.AddressPostalCode ?? "Unknown",
             JsonConvert.SerializeObject(differenceString),
-            status
+            status,
+            matchingResponse.Result?.MatchStatus
         );
 
         return new ReconciliationResponse
@@ -105,6 +109,7 @@ public class ReconciliationService(
             Differences = differences,
             DifferenceString = differenceString,
             Status = status,
+            MatchingResult = matchingResponse?.Result
         };
     }
 
@@ -162,7 +167,7 @@ public class ReconciliationService(
         return sb.ToString().EndsWith(" - ") ? sb.ToString(0, sb.Length - 3) : sb.ToString();
     }
 
-    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson result)
+    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson result, PersonMatchResponse matchResult)
     {
         var differences = new List<Difference>();
 
@@ -175,6 +180,7 @@ public class ReconciliationService(
         AddDifferenceIfUnequal(differences, nameof(request.Email), request.Email, result.Emails);
         AddDifferenceIfUnequal(differences, nameof(request.Phone), request.Phone, result.PhoneNumbers);
         AddDifferenceIfUnequal(differences, nameof(request.AddressPostalCode), request.AddressPostalCode, result.AddressPostalCodes);
+        AddDifferenceIfUnequal(differences, "MatchingNhsNumber", request.NhsNumber, matchResult.Result?.NhsNumber);
 
         return differences;
     }

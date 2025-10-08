@@ -41,6 +41,11 @@ public class ReconciliationCsvProcessStats : IStats
     public int PostCodeNhsCount { get; set; }
     public int PostCodeLaCount { get; set; }
     public int PostCodeBothCount { get; set; }
+    public int MatchingStatusMatch { get; set; }
+    public int MatchingStatusPotentialMatch { get; set; }
+    public int MatchingStatusNoMatch { get; set; }
+    public int MatchingStatusError { get; set; }
+    public int MatchingStatusManyMatch { get; set; }
 
     private readonly Lazy<double> _erroredPercentage;
     private readonly Lazy<double> _noDifferencePercentage;
