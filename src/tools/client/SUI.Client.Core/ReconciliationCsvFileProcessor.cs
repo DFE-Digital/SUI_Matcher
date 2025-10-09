@@ -139,7 +139,13 @@ public class ReconciliationCsvFileProcessor(
             localStats.MatchingStatusMatch, localStats.MatchingStatusPotentialMatch, localStats.MatchingStatusNoMatch,
             localStats.MatchingStatusManyMatch, localStats.MatchingStatusError
         ];
-        return PdfReportGenerator.GenerateReconciliationReport(GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"), "Reconciliation Report", localStats.Count, categories, values, differenceCategories, differenceValues, matchingCategories, matchingValues);
+        return PdfReportGenerator.GenerateReconciliationReport(
+            GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"),
+            "Reconciliation Report",
+            localStats.Count,
+            new Tuple<string[], double[]>(categories, values),
+            new Tuple<string[], double[]>(differenceCategories, differenceValues),
+            new Tuple<string[], double[]>(matchingCategories, matchingValues));
     }
 
     private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, string differenceList)

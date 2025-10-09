@@ -109,7 +109,7 @@ public class ReconciliationService(
             Differences = differences,
             DifferenceString = differenceString,
             Status = status,
-            MatchingResult = matchingResponse?.Result
+            MatchingResult = matchingResponse.Result
         };
     }
 

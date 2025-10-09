@@ -11,6 +11,9 @@ namespace SUI.Client.Core;
 
 public static class PdfReportGenerator
 {
+    private const string Category = "Category";
+    private const string Value = "Value";
+
     public static string GenerateReport(string filePath, string title, string[] categories, double[] values)
     {
         QuestPDF.Settings.License = LicenseType.Community;
@@ -34,8 +37,8 @@ public static class PdfReportGenerator
 
                         table.Header(header =>
                         {
-                            header.Cell().Text("Category").Bold();
-                            header.Cell().Text("Value").Bold();
+                            header.Cell().Text(Category).Bold();
+                            header.Cell().Text(Value).Bold();
                         });
 
                         for (int i = 0; i < categories.Length; i++)
@@ -61,8 +64,8 @@ public static class PdfReportGenerator
     }
 
     public static string GenerateReconciliationReport(string filePath, string title, int totalRecords,
-        string[] mainCategories, double[] mainValues, string[] differenceCategories, double[] differenceValues,
-        string[] matchingCategories, double[] matchingValues)
+        Tuple<string[], double[]> main, Tuple<string[], double[]> differences,
+        Tuple<string[], double[]> matching)
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
@@ -84,22 +87,22 @@ public static class PdfReportGenerator
 
                         table.Header(header =>
                         {
-                            header.Cell().Text("Category").Bold();
-                            header.Cell().Text("Value").Bold();
+                            header.Cell().Text(Category).Bold();
+                            header.Cell().Text(Value).Bold();
                         });
                         table.Cell().Text("Total Records Processed");
                         table.Cell().Text(totalRecords.ToString());
-                        for (int i = 0; i < mainCategories.Length; i++)
+                        for (int i = 0; i < main.Item1.Length; i++)
                         {
-                            table.Cell().Text(mainCategories[i]);
-                            table.Cell().Text(mainValues[i].ToString(CultureInfo.InvariantCulture));
+                            table.Cell().Text(main.Item1[i]);
+                            table.Cell().Text(main.Item2[i].ToString(CultureInfo.InvariantCulture));
                         }
                     });
 
-                    string barChartSvg = GenerateBarChart("Main", mainCategories, mainValues);
+                    string barChartSvg = GenerateBarChart("Main", main.Item1, main.Item2);
                     col.Item().Svg(barChartSvg);
 
-                    string pieChartSvg = GeneratePieChart("Main", mainCategories, mainValues);
+                    string pieChartSvg = GeneratePieChart("Main", main.Item1, main.Item2);
                     col.Item().Svg(pieChartSvg);
 
                     col.Item().Table(table =>
@@ -112,19 +115,19 @@ public static class PdfReportGenerator
 
                         table.Header(header =>
                         {
-                            header.Cell().Text("Category").Bold();
-                            header.Cell().Text("Value").Bold();
+                            header.Cell().Text(Category).Bold();
+                            header.Cell().Text(Value).Bold();
                         });
-                        for (int i = 0; i < differenceCategories.Length; i++)
+                        for (int i = 0; i < differences.Item1.Length; i++)
                         {
-                            table.Cell().Text(differenceCategories[i]);
-                            table.Cell().Text(differenceValues[i].ToString(CultureInfo.InvariantCulture));
+                            table.Cell().Text(differences.Item1[i]);
+                            table.Cell().Text(differences.Item2[i].ToString(CultureInfo.InvariantCulture));
                         }
                     });
-                    string barChart2Svg = GenerateBarChart("Differences", differenceCategories, differenceValues, 630, 630);
+                    string barChart2Svg = GenerateBarChart("Differences", differences.Item1, differences.Item2, 630, 630);
                     col.Item().Svg(barChart2Svg);
 
-                    string pieChart2Svg = GeneratePieChart("Differences", differenceCategories, differenceValues);
+                    string pieChart2Svg = GeneratePieChart("Differences", differences.Item1, differences.Item2);
                     col.Item().Svg(pieChart2Svg);
 
                     col.Item().Table(table =>
@@ -137,19 +140,19 @@ public static class PdfReportGenerator
 
                         table.Header(header =>
                         {
-                            header.Cell().Text("Category").Bold();
-                            header.Cell().Text("Value").Bold();
+                            header.Cell().Text(Category).Bold();
+                            header.Cell().Text(Value).Bold();
                         });
-                        for (int i = 0; i < matchingCategories.Length; i++)
+                        for (int i = 0; i < matching.Item1.Length; i++)
                         {
-                            table.Cell().Text(matchingCategories[i]);
-                            table.Cell().Text(matchingValues[i].ToString(CultureInfo.InvariantCulture));
+                            table.Cell().Text(matching.Item1[i]);
+                            table.Cell().Text(matching.Item2[i].ToString(CultureInfo.InvariantCulture));
                         }
                     });
-                    string barChart3Svg = GenerateBarChart("Matching", matchingCategories, matchingValues);
+                    string barChart3Svg = GenerateBarChart("Matching", matching.Item1, matching.Item2);
                     col.Item().Svg(barChart3Svg);
 
-                    string pieChart3Svg = GeneratePieChart("Matching", matchingCategories, matchingValues);
+                    string pieChart3Svg = GeneratePieChart("Matching", matching.Item1, matching.Item2);
                     col.Item().Svg(pieChart3Svg);
                 });
 
