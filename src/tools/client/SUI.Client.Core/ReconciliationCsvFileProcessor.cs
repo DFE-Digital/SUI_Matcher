@@ -105,29 +105,41 @@ public class ReconciliationCsvFileProcessor(
         [
             "Errored", "No Differences", "Superseded NHS Number", "Invalid NHS Number",
             "Patient Not Found", "Missing NHS Number", "Differences",
-            "Birthdate differences", "Birthdate missing NHS", "Birthdate missing LA", "Birthdate Missing Both",
-            "Email differences", "Email missing NHS", "Email missing LA", "Email Missing Both",
-            "Phone differences", "Phone missing NHS", "Phone missing LA", "Phone Missing Both",
-            "Given Name differences", "Given Name missing NHS", "Given Name missing LA", "Given Name Missing Both",
-            "Family Name differences", "Family Name missing NHS", "Family Name missing LA", "Family Name Missing Both",
-            "Postcode differences", "Postcode missing NHS", "Postcode missing LA", "Postcode Missing Both",
-            "Matching Status Match", "Matching Status Potential Match", "Matching Status No Match",
-            "Matching Status Many Match", "Matching Status Error"
         ];
         double[] values =
         [
             localStats.ErroredCount, localStats.NoDifferenceCount, localStats.SupersededNhsNumber,
             localStats.InvalidNhsNumber, localStats.PatientNotFound, localStats.MissingNhsNumber, localStats.DifferencesCount,
+        ];
+        string[] differenceCategories =
+        [
+            "Birthdate Differences", "Birthdate Missing NHS", "Birthdate Missing LA", "Birthdate Missing Both",
+            "Email Differences", "Email Missing NHS", "Email Missing LA", "Email Missing Both",
+            "Phone Differences", "Phone Missing NHS", "Phone Missing LA", "Phone Missing Both",
+            "Given Name Differences", "Given Name Missing NHS", "Given Name Missing LA", "Given Name Missing Both",
+            "Family Name Differences", "Family Name Missing NHS", "Family Name Missing LA", "Family Name Missing Both",
+            "Postcode Differences", "Postcode Missing NHS", "Postcode Missing LA", "Postcode Missing Both",
+        ];
+        double[] differenceValues =
+        [
             localStats.BirthDateCount, localStats.BirthDateNhsCount, localStats.BirthDateLaCount, localStats.BirthDateBothCount,
             localStats.EmailCount, localStats.EmailNhsCount, localStats.EmailLaCount, localStats.EmailBothCount,
             localStats.PhoneCount, localStats.PhoneNhsCount, localStats.PhoneLaCount, localStats.PhoneBothCount,
             localStats.GivenNameCount, localStats.GivenNameNhsCount, localStats.GivenNameLaCount, localStats.GivenNameBothCount,
             localStats.FamilyNameCount, localStats.FamilyNameNhsCount, localStats.FamilyNameLaCount, localStats.FamilyNameBothCount,
             localStats.PostCodeCount, localStats.PostCodeNhsCount, localStats.PostCodeLaCount, localStats.PostCodeBothCount,
+        ];
+        string[] matchingCategories =
+        [
+            "Matching Status Match", "Matching Status Potential Match", "Matching Status No Match",
+            "Matching Status Many Match", "Matching Status Error"
+        ];
+        double[] matchingValues =
+        [
             localStats.MatchingStatusMatch, localStats.MatchingStatusPotentialMatch, localStats.MatchingStatusNoMatch,
             localStats.MatchingStatusManyMatch, localStats.MatchingStatusError
         ];
-        return PdfReportGenerator.GenerateReport(GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"), "Reconciliation Report", categories, values);
+        return PdfReportGenerator.GenerateReconciliationReport(GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"), "Reconciliation Report", localStats.Count, categories, values, differenceCategories, differenceValues, matchingCategories, matchingValues);
     }
 
     private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, string differenceList)
