@@ -43,7 +43,7 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
         {
             throw new NotSupportedException(reason);
         }
-        
+
         return null;
     }
 

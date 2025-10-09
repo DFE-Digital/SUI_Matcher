@@ -13,7 +13,7 @@ public class SearchStrategyTests
         Family = "Doe",
         BirthDate = DateOnly.FromDateTime(DateTime.Today),
     };
-    
+
     [Theory]
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy1, typeof(SearchStrategy1))]
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy2, typeof(SearchStrategy2))]
