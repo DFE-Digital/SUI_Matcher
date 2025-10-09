@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 
+using MatchingApi.Exceptions;
+
 using Microsoft.AspNetCore.Mvc;
 
 using Shared.Endpoint;
@@ -24,9 +26,18 @@ public class MatchEndpoint(IMatchingService matchingService, IReconciliationServ
                 });
             }
 
-            var result = await matchingService.SearchAsync(model);
+            try
+            {
+                var result = await matchingService.SearchAsync(model);
 
-            return result.Result?.MatchStatus == MatchStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
+                return result.Result?.MatchStatus == MatchStatus.Error
+                    ? Results.BadRequest(result)
+                    : Results.Ok(result);
+            }
+            catch (InvalidStrategyException ex)
+            {
+                return Results.BadRequest(new ProblemDetails() { Title = "Strategy validation error", Detail = ex.Message });
+            }
         });
 
         var matchPersonNoLogic = app.MapPost("/matchpersonnologic", async (PersonSpecificationForNoLogic? model) =>

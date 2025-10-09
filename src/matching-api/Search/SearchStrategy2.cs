@@ -1,3 +1,6 @@
+using MatchingApi.Exceptions;
+
+using Shared;
 using Shared.Models;
 
 namespace MatchingApi.Search;
@@ -15,8 +18,8 @@ public class SearchStrategy2 : ISearchStrategy
     {
         AlgorithmVersion = version ?? 1;
         if (!AllVersions.Contains(AlgorithmVersion))
-            throw new ArgumentOutOfRangeException(nameof(version),
-                $"Version {version} not supported for {nameof(SearchStrategy2)}");
+            throw new InvalidStrategyException(
+                $"{SharedConstants.SearchStrategy.VersionErrorMessagePrefix} ({version}) For strategy ({SharedConstants.SearchStrategy.Strategies.Strategy2})");
     }
 
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)

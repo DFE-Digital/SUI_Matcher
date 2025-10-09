@@ -329,7 +329,7 @@ public sealed class MatchingServiceTests
             BirthDate = new DateOnly(1970, 1, 1),
             Family = "Smith",
             Given = "John",
-            StrategyVersion = 2
+            StrategyVersion = 3
         };
 
         _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
@@ -347,7 +347,7 @@ public sealed class MatchingServiceTests
 
         // Assert
         Assert.NotEmpty(logMessages);
-        Assert.Contains(logMessages, x => x.Contains("[Algorithm=v2]"));
+        Assert.Contains(logMessages, x => x.Contains("[Algorithm=v3]"));
     }
 
     [Fact]

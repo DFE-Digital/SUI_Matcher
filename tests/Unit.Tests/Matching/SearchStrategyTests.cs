@@ -1,7 +1,5 @@
 using MatchingApi.Search;
 
-using OxyPlot;
-
 using Shared;
 using Shared.Models;
 
@@ -9,7 +7,7 @@ namespace Unit.Tests.Matching;
 
 public class SearchStrategyTests
 {
-    private SearchSpecification _searchSpecification = new()
+    private readonly SearchSpecification _searchSpecification = new()
     {
         Given = "John",
         Family = "Doe",
@@ -45,7 +43,7 @@ public class SearchStrategyTests
             Assert.Null(exception);
         }
     }
-    
+
     [Fact]
     public void SearchStrategy2_ShouldHaveNoDuplicateKeyExceptions()
     {
@@ -58,7 +56,7 @@ public class SearchStrategyTests
             Assert.Null(exception);
         }
     }
-    
+
     [Fact]
     public void SearchStrategy1_ShouldHaveNoDuplicateKeyExceptions()
     {
@@ -75,17 +73,17 @@ public class SearchStrategyTests
     [Fact]
     public void SearchStrategy1_ShouldSetCorrectVersion_WhenSettingVersion()
     {
-        var strategy = new SearchStrategy1(1);
-        Assert.Equal(1, strategy.GetAlgorithmVersion());
+        var strategy = new SearchStrategy1(3);
+        Assert.Equal(3, strategy.GetAlgorithmVersion());
     }
-    
+
     [Fact]
     public void SearchStrategy2_ShouldSetCorrectVersion_WhenSettingVersion()
     {
         var strategy = new SearchStrategy2(1);
         Assert.Equal(1, strategy.GetAlgorithmVersion());
     }
-    
+
     [Fact]
     public void SearchStrategy3_ShouldSetCorrectVersion_WhenSettingVersion()
     {

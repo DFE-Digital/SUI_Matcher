@@ -66,11 +66,4 @@ builder.AddProject<Projects.Yarp>("yarp")
     .WithExternalHttpEndpoints()
     .WithReference(matchingApi).WaitFor(matchingApi);
 
-builder.AddProject<Projects.SUI_Client_Service_Watcher>("SUI-Client-Service")
-    .WithArgs("--input", "incoming")
-    .WithArgs("--output", "incoming/processed")
-    .WithArgs("--uri", "http://localhost:5000")
-    .WithArgs("--enable-gender")
-    .ExcludeFromManifest();
-
 await builder.Build().RunAsync();

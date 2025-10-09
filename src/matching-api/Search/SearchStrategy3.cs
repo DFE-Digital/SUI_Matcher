@@ -1,3 +1,6 @@
+using MatchingApi.Exceptions;
+
+using Shared;
 using Shared.Models;
 
 namespace MatchingApi.Search;
@@ -5,7 +8,7 @@ namespace MatchingApi.Search;
 /// <summary>
 /// Evolving strategy, iteratively improved based on performance and feedback.
 /// </summary>
-public class SearchStrategy3: ISearchStrategy
+public class SearchStrategy3 : ISearchStrategy
 {
     // Version 14 so far is the most optimal based on observed performance.
     private int AlgorithmVersion { get; }
@@ -15,8 +18,8 @@ public class SearchStrategy3: ISearchStrategy
     {
         AlgorithmVersion = version ?? 14;
         if (!AllVersions.Contains(AlgorithmVersion))
-            throw new ArgumentOutOfRangeException(nameof(version),
-                $"Version {version} not supported for {nameof(SearchStrategy1)}");
+            throw new InvalidStrategyException(
+                $"{SharedConstants.SearchStrategy.VersionErrorMessagePrefix} ({version}) For strategy ({SharedConstants.SearchStrategy.Strategies.Strategy3})");
     }
 
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
