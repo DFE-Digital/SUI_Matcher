@@ -1,20 +1,24 @@
 ﻿using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
+using Shared;
 using Shared.Models;
 using Shared.Util;
 
 using SUI.Client.Core.Extensions;
 using SUI.Client.Core.Integration;
 using SUI.Client.Core.Models;
+using SUI.Client.Core.Watcher;
 
 namespace SUI.Client.Core;
 
 public class ReconciliationCsvFileProcessor(
     ILogger<ReconciliationCsvFileProcessor> logger,
     CsvMappingConfig mapping,
-    IMatchPersonApiService matchPersonApi) : CsvFileProcessorBase(logger, new ReconciliationCsvProcessStats()), ICsvFileProcessor
+    IMatchPersonApiService matchPersonApi,
+    IOptions<CsvWatcherConfig> watcherConfig) : CsvFileProcessorBase(logger, new ReconciliationCsvProcessStats()), ICsvFileProcessor
 {
     public const string HeaderNhsNo = "SUI_NHSNo";
     public const string HeaderGivenName = "SUI_GivenName";
@@ -56,6 +60,7 @@ public class ReconciliationCsvFileProcessor(
                     mapping.ColumnMappings[nameof(ReconciliationRequest.AddressPostalCode)]),
             Gender = gender,
             Phone = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(ReconciliationRequest.Phone)]),
+            SearchStrategy = watcherConfig.Value.SearchStrategy ?? SharedConstants.SearchStrategy.Strategies.Strategy1,
         };
 
         var response = await matchPersonApi.ReconcilePersonAsync(payload);
