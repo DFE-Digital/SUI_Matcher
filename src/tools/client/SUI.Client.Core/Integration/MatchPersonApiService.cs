@@ -45,7 +45,7 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
         var response = await httpClient.PostAsJsonAsync("/matching/api/v1/reconciliation", payload);
         var dto = await response.Content.ReadFromJsonAsync<ReconciliationResponse>(new JsonSerializerOptions
         {
-            Converters = { new CustomDateOnlyConverter() },
+            Converters = { new CustomDateOnlyConverter(), new JsonStringEnumConverter() },
             PropertyNameCaseInsensitive = true,
         });
         return dto;

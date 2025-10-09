@@ -6,7 +6,7 @@
     },
     "Reconciliation": {
       "commandName": "Project",
-      "commandLineArgs": "--input $HOME/temp/sui/reconciliation-incoming --output $HOME/temp/sui/reconciliation-incoming/processed --uri http://localhost:5000 --enable-gender --enable-reconciliation"
+      "commandLineArgs": "--input $HOME/temp/sui/reconciliation-incoming --output $HOME/temp/sui/reconciliation-incoming/processed --uri http://localhost:5000 --enable-gender --enable-reconciliation -s strategy1"
     }
   }
 }

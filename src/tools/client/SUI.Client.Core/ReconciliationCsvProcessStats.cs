@@ -41,6 +41,11 @@ public class ReconciliationCsvProcessStats : IStats
     public int PostCodeNhsCount { get; set; }
     public int PostCodeLaCount { get; set; }
     public int PostCodeBothCount { get; set; }
+    public int MatchingStatusMatch { get; set; }
+    public int MatchingStatusPotentialMatch { get; set; }
+    public int MatchingStatusNoMatch { get; set; }
+    public int MatchingStatusError { get; set; }
+    public int MatchingStatusManyMatch { get; set; }
 
     private readonly Lazy<double> _erroredPercentage;
     private readonly Lazy<double> _noDifferencePercentage;
@@ -49,6 +54,7 @@ public class ReconciliationCsvProcessStats : IStats
     private readonly Lazy<double> _invalidNhsNumberPercentage;
     private readonly Lazy<double> _patientNotFoundPercentage;
     private readonly Lazy<double> _missingNhsNumberPercentage;
+    private readonly Lazy<double> _matchingSuccessPercentage;
 
     public ReconciliationCsvProcessStats()
     {
@@ -59,6 +65,7 @@ public class ReconciliationCsvProcessStats : IStats
         _invalidNhsNumberPercentage = new Lazy<double>(() => ComputePercentage(InvalidNhsNumber));
         _patientNotFoundPercentage = new Lazy<double>(() => ComputePercentage(PatientNotFound));
         _missingNhsNumberPercentage = new Lazy<double>(() => ComputePercentage(MissingNhsNumber));
+        _matchingSuccessPercentage = new Lazy<double>(() => ComputePercentage(MatchingStatusMatch));
     }
 
     private double ComputePercentage(int count) => Count == 0 ? 0 : Math.Round((double)count / Count * 100, 2);
@@ -70,6 +77,7 @@ public class ReconciliationCsvProcessStats : IStats
     public double InvalidNhsNumberPercentage => _invalidNhsNumberPercentage.Value;
     public double PatientNotFoundPercentage => _patientNotFoundPercentage.Value;
     public double MissingNhsNumberPercentage => _missingNhsNumberPercentage.Value;
+    public double MatchingSuccessPercentage => _matchingSuccessPercentage.Value;
 
     public void ResetStats()
     {
@@ -105,5 +113,10 @@ public class ReconciliationCsvProcessStats : IStats
         PostCodeNhsCount = 0;
         PostCodeLaCount = 0;
         PostCodeBothCount = 0;
+        MatchingStatusMatch = 0;
+        MatchingStatusPotentialMatch = 0;
+        MatchingStatusNoMatch = 0;
+        MatchingStatusError = 0;
+        MatchingStatusManyMatch = 0;
     }
 }

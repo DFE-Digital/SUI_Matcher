@@ -20,7 +20,7 @@ public class MatchingService(
     IValidationService validationService,
     IAuditLogger auditLogger) : IMatchingService
 {
-    public async Task<PersonMatchResponse> SearchAsync(SearchSpecification searchSpecification)
+    public async Task<PersonMatchResponse> SearchAsync(SearchSpecification searchSpecification, bool logMatch = true)
     {
         var searchId = HashUtil.StoreUniqueSearchIdFor(searchSpecification);
         var searchStrategy = SearchStrategyFactory.Get(searchSpecification.SearchStrategy);
@@ -51,8 +51,11 @@ public class MatchingService(
         }
 
         var result = await MatchAsync(searchSpecification, searchStrategy);
-
-        LogMatchCompletion(searchSpecification, result.Status, dataQualityResult, result.Score ?? 0, result.ProcessStage);
+        if (logMatch)
+        {
+            LogMatchCompletion(searchSpecification, result.Status, dataQualityResult, result.Score ?? 0,
+                result.ProcessStage);
+        }
 
         logger.LogInformation("The person match request resulted in match status '{Status}' " +
                               "and confidence score '{Score}' " +

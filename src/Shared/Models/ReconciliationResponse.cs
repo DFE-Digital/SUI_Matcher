@@ -12,4 +12,6 @@ public class ReconciliationResponse
     public ReconciliationStatus Status { get; set; }
 
     public string DifferenceString { get; set; } = String.Empty;
+
+    public MatchResult? MatchingResult { get; set; }
 }
