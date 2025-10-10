@@ -1,3 +1,6 @@
+using MatchingApi.Exceptions;
+
+using Shared;
 using Shared.Models;
 
 namespace MatchingApi.Search;
@@ -8,10 +11,18 @@ namespace MatchingApi.Search;
 /// </summary>
 public class SearchStrategy2 : ISearchStrategy
 {
-    private const int AlgorithmVersion = 1;
-    private static readonly int[] AllAlgorithmVersions = [1];
+    private int AlgorithmVersion { get; }
+    private static readonly IReadOnlyCollection<int?> AllVersions = [1];
 
-    public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model, int? version = null)
+    public SearchStrategy2(int? version = null)
+    {
+        AlgorithmVersion = version ?? 1;
+        if (!AllVersions.Contains(AlgorithmVersion))
+            throw new InvalidStrategyException(
+                $"{SharedConstants.SearchStrategy.VersionErrorMessagePrefix} ({version}) For strategy ({SharedConstants.SearchStrategy.Strategies.Strategy2})");
+    }
+
+    public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
     {
         var queryBuilder = new SearchQueryBuilder(model);
         queryBuilder.AddNonFuzzyGfd(); // 1
@@ -32,8 +43,8 @@ public class SearchStrategy2 : ISearchStrategy
         return AlgorithmVersion;
     }
 
-    public int[] GetAllAlgorithmVersions()
+    public IReadOnlyCollection<int?> GetAllAlgorithmVersions()
     {
-        return AllAlgorithmVersions;
+        return AllVersions;
     }
 }

@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using Shared;
 using Shared.Models;
 using Shared.Util;
 
@@ -36,7 +37,13 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
 
         Console.WriteLine(response.StatusCode);
         Console.WriteLine(response.ReasonPhrase);
-        Console.WriteLine(response.Content?.ReadAsStringAsync().Result);
+        var reason = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(reason);
+        if (reason.Contains(SharedConstants.SearchStrategy.VersionErrorMessagePrefix))
+        {
+            throw new NotSupportedException(reason);
+        }
+
         return null;
     }
 

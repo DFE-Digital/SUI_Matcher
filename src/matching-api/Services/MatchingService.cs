@@ -23,7 +23,7 @@ public class MatchingService(
     public async Task<PersonMatchResponse> SearchAsync(SearchSpecification searchSpecification, bool logMatch = true)
     {
         var searchId = HashUtil.StoreUniqueSearchIdFor(searchSpecification);
-        var searchStrategy = SearchStrategyFactory.Get(searchSpecification.SearchStrategy);
+        var searchStrategy = SearchStrategyFactory.Get(searchSpecification.SearchStrategy, searchSpecification.StrategyVersion);
         StoreAlgorithmVersion(searchStrategy.GetAlgorithmVersion(), searchSpecification.SearchStrategy);
 
         var auditDetails = new Dictionary<string, string>

@@ -7,4 +7,6 @@ public class SearchSpecification : PersonSpecification
         get;
         init => field = string.IsNullOrEmpty(value) ? SharedConstants.SearchStrategy.Strategies.Strategy1 : value;
     } = SharedConstants.SearchStrategy.Strategies.Strategy1;
+
+    public int? StrategyVersion { get; set; }
 }

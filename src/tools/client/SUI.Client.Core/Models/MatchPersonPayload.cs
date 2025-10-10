@@ -13,4 +13,5 @@ public class MatchPersonPayload
 
     // Form of configuration. See API docs
     public string? SearchStrategy { get; set; }
+    public int? StrategyVersion { get; set; }
 }

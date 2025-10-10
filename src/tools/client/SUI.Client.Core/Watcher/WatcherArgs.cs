@@ -27,4 +27,7 @@ public class WatcherArgs
 
     [Option('s', "search-strategy", Required = false, HelpText = "Choose only if you understand the different algorithms in the API")]
     public string? SearchStrategy { get; set; }
+
+    [Option("strategy-version", Required = false, HelpText = "Choose only if you understand the different algorithms in the API")]
+    public int? StrategyVersion { get; set; }
 }
