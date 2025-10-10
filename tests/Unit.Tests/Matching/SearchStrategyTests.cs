@@ -1,3 +1,4 @@
+using MatchingApi.Exceptions;
 using MatchingApi.Search;
 
 using Shared;
@@ -94,19 +95,19 @@ public class SearchStrategyTests
     [Fact]
     public void SearchStrategy1_ShouldThrowException_WhenVersionIsOutOfRange()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SearchStrategy1(999));
+        Assert.Throws<InvalidStrategyException>(() => new SearchStrategy1(999));
     }
 
     [Fact]
     public void SearchStrategy2_ShouldThrowException_WhenVersionIsOutOfRange()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SearchStrategy2(-1));
+        Assert.Throws<InvalidStrategyException>(() => new SearchStrategy2(-1));
     }
 
     [Fact]
     public void SearchStrategy3_ShouldThrowException_WhenVersionIsOutOfRange()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SearchStrategy3(1234));
+        Assert.Throws<InvalidStrategyException>(() => new SearchStrategy3(1234));
     }
 
 }
