@@ -217,7 +217,7 @@ public class ReconciliationCsvFileProcessor(
         Action<ReconciliationCsvProcessStats> incrementLa,
         Action<ReconciliationCsvProcessStats> incrementBoth)
     {
-        var plainRegex = new Regex($@"\b{fieldName}\b(?!:)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(10));
+        var plainRegex = new Regex($@"\b{fieldName}\b(?!:)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(300));
 
         if (plainRegex.IsMatch(differenceList)) { incrementPlain(stats); }
         if (differenceList.Contains($"{fieldName}:NHS")) { incrementNhs(stats); }
