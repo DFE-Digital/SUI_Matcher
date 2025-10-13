@@ -319,7 +319,7 @@ are evaluated.
 #### Strategy 2
 
 An alternative strategy is currently under testing is defined below. This uses Non-fuzzy and fuzzy searches, including
-wild card searches on postcode.
+wild card searches on postcode. Order of queries is not opimized, instead uses a larger variation of queries.
 
 | Rule Order | Search                                                                                                     | Example                                                                                                                                                  | Returns                                                     |
 |:-----------|:-----------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------|
@@ -335,13 +335,17 @@ wild card searches on postcode.
 
 #### Strategy 3
 
-This is a fast iteratively evolving strategy only for testing. This documentation will be updated as the strategy is
-defined.
+This is a multi versioned strategy that has been developed through iterative testing on real world data. The below is version 14 of it and is currently the best performing and most optimised for PDS calling.
 
-| Rule Order | Search                                     | Example                                                                                                                                                  | Returns                                                     |
-|:-----------|:-------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------|
-| 1          | non-fuzzy search with all provided values. | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`, `history=true` | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 2          | fuzzy search with all provided values.     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                  | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| Rule Order | Search                                                                 | Example                                                                                                                                                              | Returns                                                     |
+|:-----------|:-----------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------|
+| 1          | non-fuzzy search with given name, family name and DOB.                 | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `history=true`                                                              | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 2          | fuzzy search with given name, family name and DOB.                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                                               | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 3          | fuzzy search with all provided values.                                 | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                              | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 4          | non-fuzzy search with given name, family name and DOB range.           | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `history=true`                                   | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 5          | non-fuzzy search with given name, family name, DOB range, postcode.    | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`, `history=true`   | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 6          | fuzzy search with given name, family name and DOB range.               | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`                                                    | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+| 7          | fuzzy search with given name, family name, DOB range, postcode.        | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`                    | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 
 Definition of fuzzy search is defined
 here: [NHS FHIR API Search](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient).
