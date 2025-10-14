@@ -47,6 +47,11 @@ public class ReconciliationCsvProcessStats : IStats
     public int MatchingStatusError { get; set; }
     public int MatchingStatusManyMatch { get; set; }
 
+    public int MatchingNhsNumberCount { get; set; }
+    public int MatchingNhsNumberNhsCount { get; set; }
+    public int MatchingNhsNumberLaCount { get; set; }
+    public int MatchingNhsNumberBothCount { get; set; }
+
     private readonly Lazy<double> _erroredPercentage;
     private readonly Lazy<double> _noDifferencePercentage;
     private readonly Lazy<double> _differencesPercentage;

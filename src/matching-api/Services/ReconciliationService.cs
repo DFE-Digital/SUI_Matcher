@@ -22,54 +22,53 @@ public class ReconciliationService(
         var reconciliationId = BuildReconciliationId(reconciliationRequest);
         var auditDetails = new Dictionary<string, string> { { "SearchId", reconciliationId } };
         await auditLogger.LogAsync(new AuditLogEntry(AuditLogEntry.AuditLogAction.Reconciliation, auditDetails));
-        if (string.IsNullOrEmpty(reconciliationRequest.NhsNumber))
-        {
-            logger.LogError("Reconcile request missing Nhs Number");
-            return new ReconciliationResponse
-            {
-                Status = ReconciliationStatus.MissingNhsNumber,
-                Errors = ["Missing Nhs Number"]
-            };
-        }
 
-        if (!NhsNumberValidator.Validate(reconciliationRequest.NhsNumber))
-        {
-            logger.LogError("NHS Number Validation failed");
-            return new ReconciliationResponse
-            {
-                Status = ReconciliationStatus.InvalidNhsNumber,
-                Errors = ["The NHS Number was not valid"]
-            };
-        }
+        var response = new ReconciliationResponse();
 
         var matchingResponse = await matchingService.SearchAsync(reconciliationRequest, false);
+        response.MatchingResult = matchingResponse.Result;
 
-        var data = await nhsFhirClient.PerformSearchByNhsId(reconciliationRequest.NhsNumber);
+        var nhsNumber = reconciliationRequest.NhsNumber ?? matchingResponse.Result?.NhsNumber;
+
+        if (string.IsNullOrEmpty(nhsNumber))
+        {
+            response.Status = ReconciliationStatus.MissingNhsNumber;
+            response.Errors = ["Missing Nhs Number"];
+            return response;
+        }
+
+        if (!NhsNumberValidator.Validate(nhsNumber))
+        {
+            response.Status = ReconciliationStatus.InvalidNhsNumber;
+            response.Errors = ["The NHS Number was not valid"];
+            return response;
+        }
+
+        return await PerformReconciliation(reconciliationRequest, nhsNumber, matchingResponse, response);
+    }
+
+    private async Task<ReconciliationResponse> PerformReconciliation(ReconciliationRequest reconciliationRequest,
+        string nhsNumber,
+        PersonMatchResponse matchingResponse, ReconciliationResponse response)
+    {
+        var data = await nhsFhirClient.PerformSearchByNhsId(nhsNumber);
+
         if (data.Status == Status.InvalidNhsNumber)
         {
-            return new ReconciliationResponse
-            {
-                Status = ReconciliationStatus.InvalidNhsNumber,
-                Errors = [data.ErrorMessage ?? "Unknown error"]
-            };
+            response.Status = ReconciliationStatus.InvalidNhsNumber;
+            response.Errors = [data.ErrorMessage ?? "Unknown error"];
         }
 
         if (data.Status == Status.PatientNotFound)
         {
-            return new ReconciliationResponse
-            {
-                Status = ReconciliationStatus.PatientNotFound,
-                Errors = [data.ErrorMessage ?? "Unknown error"]
-            };
+            response.Status = ReconciliationStatus.PatientNotFound;
+            response.Errors = [data.ErrorMessage ?? "Unknown error"];
         }
 
         if (data.Status == Status.Error || data.Result == null)
         {
-            return new ReconciliationResponse
-            {
-                Status = ReconciliationStatus.Error,
-                Errors = [data.ErrorMessage ?? "Unknown error"]
-            };
+            response.Status = ReconciliationStatus.Error;
+            response.Errors = [data.ErrorMessage ?? "Unknown error"];
         }
 
         var ageGroup = data.Result.BirthDate.HasValue
@@ -93,24 +92,23 @@ public class ReconciliationService(
             status = ReconciliationStatus.Differences;
         }
 
+        response.Person = data.Result;
+        response.Differences = differences;
+        response.DifferenceString = differenceString;
+        response.Status = status;
+
         logger.LogInformation(
-            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status {Status}, Matching Status: {MatchingStatus}",
+            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}",
             ageGroup,
             reconciliationRequest.Gender ?? "Unknown",
             reconciliationRequest.AddressPostalCode ?? "Unknown",
             JsonConvert.SerializeObject(differenceString),
             status,
-            matchingResponse.Result?.MatchStatus
+            matchingResponse.Result?.MatchStatus,
+            matchingResponse.Result?.ProcessStage
         );
 
-        return new ReconciliationResponse
-        {
-            Person = data.Result,
-            Differences = differences,
-            DifferenceString = differenceString,
-            Status = status,
-            MatchingResult = matchingResponse.Result
-        };
+        return response;
     }
 
     private static string BuildReconciliationId(ReconciliationRequest reconciliationRequest)
