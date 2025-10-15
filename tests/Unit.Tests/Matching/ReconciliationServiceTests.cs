@@ -44,7 +44,7 @@ public class ReconciliationServiceTests
         Assert.NotNull(result);
         Assert.Null(result.Person);
         Assert.Single(result.Errors);
-        Assert.Equal("Missing Nhs Number", result.Errors[0]);
+        Assert.Equal("The NHS Number was not valid", result.Errors[0]);
     }
 
     [Fact]

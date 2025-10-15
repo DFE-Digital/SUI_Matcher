@@ -71,7 +71,7 @@ public class ReconciliationService(
             response.Errors = [data.ErrorMessage ?? "Unknown error"];
         }
 
-        var ageGroup = data.Result.BirthDate.HasValue
+        var ageGroup = data.Result != null && data.Result.BirthDate.HasValue
             ? PersonSpecificationUtils.GetAgeGroup(data.Result.BirthDate.Value)
             : "Unknown";
 
@@ -165,11 +165,14 @@ public class ReconciliationService(
         return sb.ToString().EndsWith(" - ") ? sb.ToString(0, sb.Length - 3) : sb.ToString();
     }
 
-    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson result, PersonMatchResponse matchResult)
+    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson? result, PersonMatchResponse matchResult)
     {
         var differences = new List<Difference>();
+        if (result == null)
+        {
+            return differences;
+        }
 
-        // The main method remains clean, with all logic in the helpers
         AddDifferenceIfUnequal(differences, nameof(request.NhsNumber), request.NhsNumber, result.NhsNumber);
         AddDifferenceIfUnequal(differences, nameof(request.BirthDate), request.BirthDate, result.BirthDate);
         AddDifferenceIfUnequal(differences, nameof(request.Gender), request.Gender, result.Gender);
