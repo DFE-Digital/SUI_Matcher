@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using Shared;
 using Shared.Models;
 
@@ -21,6 +23,8 @@ public class SearchQueryBuilder
     }
 
     private string[]? ModelName => _model.Given is not null ? [_model.Given] : null;
+    private string[]? ModelNames => _model.Given?.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    private string? FamilyName => _model.Family is not null ? Regex.Replace(_model.Family, @"\s\(.*\)", string.Empty) : null;
     private string[] DobRange =>
     [
         "ge" + _model.BirthDate!.Value.AddMonths(-_dobRange).ToString(SharedConstants.SearchQuery.DateFormat),
@@ -47,64 +51,64 @@ public class SearchQueryBuilder
         return null;
     }
 
-    public void AddNonFuzzyGfd()
+    public void AddNonFuzzyGfd(bool preprocessNames = false)
     {
         _queries.Add("NonFuzzyGFD", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Birthdate = Dob,
             History = true
         });
     }
 
-    public void AddNonFuzzyGfdPostcode()
+    public void AddNonFuzzyGfdPostcode(bool preprocessNames = false)
     {
         _queries.Add("NonFuzzyGFDPostcode", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Birthdate = Dob,
             AddressPostalcode = _model.AddressPostalCode,
             History = true
         });
     }
 
-    public void AddNonFuzzyGfdRange()
+    public void AddNonFuzzyGfdRange(bool preprocessNames = false)
     {
         _queries.Add("NonFuzzyGFDRange", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Birthdate = DobRange,
             History = true
         });
     }
 
-    public void AddNonFuzzyGfdRangePostcode(bool usePostcodeWildcard = false)
+    public void AddNonFuzzyGfdRangePostcode(bool usePostcodeWildcard = false, bool preprocessNames = false)
     {
         var name = usePostcodeWildcard ? "NonFuzzyGFDRangePostcodeWildcard" : "NonFuzzyGFDRangePostcode";
         _queries.Add(name, new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Birthdate = DobRange,
             AddressPostalcode = usePostcodeWildcard ? PostcodeWildcard() : _model.AddressPostalCode,
             History = true
         });
     }
 
-    public void AddNonFuzzyAll()
+    public void AddNonFuzzyAll(bool preprocessNames = false)
     {
         _queries.Add("NonFuzzyAll", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Email = _model.Email,
             Gender = _model.Gender,
             Phone = _model.Phone,
@@ -114,13 +118,13 @@ public class SearchQueryBuilder
         });
     }
 
-    public void AddNonFuzzyAllPostcodeWildcard()
+    public void AddNonFuzzyAllPostcodeWildcard(bool preprocessNames = false)
     {
         _queries.Add("NonFuzzyAllPostcodeWildcard", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Email = _model.Email,
             Gender = _model.Gender,
             Phone = _model.Phone,
@@ -130,24 +134,24 @@ public class SearchQueryBuilder
         });
     }
 
-    public void AddFuzzyGfd()
+    public void AddFuzzyGfd(bool preprocessNames = false)
     {
         _queries.Add("FuzzyGFD", new SearchQuery()
         {
             FuzzyMatch = true,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Birthdate = Dob
         });
     }
 
-    public void AddFuzzyAll()
+    public void AddFuzzyAll(bool preprocessNames = false)
     {
         _queries.Add("FuzzyAll", new SearchQuery()
         {
             FuzzyMatch = true,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Email = _model.Email,
             Gender = _model.Gender,
             Phone = _model.Phone,
@@ -156,75 +160,75 @@ public class SearchQueryBuilder
         });
     }
 
-    public void AddFuzzyGfdPostcodeWildcard()
+    public void AddFuzzyGfdPostcodeWildcard(bool preprocessNames = false)
     {
         _queries.Add("FuzzyGFDPostcodeWildcard",
             new SearchQuery()
             {
                 FuzzyMatch = true,
-                Given = ModelName,
-                Family = _model.Family,
+                Given = preprocessNames ? ModelNames : ModelName,
+                Family = preprocessNames ? FamilyName : _model.Family,
                 Birthdate = DobRange,
                 AddressPostalcode = PostcodeWildcard()
             });
     }
 
-    public void AddFuzzyGfdRangePostcodeWildcard()
+    public void AddFuzzyGfdRangePostcodeWildcard(bool preprocessNames = false)
     {
         _queries.Add("FuzzyGFDRangePostcodeWildcard",
             new SearchQuery()
             {
                 FuzzyMatch = true,
-                Given = ModelName,
-                Family = _model.Family,
+                Given = preprocessNames ? ModelNames : ModelName,
+                Family = preprocessNames ? FamilyName : _model.Family,
                 Birthdate = DobRange,
                 AddressPostalcode = PostcodeWildcard()
             });
     }
 
-    public void AddFuzzyGfdRangePostcode()
+    public void AddFuzzyGfdRangePostcode(bool preprocessNames = false)
     {
         _queries.Add("FuzzyGFDRangePostcode",
             new SearchQuery()
             {
                 FuzzyMatch = true,
-                Given = ModelName,
-                Family = _model.Family,
+                Given = preprocessNames ? ModelNames : ModelName,
+                Family = preprocessNames ? FamilyName : _model.Family,
                 Birthdate = DobRange,
                 AddressPostalcode = _model.AddressPostalCode
             });
     }
 
-    public void AddFuzzyGfdRange()
+    public void AddFuzzyGfdRange(bool preprocessNames = false)
     {
         _queries.Add("FuzzyGFDRange",
             new SearchQuery()
             {
                 FuzzyMatch = true,
                 Given = ModelName,
-                Family = _model.Family,
+                Family = FamilyName,
                 Birthdate = DobRange
             });
     }
 
-    public void AddExactGfd()
+    public void AddExactGfd(bool preprocessNames = false)
     {
         _queries.Add("ExactGFD", new SearchQuery()
         {
             ExactMatch = true,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Birthdate = Dob
         });
     }
 
-    public void AddExactAll()
+    public void AddExactAll(bool preprocessNames = false)
     {
         _queries.Add("ExactAll", new SearchQuery()
         {
             ExactMatch = true,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = preprocessNames ? ModelNames : ModelName,
+            Family = preprocessNames ? FamilyName : _model.Family,
             Email = _model.Email,
             Gender = _model.Gender,
             Phone = _model.Phone,
@@ -233,7 +237,7 @@ public class SearchQueryBuilder
         });
     }
 
-    public void TryAddFuzzyAltDob()
+    public void TryAddFuzzyAltDob(bool preprocessNames = false)
     {
         if (_model.BirthDate?.Day <=
             12)
@@ -249,8 +253,8 @@ public class SearchQueryBuilder
             _queries.Add("FuzzyAltDob", new SearchQuery
             {
                 FuzzyMatch = true,
-                Given = ModelName,
-                Family = _model.Family,
+                Given = preprocessNames ? ModelNames : ModelName,
+                Family = preprocessNames ? FamilyName : _model.Family,
                 Email = _model.Email,
                 Gender = _model.Gender,
                 Phone = _model.Phone,
@@ -264,6 +268,4 @@ public class SearchQueryBuilder
     {
         return _queries;
     }
-
-
 }
