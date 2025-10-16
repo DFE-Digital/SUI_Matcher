@@ -24,7 +24,7 @@ public class SearchQueryBuilder
 
     private string[]? ModelName => _model.Given is not null ? [_model.Given] : null;
     private string[]? ModelNames => _model.Given?.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-    private string? FamilyName => _model.Family is not null ? Regex.Replace(_model.Family, @"\s\(.*\)", string.Empty) : null;
+    private string? FamilyName => _model.Family is not null ? Regex.Replace(_model.Family, @"\s\(.*\)", string.Empty, RegexOptions.Compiled, TimeSpan.FromMilliseconds(300)) : null;
     private string[] DobRange =>
     [
         "ge" + _model.BirthDate!.Value.AddMonths(-_dobRange).ToString(SharedConstants.SearchQuery.DateFormat),
