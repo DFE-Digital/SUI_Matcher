@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using Shared;
 using Shared.Models;
 
@@ -8,8 +10,9 @@ public class SearchQueryBuilder
     private readonly OrderedDictionary<string, SearchQuery> _queries = new();
     private readonly SearchSpecification _model;
     private readonly int _dobRange;
+    private readonly bool _preprocessNames;
 
-    public SearchQueryBuilder(SearchSpecification model, int dobRange = 6)
+    public SearchQueryBuilder(SearchSpecification model, int dobRange = 6, bool preprocessNames = false)
     {
         if (!model.BirthDate.HasValue)
         {
@@ -18,9 +21,12 @@ public class SearchQueryBuilder
 
         _model = model;
         _dobRange = dobRange;
+        _preprocessNames = preprocessNames;
     }
 
     private string[]? ModelName => _model.Given is not null ? [_model.Given] : null;
+    private string[]? ModelNames => _model.Given?.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    private string? FamilyName => _model.Family is not null ? Regex.Replace(_model.Family, @"\s\(.*\)", string.Empty, RegexOptions.Compiled, TimeSpan.FromMilliseconds(300)) : null;
     private string[] DobRange =>
     [
         "ge" + _model.BirthDate!.Value.AddMonths(-_dobRange).ToString(SharedConstants.SearchQuery.DateFormat),
@@ -52,8 +58,8 @@ public class SearchQueryBuilder
         _queries.Add("NonFuzzyGFD", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Birthdate = Dob,
             History = true
         });
@@ -64,8 +70,8 @@ public class SearchQueryBuilder
         _queries.Add("NonFuzzyGFDPostcode", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Birthdate = Dob,
             AddressPostalcode = _model.AddressPostalCode,
             History = true
@@ -77,8 +83,8 @@ public class SearchQueryBuilder
         _queries.Add("NonFuzzyGFDRange", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Birthdate = DobRange,
             History = true
         });
@@ -90,8 +96,8 @@ public class SearchQueryBuilder
         _queries.Add(name, new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Birthdate = DobRange,
             AddressPostalcode = usePostcodeWildcard ? PostcodeWildcard() : _model.AddressPostalCode,
             History = true
@@ -103,8 +109,8 @@ public class SearchQueryBuilder
         _queries.Add("NonFuzzyAll", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Email = _model.Email,
             Gender = _model.Gender,
             Phone = _model.Phone,
@@ -119,8 +125,8 @@ public class SearchQueryBuilder
         _queries.Add("NonFuzzyAllPostcodeWildcard", new SearchQuery()
         {
             ExactMatch = false,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Email = _model.Email,
             Gender = _model.Gender,
             Phone = _model.Phone,
@@ -135,8 +141,8 @@ public class SearchQueryBuilder
         _queries.Add("FuzzyGFD", new SearchQuery()
         {
             FuzzyMatch = true,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Birthdate = Dob
         });
     }
@@ -146,8 +152,8 @@ public class SearchQueryBuilder
         _queries.Add("FuzzyAll", new SearchQuery()
         {
             FuzzyMatch = true,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Email = _model.Email,
             Gender = _model.Gender,
             Phone = _model.Phone,
@@ -162,8 +168,8 @@ public class SearchQueryBuilder
             new SearchQuery()
             {
                 FuzzyMatch = true,
-                Given = ModelName,
-                Family = _model.Family,
+                Given = _preprocessNames ? ModelNames : ModelName,
+                Family = _preprocessNames ? FamilyName : _model.Family,
                 Birthdate = DobRange,
                 AddressPostalcode = PostcodeWildcard()
             });
@@ -175,8 +181,8 @@ public class SearchQueryBuilder
             new SearchQuery()
             {
                 FuzzyMatch = true,
-                Given = ModelName,
-                Family = _model.Family,
+                Given = _preprocessNames ? ModelNames : ModelName,
+                Family = _preprocessNames ? FamilyName : _model.Family,
                 Birthdate = DobRange,
                 AddressPostalcode = PostcodeWildcard()
             });
@@ -188,8 +194,8 @@ public class SearchQueryBuilder
             new SearchQuery()
             {
                 FuzzyMatch = true,
-                Given = ModelName,
-                Family = _model.Family,
+                Given = _preprocessNames ? ModelNames : ModelName,
+                Family = _preprocessNames ? FamilyName : _model.Family,
                 Birthdate = DobRange,
                 AddressPostalcode = _model.AddressPostalCode
             });
@@ -201,8 +207,8 @@ public class SearchQueryBuilder
             new SearchQuery()
             {
                 FuzzyMatch = true,
-                Given = ModelName,
-                Family = _model.Family,
+                Given = _preprocessNames ? ModelNames : ModelName,
+                Family = _preprocessNames ? FamilyName : _model.Family,
                 Birthdate = DobRange
             });
     }
@@ -212,8 +218,8 @@ public class SearchQueryBuilder
         _queries.Add("ExactGFD", new SearchQuery()
         {
             ExactMatch = true,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Birthdate = Dob
         });
     }
@@ -223,8 +229,8 @@ public class SearchQueryBuilder
         _queries.Add("ExactAll", new SearchQuery()
         {
             ExactMatch = true,
-            Given = ModelName,
-            Family = _model.Family,
+            Given = _preprocessNames ? ModelNames : ModelName,
+            Family = _preprocessNames ? FamilyName : _model.Family,
             Email = _model.Email,
             Gender = _model.Gender,
             Phone = _model.Phone,
@@ -249,8 +255,8 @@ public class SearchQueryBuilder
             _queries.Add("FuzzyAltDob", new SearchQuery
             {
                 FuzzyMatch = true,
-                Given = ModelName,
-                Family = _model.Family,
+                Given = _preprocessNames ? ModelNames : ModelName,
+                Family = _preprocessNames ? FamilyName : _model.Family,
                 Email = _model.Email,
                 Gender = _model.Gender,
                 Phone = _model.Phone,
@@ -264,6 +270,4 @@ public class SearchQueryBuilder
     {
         return _queries;
     }
-
-
 }

@@ -47,4 +47,28 @@ public class SearchQueryBuilderTests
             Assert.True(query.History);
         }
     }
+
+    [Theory]
+    [InlineData("John", new[] { "John" }, "Smith", "Smith")]
+    [InlineData("John James Steve", new[] { "John", "James", "Steve" }, "Smith (Jones)", "Smith")]
+    [InlineData("John-James Steve", new[] { "John-James", "Steve" }, "Smith-Jones", "Smith-Jones")]
+    public void AddNonFuzzyGfdAddsPreprocessedNamesCorrectly(string given, string[] givenExpected, string family, string familyExpected)
+    {
+        var builder = new SearchQueryBuilder(new SearchSpecification
+        {
+            Given = given,
+            Family = family,
+            BirthDate = DateOnly.FromDateTime(new DateTime(2010, 1, 1))
+        },
+        preprocessNames: true);
+
+        builder.AddNonFuzzyGfd();
+
+        var result = builder.Build();
+
+        var query = result.ContainsKey("NonFuzzyGFD");
+        Assert.True(query);
+        Assert.Equal(givenExpected, result.Values.First().Given);
+        Assert.Equal(familyExpected, result.Values.First().Family);
+    }
 }

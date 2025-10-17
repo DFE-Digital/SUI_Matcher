@@ -23,6 +23,7 @@ public static class SharedConstants
             public const string Strategy1 = "strategy1";
             public const string Strategy2 = "strategy2";
             public const string Strategy3 = "strategy3";
+            public const string Strategy4 = "strategy4";
         }
     }
 }

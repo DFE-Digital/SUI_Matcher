@@ -124,6 +124,7 @@ public class ReconciliationCsvFileProcessor(
             "Given Name Differences", "Given Name Missing NHS", "Given Name Missing LA", "Given Name Missing Both",
             "Family Name Differences", "Family Name Missing NHS", "Family Name Missing LA", "Family Name Missing Both",
             "Postcode Differences", "Postcode Missing NHS", "Postcode Missing LA", "Postcode Missing Both",
+            "Matching NHS Number Differences", "Matching NHS Number NHS", "Matching NHS Number LA", "Matching NHS Number Both"
         ];
         double[] differenceValues =
         [
@@ -133,6 +134,7 @@ public class ReconciliationCsvFileProcessor(
             localStats.GivenNameCount, localStats.GivenNameNhsCount, localStats.GivenNameLaCount, localStats.GivenNameBothCount,
             localStats.FamilyNameCount, localStats.FamilyNameNhsCount, localStats.FamilyNameLaCount, localStats.FamilyNameBothCount,
             localStats.PostCodeCount, localStats.PostCodeNhsCount, localStats.PostCodeLaCount, localStats.PostCodeBothCount,
+            localStats.MatchingNhsNumberCount, localStats.MatchingNhsNumberCount, localStats.MatchingNhsNumberLaCount, localStats.MatchingNhsNumberBothCount
         ];
         string[] matchingCategories =
         [
@@ -187,6 +189,7 @@ public class ReconciliationCsvFileProcessor(
                 UpdateStatsForField(differenceList, stats, "Given", s => s.GivenNameCount++, s => s.GivenNameNhsCount++, s => s.GivenNameLaCount++, s => s.GivenNameBothCount++);
                 UpdateStatsForField(differenceList, stats, "Family", s => s.FamilyNameCount++, s => s.FamilyNameNhsCount++, s => s.FamilyNameLaCount++, s => s.FamilyNameBothCount++);
                 UpdateStatsForField(differenceList, stats, "AddressPostalCode", s => s.PostCodeCount++, s => s.PostCodeNhsCount++, s => s.PostCodeLaCount++, s => s.PostCodeBothCount++);
+                UpdateStatsForField(differenceList, stats, "MatchingNhsNumber", s => s.MatchingNhsNumberCount++, s => s.MatchingNhsNumberNhsCount++, s => s.MatchingNhsNumberLaCount++, s => s.MatchingNhsNumberBothCount++);
 
                 stats.DifferencesCount++;
                 break;
