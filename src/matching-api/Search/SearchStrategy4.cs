@@ -23,7 +23,7 @@ public class SearchStrategy4 : ISearchStrategy
 
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
     {
-        var queryBuilder = new SearchQueryBuilder(model, dobRange: 6);
+        var queryBuilder = new SearchQueryBuilder(model, dobRange: 6, preprocessNames: true);
 
         return VersionFactory(AlgorithmVersion, queryBuilder);
     }
@@ -39,19 +39,19 @@ public class SearchStrategy4 : ISearchStrategy
 
     private static OrderedDictionary<string, SearchQuery> Version1(SearchQueryBuilder queryBuilder)
     {
-        queryBuilder.AddNonFuzzyGfd(preprocessNames: true);
+        queryBuilder.AddNonFuzzyGfd();
 
-        queryBuilder.AddFuzzyGfd(preprocessNames: true);
+        queryBuilder.AddFuzzyGfd();
 
-        queryBuilder.AddFuzzyAll(preprocessNames: true);
+        queryBuilder.AddFuzzyAll();
 
-        queryBuilder.AddNonFuzzyGfdRange(preprocessNames: true);
+        queryBuilder.AddNonFuzzyGfdRange();
 
-        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false, preprocessNames: true);
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false);
 
-        queryBuilder.AddFuzzyGfdRange(preprocessNames: true);
+        queryBuilder.AddFuzzyGfdRange();
 
-        queryBuilder.AddFuzzyGfdRangePostcode(preprocessNames: true);
+        queryBuilder.AddFuzzyGfdRangePostcode();
 
         return queryBuilder.Build();
     }

@@ -59,9 +59,10 @@ public class SearchQueryBuilderTests
             Given = given,
             Family = family,
             BirthDate = DateOnly.FromDateTime(new DateTime(2010, 1, 1))
-        });
+        },
+        preprocessNames: true);
 
-        builder.AddNonFuzzyGfd(preprocessNames: true);
+        builder.AddNonFuzzyGfd();
 
         var result = builder.Build();
 
