@@ -28,13 +28,7 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
         {
             Converters = { new JsonStringEnumConverter() }
         };
-
-        if (response.IsSuccessStatusCode)
-        {
-            var dto = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(options);
-            return dto;
-        }
-
+        
         Console.WriteLine(response.StatusCode);
         Console.WriteLine(response.ReasonPhrase);
         var reason = await response.Content.ReadAsStringAsync();
@@ -44,7 +38,9 @@ public class MatchPersonApiService(HttpClient httpClient) : IMatchPersonApiServi
             throw new NotSupportedException(reason);
         }
 
-        return null;
+        var dto = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(options);
+        return dto;
+        
     }
 
     public async Task<ReconciliationResponse?> ReconcilePersonAsync(ReconciliationRequest payload)
