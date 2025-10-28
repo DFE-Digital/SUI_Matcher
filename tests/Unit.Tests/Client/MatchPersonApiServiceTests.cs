@@ -64,7 +64,7 @@ public class MatchPersonApiServiceTests
     public async Task MatchPerson_Given_Valid_MatchStatusError_Returns_Correct_Dto()
     {
         // Arrange
-        var matchResult = new PersonMatchResponse{ Result = new MatchResult { MatchStatus = MatchStatus.Error } };
+        var matchResult = new PersonMatchResponse { Result = new MatchResult { MatchStatus = MatchStatus.Error } };
         var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
         handlerMock
             .Protected()
@@ -78,7 +78,7 @@ public class MatchPersonApiServiceTests
                 StatusCode = HttpStatusCode.BadRequest,
                 Content = JsonContent.Create(matchResult),
             })
-            
+
             .Verifiable();
         var httpClient = new HttpClient(handlerMock.Object)
         {
@@ -120,19 +120,19 @@ public class MatchPersonApiServiceTests
             .ReturnsAsync(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.BadRequest,
-                Content = new StringContent(errorMessage), 
+                Content = new StringContent(errorMessage),
             })
             .Verifiable();
-        
+
         var httpClient = new HttpClient(handlerMock.Object)
         {
             BaseAddress = new Uri("http://localhost:5000/")
         };
-        
+
         // Act
         var validPayload = new MatchPersonPayload { AddressPostalCode = "LF123ED" };
         var service = new MatchPersonApiService(httpClient);
-        
+
         // Assert
         var exception = await Assert.ThrowsAsync<NotSupportedException>(
             () => service.MatchPersonAsync(validPayload)
@@ -190,12 +190,12 @@ public class MatchPersonApiServiceTests
             ItExpr.IsAny<CancellationToken>()
         );
     }
-    
+
     [Fact]
     public async Task ReconcilePerson_Given_Valid_MatchStatusError_Returns_Correct_Dto()
     {
         // Arrange
-        var matchResult = new ReconciliationResponse { MatchingResult = new MatchResult{ MatchStatus  = MatchStatus.Error } };
+        var matchResult = new ReconciliationResponse { MatchingResult = new MatchResult { MatchStatus = MatchStatus.Error } };
         var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
         handlerMock
             .Protected()
@@ -234,6 +234,6 @@ public class MatchPersonApiServiceTests
             ItExpr.IsAny<CancellationToken>()
         );
     }
-    
-   
+
+
 }
