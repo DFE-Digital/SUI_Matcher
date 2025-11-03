@@ -28,6 +28,11 @@ For the Client Watcher:
 suiw <inputDirectory> <outputDirectory> <absoluteUrlToMatchingService>
 ```
 
+For the Reconciliation Client Watcher:
+```bash
+suiw <inputDirectory> <outputDirectory> <absoluteUrlToMatchingService> --enable-reconciliation -s <strategy>
+```
+
 For the DBS Client Watcher:
 ```bash
 suidbsw <inputDirectory> <outputDirectory>
@@ -66,3 +71,13 @@ dotnet tool install SUI.Client.Watcher --tool-path 'C:\Program Files\dotnet\tool
 
 $env:Path = "C:\Program Files\dotnet\tools;$env:Path"
 ```
+
+## Reconciliation Output
+When reconciliation completes it generates and output csv and pdf report. 
+In the CSV there is a differences column. This is what those differences mean...
+- fieldname:Both - this means that the field is missing in both the CSV and the NHS Demographic data
+- fieldname:LA - this means the field is missing in the CSV
+- fieldname:NHS - this means the data is missing in the NHS data
+- fieldname - this means that the data is present in both sides but the data is different
+
+if a field name does not appear in this list then the data was the same on both sides
