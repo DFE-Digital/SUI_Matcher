@@ -28,7 +28,7 @@ public class ReconciliationService(
         var matchingResponse = await matchingService.SearchAsync(reconciliationRequest, false);
         response.MatchingResult = matchingResponse.Result;
 
-        var nhsNumber = reconciliationRequest.NhsNumber ?? matchingResponse.Result?.NhsNumber;
+        var nhsNumber = string.IsNullOrEmpty(reconciliationRequest.NhsNumber) ? matchingResponse.Result?.NhsNumber : reconciliationRequest.NhsNumber;
 
         if (string.IsNullOrEmpty(nhsNumber))
         {
