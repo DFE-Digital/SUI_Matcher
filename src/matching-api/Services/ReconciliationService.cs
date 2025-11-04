@@ -30,17 +30,22 @@ public class ReconciliationService(
 
         var nhsNumber = string.IsNullOrEmpty(reconciliationRequest.NhsNumber) ? matchingResponse.Result?.NhsNumber : reconciliationRequest.NhsNumber;
 
-        if (string.IsNullOrEmpty(nhsNumber))
+        if (string.IsNullOrEmpty(nhsNumber) || !NhsNumberValidator.Validate(nhsNumber))
         {
-            response.Status = ReconciliationStatus.MissingNhsNumber;
-            response.Errors = ["Missing Nhs Number"];
-            return response;
-        }
+            var requestAgeGroup = reconciliationRequest.BirthDate.HasValue
+                ? PersonSpecificationUtils.GetAgeGroup(reconciliationRequest.BirthDate.Value)
+                : "Unknown";
+            
+            var status = string.IsNullOrEmpty(nhsNumber)
+                ? ReconciliationStatus.MissingNhsNumber
+                : ReconciliationStatus.InvalidNhsNumber;
+            var error = string.IsNullOrEmpty(nhsNumber)
+                ? "Missing Nhs Number"
+                : "The NHS Number was not valid";
 
-        if (!NhsNumberValidator.Validate(nhsNumber))
-        {
-            response.Status = ReconciliationStatus.InvalidNhsNumber;
-            response.Errors = ["The NHS Number was not valid"];
+            response.Status = status;
+            response.Errors = [error];
+            LogReconciliationCompleted(reconciliationRequest, matchingResponse, response.Status, requestAgeGroup, string.Empty);
             return response;
         }
 
@@ -97,18 +102,23 @@ public class ReconciliationService(
         response.DifferenceString = differenceString;
         response.Status = status;
 
+        LogReconciliationCompleted(reconciliationRequest, matchingResponse, status, ageGroup, differenceString);
+
+        return response;
+    }
+
+    private void LogReconciliationCompleted(ReconciliationRequest request, PersonMatchResponse response, ReconciliationStatus status, string ageGroup, string differenceString)
+    {
         logger.LogInformation(
             "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}",
             ageGroup,
-            reconciliationRequest.Gender ?? "Unknown",
-            reconciliationRequest.AddressPostalCode ?? "Unknown",
+            request.Gender ?? "Unknown",
+            request.AddressPostalCode ?? "Unknown",
             JsonConvert.SerializeObject(differenceString),
             status,
-            matchingResponse.Result?.MatchStatus,
-            matchingResponse.Result?.ProcessStage
+            response.Result?.MatchStatus,
+            response.Result?.ProcessStage
         );
-
-        return response;
     }
 
     private static string BuildReconciliationId(ReconciliationRequest reconciliationRequest)
