@@ -41,7 +41,7 @@ public class ReconciliationServiceTests
         Assert.Single(result.Errors);
         Assert.Equal("Missing Nhs Number", result.Errors[0]);
     }
-    
+
     [Fact]
     public async Task ReconcileAsync_WhenReconciliationRequestNhsNumberIsEmpty_ShouldUseMatchingServiceNhsNumber()
     {
@@ -58,7 +58,7 @@ public class ReconciliationServiceTests
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(ValidNhsNumber))
             .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = ValidNhsNumber } });
         var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
-        
+
         var request = new ReconciliationRequest
         {
             NhsNumber = ""
