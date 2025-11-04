@@ -16,6 +16,8 @@ public class ReconciliationServiceTests
     private readonly Mock<IAuditLogger> _auditLogger = new(MockBehavior.Loose);
     private readonly Mock<IMatchingService> _matchingService = new(MockBehavior.Loose);
 
+    private const string ValidNhsNumber = "9449305552";
+
     [Fact]
     public async Task ReconcileAsync_WhenNhsNumberIsMissing_ReturnsError()
     {
@@ -25,16 +27,41 @@ public class ReconciliationServiceTests
             {
                 Result = new MatchResult
                 {
-                    MatchStatus = MatchStatus.Match,
-                    NhsNumber = "1234567890",
+                    MatchStatus = MatchStatus.Match
                 }
             });
-        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
-            .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = "1234567890" } });
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+
+        // Act
+        var result = await sut.ReconcileAsync(new ReconciliationRequest());
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Person);
+        Assert.Single(result.Errors);
+        Assert.Equal("Missing Nhs Number", result.Errors[0]);
+    }
+
+    [Fact]
+    public async Task ReconcileAsync_WhenReconciliationRequestNhsNumberIsEmpty_ShouldUseMatchingServiceNhsNumber()
+    {
+        // Arrange
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
+            .ReturnsAsync(new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.Match,
+                    NhsNumber = ValidNhsNumber,
+                }
+            });
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(ValidNhsNumber))
+            .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = ValidNhsNumber } });
         var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
+            NhsNumber = ""
         };
 
         // Act
@@ -42,9 +69,9 @@ public class ReconciliationServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.Person);
-        Assert.Single(result.Errors);
-        Assert.Equal("The NHS Number was not valid", result.Errors[0]);
+        Assert.NotNull(result.Person);
+        Assert.Equal(ValidNhsNumber, result.Person.NhsNumber);
+        Assert.Empty(result.Errors);
     }
 
     [Fact]
@@ -82,7 +109,7 @@ public class ReconciliationServiceTests
     public async Task ReconcileAsync_WhenNhsNumberIsInvalid_ReturnsError()
     {
         // Arrange
-        var errorMessage = "The NHS Number was not valid";
+        const string errorMessage = "The NHS Number was not valid";
         _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
             .ReturnsAsync(new PersonMatchResponse
             {
@@ -108,14 +135,14 @@ public class ReconciliationServiceTests
         Assert.NotNull(result);
         Assert.Null(result.Person);
         Assert.Single(result.Errors);
-        Assert.Equal(errorMessage, result.Errors[0]);
+        Assert.Equal(errorMessage, result.Errors.First());
     }
 
     [Fact]
     public async Task ReconcileAsync_WhenPersonNotFound_ReturnsError()
     {
         // Arrange
-        var errorMessage = "Person not found";
+        const string errorMessage = "Person not found";
         _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
             .ReturnsAsync(new PersonMatchResponse
             {
