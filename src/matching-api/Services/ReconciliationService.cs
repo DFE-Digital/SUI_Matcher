@@ -75,7 +75,7 @@ public class ReconciliationService(
             ? PersonSpecificationUtils.GetAgeGroup(data.Result.BirthDate.Value)
             : "Unknown";
 
-        var differences = BuildDifferenceList(reconciliationRequest, data.Result, matchingResponse);
+        var differences = BuildDifferenceList(reconciliationRequest, data.Result, matchingResponse, nhsNumber);
         var differenceString = BuildDifferences(differences);
 
         ReconciliationStatus status;
@@ -165,7 +165,7 @@ public class ReconciliationService(
         return sb.ToString().EndsWith(" - ") ? sb.ToString(0, sb.Length - 3) : sb.ToString();
     }
 
-    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson? result, PersonMatchResponse matchResult)
+    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson? result, PersonMatchResponse matchResult, string nhsNumber)
     {
         var differences = new List<Difference>();
         if (result == null)
@@ -173,7 +173,7 @@ public class ReconciliationService(
             return differences;
         }
 
-        AddDifferenceIfUnequal(differences, nameof(request.NhsNumber), request.NhsNumber, result.NhsNumber);
+        AddDifferenceIfUnequal(differences, nameof(request.NhsNumber), nhsNumber, result.NhsNumber);
         AddDifferenceIfUnequal(differences, nameof(request.BirthDate), request.BirthDate, result.BirthDate);
         AddDifferenceIfUnequal(differences, nameof(request.Gender), request.Gender, result.Gender);
         AddDifferenceIfUnequal(differences, nameof(request.Given), request.Given, result.GivenNames);
