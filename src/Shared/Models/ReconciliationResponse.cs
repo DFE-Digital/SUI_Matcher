@@ -6,12 +6,12 @@ public class ReconciliationResponse
 
     public List<string> Errors { get; set; } = [];
 
-    public List<Difference>? Differences { get; set; }
+    public List<Difference> Differences { get; set; } = [];
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ReconciliationStatus Status { get; set; }
 
     public string DifferenceString { get; set; } = String.Empty;
 
-    public MatchResult? MatchingResult { get; set; }
+    public MatchResult? MatchingResult { get; init; }
 }
