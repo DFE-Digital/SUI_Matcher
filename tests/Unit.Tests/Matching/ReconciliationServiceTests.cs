@@ -1,5 +1,6 @@
 using MatchingApi.Services;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
@@ -17,6 +18,7 @@ public class ReconciliationServiceTests
     private readonly Mock<IMatchingService> _matchingService = new(MockBehavior.Loose);
 
     private const string ValidNhsNumber = "9449305552";
+    private const string InvalidNhsNumber = "1234567890";
 
     [Fact]
     public async Task ReconcileAsync_WhenNhsNumberIsMissing_ReturnsError()
@@ -30,7 +32,7 @@ public class ReconciliationServiceTests
                     MatchStatus = MatchStatus.Match
                 }
             });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         // Act
         var result = await sut.ReconcileAsync(new ReconciliationRequest());
@@ -57,7 +59,7 @@ public class ReconciliationServiceTests
             });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(ValidNhsNumber))
             .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = ValidNhsNumber } });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
@@ -89,7 +91,7 @@ public class ReconciliationServiceTests
             });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
             .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = "9449305552" } });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
@@ -116,16 +118,16 @@ public class ReconciliationServiceTests
                 Result = new MatchResult
                 {
                     MatchStatus = MatchStatus.Match,
-                    NhsNumber = "1234567890",
+                    NhsNumber = InvalidNhsNumber,
                 }
             });
-        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(InvalidNhsNumber))
             .ReturnsAsync(new DemographicResult { ErrorMessage = errorMessage });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
-            NhsNumber = "1234567890"
+            NhsNumber = InvalidNhsNumber
         };
 
         // Act
@@ -154,7 +156,7 @@ public class ReconciliationServiceTests
             });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
             .ReturnsAsync(new DemographicResult { ErrorMessage = errorMessage });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
@@ -197,7 +199,7 @@ public class ReconciliationServiceTests
             });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
             .ReturnsAsync(new DemographicResult { Result = nhsPerson });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
@@ -250,7 +252,7 @@ public class ReconciliationServiceTests
             });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
             .ReturnsAsync(new DemographicResult { Result = nhsPerson });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
@@ -304,7 +306,7 @@ public class ReconciliationServiceTests
             });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
             .ReturnsAsync(new DemographicResult { Result = nhsPerson });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
@@ -354,7 +356,7 @@ public class ReconciliationServiceTests
             });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
             .ReturnsAsync(new DemographicResult { Result = nhsPerson });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
@@ -404,7 +406,7 @@ public class ReconciliationServiceTests
             });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("9449305552"))
             .ReturnsAsync(new DemographicResult { Result = nhsPerson });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
+        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object, _auditLogger.Object);
 
         var request = new ReconciliationRequest
         {
@@ -427,5 +429,65 @@ public class ReconciliationServiceTests
         Assert.Equal(8, result.Differences?.Count);
         Assert.Equal(ReconciliationStatus.Differences, result.Status);
         Assert.Equal("BirthDate:Both - Gender:Both - Given:Both - Family:Both - Email:Both - Phone:Both - AddressPostalCode:Both - MatchingNhsNumber:NHS", result.DifferenceString);
+    }
+
+    [Fact]
+    public async Task ReconcileAsync_ShouldLogCompleted_WhenInvalidNhsNumber()
+    {
+        // Arrange
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
+            .ReturnsAsync(new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.Match
+                }
+            });
+        var logger = Mock.Of<ILogger<ReconciliationService>>();
+        var sut = new ReconciliationService(_matchingService.Object, logger, _nhsFhirClient.Object, _auditLogger.Object);
+
+        // Act
+        await sut.ReconcileAsync(new ReconciliationRequest() {NhsNumber = InvalidNhsNumber});
+        
+        // Assert
+        Mock.Get(logger).Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("[RECONCILIATION_COMPLETED]")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ReconcileAsync_ShouldLogCompleted_WhenNhsNumberValid()
+    {
+        // Arrange
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
+            .ReturnsAsync(new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.Match
+                }
+            });
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(ValidNhsNumber))
+            .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = ValidNhsNumber } });
+        var logger = Mock.Of<ILogger<ReconciliationService>>();
+        var sut = new ReconciliationService(_matchingService.Object, logger, _nhsFhirClient.Object, _auditLogger.Object);
+
+        // Act
+        await sut.ReconcileAsync(new ReconciliationRequest() {NhsNumber = ValidNhsNumber});
+        
+        // Assert
+        Mock.Get(logger).Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("[RECONCILIATION_COMPLETED]")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 }

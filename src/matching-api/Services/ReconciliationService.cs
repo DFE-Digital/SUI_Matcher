@@ -13,7 +13,7 @@ namespace MatchingApi.Services;
 
 public class ReconciliationService(
     IMatchingService matchingService,
-    ILogger<MatchingService> logger,
+    ILogger<ReconciliationService> logger,
     INhsFhirClient nhsFhirClient,
     IAuditLogger auditLogger) : IReconciliationService
 {
