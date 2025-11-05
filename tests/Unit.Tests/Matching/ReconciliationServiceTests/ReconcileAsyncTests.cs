@@ -447,8 +447,8 @@ public class ReconcileAsyncTests
         var sut = new ReconciliationService(_matchingService.Object, logger, _nhsFhirClient.Object, _auditLogger.Object);
 
         // Act
-        await sut.ReconcileAsync(new ReconciliationRequest() {NhsNumber = InvalidNhsNumber});
-        
+        await sut.ReconcileAsync(new ReconciliationRequest() { NhsNumber = InvalidNhsNumber });
+
         // Assert
         Mock.Get(logger).Verify(
             x => x.Log(
@@ -478,8 +478,8 @@ public class ReconcileAsyncTests
         var sut = new ReconciliationService(_matchingService.Object, logger, _nhsFhirClient.Object, _auditLogger.Object);
 
         // Act
-        await sut.ReconcileAsync(new ReconciliationRequest() {NhsNumber = ValidNhsNumber});
-        
+        await sut.ReconcileAsync(new ReconciliationRequest() { NhsNumber = ValidNhsNumber });
+
         // Assert
         Mock.Get(logger).Verify(
             x => x.Log(

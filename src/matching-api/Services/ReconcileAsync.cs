@@ -22,7 +22,7 @@ public class ReconciliationService(
         var reconciliationId = BuildReconciliationId(request);
         var auditDetails = new Dictionary<string, string> { { "SearchId", reconciliationId } };
         await auditLogger.LogAsync(new AuditLogEntry(AuditLogEntry.AuditLogAction.Reconciliation, auditDetails));
-        
+
         var matchingResponse = await matchingService.SearchAsync(request, false);
 
         var response = new ReconciliationResponse
@@ -43,7 +43,7 @@ public class ReconciliationService(
         LogReconciliationCompleted(request, matchingResponse, reconResponse);
         return reconResponse;
     }
-    
+
     private async Task<ReconciliationResponse> PerformReconciliation(ReconciliationRequest request,
         string nhsNumber,
         PersonMatchResponse matchingResponse, ReconciliationResponse response)
@@ -68,7 +68,7 @@ public class ReconciliationService(
             response.Errors = [data.ErrorMessage ?? "Unknown error"];
         }
 
-        
+
         var differences = BuildDifferenceList(request, data.Result, matchingResponse, nhsNumber);
         var differenceString = BuildDifferences(differences);
 
@@ -93,10 +93,10 @@ public class ReconciliationService(
 
         return response;
     }
-    
+
     private static string GetAgeGroup(DateOnly? birthDate) =>
         !birthDate.HasValue ? "Unknown" : PersonSpecificationUtils.GetAgeGroup(birthDate.Value);
-    
+
     private static ReconciliationResponse UpdateResponseWithInvalidNhsNumber(string? nhsNumber, ReconciliationResponse response)
     {
         if (string.IsNullOrEmpty(nhsNumber))
@@ -109,7 +109,7 @@ public class ReconciliationService(
             response.Status = ReconciliationStatus.InvalidNhsNumber;
             response.Errors = ["The NHS Number was not valid"];
         }
-        
+
         return response;
     }
 
