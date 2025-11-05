@@ -9,9 +9,9 @@ using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
 
-namespace Unit.Tests.Matching;
+namespace Unit.Tests.Matching.ReconciliationServiceTests;
 
-public class ReconciliationServiceTests
+public class ReconcileAsyncTests
 {
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
     private readonly Mock<IAuditLogger> _auditLogger = new(MockBehavior.Loose);
