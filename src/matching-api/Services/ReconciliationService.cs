@@ -110,7 +110,7 @@ public class ReconciliationService(
         var ageGroup = GetAgeGroup(reconciliationResponse.Person?.BirthDate);
         decimal score = personMatchResponse.Result?.Score ?? 0;
         logger.LogInformation(
-            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {ConfidenceScore}",
+            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {Score}",
             ageGroup,
             request.Gender ?? "Unknown",
             request.AddressPostalCode ?? "Unknown",
