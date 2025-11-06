@@ -31,7 +31,7 @@ public class ReconciliationService(
         };
 
         var nhsNumber = string.IsNullOrEmpty(request.NhsNumber) ? matchingResponse.Result?.NhsNumber : request.NhsNumber;
-        
+
         if (string.IsNullOrEmpty(nhsNumber))
         {
             response.Status = ReconciliationStatus.MissingNhsNumber;
