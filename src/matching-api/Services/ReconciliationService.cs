@@ -31,12 +31,20 @@ public class ReconciliationService(
         };
 
         var nhsNumber = string.IsNullOrEmpty(request.NhsNumber) ? matchingResponse.Result?.NhsNumber : request.NhsNumber;
-
-        if (string.IsNullOrEmpty(nhsNumber) || !NhsNumberValidator.Validate(nhsNumber))
+        
+        if (string.IsNullOrEmpty(nhsNumber))
         {
-            var updatedResponse = UpdateResponseWithInvalidNhsNumber(nhsNumber, response);
-            LogReconciliationCompleted(request, matchingResponse, updatedResponse);
-            return updatedResponse;
+            response.Status = ReconciliationStatus.MissingNhsNumber;
+            response.Errors = ["Missing Nhs Number"];
+            LogReconciliationCompleted(request, matchingResponse, response);
+            return response;
+        }
+        if (!NhsNumberValidator.Validate(nhsNumber))
+        {
+            response.Status = ReconciliationStatus.InvalidNhsNumber;
+            response.Errors = ["The NHS Number was not valid"];
+            LogReconciliationCompleted(request, matchingResponse, response);
+            return response;
         }
 
         var reconResponse = await PerformReconciliation(request, nhsNumber, matchingResponse, response);
@@ -97,34 +105,20 @@ public class ReconciliationService(
     private static string GetAgeGroup(DateOnly? birthDate) =>
         !birthDate.HasValue ? "Unknown" : PersonSpecificationUtils.GetAgeGroup(birthDate.Value);
 
-    private static ReconciliationResponse UpdateResponseWithInvalidNhsNumber(string? nhsNumber, ReconciliationResponse response)
-    {
-        if (string.IsNullOrEmpty(nhsNumber))
-        {
-            response.Status = ReconciliationStatus.MissingNhsNumber;
-            response.Errors = ["Missing Nhs Number"];
-        }
-        else if (!NhsNumberValidator.Validate(nhsNumber))
-        {
-            response.Status = ReconciliationStatus.InvalidNhsNumber;
-            response.Errors = ["The NHS Number was not valid"];
-        }
-
-        return response;
-    }
-
     private void LogReconciliationCompleted(ReconciliationRequest request, PersonMatchResponse personMatchResponse, ReconciliationResponse reconciliationResponse)
     {
         var ageGroup = GetAgeGroup(reconciliationResponse.Person?.BirthDate);
+        decimal? score = personMatchResponse.Result?.Score;
         logger.LogInformation(
-            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}",
+            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {ConfidenceScore}",
             ageGroup,
             request.Gender ?? "Unknown",
             request.AddressPostalCode ?? "Unknown",
             JsonConvert.SerializeObject(reconciliationResponse.DifferenceString),
             reconciliationResponse.Status,
             personMatchResponse.Result?.MatchStatus,
-            personMatchResponse.Result?.ProcessStage
+            personMatchResponse.Result?.ProcessStage,
+            score
         );
     }
 
