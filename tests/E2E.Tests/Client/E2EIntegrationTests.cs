@@ -60,9 +60,22 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
         {
             var matchStatus = x[MatchingCsvFileProcessor.HeaderStatus];
             var nhsNumber = x[MatchingCsvFileProcessor.HeaderNhsNo];
-            Assert.Equal(nameof(MatchStatus.NoMatch), matchStatus);
+            Assert.Equal(nameof(MatchStatus.LowConfidenceMatch), matchStatus);
             Assert.Equal("9691292211", nhsNumber);
         });
+    }
+
+    [Fact]
+    public async Task TestOneRowCsvSingleNoMatch()
+    {
+        await TestAsync("no_match.csv", x =>
+                {
+                    var matchStatus = x[MatchingCsvFileProcessor.HeaderStatus];
+                    var nhsNumber = x[MatchingCsvFileProcessor.HeaderNhsNo];
+                    Assert.Equal(nameof(MatchStatus.NoMatch), matchStatus);
+                    Assert.Equal("-", nhsNumber);
+                });
+
     }
 
     [Fact]

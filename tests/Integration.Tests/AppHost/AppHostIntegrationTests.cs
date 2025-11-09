@@ -95,7 +95,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         Assert.True(response.IsSuccessStatusCode);
         var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
         Assert.NotNull(personMatchResponse?.Result);
-        Assert.Equal(MatchStatus.NoMatch, personMatchResponse.Result.MatchStatus);
+        Assert.Equal(MatchStatus.LowConfidenceMatch, personMatchResponse.Result.MatchStatus);
     }
 
     [Fact]
