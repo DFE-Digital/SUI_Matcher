@@ -230,7 +230,7 @@ Result
 
 | Name         | Type   | Desc                              | Values                                    |
 |:-------------|:-------|:----------------------------------|:------------------------------------------|
-| matchStatus  | string | Match Result                      | match, noMatch, potentialMatch, manyMatch |
+| matchStatus  | string | Match Result                      | match, noMatch, potentialMatch, lowConfidenceMatch, manyMatch |
 | nhsNumber    | string | nhsNumnber                        | 10 digit string, empty string             |
 | ProcessStage | int    | stage of the process it exited at | 0, 1, 2, 3                                |
 | score        | number | Score of the search               | 0.0 to 1.0                                |
@@ -242,6 +242,7 @@ Result
 | match          | One match has been returned                                                |
 | noMatch        | No match has been returned                                                 |
 | potentialMatch | There is a potential match. One match with score above 0.85 and below 0.95 |
+| lowConfidenceMatch | There is a low confidence match. One match with score but is below 0.85 |
 | manyMatch      | System returns mulitple matches                                            |
 
 **Data quality**
@@ -314,7 +315,7 @@ are evaluated.
 | 3          | fuzzy search with given name, family name and DOB.                                                         | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 | 4          | fuzzy search with all provided values.                                                                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09` `gender`=`male` `address-postalcode`=`WN4 9BP` | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
 | 5          | fuzzy search with given name, family name and DOB range 6 months either side of given date.                | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1961-09-06`                     | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES  |
-| 6          | guzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06`                                                | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES  |
+| 6          | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06`                                                | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES  |
 
 #### Strategy 2
 
