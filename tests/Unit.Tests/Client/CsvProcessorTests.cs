@@ -197,6 +197,61 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
+    public async Task TestOneFileLowConfidenceMatch()
+    {
+        var searchResult = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.849m, Type = SearchResult.ResultType.Matched };
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>())).Returns(() => Task.FromResult<SearchResult?>(searchResult));
+
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(false, x =>
+        {
+            x.AddSingleton(_nhsFhirClient.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = new D
+        {
+            [TestDataHeaders.GivenName] = "John",
+            [TestDataHeaders.Surname] = "Smith",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Email] = "test@test.com",
+        };
+
+        var list = new List<D> { data };
+        var headers = new HashSet<string>(data.Keys);
+
+        await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00005.csv"), headers, list);
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task; // await processing of that file
+        await cts.CancelAsync();   // cancel the task
+        await monitoringTask; // await cancellation
+
+        // ASSERTS
+        if (monitor.GetLastOperation().Exception != null)
+        {
+            throw monitor.GetLastOperation().Exception!;
+        }
+
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
+        Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
+        Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
+        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
+        Assert.NotNull(monitor.LastResult().Stats);
+
+        _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.AtLeast(6), "The PerformSearch method should be called multiple times");
+        (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+        Assert.Equal(searchResult.NhsNumber, records.First()[MatchingCsvFileProcessor.HeaderNhsNo]);
+        Assert.Equal(searchResult.Score.ToString(), records.First()[MatchingCsvFileProcessor.HeaderScore]);
+        Assert.Equal(nameof(MatchStatus.LowConfidenceMatch), records.First()[MatchingCsvFileProcessor.HeaderStatus]);
+    }
+
+    [Fact]
     public async Task TestOneFileSingleMatch_GenderIsConverted()
     {
         var searchResult = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.98m, Type = SearchResult.ResultType.Matched };
