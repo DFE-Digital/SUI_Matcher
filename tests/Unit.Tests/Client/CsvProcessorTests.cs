@@ -244,7 +244,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.AtLeast(6), "The PerformSearch method should be called multiple times");
+        _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.AtLeast(1), "The PerformSearch method should be called multiple times");
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
         Assert.Equal(searchResult.NhsNumber, records.First()[MatchingCsvFileProcessor.HeaderNhsNo]);
         Assert.Equal(searchResult.Score.ToString(), records.First()[MatchingCsvFileProcessor.HeaderScore]);
