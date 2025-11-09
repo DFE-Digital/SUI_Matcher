@@ -176,9 +176,6 @@ public sealed class MatchingServiceTests
                 Score = 0.94m
             });
 
-
-
-
         var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
@@ -207,9 +204,6 @@ public sealed class MatchingServiceTests
                 Score = 0.99m
             });
 
-
-
-
         var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
@@ -229,6 +223,35 @@ public sealed class MatchingServiceTests
     }
 
     [Fact]
+    public async Task LowConfidenceMatch()
+    {
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+           .ReturnsAsync(new SearchResult
+           {
+               Type = SearchResult.ResultType.Matched,
+               Score = 0.84m
+           });
+
+        var model = new SearchSpecification
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = DateOnly.FromDateTime(DateTime.Now.AddYears(-15)),
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        var result = await _sut.SearchAsync(model);
+
+        Assert.NotNull(result);
+        Assert.Equal(MatchStatus.LowConfidenceMatch, result.Result!.MatchStatus);
+        Assert.Equal(0.84m, result.Result.Score);
+
+    }
+
+    [Fact]
     public async Task SingleQuotesInGivenAndFamilyAreEscaped()
     {
         _nhsFhirClient.Setup(x => x.PerformSearch(It.Is<SearchQuery>(q =>
@@ -238,9 +261,6 @@ public sealed class MatchingServiceTests
                 Type = SearchResult.ResultType.Matched,
                 Score = 0.95m
             });
-
-
-
 
         var model = new SearchSpecification
         {
