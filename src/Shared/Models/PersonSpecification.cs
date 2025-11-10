@@ -7,9 +7,9 @@ namespace Shared.Models;
 public static class PersonValidationConstants
 {
     public const string GivenNameRequired = "Given name is required";
-    public const string GivenNameInvalid = "Given name cannot be greater than 20 characters";
+    public const string GivenNameInvalid = "Given name cannot be greater than 35 characters";
     public const string FamilyNameRequired = "Family name is required";
-    public const string FamilyNameInvalid = "Family name cannot be greater than 20 characters";
+    public const string FamilyNameInvalid = "Family name cannot be greater than 35 characters";
     public const string BirthDateRequired = "Date of birth is required";
     public const string BirthDateInvalid = "Invalid date of birth";
     public const string GenderInvalid = "Gender has to match FHIR standards";
@@ -21,12 +21,12 @@ public static class PersonValidationConstants
 public class PersonSpecification
 {
     [Required(ErrorMessage = PersonValidationConstants.GivenNameRequired)]
-    [StringLength(20, ErrorMessage = PersonValidationConstants.GivenNameInvalid)]
+    [StringLength(35, ErrorMessage = PersonValidationConstants.GivenNameInvalid)]
     [JsonPropertyName("given")]
     public string? Given { get; set; }
 
     [Required(ErrorMessage = PersonValidationConstants.FamilyNameRequired)]
-    [StringLength(20, ErrorMessage = PersonValidationConstants.FamilyNameInvalid)]
+    [StringLength(35, ErrorMessage = PersonValidationConstants.FamilyNameInvalid)]
     [JsonPropertyName("family")]
     public string? Family { get; set; }
 

@@ -8,6 +8,8 @@ namespace Unit.Tests.Matching
     {
         [Theory]
         [InlineData("", "Doe", "2000-01-01", "1234567890", "test@example.com", "male", "AB1 2CD", "Given name is required")]
+        [InlineData("Is More Than Thirty - Five Characters", "Doe", "2000-01-01", "1234567890", "test@example.com", "male", "AB1 2CD", "Given name cannot be greater than 35 characters")]
+        [InlineData("John", "Is More Than Thirty - Five Characters", "2000-01-01", "1234567890", "test@example.com", "male", "AB1 2CD", "Family name cannot be greater than 35 characters")]
         [InlineData("John", "", "2000-01-01", "1234567890", "test@example.com", "male", "AB1 2CD", "Family name is required")]
         [InlineData("John", "Doe", "2000-01-01", "invalid-phone", "test@example.com", "male", "AB1 2CD", "Invalid phone number.")]
         [InlineData("John", "Doe", "2000-01-01", "1234567890", "invalid-email", "male", "AB1 2CD", "Invalid email address.")]
