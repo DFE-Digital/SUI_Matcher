@@ -280,6 +280,7 @@ stateDiagram-v2
     confirmed_match: Confirmed Match
     potential_match: Potential Match
     low_confidence_match: Low Confidence Match
+    no_match: no match
     manual_process: Manual Process
     multiple_match: Multiple Matches
     [*] --> clean
