@@ -357,6 +357,10 @@ All searches return one of: [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, LOW_CONFIDENCE_
 | 6          | fuzzy search with given name, family name and DOB range.               | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`                                                    |
 | 7          | fuzzy search with given name, family name, DOB range, postcode.        | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`                    |
 
+#### Strategy 4
+
+Strategy 4 is a replication of strategy 3's searches, and additionally splits the Given name into an array and passes to PDS as multiple given names.
+
 Definition of fuzzy search is defined
 here: [NHS FHIR API Search](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient).
 
