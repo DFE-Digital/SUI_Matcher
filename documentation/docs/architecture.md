@@ -287,17 +287,17 @@ stateDiagram-v2
     clean --> apply_match_conditions
     apply_match_conditions --> if_single_match
     apply_match_conditions --> multiple_match
-    multiple_match --> manual_process
+    multiple_match --> manual_process: No NHS number
     if_single_match --> confirmed_match: if >= 95% confident
     if_single_match --> potential_match: if < 95% and >= 85% confident
     if_single_match --> low_confidence_match: if < 85% confident
-    confirmed_match --> [*]
-    potential_match --> manual_process
-    low_confidence_match --> manual_process
+    confirmed_match --> [*]: has NHS number
+    potential_match --> manual_process: has NHS number
+    low_confidence_match --> manual_process: has NHS number
     apply_match_conditions --> if_no_match_state
     if_no_match_state --> apply_match_conditions: if more match conditions
     if_no_match_state --> no_match: if no more match conditions
-    no_match --> manual_process
+    no_match --> manual_process: No NHS number
     manual_process --> [*]
 
 ```
