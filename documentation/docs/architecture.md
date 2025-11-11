@@ -278,7 +278,8 @@ stateDiagram-v2
     if_single_match: Single Match found
     if_no_match_state: No Match found
     confirmed_match: Confirmed Match
-    candidate_match: Candidate Match
+    potential_match: Potential Match
+    low_confidence_match: Low Confidence Match
     manual_process: Manual Process
     multiple_match: Multiple Matches
     [*] --> clean
@@ -287,9 +288,11 @@ stateDiagram-v2
     apply_match_conditions --> multiple_match
     multiple_match --> manual_process
     if_single_match --> confirmed_match: if >= 95% confident
-    if_single_match --> candidate_match: if < 95% confident
+    if_single_match --> potential_match: if < 95% and >= 85% confident
+    if_single_match --> low_confidence_match: if < 85% confident
     confirmed_match --> [*]
-    candidate_match --> manual_process
+    potential_match --> manual_process
+    low_confidence_match --> manual_process
     apply_match_conditions --> if_no_match_state
     if_no_match_state --> apply_match_conditions: if more match conditions
     if_no_match_state --> no_match: if no more match conditions
