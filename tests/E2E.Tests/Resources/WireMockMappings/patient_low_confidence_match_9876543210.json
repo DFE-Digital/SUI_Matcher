@@ -37,13 +37,12 @@
       "id": "123",
       "use": "usual",
       "period": {
-        "start": "2020-01-01",
-        "end": "2021-12-31"
+        "start": "2020-01-01"
       },
       "given": [
         "Joe"
       ],
-      "family": "Robinson",
+      "family": "RobinsonLow",
       "prefix": [
         "Mrs"
       ]
@@ -234,7 +233,7 @@
         "end": "2022-12-31"
       },
       "system": "email",
-      "value": "joe.robinson@example.com",
+      "value": "joe.robinsonlow@example.com",
       "use": "home"
     },
     {
