@@ -230,7 +230,7 @@ Result
 
 | Name         | Type   | Desc                              | Values                                    |
 |:-------------|:-------|:----------------------------------|:------------------------------------------|
-| matchStatus  | string | Match Result                      | match, noMatch, potentialMatch, lowConfidenceMatch, manyMatch |
+| matchStatus  | string | Match Result                      |  See *Match Status* table below. |
 | nhsNumber    | string | nhsNumnber                        | 10 digit string, empty string             |
 | ProcessStage | int    | stage of the process it exited at | 0, 1, 2, 3                                |
 | score        | number | Score of the search               | 0.0 to 1.0                                |
