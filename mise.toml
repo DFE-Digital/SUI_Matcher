@@ -1,0 +1,7 @@
+[tools]
+dotnet = { version = "9", postinstall = "mise run dotnet:update-dotsettings" }
+powershell-core = "7.5.4"
+
+[tasks."dotnet:update-dotsettings"]
+description = "Update Rider DotSettings.user with correct dotnet/MSBuild paths (PowerShell Core)"
+run = './scripts/update_dotsettings.ps1 -SettingsPath "sui-matching.sln.DotSettings.user"'
