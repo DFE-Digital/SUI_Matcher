@@ -99,6 +99,15 @@ public sealed class MockNhsFhirServer(string baseUrl)
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
                 .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "single_match_really_low_confidence.json")))));
 
+        builder.Given(b =>
+            b.WithRequest(request => request
+                .UsingGet()
+                .WithPath("/personal-demographics/FHIR/R4/Patient/9876543210")
+            )
+            .WithResponse(response => 
+                response.WithHeaders(h => h.Add("Content-Type", "application/json"))
+                    .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "patient_low_confidence_match_9876543210.json")))));
+        
         await builder.BuildAndPostAsync();
     }
 
