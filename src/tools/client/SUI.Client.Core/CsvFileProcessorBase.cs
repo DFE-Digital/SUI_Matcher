@@ -193,4 +193,17 @@ public abstract class CsvFileProcessorBase(ILogger<CsvFileProcessorBase> logger,
         File.WriteAllText(statsJsonFileName, JsonSerializer.Serialize(stats, JsonSerializerOptions));
         return statsJsonFileName;
     }
+
+    public static async Task<Dictionary<string, int>> ReadStatsJsonFileAsync(string statsFilePath)
+    {
+        if (!File.Exists(statsFilePath))
+        {
+            throw new FileNotFoundException("Stats file not found", statsFilePath);
+        }
+
+        var jsonString = await File.ReadAllTextAsync(statsFilePath);
+        var statsData = JsonSerializer.Deserialize<Dictionary<string, int>>(jsonString);
+
+        return statsData ?? new Dictionary<string, int>();
+    }
 }
