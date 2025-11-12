@@ -97,7 +97,7 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                          or ContactPoint.ContactPointSystem.Sms && s.Period?.End is null).Select(s => s.Value).OfType<string>().ToArray(),
                     FamilyNames = data.Name.Where(s => s.Period?.End is null).Select(s => s.Family).OfType<string>().ToArray(),
                     GivenNames = data.Name.Where(s => s.Period?.End is null).SelectMany(s => s.Given).OfType<string>().ToArray(),
-                    FullAddressDetails = data.Address.Select(s => string.Join(" ",s.Line)).ToArray(),
+                    FullAddressDetails = data.Address.Select(s => string.Join(" ",s.Line) + " " + s.PostalCode).ToArray(),
                     GeneralPractitionerOdsId = data.GeneralPractitioner.FirstOrDefault()?.Identifier?.Value
                 },
                 Status = Status.Success
