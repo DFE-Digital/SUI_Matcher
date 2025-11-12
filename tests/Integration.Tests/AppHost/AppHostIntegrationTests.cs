@@ -60,10 +60,8 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         Assert.Equal(MatchStatus.Match, personMatchResponse.Result.MatchStatus);
     }
 
-    // Single Match with low confidence (<95%, Candidate Match)
-
     [Fact]
-    public async Task MatchingApi_SingleMatchWithLowConfidence()
+    public async Task MatchingApi_ShouldReturnPotentialMatchStatus_WhenScoreIsBetween85And95()
     {
         var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
         {
@@ -79,10 +77,8 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         Assert.Equal(MatchStatus.PotentialMatch, personMatchResponse.Result.MatchStatus);
     }
 
-    // Single Match with really low confidence (<85%, Candidate Match)
-
     [Fact]
-    public async Task MatchingApi_SingleMatchWithReallyLowConfidence()
+    public async Task MatchingApi_ShouldReturnLowConfidenceMatchStatus_WhenScoreExistsAndLessThan85()
     {
         var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
         {

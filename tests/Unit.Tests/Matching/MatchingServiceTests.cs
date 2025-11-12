@@ -167,7 +167,7 @@ public sealed class MatchingServiceTests
     }
 
     [Fact]
-    public async Task SingleCandidateMatch()
+    public async Task ShouldReturnPotentialMatch_WhenScoreIs94()
     {
         _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(new SearchResult
