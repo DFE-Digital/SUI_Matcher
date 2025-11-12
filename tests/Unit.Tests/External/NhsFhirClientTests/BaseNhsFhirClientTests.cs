@@ -134,11 +134,25 @@ public class BaseNhsFhirClientTests
                 ],
                 Address =
                 [
-                    new Address { Period = null, PostalCode = "LS123ED" },
-                    new Address { Period = new Period { Start = "2001-09-01" }, PostalCode = null },
-                    new Address { Period = new Period { Start = "2001-09-01", End = null}, PostalCode = "LS123EF" },
-                    new Address { Period = new Period { Start = "2001-09-01", End = "2002-09-01"}, PostalCode = "LS123EF" }
-                ]
+                    new Address { Period = new Period { Start = "2012-09-02", End = null }, PostalCode = "LS123EA", Use = Address.AddressUse.Home, Line = ["64 Higher Street", "Leeds", "West Yorkshire"] },
+                    new Address { Period = new Period { Start = "2019-12-02", End = "2024-12-01"}, PostalCode = "LS123EH", Use = Address.AddressUse.Home, Line = ["54 Medium Street", "Leeds", "West Yorkshire"] },
+                    new Address { Period = new Period { Start = "2012-09-02", End = "2019-12-01"}, PostalCode = "LS123EG", Use = Address.AddressUse.Home, Line = ["34 Low Street", "Leeds", "West Yorkshire"] },
+                    new Address { Period = new Period { Start = "2010-09-01", End = "2012-09-01"}, PostalCode = "LS123EF", Use = Address.AddressUse.Home, Line = ["12 High Street", "Leeds", "West Yorkshire"] }
+                ],
+                GeneralPractitioner = [
+                new ResourceReference {
+                    Type = "Organization",
+                    Identifier = new Identifier
+                    {
+                        System = "https://fhir.nhs.uk/Id/ods-organization-code",
+                        Value = "Y12345",
+                        Period = new Period{
+                            Start = "2020-01-01",
+                            End = null
+                        }
+                    }
+                }
+                ],
             } as TResource;
             return Task.FromResult(resource);
         }
