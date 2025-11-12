@@ -14,7 +14,7 @@ namespace E2E.Tests.Client;
 public class ReconciliationTests(AppHostFixture fixture, TempDirectoryFixture tempDirectoryFixture) : IClassFixture<AppHostFixture>, IClassFixture<TempDirectoryFixture>
 {
     private readonly HttpClient _client = fixture.CreateSecureClient();
-    
+
     [Fact]
     public async Task TestOneRowCsvSingleLowConfidenceMatch()
     {
@@ -36,7 +36,7 @@ public class ReconciliationTests(AppHostFixture fixture, TempDirectoryFixture te
             Assert.Equal(1, stats[nameof(ReconciliationCsvProcessStats.DifferencesCount)]); // Only diff is DOB
         });
     }
-    
+
     private async Task TestAsync(string inputFileName, Action<Dictionary<string, string>> assertions, Action<Dictionary<string, int>> statsAssertions)
     {
         var cts = new CancellationTokenSource();
@@ -70,18 +70,18 @@ public class ReconciliationTests(AppHostFixture fixture, TempDirectoryFixture te
         Assert.True(File.Exists(monitor.LastOperation!.AssertSuccess().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastOperation.AssertSuccess().StatsJsonFile));
         var data = CsvFile.GetData(monitor.LastOperation!.AssertSuccess().OutputCsvFile);
-        
+
         var readStatsJson = await File.ReadAllTextAsync(monitor.LastOperation.AssertSuccess().StatsJsonFile, cts.Token);
         var statsData = JsonSerializer.Deserialize<Dictionary<string, int>>(readStatsJson);
         Assert.Single(data.Records);
         Assert.NotNull(statsData);
-        
+
 
         var row = data.Records[0];
         assertions(row);
         statsAssertions(statsData);
-        
-        
+
+
 
         await cts.CancelAsync();
     }
