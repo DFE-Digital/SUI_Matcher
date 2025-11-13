@@ -99,6 +99,31 @@ public sealed class MockNhsFhirServer(string baseUrl)
                 .WithHeaders(h => h.Add("Content-Type", "application/json"))
                 .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "single_match_really_low_confidence.json")))));
 
+        // Low confidence match with a difference in DOB. File name single_match_low_confidence_9876543210.json
+        builder.Given(b => b
+            .WithRequest(request => request
+                .UsingGet()
+                .WithPath("/personal-demographics/FHIR/R4/Patient")
+                .WithParams([
+                    ParamMatch("given", "Joe"),
+                    ParamMatch("family", "RobinsonLow"),
+                    ParamMatch("birthdate", "eq2005-10-15"),
+                ])
+            )
+            .WithResponse(response => response
+                .WithHeaders(h => h.Add("Content-Type", "application/json"))
+                .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "single_match_low_confidence_9876543210.json")))));
+
+        // Setup patient by NHS number lookup
+        builder.Given(b =>
+            b.WithRequest(request => request
+                .UsingGet()
+                .WithPath("/personal-demographics/FHIR/R4/Patient/9876543210")
+            )
+            .WithResponse(response =>
+                response.WithHeaders(h => h.Add("Content-Type", "application/json"))
+                    .WithBody(() => File.ReadAllText(Path.Combine("Resources", "WireMockMappings", "patient_low_confidence_match_9876543210.json")))));
+
         await builder.BuildAndPostAsync();
     }
 

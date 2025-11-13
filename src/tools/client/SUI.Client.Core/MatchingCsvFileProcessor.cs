@@ -107,8 +107,8 @@ public class MatchingCsvFileProcessor(
     protected override string GeneratePdfReport(IStats stats, string ts, string outputDirectory)
     {
         var localStats = (MatchingCsvProcessStats)stats;
-        string[] categories = ["Errored", "Matched", "Potential Match", "Many Match", "No Match"];
-        double[] values = [localStats.ErroredCount, localStats.CountMatched, localStats.CountPotentialMatch, localStats.CountManyMatch, localStats.CountNoMatch];
+        string[] categories = ["Errored", "Matched", "Potential Match", "Low confidence Match", "Many Match", "No Match"];
+        double[] values = [localStats.ErroredCount, localStats.CountMatched, localStats.CountPotentialMatch, localStats.CountLowConfidenceMatch, localStats.CountManyMatch, localStats.CountNoMatch];
         return PdfReportGenerator.GenerateReport(GetOutputFileName(ts, outputDirectory, "report.pdf"),
             "CSV Processing Report", categories, values);
     }
@@ -172,6 +172,9 @@ public class MatchingCsvFileProcessor(
 
             case MatchStatus.PotentialMatch:
                 stats.CountPotentialMatch++;
+                break;
+            case MatchStatus.LowConfidenceMatch:
+                stats.CountLowConfidenceMatch++;
                 break;
             case MatchStatus.Error:
                 stats.ErroredCount++;

@@ -230,7 +230,7 @@ Result
 
 | Name         | Type   | Desc                              | Values                                    |
 |:-------------|:-------|:----------------------------------|:------------------------------------------|
-| matchStatus  | string | Match Result                      | match, noMatch, potentialMatch, manyMatch |
+| matchStatus  | string | Match Result                      |  See *Match Status* table below. |
 | nhsNumber    | string | nhsNumnber                        | 10 digit string, empty string             |
 | ProcessStage | int    | stage of the process it exited at | 0, 1, 2, 3                                |
 | score        | number | Score of the search               | 0.0 to 1.0                                |
@@ -242,6 +242,7 @@ Result
 | match          | One match has been returned                                                |
 | noMatch        | No match has been returned                                                 |
 | potentialMatch | There is a potential match. One match with score above 0.85 and below 0.95 |
+| lowConfidenceMatch | There is a low confidence match. One match with score but is below 0.85 |
 | manyMatch      | System returns mulitple matches                                            |
 
 **Data quality**
@@ -277,22 +278,26 @@ stateDiagram-v2
     if_single_match: Single Match found
     if_no_match_state: No Match found
     confirmed_match: Confirmed Match
-    candidate_match: Candidate Match
+    potential_match: Potential Match
+    low_confidence_match: Low Confidence Match
+    no_match: no match
     manual_process: Manual Process
     multiple_match: Multiple Matches
     [*] --> clean
     clean --> apply_match_conditions
     apply_match_conditions --> if_single_match
     apply_match_conditions --> multiple_match
-    multiple_match --> manual_process
+    multiple_match --> manual_process: No NHS number
     if_single_match --> confirmed_match: if >= 95% confident
-    if_single_match --> candidate_match: if < 95% confident
-    confirmed_match --> [*]
-    candidate_match --> manual_process
+    if_single_match --> potential_match: if < 95% and >= 85% confident
+    if_single_match --> low_confidence_match: if < 85% confident
+    confirmed_match --> [*]: has NHS number
+    potential_match --> manual_process: has NHS number
+    low_confidence_match --> manual_process: has NHS number
     apply_match_conditions --> if_no_match_state
     if_no_match_state --> apply_match_conditions: if more match conditions
     if_no_match_state --> no_match: if no more match conditions
-    no_match --> manual_process
+    no_match --> manual_process: No NHS number
     manual_process --> [*]
 
 ```
@@ -307,45 +312,55 @@ for testing purposes.
 The search criteria being used for the pilot is as below, and is subject to change as real-world data and match rates
 are evaluated.
 
-| Rule Order | Search                                                                                                     | Example                                                                                                                               | Returns                                                     |
-|:-----------|:-----------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------|
-| 1          | Exact search with given name, family name and DOB.                                                         | `_exact-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 2          | Exact search with all provided values.                                                                     | `_exact-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`                               | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 3          | fuzzy search with given name, family name and DOB.                                                         | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 4          | fuzzy search with all provided values.                                                                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09` `gender`=`male` `address-postalcode`=`WN4 9BP` | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 5          | fuzzy search with given name, family name and DOB range 6 months either side of given date.                | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1961-09-06`                     | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES  |
-| 6          | guzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06`                                                | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES  |
+All searches return one of: [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, LOW_CONFIDENCE_MATCH, MANY_MATCHES]
+
+| Rule Order | Search                                                                                                     | Example                                                                                                                               |
+|:-----------|:-----------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------|
+| 1          | Exact search with given name, family name and DOB.                                                         | `_exact-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                |
+| 2          | Exact search with all provided values.                                                                     | `_exact-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`                               |
+| 3          | fuzzy search with given name, family name and DOB.                                                         | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                |
+| 4          | fuzzy search with all provided values.                                                                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09` `gender`=`male` `address-postalcode`=`WN4 9BP` |
+| 5          | fuzzy search with given name, family name and DOB range 6 months either side of given date.                | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1961-09-06`                     |
+| 6          | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06`                                                |
 
 #### Strategy 2
 
 An alternative strategy is currently under testing is defined below. This uses Non-fuzzy and fuzzy searches, including
 wild card searches on postcode. Order of queries is not opimized, instead uses a larger variation of queries.
 
-| Rule Order | Search                                                                                                     | Example                                                                                                                                                  | Returns                                                     |
-|:-----------|:-----------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------|
-| 1          | non-fuzzy search with given name, family name and DOB.                                                     | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `history=true`                                                  | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 2          | non-fuzzy search with given name, family name and DOB range.                                               | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `history=true`                       | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 3          | non-fuzzy search with all provided values, postcode as wildcard.                                           | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `address-postalcode`=`WN*`, `history=true`                      | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 4          | non-fuzzy search with all provided values.                                                                 | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`, `history=true` | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 5          | fuzzy search with given name, family name and DOB.                                                         | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                                   | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 6          | fuzzy search with given name, family name, DOB range, postcode as wildcard.                                | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN*`            | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 7          | fuzzy search with given name, family name, DOB range, postcode.                                            | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`        | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 8          | fuzzy search with all provided values.                                                                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                  | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 9          | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06`                                                                   | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+All searches return one of: [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, LOW_CONFIDENCE_MATCH, MANY_MATCHES]
+
+| Rule Order | Search                                                                                                     | Example                                                                                                                                                  |
+|:-----------|:-----------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1          | non-fuzzy search with given name, family name and DOB.                                                     | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `history=true`                                                  |
+| 2          | non-fuzzy search with given name, family name and DOB range.                                               | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `history=true`                       |
+| 3          | non-fuzzy search with all provided values, postcode as wildcard.                                           | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `address-postalcode`=`WN*`, `history=true`                      |
+| 4          | non-fuzzy search with all provided values.                                                                 | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`, `history=true` |
+| 5          | fuzzy search with given name, family name and DOB.                                                         | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                                   |
+| 6          | fuzzy search with given name, family name, DOB range, postcode as wildcard.                                | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN*`            |
+| 7          | fuzzy search with given name, family name, DOB range, postcode.                                            | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`        |
+| 8          | fuzzy search with all provided values.                                                                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                  |
+| 9          | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06`                                                                   |
 
 #### Strategy 3
 
 This is a multi versioned strategy that has been developed through iterative testing on real world data. The below is version 14 of it and is currently the best performing and most optimised for PDS calling.
 
-| Rule Order | Search                                                                 | Example                                                                                                                                                              | Returns                                                     |
-|:-----------|:-----------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------|
-| 1          | non-fuzzy search with given name, family name and DOB.                 | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `history=true`                                                              | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 2          | fuzzy search with given name, family name and DOB.                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                                               | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 3          | fuzzy search with all provided values.                                 | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                              | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 4          | non-fuzzy search with given name, family name and DOB range.           | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `history=true`                                   | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 5          | non-fuzzy search with given name, family name, DOB range, postcode.    | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`, `history=true`   | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 6          | fuzzy search with given name, family name and DOB range.               | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`                                                    | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
-| 7          | fuzzy search with given name, family name, DOB range, postcode.        | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`                    | One of:  [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, MANY_MATCHES] |
+All searches return one of: [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, LOW_CONFIDENCE_MATCH, MANY_MATCHES]
+
+| Rule Order | Search                                                                 | Example                                                                                                                                                              |
+|:-----------|:-----------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1          | non-fuzzy search with given name, family name and DOB.                 | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `history=true`                                                              |
+| 2          | fuzzy search with given name, family name and DOB.                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                                               |
+| 3          | fuzzy search with all provided values.                                 | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                              |
+| 4          | non-fuzzy search with given name, family name and DOB range.           | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `history=true`                                   |
+| 5          | non-fuzzy search with given name, family name, DOB range, postcode.    | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`, `history=true`   |
+| 6          | fuzzy search with given name, family name and DOB range.               | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`                                                    |
+| 7          | fuzzy search with given name, family name, DOB range, postcode.        | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`                    |
+
+#### Strategy 4
+
+Strategy 4 is a replication of strategy 3's searches, and additionally splits the Given name into an array and passes to PDS as multiple given names.
 
 Definition of fuzzy search is defined
 here: [NHS FHIR API Search](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient).

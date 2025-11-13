@@ -138,12 +138,12 @@ public class ReconciliationCsvFileProcessor(
         ];
         string[] matchingCategories =
         [
-            "Matching Status Match", "Matching Status Potential Match", "Matching Status No Match",
+            "Matching Status Match", "Matching Status Potential Match", "Matching Status Low Confidence Match", "Matching Status No Match",
             "Matching Status Many Match", "Matching Status Error"
         ];
         double[] matchingValues =
         [
-            localStats.MatchingStatusMatch, localStats.MatchingStatusPotentialMatch, localStats.MatchingStatusNoMatch,
+            localStats.MatchingStatusMatch, localStats.MatchingStatusPotentialMatch, localStats.MatchingStatusLowConfidenceMatch ,localStats.MatchingStatusNoMatch,
             localStats.MatchingStatusManyMatch, localStats.MatchingStatusError
         ];
         return PdfReportGenerator.GenerateReconciliationReport(
@@ -168,6 +168,9 @@ public class ReconciliationCsvFileProcessor(
                 break;
             case MatchStatus.PotentialMatch:
                 stats.MatchingStatusPotentialMatch++;
+                break;
+            case MatchStatus.LowConfidenceMatch:
+                stats.MatchingStatusLowConfidenceMatch++;
                 break;
             case MatchStatus.ManyMatch:
                 stats.MatchingStatusManyMatch++;

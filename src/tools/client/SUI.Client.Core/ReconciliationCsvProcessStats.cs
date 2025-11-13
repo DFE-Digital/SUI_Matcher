@@ -43,6 +43,7 @@ public class ReconciliationCsvProcessStats : IStats
     public int PostCodeBothCount { get; set; }
     public int MatchingStatusMatch { get; set; }
     public int MatchingStatusPotentialMatch { get; set; }
+    public int MatchingStatusLowConfidenceMatch { get; set; }
     public int MatchingStatusNoMatch { get; set; }
     public int MatchingStatusError { get; set; }
     public int MatchingStatusManyMatch { get; set; }
