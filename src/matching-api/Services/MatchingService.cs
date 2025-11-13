@@ -267,6 +267,10 @@ public class MatchingService(
         {
             status = MatchStatus.PotentialMatch;
         }
+        else if (score != 0 && score < 0.85m)
+        {
+            status = MatchStatus.LowConfidenceMatch;
+        }
 
         if (score > bestQueryResult.CurrentScore)
         {
