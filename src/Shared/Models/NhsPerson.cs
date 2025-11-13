@@ -20,7 +20,7 @@ public class NhsPerson
     public string[] Emails { get; set; } = [];
     public string[] AddressPostalCodes { get; set; } = [];
 
-    public string[] FullAddressDetails { get; set; } = [];
+    public string[] AddressHistory { get; set; } = [];
 
     public string? GeneralPractitionerOdsId { get; set; }
 
