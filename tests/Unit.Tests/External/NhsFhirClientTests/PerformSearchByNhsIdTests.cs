@@ -30,12 +30,12 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
         _fhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
-        
+
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
-        
+
         //Act
         var result = await client.PerformSearchByNhsId("1234567890");
-        
+
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Result);
@@ -50,12 +50,12 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
         _fhirClientFactory.Setup(f => f.CreateFhirClient())
             .Returns(testFhirClient);
-        
+
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
-        
+
         //Act
         var result = await client.PerformSearchByNhsId("1234567890");
-        
+
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Result);
