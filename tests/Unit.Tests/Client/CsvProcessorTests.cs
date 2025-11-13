@@ -535,6 +535,8 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 AddressPostalCodes = ["ab12 3ed"],
                 Emails = ["test@test.com"],
                 PhoneNumbers = ["0789 1234567"],
+                AddressHistory = ["home~64 Higher Street~Leeds~West Yorkshire~LS123EA|", "billing~54 Medium Street~Leeds~West Yorkshire~LS123EH|"],
+                GeneralPractitionerOdsId = "Y12345"
             }
         };
         _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(

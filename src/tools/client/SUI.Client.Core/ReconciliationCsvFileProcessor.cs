@@ -28,6 +28,8 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderGender = "SUI_Gender";
     public const string HeaderEmail = "SUI_Email";
     public const string HeaderPhone = "SUI_Phone";
+    public const string HeaderAddressHistory = "SUI_AddressHistory";
+    public const string HeaderGeneralPractitionerOdsId = "SUI_GeneralPractitionerOdsId";
     public const string HeaderDifferences = "SUI_Differences";
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderMatchStatus = "SUI_MatchStatus";
@@ -73,6 +75,8 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderAddressPostalCode] = string.Join(" - ", response?.Person?.AddressPostalCodes ?? ["-"]);
         record[HeaderEmail] = string.Join(" - ", response?.Person?.Emails ?? ["-"]);
         record[HeaderPhone] = string.Join(" - ", response?.Person?.PhoneNumbers ?? ["-"]);
+        record[HeaderAddressHistory] = string.Join(" ", response?.Person?.AddressHistory ?? ["-"]);
+        record[HeaderGeneralPractitionerOdsId] = response?.Person?.GeneralPractitionerOdsId ?? "-";
         var differenceList = response?.DifferenceString ?? "-";
         record[HeaderDifferences] = differenceList;
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
@@ -92,6 +96,8 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderAddressPostalCode);
         headers.Add(HeaderEmail);
         headers.Add(HeaderPhone);
+        headers.Add(HeaderAddressHistory);
+        headers.Add(HeaderGeneralPractitionerOdsId);
         headers.Add(HeaderDifferences);
         headers.Add(HeaderStatus);
         headers.Add(HeaderMatchStatus);
