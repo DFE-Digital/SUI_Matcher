@@ -83,6 +83,7 @@ public class MatchingCsvFileProcessor(
             Directory.CreateDirectory(watcherConfig.Value.MatchedRecordsDirectory);
 
             var successOutputFilePath = GetOutputFileName(ts, watcherConfig.Value.MatchedRecordsDirectory, Path.GetFileName(filePath), "matched");
+
             var matchedRecords = records
                 .Where(x => x.TryGetValue(HeaderStatus, out var status) && status == nameof(MatchStatus.Match))
                 .ToList();
@@ -123,6 +124,7 @@ public class MatchingCsvFileProcessor(
         var activeEhm = record.GetFirstValueOrDefault(["ActiveEHM"]);
         var ethnicity = record.GetFirstValueOrDefault(["Ethnicity"]);
         var immigrationStatus = record.GetFirstValueOrDefault(["ImmigrationStatus"]);
+        var addressHistory = record.GetFirstValueOrDefault(["AddressHistory"]);
         if (!string.IsNullOrWhiteSpace(activeCin))
         {
             optionalFields.TryAdd("ActiveCIN", activeCin);
@@ -148,6 +150,10 @@ public class MatchingCsvFileProcessor(
         if (!string.IsNullOrWhiteSpace(immigrationStatus))
         {
             optionalFields.TryAdd("ImmigrationStatus", immigrationStatus);
+        }
+        if (!string.IsNullOrWhiteSpace(addressHistory))
+        {
+            optionalFields.TryAdd("AddressHistory", addressHistory);
         }
 
         return optionalFields;
