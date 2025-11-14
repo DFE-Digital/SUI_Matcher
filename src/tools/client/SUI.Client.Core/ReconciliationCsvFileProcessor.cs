@@ -75,7 +75,7 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderAddressPostalCode] = string.Join(" - ", response?.Person?.AddressPostalCodes ?? ["-"]);
         record[HeaderEmail] = string.Join(" - ", response?.Person?.Emails ?? ["-"]);
         record[HeaderPhone] = string.Join(" - ", response?.Person?.PhoneNumbers ?? ["-"]);
-        record[HeaderAddressHistory] = string.Join(" ", response?.Person?.AddressHistory ?? ["-"]);
+        record[HeaderAddressHistory] = CsvUtils.WrapInputForCsv(response?.Person?.AddressHistory);
         record[HeaderGeneralPractitionerOdsId] = response?.Person?.GeneralPractitionerOdsId ?? "-";
         var differenceList = response?.DifferenceString ?? "-";
         record[HeaderDifferences] = differenceList;

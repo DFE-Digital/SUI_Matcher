@@ -535,7 +535,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 AddressPostalCodes = ["ab12 3ed"],
                 Emails = ["test@test.com"],
                 PhoneNumbers = ["0789 1234567"],
-                AddressHistory = ["home~64 Higher Street~Leeds~West Yorkshire~LS123EA|", "billing~54 Medium Street~Leeds~West Yorkshire~LS123EH|"],
+                AddressHistory = ["home~64 Higher Street~Leeds~West Yorkshire~LS123EA|", "billing~54 Medium,Street~Leeds~West Yorkshire~LS123EH|"],
                 GeneralPractitionerOdsId = "Y12345"
             }
         };
@@ -576,7 +576,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         var list = new List<D> { data };
         var headers = new HashSet<string>(data.Keys);
 
-        var addressHistoryFormatted = string.Join(" ", demographicResult.Result.AddressHistory);
+        var addressHistoryFormatted = $"\"{string.Join(" ", demographicResult.Result.AddressHistory)}\"";
 
         await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
 

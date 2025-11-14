@@ -60,7 +60,7 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         Assert.NotNull(result);
         Assert.NotNull(result.Result);
         Assert.Equal(4, result.Result.AddressHistory.Length);
-        Assert.Equal(["home~64 Higher Street~Leeds~West Yorkshire~LS123EA|", "billing~54 Medium Street~Leeds~West Yorkshire~LS123EH|", "work~34 Low Street~Leeds~West Yorkshire~LS123EG|", "temp~12 High Street~Leeds~West Yorkshire~LS123EF|"], result.Result.AddressHistory);
+        Assert.Equal(["home~64 Higher Street~Leeds~West Yorkshire~LS123EA|", "billing~54 Medium Street~Leeds~West Yorkshire~LS123EH|", "work~34 Low Street~Leeds~West Yorkshire~LS123EG|", "temp~12 High,Street~Leeds~West Yorkshire~LS123EF|"], result.Result.AddressHistory);
     }
 
     [Fact]
