@@ -17,7 +17,7 @@ public class CsvUtilsTests
     [Fact]
     public void WrapInputForCsv_ReturnsDash_WhenInputIsEmpty()
     {
-        string[] input = Array.Empty<string>();
+        string[] input = [];
 
         var result = CsvUtils.WrapInputForCsv(input);
 
