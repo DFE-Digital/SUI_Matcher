@@ -11,6 +11,8 @@ namespace ExternalApi.Services;
 public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhirClient> logger) : INhsFhirClient
 {
 
+    // Performs search against Nhs Digital FHIR API
+    // Returns SearchResult indicating match status
     public async Task<SearchResult?> PerformSearch(SearchQuery query)
     {
         var searchParams = SearchParamsFactory.Create(query);
@@ -64,6 +66,8 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
         }
     }
 
+    // Performs search against Nhs Digital FHIR API by NHS ID
+    // Returns a DemoGraphic Result with an NHS Person if found
     public async Task<DemographicResult> PerformSearchByNhsId(string? nhsId)
     {
         try
@@ -94,6 +98,9 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                          or ContactPoint.ContactPointSystem.Sms && s.Period?.End is null).Select(s => s.Value).OfType<string>().ToArray(),
                     FamilyNames = data.Name.Where(s => s.Period?.End is null).Select(s => s.Family).OfType<string>().ToArray(),
                     GivenNames = data.Name.Where(s => s.Period?.End is null).SelectMany(s => s.Given).OfType<string>().ToArray(),
+                    AddressHistory = data.Address.Select((s, i) => $"{(s.Use)?.ToString().ToLower()}~{string.Join("~", s.Line)}~{s.PostalCode}" + "|").ToArray(),
+                    // Always contains zero or one general practitioner object.
+                    GeneralPractitionerOdsId = data.GeneralPractitioner.FirstOrDefault()?.Identifier?.Value
                 },
                 Status = Status.Success
             };

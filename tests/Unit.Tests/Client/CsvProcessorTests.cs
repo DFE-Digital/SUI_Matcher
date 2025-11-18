@@ -113,7 +113,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         var data = testData.Select(x => x.Data).ToList();
-        var headers = new HashSet<string>(data.First().Keys);
+        var headers = new HashSet<string>(data[0].Keys);
 
         await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00002.csv"), headers, data);
 
@@ -191,9 +191,9 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Once(), "The PerformSearch method should have invoked ONCE");
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
-        Assert.Equal(searchResult.NhsNumber, records.First()[MatchingCsvFileProcessor.HeaderNhsNo]);
-        Assert.Equal(searchResult.Score.ToString(), records.First()[MatchingCsvFileProcessor.HeaderScore]);
-        Assert.Equal(nameof(MatchStatus.Match), records.First()[MatchingCsvFileProcessor.HeaderStatus]);
+        Assert.Equal(searchResult.NhsNumber, records[0][MatchingCsvFileProcessor.HeaderNhsNo]);
+        Assert.Equal(searchResult.Score.ToString(), records[0][MatchingCsvFileProcessor.HeaderScore]);
+        Assert.Equal(nameof(MatchStatus.Match), records[0][MatchingCsvFileProcessor.HeaderStatus]);
     }
 
     [Fact]
@@ -246,9 +246,9 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.AtLeast(1), "The PerformSearch method should be called multiple times");
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
-        Assert.Equal(searchResult.NhsNumber, records.First()[MatchingCsvFileProcessor.HeaderNhsNo]);
-        Assert.Equal(searchResult.Score.ToString(), records.First()[MatchingCsvFileProcessor.HeaderScore]);
-        Assert.Equal(nameof(MatchStatus.LowConfidenceMatch), records.First()[MatchingCsvFileProcessor.HeaderStatus]);
+        Assert.Equal(searchResult.NhsNumber, records[0][MatchingCsvFileProcessor.HeaderNhsNo]);
+        Assert.Equal(searchResult.Score.ToString(), records[0][MatchingCsvFileProcessor.HeaderScore]);
+        Assert.Equal(nameof(MatchStatus.LowConfidenceMatch), records[0][MatchingCsvFileProcessor.HeaderStatus]);
     }
 
     [Fact]
@@ -364,7 +364,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.NotNull(monitor.LastResult().Stats);
 
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
-        Assert.Equal("male", records.First()["Gender"]);
+        Assert.Equal("male", records[0]["Gender"]);
 
     }
 
@@ -521,7 +521,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public async Task Reconciliation_NoDifferences()
+    public async Task Reconciliation_ContainsAllHeaders()
     {
         var demographicResult = new DemographicResult
         {
@@ -535,6 +535,159 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 AddressPostalCodes = ["ab12 3ed"],
                 Emails = ["test@test.com"],
                 PhoneNumbers = ["0789 1234567"],
+                AddressHistory = ["home~64 Higher Street~Leeds~West Yorkshire~LS123EA|", "billing~54 Medium Street~Leeds~West Yorkshire~LS123EH|"],
+                GeneralPractitionerOdsId = "Y12345"
+            }
+        };
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(
+            new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.Match,
+                    NhsNumber = demographicResult.Result.NhsNumber,
+                }
+            });
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
+
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(true, x =>
+        {
+            x.AddSingleton(_matchingService.Object);
+            x.AddSingleton(_nhsFhirClient.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = new D
+        {
+            [TestDataHeaders.NhsNumber] = "9449305552",
+            [TestDataHeaders.GivenName] = "John",
+            [TestDataHeaders.Surname] = "Smith",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Gender] = "1",
+            [TestDataHeaders.PostCode] = "ab12 3ed",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Phone] = "0789 1234567",
+        };
+
+        var list = new List<D> { data };
+        var headers = new HashSet<string>(data.Keys);
+
+        var addressHistoryFormatted = CsvUtils.WrapInputForCsv(demographicResult.Result.AddressHistory);
+
+        await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task; // await processing of that file
+        await cts.CancelAsync();   // cancel the task
+        await monitoringTask; // await cancellation
+
+        // ASSERTS
+        _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once, "The PerformSearchByNhsId method should have invoked once");
+        (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+
+        Assert.Equal(demographicResult.Result.NhsNumber, records[0][ReconciliationCsvFileProcessor.HeaderNhsNo]);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderGivenName], demographicResult.Result.GivenNames);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderFamilyName], demographicResult.Result.FamilyNames);
+        Assert.Equal(demographicResult.Result.BirthDate.ToString(), records[0][ReconciliationCsvFileProcessor.HeaderBirthDate]);
+        Assert.Equal(demographicResult.Result.Gender, records[0][ReconciliationCsvFileProcessor.HeaderGender]);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderAddressPostalCode], demographicResult.Result.AddressPostalCodes);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderEmail], demographicResult.Result.Emails);
+        Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderPhone], demographicResult.Result.PhoneNumbers);
+        Assert.Equal(nameof(ReconciliationStatus.NoDifferences), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
+        Assert.Contains(String.Empty, records[0][ReconciliationCsvFileProcessor.HeaderDifferences]);
+        Assert.Equal(records[0][ReconciliationCsvFileProcessor.HeaderAddressHistory], addressHistoryFormatted);
+        Assert.Equal(records[0][ReconciliationCsvFileProcessor.HeaderGeneralPractitionerOdsId], demographicResult.Result.GeneralPractitionerOdsId);
+    }
+    [Fact]
+    public async Task Reconciliation_ContainsAllHeaders_With_SpecialCharacters_in_Address_History()
+    {
+        var demographicResult = new DemographicResult
+        {
+            Result = new NhsPerson
+            {
+                NhsNumber = "9449305552",
+                GivenNames = ["John"],
+                FamilyNames = ["Smith"],
+                BirthDate = new DateOnly(2000, 04, 01),
+                Gender = "Male",
+                AddressPostalCodes = ["ab12 3ed"],
+                Emails = ["test@test.com"],
+                PhoneNumbers = ["0789 1234567"],
+                AddressHistory = ["home~64 Higher Street~Leeds~West Yorkshire~LS123EA|", "billing~54 Medium,Street~Leeds~West Yorkshire~LS123EH|"],
+                GeneralPractitionerOdsId = "Y12345"
+            }
+        };
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(
+            new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.Match,
+                    NhsNumber = demographicResult.Result.NhsNumber,
+                }
+            });
+        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
+
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(true, x =>
+        {
+            x.AddSingleton(_matchingService.Object);
+            x.AddSingleton(_nhsFhirClient.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = new D
+        {
+            [TestDataHeaders.NhsNumber] = "9449305552",
+            [TestDataHeaders.GivenName] = "John",
+            [TestDataHeaders.Surname] = "Smith",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Gender] = "1",
+            [TestDataHeaders.PostCode] = "ab12 3ed",
+        };
+
+        var list = new List<D> { data };
+        var headers = new HashSet<string>(data.Keys);
+
+        var addressHistoryFormatted = CsvUtils.WrapInputForCsv(demographicResult.Result.AddressHistory);
+
+        await CsvFileProcessorBase.WriteCsvAsync(Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv"), headers, list);
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task; // await processing of that file
+        await cts.CancelAsync();   // cancel the task
+        await monitoringTask; // await cancellation
+
+        // ASSERTS
+        _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once, "The PerformSearchByNhsId method should have invoked once");
+        (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
+
+        Assert.Equal(records[0][ReconciliationCsvFileProcessor.HeaderAddressHistory], addressHistoryFormatted);
+
+    }
+
+    [Fact]
+    public async Task Reconciliation_NoDifferences()
+    {
+        var demographicResult = new DemographicResult
+        {
+            Result = new NhsPerson
+            {
+                NhsNumber = "9449305552",
+                GivenNames = ["John"],
+                FamilyNames = ["Smith"],
+                BirthDate = new DateOnly(2000, 04, 01),
+                Gender = "Male",
+                AddressPostalCodes = ["ab12 3ed"],
+                Emails = ["test@test.com"],
+                PhoneNumbers = ["0789 1234567"]
             }
         };
         _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(

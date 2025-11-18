@@ -21,7 +21,10 @@ public class ProcessCsVFileAsyncTests : IDisposable
     {
         var mockLogger = new Mock<ILogger<MatchingCsvFileProcessor>>();
         var mockApi = new Mock<IMatchPersonApiService>();
-        var mapping = new CsvMappingConfig { /* set up mappings as needed */ };
+        var mapping = new CsvMappingConfig
+        {
+            /* set up mappings as needed */
+        };
         var watcherConfig = Options.Create(new CsvWatcherConfig { EnableGenderSearch = true });
 
         MatchPersonPayload? capturedPayload = null;
@@ -37,7 +40,15 @@ public class ProcessCsVFileAsyncTests : IDisposable
         var outputPath = tempDir;
         var headers = new HashSet<string>
         {
-            "Given", "Family", "ActiveCIN", "ActiveCLA", "ActiveCP", "ActiveEHM", "Ethnicity", "ImmigrationStatus"
+            "Given",
+            "Family",
+            "ActiveCIN",
+            "ActiveCLA",
+            "ActiveCP",
+            "ActiveEHM",
+            "Ethnicity",
+            "ImmigrationStatus",
+            "AddressHistory"
         };
         var records = new List<Dictionary<string, string>>
         {
@@ -50,7 +61,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 ["ActiveCP"] = "CP789",
                 ["ActiveEHM"] = "EHM321",
                 ["Ethnicity"] = "A1 - White-British",
-                ["ImmigrationStatus"] = "Settled"
+                ["ImmigrationStatus"] = "Settled",
             }
         };
         await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, records);

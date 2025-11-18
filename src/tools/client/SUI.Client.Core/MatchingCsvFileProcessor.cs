@@ -83,6 +83,7 @@ public class MatchingCsvFileProcessor(
             Directory.CreateDirectory(watcherConfig.Value.MatchedRecordsDirectory);
 
             var successOutputFilePath = GetOutputFileName(ts, watcherConfig.Value.MatchedRecordsDirectory, Path.GetFileName(filePath), "matched");
+
             var matchedRecords = records
                 .Where(x => x.TryGetValue(HeaderStatus, out var status) && status == nameof(MatchStatus.Match))
                 .ToList();
@@ -149,7 +150,6 @@ public class MatchingCsvFileProcessor(
         {
             optionalFields.TryAdd("ImmigrationStatus", immigrationStatus);
         }
-
         return optionalFields;
     }
 
