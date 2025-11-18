@@ -78,6 +78,7 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             }
 
             logger.LogInformation("Patient record found for Nhs number");
+            logger.LogInformation("Security flags {SecurityFlag}", string.Join(',', data.Meta?.Security ?? []));
             return new DemographicResult
             {
                 Result = new NhsPerson
