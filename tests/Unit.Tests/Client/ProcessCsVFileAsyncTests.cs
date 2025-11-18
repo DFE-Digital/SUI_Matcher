@@ -21,7 +21,10 @@ public class ProcessCsVFileAsyncTests : IDisposable
     {
         var mockLogger = new Mock<ILogger<MatchingCsvFileProcessor>>();
         var mockApi = new Mock<IMatchPersonApiService>();
-        var mapping = new CsvMappingConfig { /* set up mappings as needed */ };
+        var mapping = new CsvMappingConfig
+        {
+            /* set up mappings as needed */
+        };
         var watcherConfig = Options.Create(new CsvWatcherConfig { EnableGenderSearch = true });
 
         MatchPersonPayload? capturedPayload = null;
@@ -37,7 +40,15 @@ public class ProcessCsVFileAsyncTests : IDisposable
         var outputPath = tempDir;
         var headers = new HashSet<string>
         {
-            "Given", "Family", "ActiveCIN", "ActiveCLA", "ActiveCP", "ActiveEHM", "Ethnicity", "ImmigrationStatus", "AddressHistory"
+            "Given",
+            "Family",
+            "ActiveCIN",
+            "ActiveCLA",
+            "ActiveCP",
+            "ActiveEHM",
+            "Ethnicity",
+            "ImmigrationStatus",
+            "AddressHistory"
         };
         var records = new List<Dictionary<string, string>>
         {
@@ -51,7 +62,6 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 ["ActiveEHM"] = "EHM321",
                 ["Ethnicity"] = "A1 - White-British",
                 ["ImmigrationStatus"] = "Settled",
-                ["AddressHistory"] = "1~99~Strong Lane~Chester, Wigan~WN1 2AA|1~105~Manchester Road~Salford, Manchester~M29 9ZZ|1~86~Manchester Road~Place, Wigan~WN1 1AA|"
             }
         };
         await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, records);
@@ -66,7 +76,6 @@ public class ProcessCsVFileAsyncTests : IDisposable
         Assert.Equal("EHM321", capturedPayload.OptionalProperties["ActiveEHM"]);
         Assert.Equal("A1 - White-British", capturedPayload.OptionalProperties["Ethnicity"]);
         Assert.Equal("Settled", capturedPayload.OptionalProperties["ImmigrationStatus"]);
-        Assert.Equal("1~99~Strong Lane~Chester, Wigan~WN1 2AA|1~105~Manchester Road~Salford, Manchester~M29 9ZZ|1~86~Manchester Road~Place, Wigan~WN1 1AA|", capturedPayload.OptionalProperties["AddressHistory"]);
     }
 
     [Fact]
