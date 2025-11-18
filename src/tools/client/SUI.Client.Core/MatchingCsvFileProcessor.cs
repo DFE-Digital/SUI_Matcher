@@ -124,7 +124,6 @@ public class MatchingCsvFileProcessor(
         var activeEhm = record.GetFirstValueOrDefault(["ActiveEHM"]);
         var ethnicity = record.GetFirstValueOrDefault(["Ethnicity"]);
         var immigrationStatus = record.GetFirstValueOrDefault(["ImmigrationStatus"]);
-        var addressHistory = record.GetFirstValueOrDefault(["AddressHistory"]);
         if (!string.IsNullOrWhiteSpace(activeCin))
         {
             optionalFields.TryAdd("ActiveCIN", activeCin);
@@ -151,11 +150,6 @@ public class MatchingCsvFileProcessor(
         {
             optionalFields.TryAdd("ImmigrationStatus", immigrationStatus);
         }
-        if (!string.IsNullOrWhiteSpace(addressHistory))
-        {
-            optionalFields.TryAdd("AddressHistory", addressHistory);
-        }
-
         return optionalFields;
     }
 
