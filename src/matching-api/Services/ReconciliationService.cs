@@ -1,11 +1,8 @@
-using System.Diagnostics;
-using System.Security.Cryptography;
 using System.Text;
 
 using Newtonsoft.Json;
 
 using Shared.Endpoint;
-using Shared.Logging;
 using Shared.Models;
 using Shared.Util;
 
@@ -14,92 +11,95 @@ namespace MatchingApi.Services;
 public class ReconciliationService(
     IMatchingService matchingService,
     ILogger<ReconciliationService> logger,
-    INhsFhirClient nhsFhirClient,
-    IAuditLogger auditLogger) : IReconciliationService
+    INhsFhirClient nhsFhirClient) : IReconciliationService
 {
     public async Task<ReconciliationResponse> ReconcileAsync(ReconciliationRequest request)
     {
-        var reconciliationId = BuildReconciliationId(request);
-        var auditDetails = new Dictionary<string, string> { { "SearchId", reconciliationId } };
-        await auditLogger.LogAsync(new AuditLogEntry(AuditLogEntry.AuditLogAction.Reconciliation, auditDetails));
-
+        // Match the request's demographics to an NHS number
         var matchingResponse = await matchingService.SearchAsync(request, false);
-
-        var response = new ReconciliationResponse
+        if (string.IsNullOrWhiteSpace(matchingResponse.Result?.NhsNumber))
         {
-            MatchingResult = matchingResponse.Result
-        };
-
-        var nhsNumber = string.IsNullOrEmpty(request.NhsNumber) ? matchingResponse.Result?.NhsNumber : request.NhsNumber;
-
-        if (string.IsNullOrEmpty(nhsNumber))
-        {
-            response.Status = ReconciliationStatus.MissingNhsNumber;
-            response.Errors = ["Missing Nhs Number"];
-            LogReconciliationCompleted(request, matchingResponse, response);
-            return response;
+            var reconciliationResponse = new ReconciliationResponse
+            {
+                MatchingResult = matchingResponse.Result,
+                Status = ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber,
+                Errors = ["Local demographics did not match to an NHS number"]
+            };
+            LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
+            return reconciliationResponse;
         }
-        if (!NhsNumberValidator.Validate(nhsNumber))
+        
+        // Fetch the NHS demographics for the matched NHS number
+        var matchedNhsNumberDemographics = 
+            await nhsFhirClient.PerformSearchByNhsId(matchingResponse.Result?.NhsNumber);
+        if (matchedNhsNumberDemographics.Status == Status.Error || matchedNhsNumberDemographics.Result == null)
         {
-            response.Status = ReconciliationStatus.InvalidNhsNumber;
-            response.Errors = ["The NHS Number was not valid"];
-            LogReconciliationCompleted(request, matchingResponse, response);
-            return response;
+            var reconciliationResponse = new ReconciliationResponse
+            {
+                MatchingResult = matchingResponse.Result,
+                // Generic error, since we'd expect a matched number to return demographics
+                Status = ReconciliationStatus.Error, 
+                Errors = [matchedNhsNumberDemographics.ErrorMessage ?? "Unknown error"]
+            };
+            LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
+            return reconciliationResponse;
         }
-
-        var reconResponse = await PerformReconciliation(request, nhsNumber, matchingResponse, response);
-        LogReconciliationCompleted(request, matchingResponse, reconResponse);
-        return reconResponse;
-    }
-
-    private async Task<ReconciliationResponse> PerformReconciliation(ReconciliationRequest request,
-        string nhsNumber,
-        PersonMatchResponse matchingResponse, ReconciliationResponse response)
-    {
-        var data = await nhsFhirClient.PerformSearchByNhsId(nhsNumber);
-
-        if (data.Status == Status.InvalidNhsNumber)
-        {
-            response.Status = ReconciliationStatus.InvalidNhsNumber;
-            response.Errors = [data.ErrorMessage ?? "Unknown error"];
-        }
-
-        if (data.Status == Status.PatientNotFound)
-        {
-            response.Status = ReconciliationStatus.PatientNotFound;
-            response.Errors = [data.ErrorMessage ?? "Unknown error"];
-        }
-
-        if (data.Status == Status.Error || data.Result == null)
-        {
-            response.Status = ReconciliationStatus.Error;
-            response.Errors = [data.ErrorMessage ?? "Unknown error"];
-        }
-
-
-        var differences = BuildDifferenceList(request, data.Result, matchingResponse, nhsNumber);
+       
+        // Compare matched NHS number's demographics to the request's demographics
+        var differences = BuildDifferenceList(request, matchedNhsNumberDemographics.Result);
         var differenceString = BuildDifferences(differences);
-
-        ReconciliationStatus status;
-        if (differences.Any(x => x.FieldName == nameof(request.NhsNumber)))
+        
+        // Prepare response, with initial status on whether differences have occurred
+        var reconResponse = new ReconciliationResponse
         {
-            status = ReconciliationStatus.SupersededNhsNumber;
-        }
-        else if (differences.Count == 0)
+            MatchingResult = matchingResponse.Result,
+            Person = matchedNhsNumberDemographics.Result,
+            Differences = differences,
+            DifferenceString = differenceString,
+            Status = differences.Count == 0
+                ? ReconciliationStatus.NoDifferences
+                : ReconciliationStatus.Differences
+        };
+        
+        // Return early if the NHS number definitely can't be superseded
+        var nhsNumberCantBeSuperseded = string.IsNullOrEmpty(request.NhsNumber) 
+                                        || request.NhsNumber == matchedNhsNumberDemographics.Result.NhsNumber;
+        if (nhsNumberCantBeSuperseded)
         {
-            status = ReconciliationStatus.NoDifferences;
+            LogReconciliationCompleted(request, matchingResponse, reconResponse);
+            return reconResponse;           
         }
-        else
+        
+        // Otherwise, fetch demographics of the request's NHS number to check if it is superseded
+        
+        // Request demographics 
+        var requestNhsNumberDemographics = 
+            await nhsFhirClient.PerformSearchByNhsId(request.NhsNumber);
+        
+        // If no success when fetching the NHS number from the request, return the result with these as errors
+        if (requestNhsNumberDemographics.Status == Status.Error || requestNhsNumberDemographics.Result == null)
         {
-            status = ReconciliationStatus.Differences;
+            var reconciliationResponse = new ReconciliationResponse
+            {
+                MatchingResult = matchingResponse.Result,
+                Status = ReconciliationStatus.Error,
+                Errors = [requestNhsNumberDemographics.ErrorMessage ?? "Unknown error"]
+            };
+            LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
+            return reconciliationResponse;
         }
 
-        response.Person = data.Result;
-        response.Differences = differences;
-        response.DifferenceString = differenceString;
-        response.Status = status;
-
-        return response;
+        bool requestNhsNumberHasBeenSuperseded = 
+            request.NhsNumber != requestNhsNumberDemographics.Result.NhsNumber;
+        // Since the demographics response will contain the new NHS number if the inputted
+        // NHS number has been superseded.
+        if (requestNhsNumberHasBeenSuperseded)
+        {
+            reconResponse.Status = ReconciliationStatus.LocalNhsNumberIsSuperseded;
+        }
+        
+        LogReconciliationCompleted(request, matchingResponse, reconResponse);
+        return reconResponse;           
     }
 
     private static string GetAgeGroup(DateOnly? birthDate) =>
@@ -120,27 +120,6 @@ public class ReconciliationService(
             personMatchResponse.Result?.ProcessStage,
             score
         );
-    }
-
-    private static string BuildReconciliationId(ReconciliationRequest reconciliationRequest)
-    {
-        var data = $"{reconciliationRequest.NhsNumber}{reconciliationRequest.Given}{reconciliationRequest.Family}" +
-                   $"{reconciliationRequest.BirthDate}{reconciliationRequest.Gender}{reconciliationRequest.AddressPostalCode}{reconciliationRequest.Email}{reconciliationRequest.Phone}";
-
-        byte[] bytes = Encoding.ASCII.GetBytes(data);
-        byte[] hashBytes = SHA256.HashData(bytes);
-
-        StringBuilder builder = new();
-        foreach (var t in hashBytes)
-        {
-            builder.Append(t.ToString("x2"));
-        }
-
-        var hash = builder.ToString();
-
-        Activity.Current?.SetBaggage("ReconciliationId", hash);
-
-        return hash;
     }
 
     private static string BuildDifferences(List<Difference>? differences)
@@ -176,7 +155,7 @@ public class ReconciliationService(
         return sb.ToString().EndsWith(" - ") ? sb.ToString(0, sb.Length - 3) : sb.ToString();
     }
 
-    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson? result, PersonMatchResponse matchResult, string nhsNumber)
+    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson? result)
     {
         var differences = new List<Difference>();
         if (result == null)
@@ -184,7 +163,7 @@ public class ReconciliationService(
             return differences;
         }
 
-        AddDifferenceIfUnequal(differences, nameof(request.NhsNumber), nhsNumber, result.NhsNumber);
+        AddDifferenceIfUnequal(differences, nameof(request.NhsNumber), request.NhsNumber, result.NhsNumber);
         AddDifferenceIfUnequal(differences, nameof(request.BirthDate), request.BirthDate, result.BirthDate);
         AddDifferenceIfUnequal(differences, nameof(request.Gender), request.Gender, result.Gender);
         AddDifferenceIfUnequal(differences, nameof(request.Given), request.Given, result.GivenNames);
@@ -192,7 +171,6 @@ public class ReconciliationService(
         AddDifferenceIfUnequal(differences, nameof(request.Email), request.Email, result.Emails);
         AddDifferenceIfUnequal(differences, nameof(request.Phone), request.Phone, result.PhoneNumbers);
         AddDifferenceIfUnequal(differences, nameof(request.AddressPostalCode), request.AddressPostalCode, result.AddressPostalCodes);
-        AddDifferenceIfUnequal(differences, "MatchingNhsNumber", request.NhsNumber, matchResult.Result?.NhsNumber);
 
         return differences;
     }
