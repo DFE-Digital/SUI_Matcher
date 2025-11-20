@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 using Shared.Endpoint;
-using Shared.Logging;
 using Shared.Models;
 
 namespace Unit.Tests.Matching.ReconciliationServiceTests;
@@ -14,44 +13,73 @@ namespace Unit.Tests.Matching.ReconciliationServiceTests;
 public class ReconcileAsyncTests
 {
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
-    private readonly Mock<IAuditLogger> _auditLogger = new(MockBehavior.Loose);
     private readonly Mock<IMatchingService> _matchingService = new(MockBehavior.Loose);
 
     private const string ValidNhsNumber = "9449305552";
     private const string InvalidNhsNumber = "1234567890";
 
     [Fact]
-    public async Task ReconcileAsync_WhenReconciliationRequestNhsNumberIsEmpty_ShouldUseMatchingServiceNhsNumber()
+    public async Task ReconcileAsync_WhenLocalDemographicsDidNotMatch_ReturnCorrectStatusAndNoDifferences()
     {
-        // Arrange
-        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
+         // ARRANGE
+         
+         // A request comes in with full demographics and a valid NHS number
+         var request = new ReconciliationRequest
+         {
+             NhsNumber = ValidNhsNumber,
+             AddressPostalCode = "AA11 2BB",
+             Family = "Hamilton",
+             Given = "David",
+             Gender = "Male",
+             Phone = "123454321",
+             BirthDate = new DateOnly(1990, 01, 02),
+             Email = "david.hamilton@example.com",
+         };
+       
+        // When matching is attempted with the request demographics, no match is returned
+        _matchingService
+            .Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
             .ReturnsAsync(new PersonMatchResponse
             {
                 Result = new MatchResult
                 {
-                    MatchStatus = MatchStatus.Match,
-                    NhsNumber = ValidNhsNumber,
+                    MatchStatus = MatchStatus.NoMatch,
+                    NhsNumber = ""
                 }
             });
-        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(ValidNhsNumber))
-            .ReturnsAsync(new DemographicResult { Result = new NhsPerson { NhsNumber = ValidNhsNumber } });
-        var sut = new ReconciliationService(_matchingService.Object, NullLogger<ReconciliationService>.Instance, _nhsFhirClient.Object);
 
-        var request = new ReconciliationRequest
-        {
-            NhsNumber = ""
-        };
+        // Build reconcilitation service on these mocks
+        var sut = new ReconciliationService(
+            _matchingService.Object,
+            NullLogger<ReconciliationService>.Instance, 
+            _nhsFhirClient.Object
+        );
 
-        // Act
+        // ACT
         var result = await sut.ReconcileAsync(request);
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Person);
-        Assert.Equal(ValidNhsNumber, result.Person.NhsNumber);
-        Assert.Empty(result.Errors);
+        // ASSERT
+        
+        // No match status returned, with no differences or demographics returned
+        Assert.Equal(ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber, result.Status);
+        Assert.Empty(result.Differences);
+        Assert.Null(result.Person);
     }
+    
+    [Fact(Skip = "Todo")]
+    public async Task ReconcileAsync_WhenLocalNHSNumberIsNotValid_ReturnCorrectStatusAndNoDifferences() {}
+    
+    [Fact(Skip = "Todo")]
+    public async Task ReconcileAsync_WhenLocalNHSNumberIsNotFoundInNHS_ReturnCorrectStatusAndNoDifferences() {}
+    
+    [Fact(Skip = "Todo")]
+    public async Task ReconcileAsync_WhenLocalNHSNumberIsSuperseded_ReturnCorrectStatusWithDifferences() {}
 
+    [Theory(Skip = "Todo")]
+    [ClassData(typeof(SuccessfulCasesTestData))]
+    public async Task ReconcileAsync_WhenReconcilitationSucceeds_ReturnCorrectStatusAndDemographicsAndDifferences() {}
+    
+    
     [Fact]
     public async Task ReconcileAsync_WhenRequestAndMatchNHSNumberDifferButNotSuperceded_ShouldGiveDemographicsForMatchedNumber()
     {
