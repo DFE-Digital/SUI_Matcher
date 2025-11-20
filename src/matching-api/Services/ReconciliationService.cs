@@ -61,6 +61,14 @@ public class ReconciliationService(
                 : ReconciliationStatus.Differences
         };
         
+        // Check if the request's NHS number is valid. If not, return with that status
+        if (!NhsNumberValidator.Validate(request.NhsNumber))
+        {
+            reconResponse.Status = ReconciliationStatus.LocalNhsNumberIsNotValid;
+            LogReconciliationCompleted(request, matchingResponse, reconResponse);
+            return reconResponse;
+        }
+        
         // Return early if the NHS number definitely can't be superseded
         var nhsNumberCantBeSuperseded = string.IsNullOrEmpty(request.NhsNumber) 
                                         || request.NhsNumber == matchedNhsNumberDemographics.Result.NhsNumber;

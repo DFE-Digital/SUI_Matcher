@@ -65,9 +65,70 @@ public class ReconcileAsyncTests
         Assert.Empty(result.Differences);
         Assert.Null(result.Person);
     }
-    
-    [Fact(Skip = "Todo")]
-    public async Task ReconcileAsync_WhenLocalNHSNumberIsNotValid_ReturnCorrectStatusAndNoDifferences() {}
+
+    [Fact]
+    public async Task ReconcileAsync_WhenLocalNHSNumberIsNotValid_ReturnCorrectStatusAndNhsNumberDifference()
+    {
+        // ARRANGE
+         
+        // A request comes in with full demographics and an invalid NHS number
+        var request = new ReconciliationRequest
+        {
+            NhsNumber = InvalidNhsNumber,
+            AddressPostalCode = "AA11 2BB",
+            Family = "Hamilton",
+            Given = "David",
+            Gender = "Male",
+            Phone = "123454321",
+            BirthDate = new DateOnly(1990, 01, 02),
+            Email = "david.hamilton@example.com",
+        };
+       
+        // When matching is attempted with the request demographics, a match is returned to a different NHS number
+        _matchingService
+            .Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
+            .ReturnsAsync(new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.Match,
+                    NhsNumber = ValidNhsNumber
+                }
+            });
+        
+        // Return similar demographics for the matched NHS number 
+        var matchedDemographics = new NhsPerson
+        {
+            NhsNumber = ValidNhsNumber, 
+            AddressPostalCodes = ["AA11 2BB"],
+            FamilyNames = ["Hamilton"],
+            GivenNames = ["David"],
+            BirthDate = new DateOnly(1990, 01, 02),
+            Gender = "M",
+            PhoneNumbers = ["123454321"],
+            Emails = ["david.hamilton@example.com"],
+        };       
+        _nhsFhirClient
+            .Setup(x => x.PerformSearchByNhsId(ValidNhsNumber))
+            .ReturnsAsync(new DemographicResult { Result = matchedDemographics});
+
+        // Build reconcilitation service on these mocks
+        var sut = new ReconciliationService(
+            _matchingService.Object,
+            NullLogger<ReconciliationService>.Instance, 
+            _nhsFhirClient.Object
+        );
+
+        // ACT
+        var result = await sut.ReconcileAsync(request);
+
+        // ASSERT
+        
+        // Invalid local NHS number status returned, and the NHS number should exist in the differences
+        Assert.Equal(ReconciliationStatus.LocalNhsNumberIsNotValid, result.Status);
+        Assert.Single(result.Differences, 
+            d => d is { FieldName: nameof(NhsPerson.NhsNumber), Local: InvalidNhsNumber, Nhs: ValidNhsNumber });
+    }
     
     [Fact(Skip = "Todo")]
     public async Task ReconcileAsync_WhenLocalNHSNumberIsNotFoundInNHS_ReturnCorrectStatusAndNoDifferences() {}
