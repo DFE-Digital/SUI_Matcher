@@ -85,16 +85,14 @@ public class ReconciliationService(
             await nhsFhirClient.PerformSearchByNhsId(request.NhsNumber);
         
         // If no success when fetching the NHS number from the request, return the result with these as errors
-        if (requestNhsNumberDemographics.Status == Status.Error || requestNhsNumberDemographics.Result == null)
+        if (requestNhsNumberDemographics.Status != Status.Success)
         {
-            var reconciliationResponse = new ReconciliationResponse
-            {
-                MatchingResult = matchingResponse.Result,
-                Status = ReconciliationStatus.Error,
-                Errors = [requestNhsNumberDemographics.ErrorMessage ?? "Unknown error"]
-            };
-            LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
-            return reconciliationResponse;
+            reconResponse.Status = requestNhsNumberDemographics.Status == Status.PatientNotFound
+                ? ReconciliationStatus.LocalNhsNumberIsNotFoundInNhs
+                : ReconciliationStatus.Error;
+            reconResponse.Errors = [requestNhsNumberDemographics.ErrorMessage ?? "Unknown error"];
+            LogReconciliationCompleted(request, matchingResponse, reconResponse);
+            return reconResponse;
         }
 
         bool requestNhsNumberHasBeenSuperseded = 
