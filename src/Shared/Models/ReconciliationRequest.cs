@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
+using System.Text;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,4 +14,20 @@ public class ReconciliationRequest : SearchSpecification
     [StringLength(10, MinimumLength = 10, ErrorMessage = "NHS number must be 10 characters long")]
     [JsonPropertyName("nhsNumber")]
     public string? NhsNumber { get; set; }
+
+
+    [JsonIgnore]
+    public string ReconciliationId
+    {
+        get
+        {
+            var data = string.Join("|", 
+                NhsNumber, Given, Family, BirthDate, Gender, AddressPostalCode, Email, Phone);
+
+            byte[] bytes = Encoding.UTF8.GetBytes(data);
+            byte[] hashBytes = SHA256.HashData(bytes);
+
+            return Convert.ToHexString(hashBytes);
+        }
+    }
 }

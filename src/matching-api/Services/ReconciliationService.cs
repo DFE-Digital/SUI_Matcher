@@ -17,6 +17,7 @@ public class ReconciliationService(
     {
         // Match the request's demographics to an NHS number
         var matchingResponse = await matchingService.SearchAsync(request, false);
+        
         if (string.IsNullOrWhiteSpace(matchingResponse.Result?.NhsNumber))
         {
             var reconciliationResponse = new ReconciliationResponse
@@ -32,6 +33,7 @@ public class ReconciliationService(
         // Fetch the NHS demographics for the matched NHS number
         var matchedNhsNumberDemographics =
             await nhsFhirClient.PerformSearchByNhsId(matchingResponse.Result?.NhsNumber);
+        
         if (matchedNhsNumberDemographics.Status == Status.Error || matchedNhsNumberDemographics.Result == null)
         {
             var reconciliationResponse = new ReconciliationResponse
