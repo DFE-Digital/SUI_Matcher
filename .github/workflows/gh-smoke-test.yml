@@ -39,7 +39,7 @@ jobs:
       client_version: ${{ steps.env-setup.outputs.client_version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Determine triggering upstream workflow
         id: detect_workflow
         run: |

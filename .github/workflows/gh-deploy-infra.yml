@@ -56,7 +56,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 'Get latest tag if no version provided'
         id: get_latest_tag
@@ -72,7 +72,7 @@ jobs:
           fi
 
       - name: Checkout (version)
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.infra_version }}
 
