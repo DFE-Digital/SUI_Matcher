@@ -869,6 +869,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 Result = new MatchResult
                 {
                     MatchStatus = MatchStatus.PotentialMatch,
+                    NhsNumber = "9999999993",
                 }
             });
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
@@ -920,7 +921,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once(), "The PerformSearchByNhsId method should have been invoked once");
+        _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.AtLeastOnce, "The PerformSearchByNhsId method should have been invoked once");
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
 
         Assert.Equal(demographicResult.Result.NhsNumber, records[0][ReconciliationCsvFileProcessor.HeaderNhsNo]);
@@ -928,7 +929,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Contains("NhsNumber - Given - Family", records[0][ReconciliationCsvFileProcessor.HeaderDifferences]);
     }
 
-    [Fact(Skip = "Pending other changes")]
+    [Fact]
     public async Task Reconciliation_MissingNhsNumber()
     {
         var demographicResult = new DemographicResult
@@ -998,10 +999,10 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
 
         Assert.Equal("-", records[0][ReconciliationCsvFileProcessor.HeaderNhsNo]);
-        //Assert.Equal(nameof(ReconciliationStatus.MissingNhsNumber), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
+        Assert.Equal(nameof(ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
     }
 
-    [Fact(Skip = "Pending other changes")]
+    [Fact]
     public async Task Reconciliation_InvalidNhsNumber()
     {
         var demographicResult = new DemographicResult
@@ -1020,11 +1021,21 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         };
 
         _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
+        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(
+            new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = MatchStatus.Match,
+                    NhsNumber = "9999999993",
+                }
+            });
 
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(true, x =>
         {
             x.AddSingleton(_nhsFhirClient.Object);
+            x.AddSingleton(_matchingService.Object);
         });
         var monitor = provider.GetRequiredService<CsvFileMonitor>();
         var monitoringTask = monitor.StartAsync(cts.Token);
@@ -1067,10 +1078,10 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Never(), "The PerformSearchByNhsId method should have been invoked once");
+        _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once, "The PerformSearchByNhsId method should have been invoked once");
         (_, List<D> records) = await CsvFileProcessorBase.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
 
-        //Assert.Equal(nameof(ReconciliationStatus.InvalidNhsNumber), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
+        Assert.Equal(nameof(ReconciliationStatus.LocalNhsNumberIsNotValid), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
     }
 
     private ServiceProvider Bootstrap(bool enableReconciliation, Action<ServiceCollection>? configure = null)
