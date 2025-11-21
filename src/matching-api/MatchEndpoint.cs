@@ -73,7 +73,7 @@ public class MatchEndpoint(IMatchingService matchingService, IReconciliationServ
                     Detail = "Request payload is empty",
                 });
             }
-            
+
             Activity.Current?.SetBaggage("ReconciliationId", model.ReconciliationId);
 
             var result = await reconciliationService.ReconcileAsync(model);

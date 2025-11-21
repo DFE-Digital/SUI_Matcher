@@ -21,7 +21,7 @@ public class ReconciliationRequest : SearchSpecification
     {
         get
         {
-            var data = string.Join("|", 
+            var data = string.Join("|",
                 NhsNumber, Given, Family, BirthDate, Gender, AddressPostalCode, Email, Phone);
 
             byte[] bytes = Encoding.UTF8.GetBytes(data);
