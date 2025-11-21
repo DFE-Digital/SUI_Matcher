@@ -138,8 +138,8 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
            CaseLabel: "Birth date present in NHS, missing locally",
            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.BirthDate = null),
            MatchedNhsNumber: "9999999993",
-           NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = new DateOnly(2000,1,1)),
-           NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = new DateOnly(2000,1,1)),
+           NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = new DateOnly(2000, 1, 1)),
+           NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = new DateOnly(2000, 1, 1)),
            ExpectedStatus: ReconciliationStatus.Differences,
            ExpectedDifferences: [
                new Difference() { FieldName = nameof(ReconciliationRequest.BirthDate), Local = null, Nhs = "2000-01-01"}
@@ -147,7 +147,7 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
 
         Add(new SuccessfulCase(
             CaseLabel: "Birth date present locally, missing in NHS",
-            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.BirthDate = new DateOnly(2000,1,1)),
+            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.BirthDate = new DateOnly(2000, 1, 1)),
             MatchedNhsNumber: "9999999993",
             NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = null),
             NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = null),
@@ -158,16 +158,16 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
 
         Add(new SuccessfulCase(
             CaseLabel: "Birth date present locally and in NHS, but is different",
-            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.BirthDate = new DateOnly(2000,1,1)),
+            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.BirthDate = new DateOnly(2000, 1, 1)),
             MatchedNhsNumber: "9999999993",
-            NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = new DateOnly(2013,1,22)),
-            NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = new DateOnly(2013,1,22)),
+            NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = new DateOnly(2013, 1, 22)),
+            NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.BirthDate = new DateOnly(2013, 1, 22)),
             ExpectedStatus: ReconciliationStatus.Differences,
             ExpectedDifferences: [
                 new Difference() { FieldName = nameof(ReconciliationRequest.BirthDate), Local = "2000-01-01", Nhs = "2013-01-22"}
             ]));
         #endregion
-        
+
         #region Gender
         Add(new SuccessfulCase(
            CaseLabel: "Gender present in NHS, missing locally",
@@ -208,8 +208,8 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
            CaseLabel: "Phone number present in NHS, missing locally",
            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.Phone = null),
            MatchedNhsNumber: "9999999993",
-           NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.PhoneNumbers = [ "123454321" ]),
-           NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.PhoneNumbers = [ "123454321" ]),
+           NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.PhoneNumbers = ["123454321"]),
+           NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.PhoneNumbers = ["123454321"]),
            ExpectedStatus: ReconciliationStatus.Differences,
            ExpectedDifferences: [
                new Difference() { FieldName = nameof(ReconciliationRequest.Phone), Local = null, Nhs = "123454321"}
@@ -230,8 +230,8 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             CaseLabel: "Phone number present locally and in NHS, but is different",
             Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.Phone = "123454321"),
             MatchedNhsNumber: "9999999993",
-            NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.PhoneNumbers = [ "543212345" ]),
-            NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.PhoneNumbers = [ "543212345" ]),
+            NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.PhoneNumbers = ["543212345"]),
+            NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.PhoneNumbers = ["543212345"]),
             ExpectedStatus: ReconciliationStatus.Differences,
             ExpectedDifferences: [
                 new Difference() { FieldName = nameof(ReconciliationRequest.Phone), Local = "123454321", Nhs = "543212345"}
@@ -243,8 +243,8 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
            CaseLabel: "Email present in NHS, missing locally",
            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.Email = null),
            MatchedNhsNumber: "9999999993",
-           NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.Emails = [ "david.smith@example.com" ]),
-           NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.Emails = [ "david.smith@example.com" ]),
+           NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.Emails = ["david.smith@example.com"]),
+           NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.Emails = ["david.smith@example.com"]),
            ExpectedStatus: ReconciliationStatus.Differences,
            ExpectedDifferences: [
                new Difference() { FieldName = nameof(ReconciliationRequest.Email), Local = null, Nhs = "david.smith@example.com"}
@@ -265,8 +265,8 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             CaseLabel: "Email present locally and in NHS, but is different",
             Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.Email = "david.smith@example.com"),
             MatchedNhsNumber: "9999999993",
-            NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.Emails = [ "david.h.smith@aol.net" ]),
-            NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.Emails = [ "david.h.smith@aol.net" ]),
+            NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.Emails = ["david.h.smith@aol.net"]),
+            NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.Emails = ["david.h.smith@aol.net"]),
             ExpectedStatus: ReconciliationStatus.Differences,
             ExpectedDifferences: [
                 new Difference() { FieldName = nameof(ReconciliationRequest.Email), Local = "david.smith@example.com", Nhs = "david.h.smith@aol.net"}
@@ -278,8 +278,8 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
            CaseLabel: "Postcode present in NHS, missing locally",
            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.AddressPostalCode = null),
            MatchedNhsNumber: "9999999993",
-           NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.AddressPostalCodes = [ "L1 8JQ" ]),
-           NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.AddressPostalCodes = [ "L1 8JQ" ]),
+           NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.AddressPostalCodes = ["L1 8JQ"]),
+           NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.AddressPostalCodes = ["L1 8JQ"]),
            ExpectedStatus: ReconciliationStatus.Differences,
            ExpectedDifferences: [
                new Difference() { FieldName = nameof(ReconciliationRequest.AddressPostalCode), Local = null, Nhs = "L1 8JQ"}
@@ -300,8 +300,8 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             CaseLabel: "Postcode present locally and in NHS, but is different",
             Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.AddressPostalCode = "L1 8JQ"),
             MatchedNhsNumber: "9999999993",
-            NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.AddressPostalCodes = [ "M1 1AA" ]),
-            NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.AddressPostalCodes = [ "M1 1AA" ]),
+            NhsDemographicsForMatchedNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.AddressPostalCodes = ["M1 1AA"]),
+            NhsDemographicsForRequestNhsNumber: DavidSmithAsNhsPerson().Configure(np => np.AddressPostalCodes = ["M1 1AA"]),
             ExpectedStatus: ReconciliationStatus.Differences,
             ExpectedDifferences: [
                 new Difference() { FieldName = nameof(ReconciliationRequest.AddressPostalCode), Local = "L1 8JQ", Nhs = "M1 1AA"}
