@@ -28,9 +28,9 @@ public class ReconciliationService(
             LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
             return reconciliationResponse;
         }
-        
+
         // Fetch the NHS demographics for the matched NHS number
-        var matchedNhsNumberDemographics = 
+        var matchedNhsNumberDemographics =
             await nhsFhirClient.PerformSearchByNhsId(matchingResponse.Result?.NhsNumber);
         if (matchedNhsNumberDemographics.Status == Status.Error || matchedNhsNumberDemographics.Result == null)
         {
@@ -38,17 +38,17 @@ public class ReconciliationService(
             {
                 MatchingResult = matchingResponse.Result,
                 // Generic error, since we'd expect a matched number to return demographics
-                Status = ReconciliationStatus.Error, 
+                Status = ReconciliationStatus.Error,
                 Errors = [matchedNhsNumberDemographics.ErrorMessage ?? "Unknown error"]
             };
             LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
             return reconciliationResponse;
         }
-       
+
         // Compare matched NHS number's demographics to the request's demographics
         var differences = BuildDifferenceList(request, matchedNhsNumberDemographics.Result);
         var differenceString = BuildDifferences(differences);
-        
+
         // Prepare response, with initial status on whether differences have occurred
         var reconResponse = new ReconciliationResponse
         {
@@ -60,7 +60,18 @@ public class ReconciliationService(
                 ? ReconciliationStatus.NoDifferences
                 : ReconciliationStatus.Differences
         };
-        
+
+        // Return early if the NHS number definitely can't be superseded
+        var nhsNumberCantBeSuperseded = string.IsNullOrEmpty(request.NhsNumber)
+                                        || request.NhsNumber == matchedNhsNumberDemographics.Result.NhsNumber;
+        if (nhsNumberCantBeSuperseded)
+        {
+            LogReconciliationCompleted(request, matchingResponse, reconResponse);
+            return reconResponse;
+        }
+
+        // Otherwise, fetch demographics of the request's NHS number to check if it is superseded
+
         // Check if the request's NHS number is valid. If not, return with that status
         if (!NhsNumberValidator.Validate(request.NhsNumber))
         {
@@ -68,22 +79,11 @@ public class ReconciliationService(
             LogReconciliationCompleted(request, matchingResponse, reconResponse);
             return reconResponse;
         }
-        
-        // Return early if the NHS number definitely can't be superseded
-        var nhsNumberCantBeSuperseded = string.IsNullOrEmpty(request.NhsNumber) 
-                                        || request.NhsNumber == matchedNhsNumberDemographics.Result.NhsNumber;
-        if (nhsNumberCantBeSuperseded)
-        {
-            LogReconciliationCompleted(request, matchingResponse, reconResponse);
-            return reconResponse;           
-        }
-        
-        // Otherwise, fetch demographics of the request's NHS number to check if it is superseded
-        
+
         // Request demographics 
-        var requestNhsNumberDemographics = 
+        var requestNhsNumberDemographics =
             await nhsFhirClient.PerformSearchByNhsId(request.NhsNumber);
-        
+
         // If no success when fetching the NHS number from the request, return the result with these as errors
         if (requestNhsNumberDemographics.Status != Status.Success)
         {
@@ -95,7 +95,7 @@ public class ReconciliationService(
             return reconResponse;
         }
 
-        bool requestNhsNumberHasBeenSuperseded = 
+        bool requestNhsNumberHasBeenSuperseded =
             request.NhsNumber != requestNhsNumberDemographics.Result.NhsNumber;
         // Since the demographics response will contain the new NHS number if the inputted
         // NHS number has been superseded.
@@ -103,9 +103,9 @@ public class ReconciliationService(
         {
             reconResponse.Status = ReconciliationStatus.LocalNhsNumberIsSuperseded;
         }
-        
+
         LogReconciliationCompleted(request, matchingResponse, reconResponse);
-        return reconResponse;           
+        return reconResponse;
     }
 
     private static string GetAgeGroup(DateOnly? birthDate) =>

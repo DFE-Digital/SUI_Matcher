@@ -7,6 +7,6 @@ public enum ReconciliationStatus
     LocalNhsNumberIsNotFoundInNhs,
     LocalNhsNumberIsSuperseded,
     NoDifferences,
-    Differences, 
+    Differences,
     Error, // For any unidentified errors, not covered by the above
 }
