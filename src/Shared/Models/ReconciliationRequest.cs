@@ -22,7 +22,7 @@ public class ReconciliationRequest : SearchSpecification
         get
         {
             var data = string.Join("|",
-                NhsNumber, Given, Family, BirthDate, Gender, AddressPostalCode, Email, Phone);
+                NhsNumber, Given, Family, BirthDate?.ToString("O"), Gender, AddressPostalCode, Email, Phone);
 
             byte[] bytes = Encoding.UTF8.GetBytes(data);
             byte[] hashBytes = SHA256.HashData(bytes);
