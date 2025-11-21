@@ -206,6 +206,12 @@ public class ReconciliationCsvFileProcessor(
                 stats.SupersededNhsNumber++;
                 break;
             case ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber:
+                stats.MissingNhsNumber++;
+                break;
+            case ReconciliationStatus.LocalNhsNumberIsNotFoundInNhs:
+                stats.PatientNotFound++;
+                break;
+            case ReconciliationStatus.LocalNhsNumberIsNotValid:
                 stats.InvalidNhsNumber++;
                 break;
             default:
