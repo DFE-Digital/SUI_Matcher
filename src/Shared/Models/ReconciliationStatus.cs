@@ -2,11 +2,11 @@
 
 public enum ReconciliationStatus
 {
+    LocalDemographicsDidNotMatchToAnNhsNumber,
+    LocalNhsNumberIsNotValid,
+    LocalNhsNumberIsNotFoundInNhs,
+    LocalNhsNumberIsSuperseded,
     NoDifferences,
     Differences,
-    SupersededNhsNumber,
-    MissingNhsNumber,
-    InvalidNhsNumber,
-    PatientNotFound,
-    Error
+    Error, // For any unidentified errors, not covered by the above
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 using MatchingApi.Exceptions;
@@ -72,6 +73,8 @@ public class MatchEndpoint(IMatchingService matchingService, IReconciliationServ
                     Detail = "Request payload is empty",
                 });
             }
+
+            Activity.Current?.SetBaggage("ReconciliationId", model.ReconciliationId);
 
             var result = await reconciliationService.ReconcileAsync(model);
             return result.Status == ReconciliationStatus.Error ? Results.BadRequest(result) : Results.Ok(result);
