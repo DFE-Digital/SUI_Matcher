@@ -1,6 +1,11 @@
-# Childrens Social Care - Single Unique Identifier
+# SUI Matcher
 
-A service to allow matching a person's records to the NHS number, to test if this could be implemented as a single unique identifier for childrens' social care in the future.
+A tool created by the single unique identifier (SUI) programme to match
+demographic details to NHS numbers using the PDS FHIR API.
+
+The SUI programme uses the tool to:
+- research matching success rates over different data sets
+- investigate how the matching process could improve data quality
 
 ## Guides
 
