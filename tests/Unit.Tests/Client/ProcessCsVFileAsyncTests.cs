@@ -64,7 +64,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 ["ImmigrationStatus"] = "Settled",
             }
         };
-        await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, records);
+        await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, records);
         _testFiles.Add(filePath);
 
         await processor.ProcessCsvFileAsync(filePath, outputPath);
@@ -142,7 +142,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
             }
         };
 
-        await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, records);
+        await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, records);
         await processor.ProcessCsvFileAsync(filePath, outputPath);
 
         // Assert
@@ -224,7 +224,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
         };
 
 
-        await CsvFileProcessorBase.WriteCsvAsync(filePath, headers, records);
+        await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, records);
         await processor.ProcessCsvFileAsync(filePath, outputPath);
 
         // Assert
