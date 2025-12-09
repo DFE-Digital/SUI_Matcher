@@ -15,9 +15,8 @@ using Shared.Models;
 using Shared.Util;
 
 using SUI.Client.Core;
-using SUI.Client.Core.Extensions;
-using SUI.Client.Core.Integration;
-using SUI.Client.Core.Watcher;
+using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Infrastructure.FileSystem;
 
 using Unit.Tests.Util;
 using Unit.Tests.Util.Adapters;
@@ -25,6 +24,7 @@ using Unit.Tests.Util.Adapters;
 using Xunit.Abstractions;
 
 using D = System.Collections.Generic.Dictionary<string, string>;
+using IMatchingService = SUI.Client.Core.Application.Interfaces.IMatchingService;
 
 namespace Unit.Tests.Client;
 
@@ -32,7 +32,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 {
     private readonly TempDirectoryFixture _dir = new();
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
-    private readonly Mock<IMatchingService> _matchingService = new(MockBehavior.Loose);
+    private readonly Mock<Shared.Endpoint.IMatchingService> _matchingService = new(MockBehavior.Loose);
 
     public required ITestOutputHelper TestContext = testOutputHelper;
 
@@ -1099,10 +1099,10 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         });
 
         servicesCollection.AddClientCore(config, enableReconciliation);
-        servicesCollection.AddSingleton<IMatchPersonApiService, MatchPersonServiceAdapter>(); // wires up the IMatchingService directly, without using http
+        servicesCollection.AddSingleton<IMatchingService, MatchingServiceAdapter>(); // wires up the IMatchingService directly, without using http
 
         // core domain deps
-        servicesCollection.AddSingleton<IMatchingService, MatchingService>();
+        servicesCollection.AddSingleton<Shared.Endpoint.IMatchingService, MatchingService>();
         servicesCollection.AddSingleton<IReconciliationService, ReconciliationService>();
         servicesCollection.AddSingleton<IValidationService, ValidationService>();
         servicesCollection.AddSingleton<IAuditLogger, ChannelAuditLogger>();
