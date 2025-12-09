@@ -31,7 +31,7 @@
         <ProjectReference Include="..\..\src\external-api\External.csproj"/>
         <ProjectReference Include="..\..\src\matching-api\Matching.csproj"/>
         <ProjectReference Include="..\..\src\Shared\Shared.csproj"/>
-        <ProjectReference Include="..\..\src\tools\client\SUI.Client.Core\SUI.Client.Core.csproj"/>
+        <ProjectReference Include="..\..\src\SUI.Client\SUI.Client.Core\SUI.Client.Core.csproj" />
         <ProjectReference Include="..\..\src\tools\dbs-response-logger\SUI.DBS.Response.Logger.Core\SUI.DBS.Response.Logger.Core.csproj"/>
     </ItemGroup>
 

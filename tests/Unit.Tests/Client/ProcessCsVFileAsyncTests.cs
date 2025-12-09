@@ -6,9 +6,8 @@ using Moq;
 using Shared.Models;
 
 using SUI.Client.Core;
-using SUI.Client.Core.Integration;
-using SUI.Client.Core.Models;
-using SUI.Client.Core.Watcher;
+using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Infrastructure.FileSystem;
 
 namespace Unit.Tests.Client;
 
@@ -20,7 +19,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
     public async Task ProcessCsvFileAsync_PassesExistingAllOptionalFieldsToMatchPersonAsync()
     {
         var mockLogger = new Mock<ILogger<MatchingCsvFileProcessor>>();
-        var mockApi = new Mock<IMatchPersonApiService>();
+        var mockApi = new Mock<IMatchingService>();
         var mapping = new CsvMappingConfig
         {
             /* set up mappings as needed */
@@ -82,7 +81,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
     public async Task ProcessCsvFileAsync_ShouldOutputSuccessfulMatchedResults_ToSuccessOutputDirectory()
     {
         var mockLogger = new Mock<ILogger<MatchingCsvFileProcessor>>();
-        var mockApi = new Mock<IMatchPersonApiService>();
+        var mockApi = new Mock<IMatchingService>();
         var mapping = new CsvMappingConfig
         {
             /* set up mappings as needed */
@@ -116,7 +115,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
             "Family",
             "DOB"
         };
-        var dob = DateTime.Now.AddYears(-10).ToString(ClientConstants.AcceptedCsvDateFormats.First());
+        var dob = DateTime.Now.AddYears(-10).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First());
         var records = new List<Dictionary<string, string>>
         {
             new()
@@ -163,7 +162,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
     public async Task ProcessCsvFileAsync_ShouldOutputSuccessfulMatchedResults_ToSuccessOutputDirectory_WhenOnlyAChildAgeGroup()
     {
         var mockLogger = new Mock<ILogger<MatchingCsvFileProcessor>>();
-        var mockApi = new Mock<IMatchPersonApiService>();
+        var mockApi = new Mock<IMatchingService>();
         var mapping = new CsvMappingConfig
         {
             /* set up mappings as needed */
@@ -205,21 +204,21 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 ["Id"] = "L1",
                 ["Given"] = "John",
                 ["Family"] = "Smith",
-                ["DOB"] = DateTime.Now.AddYears(-19).ToString(ClientConstants.AcceptedCsvDateFormats.First()) // Not Child age
+                ["DOB"] = DateTime.Now.AddYears(-19).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()) // Not Child age
             },
             new()
             {
                 ["Id"] = "L2",
                 ["Given"] = "Jane",
                 ["Family"] = "Doe",
-                ["DOB"] = DateTime.Now.AddYears(-3).ToString(ClientConstants.AcceptedCsvDateFormats.First()) // Child age
+                ["DOB"] = DateTime.Now.AddYears(-3).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()) // Child age
             },
             new()
             {
                 ["Id"] = "L3",
                 ["Given"] = "Jim",
                 ["Family"] = "Beam",
-                ["DOB"] = DateTime.Now.AddYears(-1).ToString(ClientConstants.AcceptedCsvDateFormats.First()) // Child age
+                ["DOB"] = DateTime.Now.AddYears(-1).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()) // Child age
             }
         };
 

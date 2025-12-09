@@ -6,8 +6,8 @@ using Microsoft.Extensions.Options;
 using Shared.Models;
 
 using SUI.Client.Core;
-using SUI.Client.Core.Integration;
-using SUI.Client.Core.Watcher;
+using SUI.Client.Core.Infrastructure.FileSystem;
+using SUI.Client.Core.Infrastructure.Http;
 
 namespace E2E.Tests.Client;
 
@@ -42,7 +42,7 @@ public class ReconciliationTests(AppHostFixture fixture, TempDirectoryFixture te
         var cts = new CancellationTokenSource();
         Path.GetTempPath();
 
-        var matchPersonApiService = new MatchPersonApiService(_client);
+        var matchPersonApiService = new HttpApiMatchingService(_client);
         var mappingConfig = new CsvMappingConfig();
         var logger = NullLogger<ReconciliationCsvFileProcessor>.Instance;
         var watcherConfig = Options.Create(new CsvWatcherConfig()

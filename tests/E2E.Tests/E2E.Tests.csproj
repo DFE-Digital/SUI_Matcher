@@ -33,8 +33,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\app-host\AppHost.csproj" />
 		<ProjectReference Include="..\..\src\Shared\Shared.csproj" />
-		<ProjectReference Include="..\..\src\tools\client\SUI.Client.Core\SUI.Client.Core.csproj" />
-		<ProjectReference Include="..\..\src\tools\client\SUI.Client.Watcher\SUI.Client.Watcher.csproj" />
+		<ProjectReference Include="..\..\src\SUI.Client\SUI.Client.Core\SUI.Client.Core.csproj" />
+		<ProjectReference Include="..\..\src\SUI.Client\SUI.Client.Watcher\SUI.Client.Watcher.csproj" />
 	</ItemGroup>
 
     <ItemGroup>
