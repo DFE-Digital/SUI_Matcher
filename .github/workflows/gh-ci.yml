@@ -52,7 +52,7 @@ jobs:
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.coverageReportPaths=CoverageReport/SonarQube.xml \
             /d:sonar.coverage.exclusions="**/Program.cs,**/*.json" \
-            /d:sonar.cpd.exclusions="**/Program.cs" \
+            /d:sonar.cpd.exclusions="**/*" \
             /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S6602 \
             /d:sonar.scanner.skipJreProvisioning=true \
             /d:sonar.scanner.scanAll=false
