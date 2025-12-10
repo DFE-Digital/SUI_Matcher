@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - 'src/SUI.Clent/**'
+      - 'src/SUI.Client/**'
       - 'src/tools/dbs-response-logger/**'
       - 'src/Shared/**'
   workflow_dispatch:
