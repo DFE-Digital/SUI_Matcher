@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - 'src/tools/client/**'
+      - 'src/SUI.Clent/**'
       - 'src/tools/dbs-response-logger/**'
       - 'src/Shared/**'
   workflow_dispatch:
@@ -106,7 +106,7 @@ jobs:
       - name: Check changed files to set publish flags
         id: check-changed-files
         run: |
-          client_files=$(git show --name-only HEAD | grep src/tools/client || true)
+          client_files=$(git show --name-only HEAD | grep src/SUI.Client || true)
           if [[ -n $client_files ]]; then
             echo "auto_publish_client=true" >> $GITHUB_ENV
           else
@@ -128,7 +128,7 @@ jobs:
       - name: Package Client Watcher
         if: ${{ github.event.inputs.publish-client == 'true' || env.auto_publish_client == 'true' }}
         run: |
-          dotnet pack ./src/tools/client/SUI.Client.Watcher/SUI.Client.Watcher.csproj \
+          dotnet pack ./src/SUI.Client/SUI.Client.Watcher/SUI.Client.Watcher.csproj \
             --configuration Release \
             --output ./nukpg \
             /p:Version=${{ env.CLIENT_VERSION }} \
@@ -144,7 +144,7 @@ jobs:
       - name: Package Client Watcher Service
         if: ${{ github.event.inputs.publish-client == 'true' || env.auto_publish_client == 'true' }}
         run: |
-          dotnet pack ./src/tools/client/SUI.Client.Service.Watcher/SUI.Client.Service.Watcher.csproj \
+          dotnet pack ./src/SUI.Client/SUI.Client.Service.Watcher/SUI.Client.Service.Watcher.csproj \
             --configuration Release \
             --output ./nukpg \
             /p:Version=${{ env.CLIENT_VERSION }}
