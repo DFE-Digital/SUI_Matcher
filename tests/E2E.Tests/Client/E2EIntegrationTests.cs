@@ -131,12 +131,9 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
             ProcessedDirectory = tempDirectoryFixture.ProcessedDirectoryPath,
         };
 
-        var watcher = new CsvFileWatcherService(Options.Create(appConfig), NullLoggerFactory.Instance);
-        var monitor = new CsvFileMonitor(watcher, Options.Create(appConfig), NullLogger<CsvFileMonitor>.Instance, fileProcessor);
+        var monitor = new CsvFileMonitor(Options.Create(appConfig), NullLogger<CsvFileMonitor>.Instance, fileProcessor);
 
-        var monitoringTask = monitor.StartAsync(cts.Token);
-
-        Assert.Equal(0, watcher.Count);
+        _ = monitor.StartAsync(cts.Token);
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         File.Copy(Path.Combine("Resources", "Csv", inputFileName), Path.Combine(appConfig.IncomingDirectory, inputFileName));
@@ -144,7 +141,6 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
 
         await tcs.Task; // wait for the file to be processed
 
-        Assert.Equal(1, watcher.Count);
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastOperation!.AssertSuccess().OutputCsvFile));
         var data = CsvFile.GetData(monitor.LastOperation!.AssertSuccess().OutputCsvFile);
