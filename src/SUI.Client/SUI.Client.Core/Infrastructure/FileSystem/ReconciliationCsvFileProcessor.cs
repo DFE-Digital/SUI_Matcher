@@ -109,58 +109,6 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderMatchNhsNumber);
     }
 
-    private string GeneratePdfReport(IStats stats, string ts, string outputDirectory)
-    {
-        var localStats = (ReconciliationCsvProcessStats)stats;
-        string[] categories =
-        [
-            "Errored", "No Differences", "Superseded NHS Number", "Invalid NHS Number",
-            "Patient Not Found", "Missing NHS Number", "Differences",
-        ];
-        double[] values =
-        [
-            localStats.ErroredCount, localStats.NoDifferenceCount, localStats.SupersededNhsNumber,
-            localStats.InvalidNhsNumber, localStats.PatientNotFound, localStats.MissingNhsNumber, localStats.DifferencesCount,
-        ];
-        string[] differenceCategories =
-        [
-            "Birthdate Differences", "Birthdate Missing NHS", "Birthdate Missing LA", "Birthdate Missing Both",
-            "Email Differences", "Email Missing NHS", "Email Missing LA", "Email Missing Both",
-            "Phone Differences", "Phone Missing NHS", "Phone Missing LA", "Phone Missing Both",
-            "Given Name Differences", "Given Name Missing NHS", "Given Name Missing LA", "Given Name Missing Both",
-            "Family Name Differences", "Family Name Missing NHS", "Family Name Missing LA", "Family Name Missing Both",
-            "Postcode Differences", "Postcode Missing NHS", "Postcode Missing LA", "Postcode Missing Both",
-            "Matching NHS Number Differences", "Matching NHS Number NHS", "Matching NHS Number LA", "Matching NHS Number Both"
-        ];
-        double[] differenceValues =
-        [
-            localStats.BirthDateCount, localStats.BirthDateNhsCount, localStats.BirthDateLaCount, localStats.BirthDateBothCount,
-            localStats.EmailCount, localStats.EmailNhsCount, localStats.EmailLaCount, localStats.EmailBothCount,
-            localStats.PhoneCount, localStats.PhoneNhsCount, localStats.PhoneLaCount, localStats.PhoneBothCount,
-            localStats.GivenNameCount, localStats.GivenNameNhsCount, localStats.GivenNameLaCount, localStats.GivenNameBothCount,
-            localStats.FamilyNameCount, localStats.FamilyNameNhsCount, localStats.FamilyNameLaCount, localStats.FamilyNameBothCount,
-            localStats.PostCodeCount, localStats.PostCodeNhsCount, localStats.PostCodeLaCount, localStats.PostCodeBothCount,
-            localStats.MatchingNhsNumberCount, localStats.MatchingNhsNumberCount, localStats.MatchingNhsNumberLaCount, localStats.MatchingNhsNumberBothCount
-        ];
-        string[] matchingCategories =
-        [
-            "Matching Status Match", "Matching Status Potential Match", "Matching Status Low Confidence Match", "Matching Status No Match",
-            "Matching Status Many Match", "Matching Status Error"
-        ];
-        double[] matchingValues =
-        [
-            localStats.MatchingStatusMatch, localStats.MatchingStatusPotentialMatch, localStats.MatchingStatusLowConfidenceMatch ,localStats.MatchingStatusNoMatch,
-            localStats.MatchingStatusManyMatch, localStats.MatchingStatusError
-        ];
-        return PdfReportGenerator.GenerateReconciliationReport(
-            GetOutputFileName(ts, outputDirectory, "ReconciliationReport.pdf"),
-            "Reconciliation Report",
-            localStats.Count,
-            new Tuple<string[], double[]>(categories, values),
-            new Tuple<string[], double[]>(differenceCategories, differenceValues),
-            new Tuple<string[], double[]>(matchingCategories, matchingValues));
-    }
-
     private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, string differenceList)
     {
         stats.Count++;
@@ -285,8 +233,7 @@ public class ReconciliationCsvFileProcessor(
 
 
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, _stats);
-        var pdfReport = GeneratePdfReport(_stats, ts, outputDirectory);
-        var csvResult = new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, _stats, outputDirectory);
+        var csvResult = new ProcessCsvFileResult(outputFilePath, statsJsonFileName, _stats, outputDirectory);
         _stats.ResetStats();
         return csvResult;
     }

@@ -133,7 +133,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         var (_, records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
@@ -186,7 +185,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Once(), "The PerformSearch method should have invoked ONCE");
@@ -241,7 +239,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.AtLeast(1), "The PerformSearch method should be called multiple times");
@@ -296,7 +293,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.AtLeast(1), "The PerformSearch method should be called multiple times");
@@ -360,7 +356,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
@@ -745,7 +740,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once, "The PerformSearchByNhsId method should have invoked once");
@@ -835,7 +829,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once, "The PerformSearchByNhsId method should have been invoked once");
@@ -918,7 +911,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.AtLeastOnce, "The PerformSearchByNhsId method should have been invoked once");
@@ -992,7 +984,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Never(), "The PerformSearchByNhsId method should have been invoked once");
@@ -1075,7 +1066,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.True(File.Exists(monitor.LastResult().ReportPdfFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
         _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once, "The PerformSearchByNhsId method should have been invoked once");

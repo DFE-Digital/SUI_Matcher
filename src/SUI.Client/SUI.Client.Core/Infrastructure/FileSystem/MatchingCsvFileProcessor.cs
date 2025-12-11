@@ -104,17 +104,8 @@ public class MatchingCsvFileProcessor(
                             && PersonSpecificationUtils.IsAgeEighteenOrUnder(dob))
                 .ToList();
             logger.LogInformation("Writing matched records CSV file to: {SuccessOutputFilePath}. Matched record count {Count}", successOutputFilePath, underNineteens.Count);
-            await ReconciliationCsvFileProcessor.WriteCsvAsync(successOutputFilePath, headers, underNineteens);
+            await WriteCsvAsync(successOutputFilePath, headers, underNineteens);
         }
-    }
-
-    private string GeneratePdfReport(IStats stats, string ts, string outputDirectory)
-    {
-        var localStats = (MatchingCsvProcessStats)stats;
-        string[] categories = ["Errored", "Matched", "Potential Match", "Low confidence Match", "Many Match", "No Match"];
-        double[] values = [localStats.ErroredCount, localStats.CountMatched, localStats.CountPotentialMatch, localStats.CountLowConfidenceMatch, localStats.CountManyMatch, localStats.CountNoMatch];
-        return PdfReportGenerator.GenerateReport(GetOutputFileName(ts, outputDirectory, "report.pdf"),
-            "CSV Processing Report", categories, values);
     }
 
     private static Dictionary<string, object> GetOptionalFields(Dictionary<string, string> record)
@@ -233,10 +224,8 @@ public class MatchingCsvFileProcessor(
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
         await WriteCsvAsync(outputFilePath, headers, records);
 
-
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, _stats);
-        var pdfReport = GeneratePdfReport(_stats, ts, outputDirectory);
-        var csvResult = new ProcessCsvFileResult(outputFilePath, statsJsonFileName, pdfReport, _stats, outputDirectory);
+        var csvResult = new ProcessCsvFileResult(outputFilePath, statsJsonFileName, _stats, outputDirectory);
         _stats.ResetStats();
         return csvResult;
     }
@@ -351,19 +340,6 @@ public class MatchingCsvFileProcessor(
         var statsJsonFileName = GetOutputFileName(ts, outputDirectory, "stats.json");
         File.WriteAllText(statsJsonFileName, JsonSerializer.Serialize(stats, JsonSerializerOptions));
         return statsJsonFileName;
-    }
-
-    public static async Task<Dictionary<string, int>> ReadStatsJsonFileAsync(string statsFilePath)
-    {
-        if (!File.Exists(statsFilePath))
-        {
-            throw new FileNotFoundException("Stats file not found", statsFilePath);
-        }
-
-        var jsonString = await File.ReadAllTextAsync(statsFilePath);
-        var statsData = JsonSerializer.Deserialize<Dictionary<string, int>>(jsonString);
-
-        return statsData ?? new Dictionary<string, int>();
     }
 
     public static readonly string[] AcceptedCsvDateFormats = ["yyyy-MM-dd", "yyyyMMdd", "yyyy/MM/dd"];
