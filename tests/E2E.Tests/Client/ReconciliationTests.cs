@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 
 using Shared.Models;
 
-using SUI.Client.Core;
 using SUI.Client.Core.Infrastructure.FileSystem;
 using SUI.Client.Core.Infrastructure.Http;
 
@@ -52,12 +51,9 @@ public class ReconciliationTests(AppHostFixture fixture, TempDirectoryFixture te
         });
         var fileProcessor = new ReconciliationCsvFileProcessor(logger, mappingConfig, matchPersonApiService, watcherConfig);
 
-        var watcher = new CsvFileWatcherService(watcherConfig, NullLoggerFactory.Instance);
-        var monitor = new CsvFileMonitor(watcher, watcherConfig, NullLogger<CsvFileMonitor>.Instance, fileProcessor);
+        var monitor = new CsvFileMonitor(watcherConfig, NullLogger<CsvFileMonitor>.Instance, fileProcessor);
 
-        var monitoringTask = monitor.StartAsync(cts.Token);
-
-        Assert.Equal(0, watcher.Count);
+        _ = monitor.StartAsync(cts.Token);
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         File.Copy(Path.Combine("Resources", "Csv", inputFileName), Path.Combine(watcherConfig.Value.IncomingDirectory, inputFileName));
@@ -65,7 +61,6 @@ public class ReconciliationTests(AppHostFixture fixture, TempDirectoryFixture te
 
         await tcs.Task; // wait for the file to be processed
 
-        Assert.Equal(1, watcher.Count);
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastOperation!.AssertSuccess().OutputCsvFile));
         Assert.True(File.Exists(monitor.LastOperation.AssertSuccess().StatsJsonFile));

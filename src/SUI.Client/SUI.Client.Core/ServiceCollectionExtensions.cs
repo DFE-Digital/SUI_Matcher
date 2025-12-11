@@ -34,7 +34,6 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddSingleton<IMatchingService, HttpApiMatchingService>();
-        services.AddSingleton<CsvFileWatcherService>();
         services.AddSingleton<CsvFileMonitor>();
         return services;
     }

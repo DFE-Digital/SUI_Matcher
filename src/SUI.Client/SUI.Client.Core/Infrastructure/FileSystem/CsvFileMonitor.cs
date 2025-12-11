@@ -9,12 +9,12 @@ using Shared.Util;
 namespace SUI.Client.Core.Infrastructure.FileSystem;
 
 [ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
-public class CsvFileMonitor
+public class CsvFileMonitor : IDisposable
 {
-    private readonly CsvFileWatcherService _fileWatcherService;
     private readonly CsvWatcherConfig _config;
     private readonly ILogger<CsvFileMonitor> _logger;
     private readonly ICsvFileProcessor _fileProcessor;
+    private readonly FileSystemWatcher _watcher;
     private readonly ConcurrentQueue<string> _fileQueue = new();
     private int _processedCount;
     private int _errorCount;
@@ -28,19 +28,24 @@ public class CsvFileMonitor
 
     public ProcessCsvFileResult LastResult() => GetLastOperation().AssertSuccess();
 
-    public CsvFileMonitor(CsvFileWatcherService fileWatcherService, IOptions<CsvWatcherConfig> config, ILogger<CsvFileMonitor> logger, ICsvFileProcessor fileProcessor)
+    public CsvFileMonitor(IOptions<CsvWatcherConfig> config, ILogger<CsvFileMonitor> logger, ICsvFileProcessor fileProcessor)
     {
-        _fileWatcherService = fileWatcherService;
         _config = config.Value;
         _logger = logger;
         _fileProcessor = fileProcessor;
+
+        Directory.CreateDirectory(_config.IncomingDirectory);
         Directory.CreateDirectory(_config.ProcessedDirectory);
-        _fileWatcherService.FileDetected += (_, filePath) => _fileQueue.Enqueue(filePath);
+        _watcher = new FileSystemWatcher(_config.IncomingDirectory, "*.csv")
+        {
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+        };
+        _watcher.Created += (_, e) => _fileQueue.Enqueue(e.FullPath);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _fileWatcherService.Start();
+        _watcher.EnableRaisingEvents = true;
         _logger.LogInformation("Started watching {Directory}", _config.IncomingDirectory);
         try
         {
@@ -50,7 +55,7 @@ public class CsvFileMonitor
         {
             _logger.LogError(exception, "Cancelled. Stopping...");
         }
-        _fileWatcherService.Stop();
+        _watcher.EnableRaisingEvents = false;
         _logger.LogInformation("Stopped watching {Directory}", _config.IncomingDirectory);
     }
 
@@ -95,5 +100,20 @@ public class CsvFileMonitor
     public void PrintStats(TextWriter output)
     {
         output.WriteLine($"Processed Count: {_processedCount}, Error Count: {_errorCount}");
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _watcher.EnableRaisingEvents = false;
+            _watcher.Dispose();
+        }
     }
 }
