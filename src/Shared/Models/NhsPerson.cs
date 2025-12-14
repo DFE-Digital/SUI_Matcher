@@ -23,5 +23,4 @@ public class NhsPerson
     public string[] AddressHistory { get; set; } = [];
 
     public string? GeneralPractitionerOdsId { get; set; }
-
 }

@@ -534,16 +534,22 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 GeneralPractitionerOdsId = "Y12345"
             }
         };
-        _matchingService.Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false)).ReturnsAsync(
-            new PersonMatchResponse
+        var personMatchResponse = new PersonMatchResponse
+        {
+            Result = new MatchResult
             {
-                Result = new MatchResult
-                {
-                    MatchStatus = MatchStatus.Match,
-                    NhsNumber = demographicResult.Result.NhsNumber,
-                }
-            });
-        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId(It.IsAny<string>())).Returns(() => Task.FromResult(demographicResult));
+                MatchStatus = MatchStatus.Match,
+                NhsNumber = demographicResult.Result.NhsNumber,
+                Score = 1,
+                ProcessStage = "ExactAll",
+            }
+        };
+        _matchingService
+            .Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
+            .ReturnsAsync(personMatchResponse);
+        _nhsFhirClient
+            .Setup(x => x.PerformSearchByNhsId(It.IsAny<string>()))
+            .Returns(() => Task.FromResult(demographicResult));
 
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(true, x =>
@@ -594,8 +600,10 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.Contains(records[0][ReconciliationCsvFileProcessor.HeaderPhone], demographicResult.Result.PhoneNumbers);
         Assert.Equal(nameof(ReconciliationStatus.NoDifferences), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
         Assert.Contains(String.Empty, records[0][ReconciliationCsvFileProcessor.HeaderDifferences]);
-        Assert.Equal(records[0][ReconciliationCsvFileProcessor.HeaderAddressHistory], addressHistoryFormatted);
-        Assert.Equal(records[0][ReconciliationCsvFileProcessor.HeaderGeneralPractitionerOdsId], demographicResult.Result.GeneralPractitionerOdsId);
+        Assert.Equal(addressHistoryFormatted, records[0][ReconciliationCsvFileProcessor.HeaderAddressHistory]);
+        Assert.Equal(demographicResult.Result.GeneralPractitionerOdsId, records[0][ReconciliationCsvFileProcessor.HeaderGeneralPractitionerOdsId]);
+        Assert.Equal(personMatchResponse.Result.Score.ToString(), records[0][ReconciliationCsvFileProcessor.HeaderMatchScore]);
+        Assert.Equal(personMatchResponse.Result.ProcessStage, records[0][ReconciliationCsvFileProcessor.HeaderMatchProcessStage]);
     }
     [Fact]
     public async Task Reconciliation_ContainsAllHeaders_With_SpecialCharacters_in_Address_History()

@@ -39,6 +39,8 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderMatchStatus = "SUI_MatchStatus";
     public const string HeaderMatchNhsNumber = "SUI_MatchNhsNumber";
+    public const string HeaderMatchScore = "SUI_MatchScore";
+    public const string HeaderMatchProcessStage = "SUI_MatchProcessStage";
 
     private async Task ProcessRecord(Dictionary<string, string> record, IStats stats)
     {
@@ -87,6 +89,8 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
         record[HeaderMatchNhsNumber] = response?.MatchingResult?.NhsNumber ?? "-";
         record[HeaderMatchStatus] = response?.MatchingResult?.MatchStatus.ToString() ?? "-";
+        record[HeaderMatchScore] = response?.MatchingResult?.Score.ToString() ?? "-";
+        record[HeaderMatchProcessStage] = response?.MatchingResult?.ProcessStage ?? "-";
 
         RecordStats((ReconciliationCsvProcessStats)stats, response, differenceList);
     }
@@ -107,6 +111,8 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderStatus);
         headers.Add(HeaderMatchStatus);
         headers.Add(HeaderMatchNhsNumber);
+        headers.Add(HeaderMatchScore);
+        headers.Add(HeaderMatchProcessStage);
     }
 
     private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, string differenceList)
