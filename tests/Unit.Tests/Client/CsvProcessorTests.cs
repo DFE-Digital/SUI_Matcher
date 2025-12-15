@@ -5,6 +5,7 @@ using MatchingApi.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
 
 using Moq;
@@ -15,7 +16,6 @@ using Shared.Models;
 using Shared.Util;
 
 using SUI.Client.Core;
-using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Infrastructure.FileSystem;
 
 using Unit.Tests.Util;
@@ -1080,6 +1080,51 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
 
         Assert.Equal(nameof(ReconciliationStatus.LocalNhsNumberIsNotValid), records[0][ReconciliationCsvFileProcessor.HeaderStatus]);
+    }
+
+    [Fact]
+    public async Task Reconciliation_ResponseIsNull()
+    {
+        // Arrange
+
+        // Prepare instance of ReconciliationCsvFileProcessor
+        var reconciliationCsvFileProcessor = new ReconciliationCsvFileProcessor(
+            new Mock<ILogger<ReconciliationCsvFileProcessor>>().Object,
+            new CsvMappingConfig(),
+            new Mock<IMatchingService>().Object, // All responses are null
+            Options.Create(new CsvWatcherConfig { SearchStrategy = "4" }));
+
+        // Write input file
+        var data = new D
+        {
+            [TestDataHeaders.NhsNumber] = "",
+            [TestDataHeaders.GivenName] = "Dave",
+            [TestDataHeaders.Surname] = "Wilkes",
+            [TestDataHeaders.DOB] = "2000-04-01",
+            [TestDataHeaders.Gender] = "1",
+            [TestDataHeaders.PostCode] = "ab12 3ed",
+            [TestDataHeaders.Email] = "test@test.com",
+            [TestDataHeaders.Phone] = "0789 1234567"
+        };
+
+        var list = new List<D> { data };
+        var headers = new HashSet<string>(data.Keys);
+
+        var filePath = Path.Combine(_dir.IncomingDirectoryPath, "file00001.csv");
+        await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, list);
+
+        // Act
+        var result = await reconciliationCsvFileProcessor.ProcessCsvFileAsync(filePath, _dir.ProcessedDirectoryPath);
+
+        // Assert
+
+        // Read Csv file and get values of all columns after
+        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(result.OutputCsvFile);
+
+        var fieldValuesAddedFromProcessing = records[0]
+            .Where(k => k.Key.StartsWith("SUI_"))
+            .Select(kvp => kvp.Value).ToList();
+        Assert.All(fieldValuesAddedFromProcessing, value => Assert.Equal("-", value));
     }
 
     private ServiceProvider Bootstrap(bool enableReconciliation, Action<ServiceCollection>? configure = null)
