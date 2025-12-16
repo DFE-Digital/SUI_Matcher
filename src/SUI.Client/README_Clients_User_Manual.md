@@ -11,13 +11,13 @@ Add a `--version <version>` parameter to the command to install a specific versi
 
 For the Client Watcher:
 ```bash
-dotnet tool install --global DFE.SUI.Client.Watcher
+dotnet tool install SUI.Client.Watcher --tool-path "C:\Program Files\dotnet\tools"
 ```
 
 For the DBS Client Watcher:
 
 ```bash
-dotnet tool install --global DFE.SUI.DBS.Response.Logger.Watcher
+dotnet tool install SUI.DBS.Response.Logger.Watcher --tool-path "C:\Program Files\dotnet\tools"
 ```
 
 ## Running the watcher tool
