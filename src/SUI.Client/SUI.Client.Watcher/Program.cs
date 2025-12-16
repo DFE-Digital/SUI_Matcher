@@ -78,7 +78,7 @@ await argResult.WithParsedAsync(async parsedArgs =>
             {
                 Console.WriteLine(e.Message);
             }
-        });
+        }).RemoveAllLoggers();
     });
 
     var host = builder.Build();

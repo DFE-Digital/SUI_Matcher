@@ -12,7 +12,7 @@ This guide explains how to deploy the app infra and app from your laptop.
 
 ## Configuring the Deployment
 
-1. Set the proper environment variables:
+Set environment variables in your local terminal:
 ```bash
 export AZURE_ENV_NAME="<Enter Env Name>"
 export AZURE_ENV_PREFIX="<Enter Env Prefix>"
@@ -26,39 +26,49 @@ export AZURE_CONTAINER_APP_VNET="<Enter Network>"
 export AZURE_CONTAINER_APP_ENV_SUBNET="<Enter Subnet for Env Deployment>"
 ```
 
+Hint: The values for some these can be found on the resource group you are 
+wanting to deploy into. Navigate to your target resource group and then 
+'Settings > Deployments > (Any recent deployment) > Inputs'.
+
 ## Running the Deployment
 
 1. Open a terminal and navigate to the directory `app-host/infra` that contains the `main.bicep` file.
 2. Log in using a service principal: [Documentation](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/reference#azd-auth-login)
+
    ```bash
    az login
    ```
-Select the right env. Then login via azd for good measure...
+   
+    Select the right env. Then login via azd for good measure...
    ```
    azd login
-    ```
+   ```
+   
 3. Use what-if to preview what will be changed/deployed [Documentation](https://learn.microsoft.com/en-us/cli/azure/deployment/group?view=azure-cli-latest#az-deployment-group-what-if)
    ```bash
    az deployment group what-if --resource-group "${AZURE_RESOURCE_GROUP}" --template-file main.bicep --parameters environmentName="${AZURE_ENV_NAME}" environmentPrefix="${AZURE_ENV_PREFIX}" location="${AZURE_LOCATION}" monitoringActionGroupEmail="${AZURE_MONITORING_ACTION_GROUP_EMAIL}" containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" containerAppVnet="${AZURE_CONTAINER_APP_VNET}" containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}"
    ```
    You will see a preview of the changes that will be made to your Azure resources. This is a good way to verify that the parameters are set correctly and that the deployment will proceed as expected.
 
+
 4. Run the following command to provision the infrastructure using `azd`:
 
     ```bash
-    azd provision --no-prompt --environment <your-environment-name>
+    azd provision --no-prompt --environment "${AZURE_ENV_NAME}" 
     ```
-   Replace `<your-environment-name>` with the name of your environment (e.g., `Integration`, ).
+
 
 5. Deploy the application using the following command (need to move back to the app-host dir):
 
     ```bash
     cd ..
-    azd deploy --no-prompt --environment <your-environment-name>
+    azd deploy --no-prompt --environment "${AZURE_ENV_NAME}" 
     ```
 
-   This command will deploy the application to the specified environment.
+   This command will deploy the application to the specified environment. If 
+   you haven't run the infra deploy then certain values may not be set in your 
+   environment. For instance AZURE_CONTAINER_REGISTRY_ENDPOINT. You can find 
+   these values via the console.
 
-   If you haven't run the infra deploy then certain values may not be set in your environment. For instance AZURE_CONTAINER_REGISTRY_ENDPOINT. You can find these values via the console.
 
 6. Monitor the deployment progress in the terminal. If successful, you will see a message indicating that the deployment was completed.
