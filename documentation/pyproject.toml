@@ -10,7 +10,7 @@ python = "^3.12"
 mkdocs = "^1.6.1"
 markdown-include = "^0.8.1"
 mkdocstrings = {extras = ["python"], version = "^0.27.0"}
-pymdown-extensions = "^10.14.3"
+pymdown-extensions = "^10.16.1"
 mkdocs-mermaid2-plugin = {extras = ["test"], version = "^1.2.1"}
 
 
