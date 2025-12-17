@@ -35,7 +35,6 @@ public class ProcessCsVFileAsyncTests : IDisposable
 
         // Prepare test CSV file with all optional fields
         var tempDir = Path.GetTempPath();
-        var filePath = Path.Combine(tempDir, "test.csv");
         var outputPath = tempDir;
         var headers = new HashSet<string>
         {
@@ -63,10 +62,8 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 ["ImmigrationStatus"] = "Settled",
             }
         };
-        await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, records);
-        _testFiles.Add(filePath);
 
-        await processor.ProcessCsvFileAsync(filePath, outputPath);
+        await processor.ProcessCsvFileAsync("test", headers, records, outputPath);
 
         Assert.NotNull(capturedPayload);
         Assert.Equal("CIN123", capturedPayload!.OptionalProperties["ActiveCIN"]);
@@ -106,7 +103,6 @@ public class ProcessCsVFileAsyncTests : IDisposable
 
         var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
 
-        var filePath = Path.Combine(tempDir, "test.csv");
         var outputPath = tempDir;
         var headers = new HashSet<string>
         {
@@ -141,8 +137,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
             }
         };
 
-        await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, records);
-        await processor.ProcessCsvFileAsync(filePath, outputPath);
+        await processor.ProcessCsvFileAsync("test", headers, records, outputPath);
 
         // Assert
         var files = Directory.EnumerateFiles($"{tempDir}/Processed/Matched", "*.csv").ToList();
@@ -188,7 +183,6 @@ public class ProcessCsVFileAsyncTests : IDisposable
         var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
 
 
-        var filePath = Path.Combine(tempDir, "test.csv");
         var outputPath = tempDir;
         var headers = new HashSet<string>
         {
@@ -223,8 +217,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
         };
 
 
-        await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, records);
-        await processor.ProcessCsvFileAsync(filePath, outputPath);
+        await processor.ProcessCsvFileAsync("test", headers, records, outputPath);
 
         // Assert
         var files = Directory.EnumerateFiles($"{tempDir}/Processed/Matched", "*.csv").ToList();

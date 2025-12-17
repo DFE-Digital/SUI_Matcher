@@ -191,21 +191,8 @@ public class ReconciliationCsvFileProcessor(
         if (differenceList.Contains($"{fieldName}:Both")) { incrementBoth(stats); }
     }
 
-    public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
+    public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string tableName, HashSet<string> headers, List<Dictionary<string, string>> records, string outputPath)
     {
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException("File not found", filePath);
-        }
-
-        var ts = $"_{DateTime.Now:yyyyMMdd-HHmmss}";
-
-        var outputDirectory =
-            Path.Combine(outputPath, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(filePath)));
-        Directory.CreateDirectory(outputDirectory);
-
-        (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
-
         AddExtraCsvHeaders(headers);
 
         int totalRecords = records.Count;
@@ -213,8 +200,8 @@ public class ReconciliationCsvFileProcessor(
         var progressStopwatch = new Stopwatch();
         progressStopwatch.Start();
 
-        logger.LogInformation("Beginning to process {TotalRecords} records from file: {FilePath}", totalRecords,
-            filePath);
+        logger.LogInformation("Beginning to process {TotalRecords} records from: {TableName}", totalRecords,
+            tableName);
 
         foreach (var record in records)
         {
@@ -233,58 +220,20 @@ public class ReconciliationCsvFileProcessor(
 
         progressStopwatch.Stop();
 
-        var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
+        var ts = $"_{Process.GetCurrentProcess().StartTime:yyyyMMdd-HHmmss}";
+
+        var outputDirectory =
+            Path.Combine(outputPath, string.Concat(ts, "__", tableName));
+        Directory.CreateDirectory(outputDirectory);
+
+        var outputFilePath = GetOutputFileName(ts, outputDirectory, tableName + ".csv");
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
         await WriteCsvAsync(outputFilePath, headers, records);
-
 
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, _stats);
         var csvResult = new ProcessCsvFileResult(outputFilePath, statsJsonFileName, _stats, outputDirectory);
         _stats.ResetStats();
         return csvResult;
-    }
-
-    public static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(
-        string filePath)
-    {
-        var headers = new HashSet<string>();
-        var records = new List<Dictionary<string, string>>();
-
-        if (!await IsFileReadyAsync(filePath))
-        {
-            throw new IOException($"File {filePath} is not ready for reading.");
-        }
-
-        using (var reader = new StreamReader(filePath))
-        using (var csv = new CsvReader(reader,
-                   new CsvConfiguration(CultureInfo.InvariantCulture)
-                   {
-                       IgnoreBlankLines = true,
-                       MissingFieldFound = null,
-                       HeaderValidated = null
-                   }))
-        {
-            await csv.ReadAsync();
-            csv.ReadHeader();
-
-            if (csv.HeaderRecord is not null)
-            {
-                headers.UnionWith(csv.HeaderRecord);
-            }
-
-            while (await csv.ReadAsync())
-            {
-                var row = new Dictionary<string, string>();
-                foreach (var header in headers)
-                {
-                    row[header] = csv.GetField(header) ?? string.Empty;
-                }
-
-                records.Add(row);
-            }
-        }
-
-        return (headers, records);
     }
 
     /// <summary>
@@ -323,24 +272,6 @@ public class ReconciliationCsvFileProcessor(
         var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
         var extension = Path.GetExtension(fileName);
         return Path.Combine(outputDirectory, $"{filenameWithoutExt}_output_{timestamp}{extension}");
-    }
-
-    private static async Task<bool> IsFileReadyAsync(string filePath, int maxAttempts = 5, int delayMs = 1000)
-    {
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            try
-            {
-                await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
-                return true;
-            }
-            catch (IOException)
-            {
-                await Task.Delay(delayMs);
-            }
-        }
-
-        return false;
     }
 
     private static string WriteStatsJsonFile(string outputDirectory, string ts, object stats)

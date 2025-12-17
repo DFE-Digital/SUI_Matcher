@@ -82,16 +82,25 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
     public async Task ProcessCsvFileAsync_WritesToExpectedLocation_WhenUsingRelativePath()
     {
         // Arrange
+
+        // Create object graph for CsvFileMonitor
         var matchPersonApiService = new HttpApiMatchingService(_client);
         var mappingConfig = new CsvMappingConfig();
-        var logger = NullLogger<MatchingCsvFileProcessor>.Instance;
-        // create IOptions<CsvWatcherConfig> if needed
         var watcherConfig = Options.Create(new CsvWatcherConfig());
-        var fileProcessor = new MatchingCsvFileProcessor(logger, mappingConfig, matchPersonApiService, watcherConfig);
+        var fileProcessor = new MatchingCsvFileProcessor(
+            NullLogger<MatchingCsvFileProcessor>.Instance,
+            mappingConfig,
+            matchPersonApiService,
+            watcherConfig
+        );
+        var monitor = new CsvFileMonitor(watcherConfig, NullLogger<CsvFileMonitor>.Instance, fileProcessor);
 
-        var inputFileName = "single_match.csv";
-        var inputFilePath = Path.Combine("Resources", "Csv", inputFileName); // Relative path
+        // Create monitoring directory and copy file in place
+        var inputFilePath = Path.Combine("Resources", "Csv", "single_match.csv"); // Relative path
+        var monitorDirectory = Directory.CreateTempSubdirectory();
+        File.Copy(inputFilePath, monitorDirectory.FullName);
 
+        // Prepare output directory
         var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
         var outputDirectory = Path.Combine("TestOutput"); // Use a relative path for output
         Directory.CreateDirectory(outputDirectory);
@@ -100,7 +109,13 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
         var expectedOutputFilePath = Path.Combine(expectedOutputDirectory, "stats_output__" + timestamp + ".json");
 
         // Act
-        await fileProcessor.ProcessCsvFileAsync(inputFilePath, outputDirectory);
+
+        // Start monitor and wait for file to be processed, otherwise throw exception
+        var autoResetEvent = new AutoResetEvent(false);
+        monitor.Processed += (_, _) => autoResetEvent.Set();
+        _ = monitor.StartAsync(CancellationToken.None);
+        autoResetEvent.WaitOne(5000); // wait 5 seconds and then fail
+        monitor.Dispose();
 
         // Assert
         Assert.True(Directory.Exists(expectedOutputDirectory), "Output directory was not created.");

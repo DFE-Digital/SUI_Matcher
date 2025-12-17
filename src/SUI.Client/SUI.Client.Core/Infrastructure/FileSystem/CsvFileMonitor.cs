@@ -1,5 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+
+using CsvHelper;
+using CsvHelper.Configuration;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -41,6 +45,21 @@ public class CsvFileMonitor : IDisposable
             NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
         };
         _watcher.Created += (_, e) => _fileQueue.Enqueue(e.FullPath);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true); // Disposer pattern
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _watcher.EnableRaisingEvents = false;
+            _watcher.Dispose();
+        }
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -95,25 +114,78 @@ public class CsvFileMonitor : IDisposable
     }
 
     private async Task<ProcessCsvFileResult> ProcessFileAsync(string filePath)
-        => await _fileProcessor.ProcessCsvFileAsync(filePath, _config.ProcessedDirectory);
+    {
+        (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
+
+        _logger.LogInformation("Beginning to process {TotalRecords} records from file: {FilePath}", records.Count,
+            filePath);
+        return await _fileProcessor.ProcessCsvFileAsync(Path.GetFileNameWithoutExtension(filePath), headers, records, _config.ProcessedDirectory);
+    }
 
     public void PrintStats(TextWriter output)
     {
         output.WriteLine($"Processed Count: {_processedCount}, Error Count: {_errorCount}");
     }
 
-    public void Dispose()
+
+    public static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(
+        string filePath)
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        var headers = new HashSet<string>();
+        var records = new List<Dictionary<string, string>>();
+
+        if (!await IsFileReadyAsync(filePath))
+        {
+            throw new IOException($"File {filePath} is not ready for reading.");
+        }
+
+        using (var reader = new StreamReader(filePath))
+        using (var csv = new CsvReader(reader,
+                   new CsvConfiguration(CultureInfo.InvariantCulture)
+                   {
+                       IgnoreBlankLines = true,
+                       MissingFieldFound = null,
+                       HeaderValidated = null
+                   }))
+        {
+            await csv.ReadAsync();
+            csv.ReadHeader();
+
+            if (csv.HeaderRecord is not null)
+            {
+                headers.UnionWith(csv.HeaderRecord);
+            }
+
+            while (await csv.ReadAsync())
+            {
+                var row = new Dictionary<string, string>();
+                foreach (var header in headers)
+                {
+                    row[header] = csv.GetField(header) ?? string.Empty;
+                }
+
+                records.Add(row);
+            }
+        }
+
+        return (headers, records);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private static async Task<bool> IsFileReadyAsync(string filePath, int maxAttempts = 5, int delayMs = 1000)
     {
-        if (disposing)
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
-            _watcher.EnableRaisingEvents = false;
-            _watcher.Dispose();
+            try
+            {
+                await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
+                return true;
+            }
+            catch (IOException)
+            {
+                await Task.Delay(delayMs);
+            }
         }
+
+        return false;
     }
 }
