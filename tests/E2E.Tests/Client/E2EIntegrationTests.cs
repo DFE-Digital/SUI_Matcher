@@ -110,12 +110,13 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
 
         // Act
 
-        // Start monitor and wait for file to be processed, otherwise throw exception
-        var autoResetEvent = new AutoResetEvent(false);
-        monitor.Processed += (_, _) => autoResetEvent.Set();
-        _ = monitor.StartAsync(CancellationToken.None);
-        autoResetEvent.WaitOne(5000); // wait 5 seconds and then fail
-        monitor.Dispose();
+        // Start monitor and wait for file to be processed
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        monitor.Processed += (_, _) => tcs.SetResult();
+        var cts = new CancellationTokenSource();
+        _ = monitor.StartAsync(cts.Token);
+        await tcs.Task;
+        await cts.CancelAsync();
 
         // Assert
         Assert.True(Directory.Exists(expectedOutputDirectory), "Output directory was not created.");

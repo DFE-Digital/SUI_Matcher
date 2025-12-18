@@ -1,3 +1,5 @@
+using System.Data;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -5,13 +7,12 @@ using Moq;
 
 using Shared.Models;
 
-using SUI.Client.Core;
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Infrastructure.FileSystem;
 
 namespace Unit.Tests.Client;
 
-public class ProcessCsVFileAsyncTests : IDisposable
+public class ProcessCsvFileAsyncTests : IDisposable
 {
     private readonly List<string> _testFiles = [];
 
@@ -34,36 +35,14 @@ public class ProcessCsVFileAsyncTests : IDisposable
         var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
 
         // Prepare test CSV file with all optional fields
-        var tempDir = Path.GetTempPath();
-        var outputPath = tempDir;
-        var headers = new HashSet<string>
+        var outputDir = Path.GetTempPath();
+        var dt = new DataTable("test")
         {
-            "Given",
-            "Family",
-            "ActiveCIN",
-            "ActiveCLA",
-            "ActiveCP",
-            "ActiveEHM",
-            "Ethnicity",
-            "ImmigrationStatus",
-            "AddressHistory"
-        };
-        var records = new List<Dictionary<string, string>>
-        {
-            new()
-            {
-                ["Given"] = "Jane",
-                ["Family"] = "Doe",
-                ["ActiveCIN"] = "CIN123",
-                ["ActiveCLA"] = "CLA456",
-                ["ActiveCP"] = "CP789",
-                ["ActiveEHM"] = "EHM321",
-                ["Ethnicity"] = "A1 - White-British",
-                ["ImmigrationStatus"] = "Settled",
-            }
+            Columns = { "Given", "Family", "ActiveCIN", "ActiveCLA", "ActiveCP", "ActiveEHM", "Ethnicity", "ImmigrationStatus" },
+            Rows = { { "Jane", "Doe", "CIN123", "CLA456", "CP789", "EHM321", "A1 - White-British", "Settled" } }
         };
 
-        await processor.ProcessCsvFileAsync("test", headers, records, outputPath);
+        await processor.ProcessCsvFileAsync(dt, outputDir);
 
         Assert.NotNull(capturedPayload);
         Assert.Equal("CIN123", capturedPayload!.OptionalProperties["ActiveCIN"]);
@@ -104,40 +83,19 @@ public class ProcessCsVFileAsyncTests : IDisposable
         var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
 
         var outputPath = tempDir;
-        var headers = new HashSet<string>
-        {
-            "Id",
-            "Given",
-            "Family",
-            "DOB"
-        };
         var dob = DateTime.Now.AddYears(-10).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First());
-        var records = new List<Dictionary<string, string>>
+        var dt = new DataTable("test")
         {
-            new()
+            Columns = { "Id", "Given", "Family", "DOB" },
+            Rows =
             {
-                ["Id"] = "L1",
-                ["Given"] = "John",
-                ["Family"] = "Smith",
-                ["DOB"] = dob
-            },
-            new()
-            {
-                ["Id"] = "L2",
-                ["Given"] = "Jane",
-                ["Family"] = "Doe",
-                ["DOB"] = dob
-            },
-            new()
-            {
-                ["Id"] = "L3",
-                ["Given"] = "Jim",
-                ["Family"] = "Beam",
-                ["DOB"] = dob
+                { "L1", "John", "Smith", dob },
+                { "L2", "Jane", "Doe", dob },
+                { "L3", "Jim", "Beam", dob }
             }
         };
 
-        await processor.ProcessCsvFileAsync("test", headers, records, outputPath);
+        await processor.ProcessCsvFileAsync(dt, outputPath);
 
         // Assert
         var files = Directory.EnumerateFiles($"{tempDir}/Processed/Matched", "*.csv").ToList();
@@ -184,40 +142,23 @@ public class ProcessCsVFileAsyncTests : IDisposable
 
 
         var outputPath = tempDir;
-        var headers = new HashSet<string>
+
+
+        var dobOf19YearOld = DateTime.Now.AddYears(-19).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First());
+        var dobOf3YearOld = DateTime.Now.AddYears(-3).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First());
+        var dobOf1YearOld = DateTime.Now.AddYears(-1).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First());
+        var dt = new DataTable("test")
         {
-            "DOB",
-            "Id",
-            "Given",
-            "Family"
-        };
-        var records = new List<Dictionary<string, string>>
-        {
-            new()
+            Columns = { "Id", "Given", "Family", "DOB" },
+            Rows =
             {
-                ["Id"] = "L1",
-                ["Given"] = "John",
-                ["Family"] = "Smith",
-                ["DOB"] = DateTime.Now.AddYears(-19).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()) // Not Child age
-            },
-            new()
-            {
-                ["Id"] = "L2",
-                ["Given"] = "Jane",
-                ["Family"] = "Doe",
-                ["DOB"] = DateTime.Now.AddYears(-3).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()) // Child age
-            },
-            new()
-            {
-                ["Id"] = "L3",
-                ["Given"] = "Jim",
-                ["Family"] = "Beam",
-                ["DOB"] = DateTime.Now.AddYears(-1).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()) // Child age
+                { "L1", "John", "Smith", dobOf19YearOld},
+                { "L2", "Jane", "Doe", dobOf3YearOld},
+                { "L3", "Jim", "Beam", dobOf1YearOld}
             }
         };
 
-
-        await processor.ProcessCsvFileAsync("test", headers, records, outputPath);
+        await processor.ProcessCsvFileAsync(dt, outputPath);
 
         // Assert
         var files = Directory.EnumerateFiles($"{tempDir}/Processed/Matched", "*.csv").ToList();

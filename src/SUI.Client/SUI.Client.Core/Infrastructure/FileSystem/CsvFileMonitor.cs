@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -115,11 +116,11 @@ public class CsvFileMonitor : IDisposable
 
     private async Task<ProcessCsvFileResult> ProcessFileAsync(string filePath)
     {
-        (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
+        var inputData = await ReadCsvAsync(filePath);
 
-        _logger.LogInformation("Beginning to process {TotalRecords} records from file: {FilePath}", records.Count,
+        _logger.LogInformation("Beginning to process {TotalRecords} records from file: {FilePath}", inputData.Rows.Count,
             filePath);
-        return await _fileProcessor.ProcessCsvFileAsync(Path.GetFileNameWithoutExtension(filePath), headers, records, _config.ProcessedDirectory);
+        return await _fileProcessor.ProcessCsvFileAsync(inputData, _config.ProcessedDirectory);
     }
 
     public void PrintStats(TextWriter output)
@@ -128,47 +129,35 @@ public class CsvFileMonitor : IDisposable
     }
 
 
-    public static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(
-        string filePath)
+    public static async Task<DataTable> ReadCsvAsync(string filePath)
     {
-        var headers = new HashSet<string>();
-        var records = new List<Dictionary<string, string>>();
+        var dt = new DataTable();
 
         if (!await IsFileReadyAsync(filePath))
         {
             throw new IOException($"File {filePath} is not ready for reading.");
         }
 
-        using (var reader = new StreamReader(filePath))
-        using (var csv = new CsvReader(reader,
-                   new CsvConfiguration(CultureInfo.InvariantCulture)
-                   {
-                       IgnoreBlankLines = true,
-                       MissingFieldFound = null,
-                       HeaderValidated = null
-                   }))
+        using var reader = new StreamReader(filePath);
+
+        CsvConfiguration readerConfiguration = new(CultureInfo.InvariantCulture)
         {
-            await csv.ReadAsync();
-            csv.ReadHeader();
+            IgnoreBlankLines = true,
+            MissingFieldFound = null,
+            HeaderValidated = null
+        };
+        using var csv = new CsvReader(reader, readerConfiguration);
 
-            if (csv.HeaderRecord is not null)
-            {
-                headers.UnionWith(csv.HeaderRecord);
-            }
+        using var dr = new CsvDataReader(csv);
+        dt.Load(dr);
+        dt.TableName = Path.GetFileNameWithoutExtension(filePath);
 
-            while (await csv.ReadAsync())
-            {
-                var row = new Dictionary<string, string>();
-                foreach (var header in headers)
-                {
-                    row[header] = csv.GetField(header) ?? string.Empty;
-                }
-
-                records.Add(row);
-            }
+        foreach (DataColumn col in dt.Columns)
+        {
+            col.ReadOnly = false; // Ensure table is editable
         }
 
-        return (headers, records);
+        return dt;
     }
 
     private static async Task<bool> IsFileReadyAsync(string filePath, int maxAttempts = 5, int delayMs = 1000)
