@@ -3,18 +3,14 @@ using Microsoft.Extensions.Options;
 
 using Shared.Models;
 
-using SUI.Client.Core;
 using SUI.Client.Core.Infrastructure.FileSystem;
 using SUI.Client.Core.Infrastructure.Http;
-
-using WireMock.Client;
 
 namespace E2E.Tests.Client;
 
 public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture tempDirectoryFixture) : IClassFixture<AppHostFixture>, IClassFixture<TempDirectoryFixture>
 {
     private readonly HttpClient _client = fixture.CreateSecureClient();
-    private readonly IWireMockAdminApi _nhsAuthMockApi = fixture.NhsAuthMockApi();
 
     [Fact]
     public async Task TestOneRowCsvSingleMatch()
@@ -83,10 +79,26 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
     {
         // Arrange
 
+        // Create monitoring directory and copy file in place
+        var fileName = "single_match.csv";
+        var inputFilePath = Path.Combine("Resources", "Csv", fileName); // Relative path
+        var monitorDirectory = Directory.CreateTempSubdirectory();
+
+        // Prepare output directory
+        var relativeOutputDirectory = Path.GetRelativePath(
+            Directory.GetCurrentDirectory(),
+            Directory.CreateTempSubdirectory().FullName
+        );
+
         // Create object graph for CsvFileMonitor
         var matchPersonApiService = new HttpApiMatchingService(_client);
         var mappingConfig = new CsvMappingConfig();
-        var watcherConfig = Options.Create(new CsvWatcherConfig());
+        var watcherConfig = Options.Create(new CsvWatcherConfig
+        {
+            IncomingDirectory = monitorDirectory.FullName,
+            ProcessedDirectory = relativeOutputDirectory,
+            EnableGenderSearch = true,
+        });
         var fileProcessor = new MatchingCsvFileProcessor(
             NullLogger<MatchingCsvFileProcessor>.Instance,
             mappingConfig,
@@ -95,19 +107,6 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
         );
         var monitor = new CsvFileMonitor(watcherConfig, NullLogger<CsvFileMonitor>.Instance, fileProcessor);
 
-        // Create monitoring directory and copy file in place
-        var inputFilePath = Path.Combine("Resources", "Csv", "single_match.csv"); // Relative path
-        var monitorDirectory = Directory.CreateTempSubdirectory();
-        File.Copy(inputFilePath, monitorDirectory.FullName);
-
-        // Prepare output directory
-        var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-        var outputDirectory = Path.Combine("TestOutput"); // Use a relative path for output
-        Directory.CreateDirectory(outputDirectory);
-
-        var expectedOutputDirectory = Path.Combine(outputDirectory, $"_{timestamp}__single_match");
-        var expectedOutputFilePath = Path.Combine(expectedOutputDirectory, "stats_output__" + timestamp + ".json");
-
         // Act
 
         // Start monitor and wait for file to be processed
@@ -115,18 +114,23 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
         monitor.Processed += (_, _) => tcs.SetResult();
         var cts = new CancellationTokenSource();
         _ = monitor.StartAsync(cts.Token);
-        await tcs.Task;
+        File.Copy(inputFilePath, Path.Combine(monitorDirectory.FullName, fileName));
+        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(500), cts.Token);
         await cts.CancelAsync();
 
-        // Assert
-        Assert.True(Directory.Exists(expectedOutputDirectory), "Output directory was not created.");
-        Assert.True(File.Exists(expectedOutputFilePath), "Output file was not created in the expected location.");
-
-        // Cleanup
-        if (Directory.Exists(expectedOutputDirectory))
+        if (monitor.LastOperation?.Exception is not null)
         {
-            Directory.Delete(expectedOutputDirectory, true);
+            throw monitor.LastOperation.Exception;
         }
+
+        // Assert
+        Assert.Contains(
+            Directory.EnumerateDirectories(relativeOutputDirectory),
+            d =>
+            {
+                return d.EndsWith("single_match")
+                       && Directory.EnumerateFiles(d).Any(f => Path.GetFileName(f).StartsWith("stats_output__"));
+            });
     }
 
 
@@ -153,7 +157,7 @@ public class E2EIntegrationTests(AppHostFixture fixture, TempDirectoryFixture te
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         File.Copy(Path.Combine("Resources", "Csv", inputFileName), Path.Combine(appConfig.IncomingDirectory, inputFileName));
-        monitor.Processed += (s, e) => tcs.SetResult();
+        monitor.Processed += (_, _) => tcs.SetResult();
 
         await tcs.Task; // wait for the file to be processed
 
