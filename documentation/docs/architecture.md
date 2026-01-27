@@ -1,33 +1,5 @@
 # Architecture
 
-<!--toc:start-->
-
-- [Architecture](#architecture)
-  - [Constraints and Principals](#constraints-and-principals)
-  - [High Level Logical Architecture](#high-level-logical-architecture)
-  - [Systems Architecture](#systems-architecture)
-    - [Physical View](#physical-view)
-      - [Definitions](#definitions)
-      - [Step by Step Flow Happy Path](#step-by-step-flow-happy-path)
-    - [Sequence Diagram](#sequence-diagram)
-  - [Application Architecture](#application-architecture)
-    - [Container diagram](#container-diagram)
-    - [Services](#services)
-      - [matching](#matching)
-      - [auth](#auth)
-      - [external](#external)
-    - [Search Criteria](#search-criteria)
-    - [Search Rules](#search-rules)
-      - [Strategy 1 (Default and stable)](#strategy-1-default-and-stable)
-      - [Strategy 2](#strategy-2)
-      - [Strategy 3](#strategy-3)
-      - [Strategy 4](#strategy-4)
-  - [Data Overview](#data-overview)
-  - [Non Functional Requirements](#non-functional-requirements)
-  - [Non Functional Priorities](#non-functional-priorities)
-
-<!--toc:end-->
-
 These are the architecture documents.
 
 ## Constraints and Principals
