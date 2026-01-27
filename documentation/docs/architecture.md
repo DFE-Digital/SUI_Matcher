@@ -21,6 +21,7 @@
       - [Strategy 1 (Default and stable)](#strategy-1-default-and-stable)
       - [Strategy 2](#strategy-2)
       - [Strategy 3](#strategy-3)
+      - [Strategy 4](#strategy-4)
   - [Data Overview](#data-overview)
   - [Non Functional Requirements](#non-functional-requirements)
   - [Non Functional Priorities](#non-functional-priorities)
@@ -301,69 +302,6 @@ stateDiagram-v2
     manual_process --> [*]
 
 ```
-
-### Search Rules
-
-We use multiple strategies, strategy 1 being the default and defined below. Other strategies may be used in the future
-for testing purposes.
-
-#### Strategy 1
-
-The search criteria being used for the pilot is as below, and is subject to change as real-world data and match rates
-are evaluated.
-
-All searches return one of: [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, LOW_CONFIDENCE_MATCH, MANY_MATCHES]
-
-| Rule order | Rule name     | Description                                                                                                | Example                                                                                                                               |
-|:-----------|:--------------|:-----------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------|
-| 1          | ExactGFD      | Exact search with given name, family name and DOB.                                                         | `_exact-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                |
-| 2          | ExactAll      | Exact search with all provided values.                                                                     | `_exact-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`                               |
-| 3          | FuzzyGFD      | fuzzy search with given name, family name and DOB.                                                         | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                |
-| 4          | FuzzyAll      | fuzzy search with all provided values.                                                                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09` `gender`=`male` `address-postalcode`=`WN4 9BP` |
-| 5          | FuzzyGFDRange | fuzzy search with given name, family name and DOB range 6 months either side of given date.                | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1961-09-06`                     |
-| 6          | FuzzyAltDob   | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06`                                                |
-
-#### Strategy 2
-
-An alternative strategy is currently under testing is defined below. This uses Non-fuzzy and fuzzy searches, including
-wild card searches on postcode. Order of queries is not opimized, instead uses a larger variation of queries.
-
-All searches return one of: [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, LOW_CONFIDENCE_MATCH, MANY_MATCHES]
-
-| Rule order | Rule name                     | Description                                                                                                | Example                                                                                                                                                  |
-|:-----------|:------------------------------|:-----------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1          | NonFuzzyGFD                   | non-fuzzy search with given name, family name and DOB.                                                     | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `history=true`                                                  |
-| 2          | NonFuzzyGFDRange              | non-fuzzy search with given name, family name and DOB range.                                               | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `history=true`                       |
-| 3          | NonFuzzyAllPostcodeWildcard   | non-fuzzy search with all provided values, postcode as wildcard.                                           | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `address-postalcode`=`WN*`, `history=true`                      |
-| 4          | NonFuzzyAll                   | non-fuzzy search with all provided values.                                                                 | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`, `history=true` |
-| 5          | FuzzyGFD                      | fuzzy search with given name, family name and DOB.                                                         | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                                   |
-| 6          | FuzzyGFDRangePostcodeWildcard | fuzzy search with given name, family name, DOB range, postcode as wildcard.                                | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN*`            |
-| 7          | FuzzyGFDRangePostcode         | fuzzy search with given name, family name, DOB range, postcode.                                            | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`        |
-| 8          | FuzzyAll                      | fuzzy search with all provided values.                                                                     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                  |
-| 9          | FuzzyAltDob                   | fuzzy search with given name, family name and DOB. Day swapped with month if day equal to or less than 12. | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-09-06`                                                                   |
-
-#### Strategy 3
-
-This is a multi versioned strategy that has been developed through iterative testing on real world data. The below is version 14 of it and is currently the best performing and most optimised for PDS calling.
-
-All searches return one of: [NHS_NUM, NO_MATCH, POTENTIAL_MATCH, LOW_CONFIDENCE_MATCH, MANY_MATCHES]
-
-| Rule order | Rule name                | Description                                                         | Example                                                                                                                                                              |
-|:-----------|:-------------------------|:--------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1          | NonFuzzyGFD              | non-fuzzy search with given name, family name and DOB.              | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `history=true`                                                              |
-| 2          | FuzzyGFD                 | fuzzy search with given name, family name and DOB.                  | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`                                                                               |
-| 3          | FuzzyAll                 | fuzzy search with all provided values.                              | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`eq1960-06-09`, `gender`=`male`, `address-postalcode`=`WN4 9BP`                              |
-| 4          | NonFuzzyGFDRange         | non-fuzzy search with given name, family name and DOB range.        | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `history=true`                                   |
-| 5          | NonFuzzyGFDRangePostcode | non-fuzzy search with given name, family name, DOB range, postcode. | `_exact-match`=`false`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`, `history=true`   |
-| 6          | FuzzyGFDRange            | fuzzy search with given name, family name and DOB range.            | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`                                                    |
-| 7          | FuzzyGFDRangePostcode    | fuzzy search with given name, family name, DOB range, postcode.     | `_fuzzy-match`=`true`, `family`=`harley`, `given`=`topper`, `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`, `address-postalcode`=`WN4 9BP`                    |
-
-#### Strategy 4
-
-Strategy 4 is a replication of strategy 3's searches, and additionally splits the Given name into an array and passes to PDS as multiple given names.
-
-Definition of fuzzy search is defined
-here: [NHS FHIR API Search](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient).
 
 ## Data Overview
 
