@@ -70,6 +70,7 @@ public class ReconciliationCsvFileProcessor(
             Gender = gender,
             Phone = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(ReconciliationRequest.Phone)]),
             SearchStrategy = watcherConfig.Value.SearchStrategy ?? SharedConstants.SearchStrategy.Strategies.Strategy1,
+            StrategyVersion = watcherConfig.Value.StrategyVersion
         };
 
         var response = await matching.ReconcilePersonAsync(payload);
