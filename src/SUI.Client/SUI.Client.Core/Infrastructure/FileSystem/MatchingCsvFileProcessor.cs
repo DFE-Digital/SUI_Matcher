@@ -1,3 +1,4 @@
+using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
@@ -27,30 +28,30 @@ public class MatchingCsvFileProcessor(
     public const string HeaderScore = "SUI_Score";
     public const string HeaderNhsNo = "SUI_NHSNo";
 
-    private async Task ProcessRecord(Dictionary<string, string> record, IStats stats)
+    private async Task ProcessRecord(DataRow row, IStats stats)
     {
-        string gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]).ToLower();
+        string gender = row.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)]).ToLower();
 
         if (int.TryParse(gender, out int _))
         {
             var genderFromNumber = PersonSpecificationUtils.ToGenderFromNumber(gender);
             gender = genderFromNumber;
             // Update the record with the string representation
-            record[nameof(SearchQuery.Gender)] = genderFromNumber;
+            row[nameof(SearchQuery.Gender)] = genderFromNumber;
         }
 
         MatchPersonPayload payload = new()
         {
-            Given = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
-            Family = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Family)]),
+            Given = row.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Given)]),
+            Family = row.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Family)]),
             BirthDate =
-                record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
-            Email = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
+                row.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]),
+            Email = row.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Email)]),
             AddressPostalCode =
-                record.GetFirstValueOrDefault(
+                row.GetFirstValueOrDefault(
                     mapping.ColumnMappings[nameof(MatchPersonPayload.AddressPostalCode)]),
             Gender = watcherConfig.Value.EnableGenderSearch ? gender : null,
-            OptionalProperties = GetOptionalFields(record),
+            OptionalProperties = GetOptionalFields(row),
             SearchStrategy = watcherConfig.Value.SearchStrategy,
             StrategyVersion = watcherConfig.Value.StrategyVersion
 
@@ -58,66 +59,64 @@ public class MatchingCsvFileProcessor(
 
         var response = await matching.MatchPersonAsync(payload);
 
-        record[HeaderStatus] = response?.Result?.MatchStatus.ToString() ?? "-";
-        record[HeaderScore] = response?.Result?.Score.ToString() ?? "-";
-        record[HeaderNhsNo] = response?.Result?.NhsNumber ?? "-";
+        row[HeaderStatus] = response?.Result?.MatchStatus.ToString() ?? "-";
+        row[HeaderScore] = response?.Result?.Score.ToString() ?? "-";
+        row[HeaderNhsNo] = response?.Result?.NhsNumber ?? "-";
 
         RecordStats((MatchingCsvProcessStats)stats, response);
     }
 
-    private void AddExtraCsvHeaders(HashSet<string> headers)
+    private void AddExtraCsvHeaders(DataTable inputData)
     {
-        headers.Add(HeaderStatus);
-        headers.Add(HeaderScore);
-        headers.Add(HeaderNhsNo);
+        inputData.Columns.Add(HeaderStatus);
+        inputData.Columns.Add(HeaderScore);
+        inputData.Columns.Add(HeaderNhsNo);
     }
 
     /// <summary>
     /// Creates a new file with only 'Match' status into a specified directory
     /// </summary>
-    /// <param name="filePath"></param>
+    /// <param name="data"></param>
     /// <param name="ts"></param>
-    /// <param name="records"></param>
-    /// <param name="headers"></param>
-    private async Task CreateMatchedCsvIfEnabled(string filePath, string ts, List<Dictionary<string, string>> records, HashSet<string> headers)
+    private async Task CreateMatchedCsvIfEnabled(DataTable data, string ts)
     {
         if (!string.IsNullOrEmpty(watcherConfig.Value.MatchedRecordsDirectory))
         {
             Directory.CreateDirectory(watcherConfig.Value.MatchedRecordsDirectory);
 
-            var successOutputFilePath = GetOutputFileName(ts, watcherConfig.Value.MatchedRecordsDirectory, Path.GetFileName(filePath), "matched");
+            var successOutputFilePath = Path.Combine(watcherConfig.Value.MatchedRecordsDirectory, $"{data.TableName}_matched_output_{ts}.csv");
 
-            var matchedRecords = records
-                .Where(x => x.TryGetValue(HeaderStatus, out var status) && status == nameof(MatchStatus.Match))
-                .ToList();
+            var birthDateColumn = mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)].Single(data.Columns.Contains);
 
-            // We only want to include matched records for under 19s in the output file.
-            // As we cannot guarantee the date format in the input file, we will attempt to parse using a range of common UK date formats.
-            // IF we encounter another format in the future, we can add configuration to specify which format to use.
-            var birthDateColumn = mapping.ColumnMappings[nameof(MatchPersonPayload.BirthDate)]
-                .FirstOrDefault(headers.Contains);
+            var outputData = data.AsEnumerable()
+                // Confident matches
+                .Where(row => row.Field<string>(HeaderStatus) == nameof(MatchStatus.Match))
+                // Under 19s only
+                .Where(row =>
+                {
+                    var birthDateStringValue = row.Field<string>(birthDateColumn);
+                    if (string.IsNullOrWhiteSpace(birthDateStringValue)) return false;
+                    var birthDateParsed = DateOnly.ParseExact(birthDateStringValue, AcceptedCsvDateFormats,
+                        CultureInfo.InvariantCulture);
+                    return PersonSpecificationUtils.IsAgeEighteenOrUnder(birthDateParsed);
+                })
+                .CopyToDataTable();
 
-            var underNineteens = matchedRecords
-                .Where(x => birthDateColumn != null
-                            && x.TryGetValue(birthDateColumn, out var dobStr)
-                            && DateOnly.TryParseExact(dobStr, AcceptedCsvDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dob)
-                            && PersonSpecificationUtils.IsAgeEighteenOrUnder(dob))
-                .ToList();
-            logger.LogInformation("Writing matched records CSV file to: {SuccessOutputFilePath}. Matched record count {Count}", successOutputFilePath, underNineteens.Count);
-            await WriteCsvAsync(successOutputFilePath, headers, underNineteens);
+            logger.LogInformation("Writing matched records CSV file to: {SuccessOutputFilePath}. Matched record count {Count}", successOutputFilePath, outputData.Rows.Count);
+            await WriteCsvAsync(successOutputFilePath, outputData);
         }
     }
 
-    private static Dictionary<string, object> GetOptionalFields(Dictionary<string, string> record)
+    private static Dictionary<string, object> GetOptionalFields(DataRow row)
     {
         // As we cannot guarantee the presence of these fields in the CSV, we will check and only add them if they exist and are non-empty.
         var optionalFields = new Dictionary<string, object>();
-        var activeCin = record.GetFirstValueOrDefault(["ActiveCIN"]);
-        var activeCla = record.GetFirstValueOrDefault(["ActiveCLA"]);
-        var activeCp = record.GetFirstValueOrDefault(["ActiveCP"]);
-        var activeEhm = record.GetFirstValueOrDefault(["ActiveEHM"]);
-        var ethnicity = record.GetFirstValueOrDefault(["Ethnicity"]);
-        var immigrationStatus = record.GetFirstValueOrDefault(["ImmigrationStatus"]);
+        var activeCin = row.GetFirstValueOrDefault(["ActiveCIN"]);
+        var activeCla = row.GetFirstValueOrDefault(["ActiveCLA"]);
+        var activeCp = row.GetFirstValueOrDefault(["ActiveCP"]);
+        var activeEhm = row.GetFirstValueOrDefault(["ActiveEHM"]);
+        var ethnicity = row.GetFirstValueOrDefault(["Ethnicity"]);
+        var immigrationStatus = row.GetFirstValueOrDefault(["ImmigrationStatus"]);
         if (!string.IsNullOrWhiteSpace(activeCin))
         {
             optionalFields.TryAdd("ActiveCIN", activeCin);
@@ -176,32 +175,19 @@ public class MatchingCsvFileProcessor(
         }
     }
 
-    public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
+    public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(DataTable inputData, string outputPath)
     {
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException("File not found", filePath);
-        }
+        AddExtraCsvHeaders(inputData);
 
-        var ts = $"_{DateTime.Now:yyyyMMdd-HHmmss}";
-
-        var outputDirectory =
-            Path.Combine(outputPath, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(filePath)));
-        Directory.CreateDirectory(outputDirectory);
-
-        (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
-
-        AddExtraCsvHeaders(headers);
-
-        int totalRecords = records.Count;
+        int totalRecords = inputData.Rows.Count;
         int currentRecord = 0;
         var progressStopwatch = new Stopwatch();
         progressStopwatch.Start();
 
-        logger.LogInformation("Beginning to process {TotalRecords} records from file: {FilePath}", totalRecords,
-            filePath);
+        logger.LogInformation("Beginning to process {TotalRecords} records from file: {TableName}", totalRecords,
+            inputData.TableName);
 
-        foreach (var record in records)
+        foreach (DataRow row in inputData.Rows)
         {
             currentRecord++;
             // Log progress at least every 5 seconds so we can see how many records are being processed over time.
@@ -211,18 +197,24 @@ public class MatchingCsvFileProcessor(
                 progressStopwatch.Restart();
             }
 
-            await ProcessRecord(record, _stats);
+            await ProcessRecord(row, _stats);
             // this delay is to try and stop requests getting throttled by the FHIR api.
             await Task.Delay(250);
         }
 
         progressStopwatch.Stop();
 
-        await CreateMatchedCsvIfEnabled(filePath, ts, records, headers);
+        var ts = $"_{Process.GetCurrentProcess().StartTime:yyyyMMdd-HHmmss}";
 
-        var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
+        await CreateMatchedCsvIfEnabled(inputData, ts);
+
+        var outputDirectory =
+            Path.Combine(outputPath, string.Concat(ts, "__", inputData.TableName));
+        Directory.CreateDirectory(outputDirectory);
+
+        var outputFilePath = GetOutputFileName(ts, outputDirectory, inputData.TableName + ".csv");
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
-        await WriteCsvAsync(outputFilePath, headers, records);
+        await WriteCsvAsync(outputFilePath, inputData);
 
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, _stats);
         var csvResult = new ProcessCsvFileResult(outputFilePath, statsJsonFileName, _stats, outputDirectory);
@@ -230,72 +222,27 @@ public class MatchingCsvFileProcessor(
         return csvResult;
     }
 
-    private static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(
-        string filePath)
-    {
-        var headers = new HashSet<string>();
-        var records = new List<Dictionary<string, string>>();
-
-        if (!await IsFileReadyAsync(filePath))
-        {
-            throw new IOException($"File {filePath} is not ready for reading.");
-        }
-
-        using (var reader = new StreamReader(filePath))
-        using (var csv = new CsvReader(reader,
-                   new CsvConfiguration(CultureInfo.InvariantCulture)
-                   {
-                       IgnoreBlankLines = true,
-                       MissingFieldFound = null,
-                       HeaderValidated = null
-                   }))
-        {
-            await csv.ReadAsync();
-            csv.ReadHeader();
-
-            if (csv.HeaderRecord is not null)
-            {
-                headers.UnionWith(csv.HeaderRecord);
-            }
-
-            while (await csv.ReadAsync())
-            {
-                var row = new Dictionary<string, string>();
-                foreach (var header in headers)
-                {
-                    row[header] = csv.GetField(header) ?? string.Empty;
-                }
-
-                records.Add(row);
-            }
-        }
-
-        return (headers, records);
-    }
-
     /// <summary>
     /// Writes a CSV file asynchronously with the provided headers and records.
     /// The output file name is based on the input file name, suffixed with "_output_{timestamp}".
     /// </summary>
-    private static async Task WriteCsvAsync(string fileName, HashSet<string> headers,
-        List<Dictionary<string, string>> records)
+    public static async Task WriteCsvAsync(string fileName, DataTable inputData)
     {
         await using var writer = new StreamWriter(fileName);
         await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
 
-        foreach (var header in headers)
+        foreach (DataColumn column in inputData.Columns)
         {
-            csv.WriteField(header);
+            csv.WriteField(column.ColumnName);
         }
 
         await csv.NextRecordAsync();
 
-
-        foreach (var record in records)
+        foreach (DataRow row in inputData.Rows)
         {
-            foreach (var header in headers)
+            foreach (DataColumn column in inputData.Columns)
             {
-                csv.WriteField(record.GetValueOrDefault(header, ""));
+                csv.WriteField(row.Field<string>(column));
             }
 
             await csv.NextRecordAsync();
@@ -307,32 +254,6 @@ public class MatchingCsvFileProcessor(
         var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
         var extension = Path.GetExtension(fileName);
         return Path.Combine(outputDirectory, $"{filenameWithoutExt}_output_{timestamp}{extension}");
-    }
-
-    private static string GetOutputFileName(string timestamp, string outputDirectory, string fileName,
-        string fileSuffix)
-    {
-        var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
-        var extension = Path.GetExtension(fileName);
-        return Path.Combine(outputDirectory, $"{filenameWithoutExt}_{fileSuffix}_output_{timestamp}{extension}");
-    }
-
-    private static async Task<bool> IsFileReadyAsync(string filePath, int maxAttempts = 5, int delayMs = 1000)
-    {
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            try
-            {
-                await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
-                return true;
-            }
-            catch (IOException)
-            {
-                await Task.Delay(delayMs);
-            }
-        }
-
-        return false;
     }
 
     private static string WriteStatsJsonFile(string outputDirectory, string ts, object stats)

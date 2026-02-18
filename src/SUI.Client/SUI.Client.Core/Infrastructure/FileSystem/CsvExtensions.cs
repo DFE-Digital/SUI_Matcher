@@ -1,13 +1,23 @@
+using System.Data;
+
 namespace SUI.Client.Core.Infrastructure.FileSystem;
 
 public static class CsvExtensions
 {
-    public static string GetFirstValueOrDefault(this Dictionary<string, string> record, IEnumerable<string> keys)
+    public static string GetFirstValueOrDefault(this DataRow row, IEnumerable<string> possibleColumnNames)
     {
-        foreach (var key in keys)
+        foreach (var columnName in possibleColumnNames)
         {
-            if (record.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
-                return value;
+            if (!row.Table.Columns.Contains(columnName))
+            {
+                continue;
+            }
+
+            var columnValue = row.Field<string>(columnName);
+            if (!string.IsNullOrEmpty(columnValue))
+            {
+                return columnValue;
+            }
         }
         return string.Empty;
     }
