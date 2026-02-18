@@ -20,6 +20,7 @@ public class SearchStrategyTests
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy2, typeof(SearchStrategy2))]
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy3, typeof(SearchStrategy3))]
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy4, typeof(SearchStrategy4))]
+    [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy5, typeof(SearchStrategy5))]
     public void SearchStrategyFactory_ReturnsCorrectStrategyInstance(string strategyName, Type expectedType)
     {
         var factory = SearchStrategyFactory.Get(strategyName);
@@ -30,6 +31,20 @@ public class SearchStrategyTests
     public void SearchStrategyFactory_ThrowsOnUnknownStrategy()
     {
         Assert.Throws<ArgumentException>(() => SearchStrategyFactory.Get("unknown"));
+    }
+    
+    [Fact]
+    public void SearchStrategy5_ShouldHaveNoDuplicateKeyExceptions()
+    {
+        var strategy = new SearchStrategy5();
+        var versions = strategy.GetAllAlgorithmVersions();
+
+        foreach (var version in versions)
+        {
+            var sut = new SearchStrategy5(version);
+            var exception = Record.Exception(() => sut.BuildQuery(_searchSpecification));
+            Assert.Null(exception);
+        }
     }
 
     [Fact]

@@ -11,6 +11,7 @@ public static class SearchStrategyFactory
             { SharedConstants.SearchStrategy.Strategies.Strategy2, v => new SearchStrategy2(v) },
             { SharedConstants.SearchStrategy.Strategies.Strategy3, v => new SearchStrategy3(v) },
             { SharedConstants.SearchStrategy.Strategies.Strategy4, v => new SearchStrategy4(v) },
+            { SharedConstants.SearchStrategy.Strategies.Strategy5, v => new SearchStrategy5(v) },
         };
 
     public static ISearchStrategy Get(string name, int? version = null)
