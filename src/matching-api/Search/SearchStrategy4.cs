@@ -56,7 +56,7 @@ public class SearchStrategy4 : ISearchStrategy
 
         return queryBuilder.Build();
     }
-    
+
     /// <summary>
     ///  Version 2 removes the non-fuzzy and fuzzy GFD range searches compared to V1, to test the impact of removing these searches on matching performance
     /// </summary>
