@@ -38,18 +38,24 @@ public class SearchStrategy5 : ISearchStrategy
     }
 
     /// <summary>
-    /// Version 1 removes the first name entirely from the search.
-    /// This is based on that the first name can contain baby names like 'baby' in both local and PDS but differently.
-    /// which are only used temporarily and may be less likely to match with a record.
+    /// Version 1 replicates Strategy4 Version 2 and adds two additional queries which remove the first name from the search.
     /// </summary>
     /// <param name="queryBuilder"></param>
     /// <returns></returns>
     private static OrderedDictionary<string, SearchQuery> Version1(SearchQueryBuilder queryBuilder)
     {
+        queryBuilder.AddNonFuzzyGfd();
+
+        queryBuilder.AddFuzzyGfd();
+        
         queryBuilder.AddFuzzyFdgPostcode();
         queryBuilder.AddFuzzyFdPostcode();
 
         queryBuilder.AddFuzzyAll();
+
+        queryBuilder.AddNonFuzzyGfdRangePostcode(usePostcodeWildcard: false);
+
+        queryBuilder.AddFuzzyGfdRangePostcode();
 
         return queryBuilder.Build();
     }
