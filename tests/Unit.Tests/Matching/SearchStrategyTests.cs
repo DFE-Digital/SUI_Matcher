@@ -32,7 +32,7 @@ public class SearchStrategyTests
     {
         Assert.Throws<ArgumentException>(() => SearchStrategyFactory.Get("unknown"));
     }
-    
+
     [Fact]
     public void SearchStrategy5_ShouldHaveNoDuplicateKeyExceptions()
     {
