@@ -20,14 +20,14 @@ public class SearchStrategy5 : ISearchStrategy
             throw new InvalidStrategyException(
                 $"{SharedConstants.SearchStrategy.VersionErrorMessagePrefix} ({version}) For strategy ({SharedConstants.SearchStrategy.Strategies.Strategy5})");
     }
-    
+
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
     {
         var queryBuilder = new SearchQueryBuilder(model, dobRange: 6, preprocessNames: true);
 
         return VersionFactory(AlgorithmVersion, queryBuilder);
     }
-    
+
     private static OrderedDictionary<string, SearchQuery> VersionFactory(int version, SearchQueryBuilder queryBuilder)
     {
         return version switch
@@ -47,7 +47,7 @@ public class SearchStrategy5 : ISearchStrategy
         queryBuilder.AddNonFuzzyGfd();
 
         queryBuilder.AddFuzzyGfd();
-        
+
         queryBuilder.AddFuzzyFdgPostcode();
         queryBuilder.AddFuzzyFdPostcode();
 
@@ -64,7 +64,7 @@ public class SearchStrategy5 : ISearchStrategy
     {
         return AlgorithmVersion;
     }
-    
+
     public IReadOnlyCollection<int?> GetAllAlgorithmVersions()
     {
         return AllVersions;

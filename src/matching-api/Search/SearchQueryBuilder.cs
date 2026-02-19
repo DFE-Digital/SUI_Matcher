@@ -212,7 +212,7 @@ public class SearchQueryBuilder
                 Birthdate = DobRange
             });
     }
-    
+
     /// <summary>
     /// Family name, DOB, Gender and postcode
     /// </summary>
@@ -228,7 +228,7 @@ public class SearchQueryBuilder
                 AddressPostalcode = _model.AddressPostalCode
             });
     }
-    
+
     /// <summary>
     /// Family name, DOB and postcode
     /// </summary>
@@ -271,7 +271,7 @@ public class SearchQueryBuilder
         });
     }
 
-    
+
 
     public void TryAddFuzzyAltDob()
     {
