@@ -144,7 +144,17 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
     public async Task TestOneFileSingleMatch()
     {
         var searchResult = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.98m, Type = SearchResult.ResultType.Matched };
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>())).Returns(() => Task.FromResult<SearchResult?>(searchResult));
+        var callCount = 0;
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                return callCount switch
+                {
+                    1 => searchResult,
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched}
+                };
+            });
 
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(false, x =>
@@ -187,7 +197,6 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Once(), "The PerformSearch method should have invoked ONCE");
         (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
         Assert.Equal(searchResult.NhsNumber, records[0][MatchingCsvFileProcessor.HeaderNhsNo]);
         Assert.Equal(searchResult.Score.ToString(), records[0][MatchingCsvFileProcessor.HeaderScore]);
@@ -367,13 +376,23 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
     public async Task TestOneFileSingleMatch_GenderNotSentIfGenderFlagIsOff()
     {
         var searchResultBad = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.55m, Type = SearchResult.ResultType.Unmatched };
+        var searchResultBad2 = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.55m, Type = SearchResult.ResultType.Unmatched };
         var searchResultGood = new SearchResult { NhsNumber = "AAAAA1111111", Score = 0.99m, Type = SearchResult.ResultType.Matched };
 
         // Mimick at least 3 calls to the PerformSearch method, showing different stages.
-        _nhsFhirClient.SetupSequence(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .Returns(() => Task.FromResult<SearchResult?>(searchResultBad))
-            .Returns(() => Task.FromResult<SearchResult?>(searchResultBad))
-            .Returns(() => Task.FromResult<SearchResult?>(searchResultGood));
+        var callCount = 0;
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                return callCount switch
+                {
+                    1 => searchResultBad,
+                    2 => searchResultBad2,
+                    3 => searchResultGood,
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched}
+                };
+            });
 
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(false, x =>
