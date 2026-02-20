@@ -225,12 +225,18 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task LowConfidenceMatch()
     {
+        var callCount = 0;
         _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-           .ReturnsAsync(new SearchResult
-           {
-               Type = SearchResult.ResultType.Matched,
-               Score = 0.84m
-           });
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                return callCount switch
+                {
+                    1 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.81m },
+                    2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.84m },
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched}
+                };
+            });
 
         var model = new SearchSpecification
         {
