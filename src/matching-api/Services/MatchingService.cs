@@ -214,7 +214,7 @@ public class MatchingService(
         var queries = strategy.BuildQuery(model);
         var bestQueryResult = new BestQueryResult();
         MatchResult2? firstMatchedQueryResult = null;
-        
+
 
         foreach (var queryEntry in queries)
         {
@@ -234,7 +234,7 @@ public class MatchingService(
                     if (score >= 0.95m)
                     {
                         firstMatchedQueryResult ??= new MatchResult2(searchResult, status, score, queryCode);
-                        
+
                     }
                 }
 

@@ -152,7 +152,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                 return callCount switch
                 {
                     1 => searchResult,
-                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched}
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched }
                 };
             });
 
@@ -390,7 +390,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
                     1 => searchResultBad,
                     2 => searchResultBad2,
                     3 => searchResultGood,
-                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched}
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched }
                 };
             });
 

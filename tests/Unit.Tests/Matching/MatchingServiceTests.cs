@@ -234,7 +234,7 @@ public sealed class MatchingServiceTests
                 {
                     1 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.81m },
                     2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.84m },
-                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched}
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched }
                 };
             });
 
@@ -507,7 +507,7 @@ public sealed class MatchingServiceTests
                     2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.97m },
                     3 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.98m },
                     4 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.84m },
-                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched} // Everything else returns unmatched
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched } // Everything else returns unmatched
                 };
             });
 
@@ -516,7 +516,7 @@ public sealed class MatchingServiceTests
             BirthDate = new DateOnly(2000, 11, 16),
             Family = "Smith",
             Given = "John",
-            SearchStrategy =  SharedConstants.SearchStrategy.Strategies.Strategy4,
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy4,
             StrategyVersion = 2 // Contains 5 queries
         };
 
