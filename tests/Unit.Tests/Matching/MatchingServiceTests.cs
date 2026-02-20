@@ -484,4 +484,41 @@ public sealed class MatchingServiceTests
             (q.FuzzyMatch == null || q.FuzzyMatch == false) && q.ExactMatch == false)));
 
     }
+
+    [Fact]
+    public async Task ShouldRunAllQueries_AndStillReturnOnlyTheFirstMatch()
+    {
+        // This is an introduced feature so we can test if better results do appear even after the first one match is found.
+        // Arrange
+        var callCount = 0;
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                return callCount switch
+                {
+                    1 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.81m },
+                    2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.97m },
+                    3 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.98m },
+                    4 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.84m },
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched} // Everything else returns unmatched
+                };
+            });
+
+        var model = new SearchSpecification
+        {
+            BirthDate = new DateOnly(2000, 11, 16),
+            Family = "Smith",
+            Given = "John",
+            SearchStrategy =  SharedConstants.SearchStrategy.Strategies.Strategy4,
+            StrategyVersion = 2 // Contains 5 queries
+        };
+
+        // Act
+        var result = await _sut.SearchAsync(model);
+
+        // Assert
+        Assert.Equal(0.97m, result.Result!.Score);
+        _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.AtLeast(5));
+    }
 }

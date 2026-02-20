@@ -213,6 +213,8 @@ public class MatchingService(
     {
         var queries = strategy.BuildQuery(model);
         var bestQueryResult = new BestQueryResult();
+        MatchResult2? firstMatchedQueryResult = null;
+        
 
         foreach (var queryEntry in queries)
         {
@@ -231,11 +233,8 @@ public class MatchingService(
 
                     if (score >= 0.95m)
                     {
-                        logger.LogInformation(
-                            "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
-                            queryCode, status.ToString(), score);
-
-                        return new MatchResult2(searchResult, status, score, queryCode); // single match with confidence score
+                        firstMatchedQueryResult ??= new MatchResult2(searchResult, status, score, queryCode);
+                        
                     }
                 }
 
@@ -243,6 +242,16 @@ public class MatchingService(
             }
         }
 
+        // Match
+        if (firstMatchedQueryResult != null)
+        {
+            logger.LogInformation(
+                "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
+                firstMatchedQueryResult.ProcessStage, firstMatchedQueryResult.Status.ToString(), firstMatchedQueryResult.Score);
+            return firstMatchedQueryResult;
+        }
+
+        // Next best match that is not a 'Match'
         if (bestQueryResult.CurrentSearchResult != null)
         {
             logger.LogInformation("Search query ({Query}) resulted in status '{Status}'", bestQueryResult.CurrentQueryCode, bestQueryResult.CurrentStatus);
