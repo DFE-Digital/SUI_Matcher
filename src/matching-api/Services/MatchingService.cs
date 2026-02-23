@@ -230,7 +230,7 @@ public class MatchingService(
                 {
                     var score = searchResult.Score.GetValueOrDefault();
                     var status = GetMatchStatusFromScore(score);
-                    
+
                     bestQueryResult = UpdateSingleMatchBestQueryResult(searchResult, bestQueryResult, queryCode, score, status);
 
                     if (score >= 0.95m)
@@ -244,7 +244,7 @@ public class MatchingService(
                             // we need to check if the NHS number is the same as the first match to determine if this is a logical multi match or not
                             var nhsNumberIsDifferent = searchResult.NhsNumber != firstMatchedQueryResult.Result?.NhsNumber;
                             LogLogicalMultiMatch(queryCode, searchResult.Score, firstMatchedQueryResult.Score, nhsNumberIsDifferent);
-                            
+
                             if (nhsNumberIsDifferent)
                             {
                                 // Taking the latest match result as we do not support returning many. Logs can determine other details.
@@ -329,7 +329,7 @@ public class MatchingService(
         }
         return bestQueryResult;
     }
-    
+
     private static MatchStatus GetMatchStatusFromScore(decimal score)
     {
         switch (score)
