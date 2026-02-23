@@ -223,15 +223,15 @@ public class MatchingService(
 
             logger.LogInformation("Performing search query ({Query}) against Nhs Fhir API", queryCode);
 
-
-
             var searchResult = await nhsFhirClient.PerformSearch(query);
             if (searchResult != null)
             {
                 if (searchResult.Type == SearchResult.ResultType.Matched)
                 {
-                    HandleSingleMatchResult(searchResult, bestQueryResult, queryCode,
-                        out MatchStatus status, out decimal score);
+                    var score = searchResult.Score.GetValueOrDefault();
+                    var status = GetMatchStatusFromScore(score);
+                    
+                    bestQueryResult = UpdateSingleMatchBestQueryResult(searchResult, bestQueryResult, queryCode, score, status);
 
                     if (score >= 0.95m)
                     {
@@ -254,7 +254,7 @@ public class MatchingService(
                     }
                 }
 
-                HandleMultipleMatchesResult(searchResult, bestQueryResult, queryCode);
+                bestQueryResult = UpdateMultipleMatchBestQueryResult(searchResult, bestQueryResult, queryCode);
             }
         }
 
@@ -295,18 +295,39 @@ public class MatchingService(
             currentScore);
     }
 
-    private static void HandleSingleMatchResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode, out MatchStatus status, out decimal score)
+    private static BestQueryResult UpdateSingleMatchBestQueryResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode, decimal score, MatchStatus status)
     {
-        status = GetMatchStatusFromScore(searchResult.Score.GetValueOrDefault());
-        score = searchResult.Score.GetValueOrDefault();
-
         if (score > bestQueryResult.CurrentScore)
         {
-            bestQueryResult.CurrentStatus = status;
-            bestQueryResult.CurrentScore = score;
-            bestQueryResult.CurrentQueryCode = queryCode;
-            bestQueryResult.CurrentSearchResult = searchResult;
+            return bestQueryResult with
+            {
+                CurrentQueryCode = queryCode,
+                CurrentScore = score,
+                CurrentStatus = status,
+                CurrentSearchResult = searchResult
+            };
         }
+
+        return bestQueryResult;
+    }
+
+    private BestQueryResult UpdateMultipleMatchBestQueryResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode)
+    {
+        if (searchResult.Type == SearchResult.ResultType.MultiMatched)
+        {
+            logger.LogInformation("Search query ({Query}) resulted in status 'ManyMatch'", queryCode);
+
+            if (bestQueryResult.CurrentScore == 0 && (int)MatchStatus.ManyMatch <= (int)bestQueryResult.CurrentStatus)
+            {
+                return bestQueryResult with
+                {
+                    CurrentStatus = MatchStatus.ManyMatch,
+                    CurrentQueryCode = queryCode,
+                    CurrentSearchResult = searchResult
+                };
+            }
+        }
+        return bestQueryResult;
     }
     
     private static MatchStatus GetMatchStatusFromScore(decimal score)
@@ -329,26 +350,11 @@ public class MatchingService(
         }
     }
 
-    private void HandleMultipleMatchesResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode)
+    private sealed record BestQueryResult
     {
-        if (searchResult.Type == SearchResult.ResultType.MultiMatched)
-        {
-            logger.LogInformation("Search query ({Query}) resulted in status 'ManyMatch'", queryCode);
-
-            if (bestQueryResult.CurrentScore == 0 && (int)MatchStatus.ManyMatch <= (int)bestQueryResult.CurrentStatus)
-            {
-                bestQueryResult.CurrentStatus = MatchStatus.ManyMatch;
-                bestQueryResult.CurrentQueryCode = queryCode;
-                bestQueryResult.CurrentSearchResult = searchResult;
-            }
-        }
-    }
-
-    private sealed class BestQueryResult
-    {
-        public MatchStatus CurrentStatus { get; set; } = MatchStatus.NoMatch;
-        public decimal CurrentScore { get; set; } = 0;
-        public string CurrentQueryCode { get; set; } = "";
-        public SearchResult? CurrentSearchResult { get; set; }
+        public MatchStatus CurrentStatus { get; init; } = MatchStatus.NoMatch;
+        public decimal CurrentScore { get; init; } = 0;
+        public string CurrentQueryCode { get; init; } = "";
+        public SearchResult? CurrentSearchResult { get; init; }
     }
 }
