@@ -223,6 +223,8 @@ public class MatchingService(
 
             logger.LogInformation("Performing search query ({Query}) against Nhs Fhir API", queryCode);
 
+
+
             var searchResult = await nhsFhirClient.PerformSearch(query);
             if (searchResult != null)
             {
@@ -233,8 +235,14 @@ public class MatchingService(
 
                     if (score >= 0.95m)
                     {
-                        firstMatchedQueryResult ??= new MatchResult2(searchResult, status, score, queryCode);
-
+                        if (firstMatchedQueryResult == null)
+                        {
+                            firstMatchedQueryResult = new MatchResult2(searchResult, status, score, queryCode);
+                        }
+                        else
+                        {
+                            LogQueryResultMatching(queryCode, searchResult, firstMatchedQueryResult!);
+                        }
                     }
                 }
 
@@ -262,6 +270,16 @@ public class MatchingService(
         logger.LogInformation("Search algorithm resulted in status 'NoMatch'");
 
         return new MatchResult2(MatchStatus.NoMatch);
+    }
+
+    private void LogQueryResultMatching(string queryCode, SearchResult currentMatchedSearchResult, MatchResult2 firstMatchedSearchResult)
+    {
+        var nhsNumberIsDifferent = currentMatchedSearchResult.NhsNumber != firstMatchedSearchResult.Result?.NhsNumber;
+        logger.LogInformation("[MatchedQueryResult] queryCode: {QueryCode} NhsNumberIsDifferent: {NhsNumberDiff} and first match score: {FirstScore} and current score: {CurrentScore}",
+            queryCode,
+            nhsNumberIsDifferent,
+            firstMatchedSearchResult.Score,
+            currentMatchedSearchResult.Score);
     }
 
     private static void HandleSingleMatchResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode, out MatchStatus status, out decimal score)
