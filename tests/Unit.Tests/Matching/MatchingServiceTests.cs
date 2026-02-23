@@ -527,4 +527,35 @@ public sealed class MatchingServiceTests
         Assert.Equal(0.97m, result.Result!.Score);
         _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.AtLeast(5));
     }
+
+    [Fact]
+    public async Task ShouldReturnManyMatch_WhenTwoConfidentMatchesFoundWithDifferentNhsNumbers()
+    {
+        // Arrange
+        var callCount = 0;
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                return callCount switch
+                {
+                    1 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.95m, NhsNumber = "123" },
+                    2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.96m, NhsNumber = "456" },
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched }
+                };
+            });
+
+        var model = new SearchSpecification
+        {
+            BirthDate = new DateOnly(2000, 11, 16),
+            Family = "Smith",
+            Given = "John"
+        };
+
+        // Act
+        var result = await _sut.SearchAsync(model);
+
+        // Assert
+        Assert.Equal(MatchStatus.ManyMatch, result.Result!.MatchStatus);
+    }
 }
