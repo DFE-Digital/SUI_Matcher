@@ -6,7 +6,11 @@ using Shared.Models;
 namespace MatchingApi.Search;
 
 /// <summary>
-/// Strategy 5 introduces a theory that by removing the first name from the search, we can increase match rate
+/// Strategy 5 introduces a theory that sometimes by removing the first name from the 
+/// search, the match rate could increase. It would increase in cases where the first name 
+/// on the local authority side is a placeholder name, such as 'Baby' or 'Male Infant'.
+///
+/// This theory proved to be false and no significant improvements occurred in these cases.
 /// </summary>
 public class SearchStrategy5 : ISearchStrategy
 {
