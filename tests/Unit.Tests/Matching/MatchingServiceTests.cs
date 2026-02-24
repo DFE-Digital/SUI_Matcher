@@ -225,12 +225,18 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task LowConfidenceMatch()
     {
+        var callCount = 0;
         _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-           .ReturnsAsync(new SearchResult
-           {
-               Type = SearchResult.ResultType.Matched,
-               Score = 0.84m
-           });
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                return callCount switch
+                {
+                    1 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.81m },
+                    2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.84m },
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched }
+                };
+            });
 
         var model = new SearchSpecification
         {
@@ -483,5 +489,73 @@ public sealed class MatchingServiceTests
         _nhsFhirClient.Verify(x => x.PerformSearch(It.Is<SearchQuery>(q =>
             (q.FuzzyMatch == null || q.FuzzyMatch == false) && q.ExactMatch == false)));
 
+    }
+
+    [Fact]
+    public async Task ShouldRunAllQueries_AndStillReturnOnlyTheFirstMatch()
+    {
+        // This is an introduced feature so we can test if better results do appear even after the first one match is found.
+        // Arrange
+        var callCount = 0;
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                return callCount switch
+                {
+                    1 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.81m },
+                    2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.97m },
+                    3 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.98m },
+                    4 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.84m },
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched } // Everything else returns unmatched
+                };
+            });
+
+        var model = new SearchSpecification
+        {
+            BirthDate = new DateOnly(2000, 11, 16),
+            Family = "Smith",
+            Given = "John",
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy4,
+            StrategyVersion = 2 // Contains 5 queries
+        };
+
+        // Act
+        var result = await _sut.SearchAsync(model);
+
+        // Assert
+        Assert.Equal(0.97m, result.Result!.Score);
+        _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.AtLeast(5));
+    }
+
+    [Fact]
+    public async Task ShouldReturnManyMatch_WhenTwoConfidentMatchesFoundWithDifferentNhsNumbers()
+    {
+        // Arrange
+        var callCount = 0;
+        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                return callCount switch
+                {
+                    1 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.95m, NhsNumber = "123" },
+                    2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.96m, NhsNumber = "456" },
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched }
+                };
+            });
+
+        var model = new SearchSpecification
+        {
+            BirthDate = new DateOnly(2000, 11, 16),
+            Family = "Smith",
+            Given = "John"
+        };
+
+        // Act
+        var result = await _sut.SearchAsync(model);
+
+        // Assert
+        Assert.Equal(MatchStatus.ManyMatch, result.Result!.MatchStatus);
     }
 }

@@ -213,6 +213,8 @@ public class MatchingService(
     {
         var queries = strategy.BuildQuery(model);
         var bestQueryResult = new BestQueryResult();
+        MatchResult2? firstMatchedQueryResult = null;
+        MatchResult2? logicalManyMatch = null;
 
         foreach (var queryEntry in queries)
         {
@@ -226,23 +228,52 @@ public class MatchingService(
             {
                 if (searchResult.Type == SearchResult.ResultType.Matched)
                 {
-                    HandleSingleMatchResult(searchResult, bestQueryResult, queryCode,
-                        out MatchStatus status, out decimal score);
+                    var score = searchResult.Score.GetValueOrDefault();
+                    var status = GetMatchStatusFromScore(score);
+
+                    bestQueryResult = UpdateSingleMatchBestQueryResult(searchResult, bestQueryResult, queryCode, score, status);
 
                     if (score >= 0.95m)
                     {
-                        logger.LogInformation(
-                            "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
-                            queryCode, status.ToString(), score);
+                        if (firstMatchedQueryResult == null)
+                        {
+                            firstMatchedQueryResult = new MatchResult2(searchResult, status, score, queryCode);
+                        }
+                        else // Multiple high confidence matches found
+                        {
+                            // we need to check if the NHS number is the same as the first match to determine if this is a logical multi match or not
+                            var nhsNumberIsDifferent = searchResult.NhsNumber != firstMatchedQueryResult.Result?.NhsNumber;
+                            LogLogicalMultiMatch(queryCode, searchResult.Score, firstMatchedQueryResult.Score, nhsNumberIsDifferent);
 
-                        return new MatchResult2(searchResult, status, score, queryCode); // single match with confidence score
+                            if (nhsNumberIsDifferent)
+                            {
+                                // Taking the latest match result as we do not support returning many. Logs can determine other details.
+                                logicalManyMatch = new MatchResult2(MatchStatus.ManyMatch, queryCode);
+                            }
+                        }
                     }
                 }
 
-                HandleMultipleMatchesResult(searchResult, bestQueryResult, queryCode);
+                bestQueryResult = UpdateMultipleMatchBestQueryResult(searchResult, bestQueryResult, queryCode);
             }
         }
 
+        // Logical many match takes precedence over any other match result due to it finding 2 confident matches with different Ids.
+        if (logicalManyMatch is not null)
+        {
+            return logicalManyMatch;
+        }
+
+        // Match
+        if (firstMatchedQueryResult != null)
+        {
+            logger.LogInformation(
+                "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
+                firstMatchedQueryResult.ProcessStage, firstMatchedQueryResult.Status.ToString(), firstMatchedQueryResult.Score);
+            return firstMatchedQueryResult;
+        }
+
+        // Next best match that is not a 'Match'
         if (bestQueryResult.CurrentSearchResult != null)
         {
             logger.LogInformation("Search query ({Query}) resulted in status '{Status}'", bestQueryResult.CurrentQueryCode, bestQueryResult.CurrentStatus);
@@ -255,33 +286,32 @@ public class MatchingService(
         return new MatchResult2(MatchStatus.NoMatch);
     }
 
-    private static void HandleSingleMatchResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode, out MatchStatus status, out decimal score)
+    private void LogLogicalMultiMatch(string queryCode, decimal? currentScore, decimal? firstMatchScore, bool nhsNumberIsDifferent)
     {
-        status = MatchStatus.NoMatch;
-        score = searchResult.Score.GetValueOrDefault();
-        if (score >= 0.95m)
-        {
-            status = MatchStatus.Match;
-        }
-        else if (score >= 0.85m)
-        {
-            status = MatchStatus.PotentialMatch;
-        }
-        else if (score != 0 && score < 0.85m)
-        {
-            status = MatchStatus.LowConfidenceMatch;
-        }
-
-        if (score > bestQueryResult.CurrentScore)
-        {
-            bestQueryResult.CurrentStatus = status;
-            bestQueryResult.CurrentScore = score;
-            bestQueryResult.CurrentQueryCode = queryCode;
-            bestQueryResult.CurrentSearchResult = searchResult;
-        }
+        logger.LogInformation("[MatchedQueryResult] queryCode: {QueryCode} NhsNumberIsDifferent: {NhsNumberDiff} and first match score: {FirstScore} and current score: {CurrentScore}",
+            queryCode,
+            nhsNumberIsDifferent,
+            firstMatchScore,
+            currentScore);
     }
 
-    private void HandleMultipleMatchesResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode)
+    private static BestQueryResult UpdateSingleMatchBestQueryResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode, decimal score, MatchStatus status)
+    {
+        if (score > bestQueryResult.CurrentScore)
+        {
+            return bestQueryResult with
+            {
+                CurrentQueryCode = queryCode,
+                CurrentScore = score,
+                CurrentStatus = status,
+                CurrentSearchResult = searchResult
+            };
+        }
+
+        return bestQueryResult;
+    }
+
+    private BestQueryResult UpdateMultipleMatchBestQueryResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode)
     {
         if (searchResult.Type == SearchResult.ResultType.MultiMatched)
         {
@@ -289,18 +319,42 @@ public class MatchingService(
 
             if (bestQueryResult.CurrentScore == 0 && (int)MatchStatus.ManyMatch <= (int)bestQueryResult.CurrentStatus)
             {
-                bestQueryResult.CurrentStatus = MatchStatus.ManyMatch;
-                bestQueryResult.CurrentQueryCode = queryCode;
-                bestQueryResult.CurrentSearchResult = searchResult;
+                return bestQueryResult with
+                {
+                    CurrentStatus = MatchStatus.ManyMatch,
+                    CurrentQueryCode = queryCode,
+                    CurrentSearchResult = searchResult
+                };
             }
+        }
+        return bestQueryResult;
+    }
+
+    private static MatchStatus GetMatchStatusFromScore(decimal score)
+    {
+        switch (score)
+        {
+            case >= 0.95m:
+                return MatchStatus.Match;
+            case >= 0.85m:
+                return MatchStatus.PotentialMatch;
+            default:
+                {
+                    if (score != 0 && score < 0.85m)
+                    {
+                        return MatchStatus.LowConfidenceMatch;
+                    }
+
+                    return MatchStatus.NoMatch;
+                }
         }
     }
 
-    private sealed class BestQueryResult
+    private sealed record BestQueryResult
     {
-        public MatchStatus CurrentStatus { get; set; } = MatchStatus.NoMatch;
-        public decimal CurrentScore { get; set; } = 0;
-        public string CurrentQueryCode { get; set; } = "";
-        public SearchResult? CurrentSearchResult { get; set; }
+        public MatchStatus CurrentStatus { get; init; } = MatchStatus.NoMatch;
+        public decimal CurrentScore { get; init; } = 0;
+        public string CurrentQueryCode { get; init; } = "";
+        public SearchResult? CurrentSearchResult { get; init; }
     }
 }
