@@ -222,7 +222,8 @@ public class SearchQueryBuilder
             new SearchQuery()
             {
                 FuzzyMatch = true,
-                Given = _preprocessNames ? ModelNames : ModelName,
+                Given = [],
+                Gender = _model.Gender,
                 Family = _preprocessNames ? FamilyName : _model.Family,
                 Birthdate = DobRange,
                 AddressPostalcode = _model.AddressPostalCode
@@ -238,7 +239,7 @@ public class SearchQueryBuilder
             new SearchQuery()
             {
                 FuzzyMatch = true,
-                Given = _preprocessNames ? ModelNames : ModelName,
+                Given = [],
                 Family = _preprocessNames ? FamilyName : _model.Family,
                 Birthdate = DobRange,
                 AddressPostalcode = _model.AddressPostalCode
