@@ -112,6 +112,15 @@ Strategy 4 takes version 14 of Strategy 3, splits the given name into an array, 
 6. [Fuzzy GFD Range](rules.md#fuzzy-gfd-range)
 7. [Fuzzy GFD Range (Postcode)](rules.md#fuzzy-gfd-range-postcode)
 
+#### Version 2
+
+1. [Non Fuzzy GFD](rules.md#non-fuzzy-gfd)
+2. [Fuzzy GFD](rules.md#fuzzy-gfd)
+3. [Fuzzy All](rules.md#fuzzy-all)
+5. [Non Fuzzy GFD Range (Postcode)](rules.md#non-fuzzy-gfd-range-postcode)
+7. [Fuzzy GFD Range (Postcode)](rules.md#fuzzy-gfd-range-postcode)
+
+
 ## Return Results
 
 Each query to PDS via the matcher returns one of the following results:
