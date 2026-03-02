@@ -89,7 +89,7 @@ Fuzzy search with given name, family name and DOB. Day swapped with month if day
 `given`=`topper`, <br>
 `birthdate`=`eq1960-09-06`<br>
 
-## Fuzzy FDG Postcode
+## Fuzzy FDRange Gender Postcode
 
 ``_fuzzy-match`=`true`,<br>
 `family`=`harley`, <br>
@@ -98,7 +98,7 @@ Fuzzy search with given name, family name and DOB. Day swapped with month if day
 `birthdate`=`eq1960-06-09`,<br>
 `address-postalcode`=`WN4 9BP`<br>
 
-## Fuzzy FD Postcode
+## Fuzzy FDRange Postcode
 
 ``_fuzzy-match`=`true`,<br>
 `family`=`harley`, <br>

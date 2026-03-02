@@ -216,9 +216,9 @@ public class SearchQueryBuilder
     /// <summary>
     /// Family name, DOB, Gender and postcode
     /// </summary>
-    public void AddFuzzyFdgPostcode()
+    public void AddFuzzyFDRangeGPostcode()
     {
-        _queries.Add("FuzzyFDGPostcode",
+        _queries.Add("FuzzyFDRangeGPostcode",
             new SearchQuery()
             {
                 FuzzyMatch = true,
@@ -233,9 +233,9 @@ public class SearchQueryBuilder
     /// <summary>
     /// Family name, DOB and postcode
     /// </summary>
-    public void AddFuzzyFdPostcode()
+    public void AddFuzzyFDRangePostcode()
     {
-        _queries.Add("FuzzyFDPostcode",
+        _queries.Add("FuzzyFDRangePostcode",
             new SearchQuery()
             {
                 FuzzyMatch = true,

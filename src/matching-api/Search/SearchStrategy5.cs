@@ -52,8 +52,8 @@ public class SearchStrategy5 : ISearchStrategy
 
         queryBuilder.AddFuzzyGfd();
 
-        queryBuilder.AddFuzzyFdgPostcode();
-        queryBuilder.AddFuzzyFdPostcode();
+        queryBuilder.AddFuzzyFDRangeGPostcode();
+        queryBuilder.AddFuzzyFDRangePostcode();
 
         queryBuilder.AddFuzzyAll();
 

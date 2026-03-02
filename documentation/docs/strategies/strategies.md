@@ -128,8 +128,8 @@ Strategy 5 takes version 2 of Strategy 4, and added 2 new queries based on not u
 
 1. [Non Fuzzy GFD](rules.md#non-fuzzy-gfd)
 2. [Fuzzy GFD](rules.md#fuzzy-gfd)
-3. [Fuzzy FDG postcode](rules.md#fuzzy-fdg-postcode)
-4. [Fuzzy FD postcode](rules.md#fuzzy-fd-postcode)
+3. [Fuzzy FDG postcode](rules.md#fuzzy-fdrange-g-postcode)
+4. [Fuzzy FD postcode](rules.md#fuzzy-fdrange-postcode)
 5. [Fuzzy All](rules.md#fuzzy-all)
 6. [Non Fuzzy GFD Range (Postcode)](rules.md#non-fuzzy-gfd-range-postcode)
 7. [Fuzzy GFD Range (Postcode)](rules.md#fuzzy-gfd-range-postcode)
