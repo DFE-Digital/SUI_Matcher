@@ -6,7 +6,7 @@ public class AddressesHistoryIntersectTests
 {
     [Theory]
     [InlineData("1~2a bob lane~Somewhere~YO1 6GA", "1~2a bob lane~Somewhere~YO1 6GA", true)]
-    [InlineData("1~2 bob lane~Somewhere~YO1 6GA|1~3 bob lane~Somewhere~YO1 6GB", 
+    [InlineData("1~2 bob lane~Somewhere~YO1 6GA|1~3 bob lane~Somewhere~YO1 6GB",
         "house~3 bob lane~Somewhere~YO1 6GB|temp~15b bob lane~Somewhere else~MA1 6YO",
         true)]
     [InlineData("1~2 bob lane~Somewhere~YO1 6GA", "1~2 bob lane~Somewhere~YO1 6GB", false)]

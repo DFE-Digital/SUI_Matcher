@@ -79,8 +79,8 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         var headers = new HashSet<string>(data[0].Keys);
 
         await ReconciliationCsvFileProcessor.WriteCsvAsync(
-            Path.Combine(_dir.IncomingDirectoryPath, "address_stats_test.csv"), 
-            headers, 
+            Path.Combine(_dir.IncomingDirectoryPath, "address_stats_test.csv"),
+            headers,
             data);
 
         monitor.Processed += (_, _) => tcs.SetResult();
@@ -117,13 +117,13 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         // Expected counts:
         Assert.Equal(4, stats.GetValueOrDefault("PrimaryAddressSame"));
         Assert.Equal(40, stats.GetValueOrDefault("PrimaryAddressSamePercentage"));
-        
+
         Assert.Equal(7, stats.GetValueOrDefault("AddressHistoriesIntersect"));
         Assert.Equal(70, stats.GetValueOrDefault("AddressHistoriesIntersectPercentage"));
-        
+
         Assert.Equal(7, stats.GetValueOrDefault("PrimaryCMSAddressInPDSHistory"));
         Assert.Equal(70, stats.GetValueOrDefault("PrimaryCMSAddressInPDSHistoryPercentage"));
-        
+
         Assert.Equal(6, stats.GetValueOrDefault("PrimaryPDSAddressInCMSHistory"));
         Assert.Equal(60, stats.GetValueOrDefault("PrimaryPDSAddressInCMSHistoryPercentage"));
     }
@@ -131,121 +131,120 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
     [Fact]
     public async Task AddressComparison_ShouldWriteTrueWhereComparison()
     {
-            // ARRANGE - 1 test record with all address comparison scenarios true
-            var testRecord = SetupTestData().First();
+        // ARRANGE - 1 test record with all address comparison scenarios true
+        var testRecord = SetupTestData().First();
 
-    
-            // ACT
-            var cts = new CancellationTokenSource();
-            var provider = Bootstrap(true, x =>
-            {
-                x.AddSingleton(_matchingService.Object);
-                x.AddSingleton(_nhsFhirClient.Object);
-            });
-            var monitor = provider.GetRequiredService<CsvFileMonitor>();
-            var monitoringTask = monitor.StartAsync(cts.Token);
-    
-            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-    
-            var data = new List<D> { testRecord.cmsData };
-            var headers = new HashSet<string>(data[0].Keys);
-    
-            await ReconciliationCsvFileProcessor.WriteCsvAsync(
-                Path.Combine(_dir.IncomingDirectoryPath, "address_comparison_row_test.csv"), 
-                headers, 
-                data);
-    
-            monitor.Processed += (_, _) => tcs.SetResult();
-            await tcs.Task;
-            await cts.CancelAsync();
-            await monitoringTask;
-    
-            // ASSERTS
-            if (monitor.GetLastOperation().Exception != null)
-            {
-                throw monitor.GetLastOperation().Exception!;
-            }
-    
-            Assert.Null(monitor.GetLastOperation().Exception);
-            Assert.Equal(0, monitor.ErrorCount);
-            Assert.Equal(1, monitor.ProcessedCount);
-            Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
-    
-            (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.LastResult().OutputCsvFile);
-            Assert.NotNull(records);
-            
-            var record = records!.First();
-            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame} column");
-            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect} column");
-            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory} column");
-            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory} column");
-            
-            // Happy path assertions
-            Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame));
-            Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect));
-            Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory));
-            Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory));
+
+        // ACT
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(true, x =>
+        {
+            x.AddSingleton(_matchingService.Object);
+            x.AddSingleton(_nhsFhirClient.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = new List<D> { testRecord.cmsData };
+        var headers = new HashSet<string>(data[0].Keys);
+
+        await ReconciliationCsvFileProcessor.WriteCsvAsync(
+            Path.Combine(_dir.IncomingDirectoryPath, "address_comparison_row_test.csv"),
+            headers,
+            data);
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task;
+        await cts.CancelAsync();
+        await monitoringTask;
+
+        // ASSERTS
+        if (monitor.GetLastOperation().Exception != null)
+        {
+            throw monitor.GetLastOperation().Exception!;
+        }
+
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
+        Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
+
+        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.LastResult().OutputCsvFile);
+        Assert.NotNull(records);
+
+        var record = records!.First();
+        Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame} column");
+        Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect} column");
+        Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory} column");
+        Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory} column");
+
+        // Happy path assertions
+        Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame));
+        Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect));
+        Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory));
+        Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory));
     }
-    
-    
+
     [Fact]
     public async Task AddressComparison_ShouldWriteFalseWhereNoComparison()
     {
-            // ARRANGE - 1 test record with all address comparison scenarios true
-            var testRecord = SetupTestData().Last(); 
-    
-            // ACT
-            var cts = new CancellationTokenSource();
-            var provider = Bootstrap(true, x =>
-            {
-                x.AddSingleton(_matchingService.Object);
-                x.AddSingleton(_nhsFhirClient.Object);
-            });
-            var monitor = provider.GetRequiredService<CsvFileMonitor>();
-            var monitoringTask = monitor.StartAsync(cts.Token);
-    
-            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-    
-            var data = new List<D> { testRecord.cmsData };
-            var headers = new HashSet<string>(data[0].Keys);
-    
-            await ReconciliationCsvFileProcessor.WriteCsvAsync(
-                Path.Combine(_dir.IncomingDirectoryPath, "address_comparison_row_test.csv"), 
-                headers, 
-                data);
-    
-            monitor.Processed += (_, _) => tcs.SetResult();
-            await tcs.Task;
-            await cts.CancelAsync();
-            await monitoringTask;
-    
-            // ASSERTS
-            if (monitor.GetLastOperation().Exception != null)
-            {
-                throw monitor.GetLastOperation().Exception!;
-            }
-    
-            Assert.Null(monitor.GetLastOperation().Exception);
-            Assert.Equal(0, monitor.ErrorCount);
-            Assert.Equal(1, monitor.ProcessedCount);
-            Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
-    
-            (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.LastResult().OutputCsvFile);
-            Assert.NotNull(records);
-            
-            var record = records!.First();
-            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame} column");
-            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect} column");
-            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory} column");
-            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory} column");
-            
-            
-            var lastRecord = records.Last();
-            Assert.Equal("False", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame));
-            Assert.Equal("False", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect));
-            Assert.Equal("False", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory));
-            Assert.Equal("False", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory));
-            
+        // ARRANGE - 1 test record with all address comparison scenarios true
+        var testRecord = SetupTestData().Last();
+
+        // ACT
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(true, x =>
+        {
+            x.AddSingleton(_matchingService.Object);
+            x.AddSingleton(_nhsFhirClient.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = new List<D> { testRecord.cmsData };
+        var headers = new HashSet<string>(data[0].Keys);
+
+        await ReconciliationCsvFileProcessor.WriteCsvAsync(
+            Path.Combine(_dir.IncomingDirectoryPath, "address_comparison_row_test.csv"),
+            headers,
+            data);
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task;
+        await cts.CancelAsync();
+        await monitoringTask;
+
+        // ASSERTS
+        if (monitor.GetLastOperation().Exception != null)
+        {
+            throw monitor.GetLastOperation().Exception!;
+        }
+
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
+        Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
+
+        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.LastResult().OutputCsvFile);
+        Assert.NotNull(records);
+
+        var record = records!.First();
+        Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame} column");
+        Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect} column");
+        Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory} column");
+        Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory} column");
+
+
+        var lastRecord = records.Last();
+        Assert.Equal("False", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame));
+        Assert.Equal("False", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect));
+        Assert.Equal("False", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory));
+        Assert.Equal("False", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory));
+
     }
 
 
@@ -401,7 +400,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                     [TestDataHeaders.PostCode] = "G11AA",
                     [TestDataHeaders.Email] = "test6@test.com",
                     [TestDataHeaders.AddressHistory] = "1~70 Different St~Glasgow~G11AA|"
-                    
+
                 },
                 new DemographicResult
                 {
@@ -526,13 +525,13 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                 }
             )
         };
-        
+
         foreach (var (cmsData, nhsData) in data)
         {
             _nhsFhirClient
                 .Setup(x => x.PerformSearchByNhsId(cmsData[TestDataHeaders.NhsNumber]))
                 .ReturnsAsync(nhsData);
-            
+
             _matchingService
                 .Setup(x => x.SearchAsync(
                     It.Is<SearchSpecification>(s => s.Email == cmsData[TestDataHeaders.Email]),
@@ -580,4 +579,3 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         return servicesCollection.BuildServiceProvider();
     }
 }
-

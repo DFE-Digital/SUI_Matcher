@@ -32,7 +32,7 @@ public class AddressDelimiterParserTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
-    public void ParseRecord_ReturnsNull_WhenInputBlank(string input)
+    public void ParseRecord_ReturnsNull_WhenInputBlank(string? input)
     {
         var result = AddressParser.ParseRecord(input);
 

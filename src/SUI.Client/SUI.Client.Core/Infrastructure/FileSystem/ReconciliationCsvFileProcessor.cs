@@ -42,7 +42,7 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderMatchNhsNumber = "SUI_MatchNhsNumber";
     public const string HeaderMatchScore = "SUI_MatchScore";
     public const string HeaderMatchProcessStage = "SUI_MatchProcessStage";
-    
+
     // address comparison
     public const string HeaderPrimaryAddressSame = "SUI_PrimaryAddressSame";
     public const string HeaderAddressHistoriesIntersect = "SUI_AddressHistoriesIntersect";
@@ -81,10 +81,10 @@ public class ReconciliationCsvFileProcessor(
         };
 
         var response = await matching.ReconcilePersonAsync(payload);
-        
+
         var addressComparisonResult = GetAddressComparisonResult(
-            payload, 
-            response, 
+            payload,
+            response,
             record.GetFirstValueOrDefault(mapping.ColumnMappings[CsvMappingConfig.NonRequestFieldsConstants.AddressHistory]));
 
         record[HeaderNhsNo] = response?.Person?.NhsNumber ?? "-";
@@ -112,10 +112,10 @@ public class ReconciliationCsvFileProcessor(
         RecordStats((ReconciliationCsvProcessStats)stats, response, differenceList);
         RecordAddressStats((ReconciliationCsvProcessStats)stats, addressComparisonResult);
     }
-    
-    
-    
-    private  AddressComparisonResult GetAddressComparisonResult(ReconciliationRequest request, ReconciliationResponse? response, string addressHistory)
+
+
+
+    private AddressComparisonResult GetAddressComparisonResult(ReconciliationRequest request, ReconciliationResponse? response, string addressHistory)
     {
         var result = new AddressComparisonResult();
 
@@ -217,7 +217,7 @@ public class ReconciliationCsvFileProcessor(
                 break;
         }
 
-        
+
     }
 
     private static void UpdateStatsForField(
