@@ -28,7 +28,7 @@ using IMatchingService = SUI.Client.Core.Application.Interfaces.IMatchingService
 
 namespace Unit.Tests.Client;
 
-public class AddressComparisonStatsTests(ITestOutputHelper testOutputHelper)
+public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelper)
 {
     private readonly TempDirectoryFixture _dir = new();
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
@@ -61,7 +61,135 @@ public class AddressComparisonStatsTests(ITestOutputHelper testOutputHelper)
     public async Task AddressComparisonStats_ShouldBeTrackedCorrectly()
     {
         // ARRANGE - 10 test records with various address scenarios
-        var testRecords = new List<(D cmsData, DemographicResult nhsData)>
+        var testRecords = SetupTestData();
+
+        // ACT
+        var cts = new CancellationTokenSource();
+        var provider = Bootstrap(true, x =>
+        {
+            x.AddSingleton(_matchingService.Object);
+            x.AddSingleton(_nhsFhirClient.Object);
+        });
+        var monitor = provider.GetRequiredService<CsvFileMonitor>();
+        var monitoringTask = monitor.StartAsync(cts.Token);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var data = testRecords.Select(x => x.cmsData).ToList();
+        var headers = new HashSet<string>(data[0].Keys);
+
+        await ReconciliationCsvFileProcessor.WriteCsvAsync(
+            Path.Combine(_dir.IncomingDirectoryPath, "address_stats_test.csv"), 
+            headers, 
+            data);
+
+        monitor.Processed += (_, _) => tcs.SetResult();
+        await tcs.Task;
+        await cts.CancelAsync();
+        await monitoringTask;
+
+        // ASSERTS
+        if (monitor.GetLastOperation().Exception != null)
+        {
+            throw monitor.GetLastOperation().Exception!;
+        }
+
+        Assert.Null(monitor.GetLastOperation().Exception);
+        Assert.Equal(0, monitor.ErrorCount);
+        Assert.Equal(1, monitor.ProcessedCount);
+        Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
+        Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
+        Assert.NotNull(monitor.LastResult().Stats);
+
+        var stats = await ReconciliationCsvFileProcessor.ReadStatsJsonFileAsync(
+            monitor.GetLastOperation().AssertSuccess().StatsJsonFile);
+
+        // Verify address comparison stats
+        Assert.True(stats.ContainsKey("PrimaryAddressSame"), "Stats should contain PrimaryAddressSame");
+        Assert.True(stats.ContainsKey("PrimaryAddressSamePercentage"), "Stats should contain PrimaryAddressSamePercentage");
+        Assert.True(stats.ContainsKey("AddressHistoriesIntersect"), "Stats should contain AddressHistoriesIntersect");
+        Assert.True(stats.ContainsKey("AddressHistoriesIntersectPercentage"), "Stats should contain AddressHistoriesIntersectPercentage");
+        Assert.True(stats.ContainsKey("PrimaryCMSAddressInPDSHistory"), "Stats should contain PrimaryCMSAddressInPDSHistory");
+        Assert.True(stats.ContainsKey("PrimaryCMSAddressInPDSHistoryPercentage"), "Stats should contain PrimaryCMSAddressInPDSHistoryPercentage");
+        Assert.True(stats.ContainsKey("PrimaryPDSAddressInCMSHistory"), "Stats should contain PrimaryPDSAddressInCMSHistory");
+        Assert.True(stats.ContainsKey("PrimaryPDSAddressInCMSHistoryPercentage"), "Stats should contain PrimaryPDSAddressInCMSHistoryPercentage");
+
+        // Expected counts:
+        Assert.Equal(4, stats.GetValueOrDefault("PrimaryAddressSame"));
+        Assert.Equal(40, stats.GetValueOrDefault("PrimaryAddressSamePercentage"));
+        
+        Assert.Equal(7, stats.GetValueOrDefault("AddressHistoriesIntersect"));
+        Assert.Equal(70, stats.GetValueOrDefault("AddressHistoriesIntersectPercentage"));
+        
+        Assert.Equal(7, stats.GetValueOrDefault("PrimaryCMSAddressInPDSHistory"));
+        Assert.Equal(70, stats.GetValueOrDefault("PrimaryCMSAddressInPDSHistoryPercentage"));
+        
+        Assert.Equal(6, stats.GetValueOrDefault("PrimaryPDSAddressInCMSHistory"));
+        Assert.Equal(60, stats.GetValueOrDefault("PrimaryPDSAddressInCMSHistoryPercentage"));
+    }
+
+    [Fact]
+    public async Task AddressComparison_ShouldWriteCorrectlyToEachRowInCsv()
+    {
+            // ARRANGE - 1 test record with all address comparison scenarios true
+            var testRecord = SetupTestData().First();
+    
+            // ACT
+            var cts = new CancellationTokenSource();
+            var provider = Bootstrap(true, x =>
+            {
+                x.AddSingleton(_matchingService.Object);
+                x.AddSingleton(_nhsFhirClient.Object);
+            });
+            var monitor = provider.GetRequiredService<CsvFileMonitor>();
+            var monitoringTask = monitor.StartAsync(cts.Token);
+    
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    
+            var data = new List<D> { testRecord.cmsData };
+            var headers = new HashSet<string>(data[0].Keys);
+    
+            await ReconciliationCsvFileProcessor.WriteCsvAsync(
+                Path.Combine(_dir.IncomingDirectoryPath, "address_comparison_row_test.csv"), 
+                headers, 
+                data);
+    
+            monitor.Processed += (_, _) => tcs.SetResult();
+            await tcs.Task;
+            await cts.CancelAsync();
+            await monitoringTask;
+    
+            // ASSERTS
+            if (monitor.GetLastOperation().Exception != null)
+            {
+                throw monitor.GetLastOperation().Exception!;
+            }
+    
+            Assert.Null(monitor.GetLastOperation().Exception);
+            Assert.Equal(0, monitor.ErrorCount);
+            Assert.Equal(1, monitor.ProcessedCount);
+            Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
+    
+            (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.LastResult().OutputCsvFile);
+            Assert.NotNull(records);
+            
+            var record = records!.First();
+            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame} column");
+            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect} column");
+            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory} column");
+            Assert.True(record.ContainsKey(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory), $"Output CSV should contain {ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory} column");
+            
+            Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryAddressSame));
+            Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderAddressHistoriesIntersect));
+            Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory));
+            Assert.Equal("True", record.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory));
+            
+    }
+
+
+    private List<(D cmsData, DemographicResult nhsData)> SetupTestData()
+    {
+        var data = new List<(D cmsData, DemographicResult nhsData)>
         {
             // Record 1: PrimaryCMSAddressInPDSHistory + PrimaryAddressSame + AddressHistoriesIntersect = true (exact match)
             (
@@ -336,9 +464,8 @@ public class AddressComparisonStatsTests(ITestOutputHelper testOutputHelper)
                 }
             )
         };
-
-        // Setup mocks for each record
-        foreach (var (cmsData, nhsData) in testRecords)
+        
+        foreach (var (cmsData, nhsData) in data)
         {
             _nhsFhirClient
                 .Setup(x => x.PerformSearchByNhsId(cmsData[TestDataHeaders.NhsNumber]))
@@ -359,69 +486,7 @@ public class AddressComparisonStatsTests(ITestOutputHelper testOutputHelper)
                 });
         }
 
-        // ACT
-        var cts = new CancellationTokenSource();
-        var provider = Bootstrap(true, x =>
-        {
-            x.AddSingleton(_matchingService.Object);
-            x.AddSingleton(_nhsFhirClient.Object);
-        });
-        var monitor = provider.GetRequiredService<CsvFileMonitor>();
-        var monitoringTask = monitor.StartAsync(cts.Token);
-
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        var data = testRecords.Select(x => x.cmsData).ToList();
-        var headers = new HashSet<string>(data[0].Keys);
-
-        await ReconciliationCsvFileProcessor.WriteCsvAsync(
-            Path.Combine(_dir.IncomingDirectoryPath, "address_stats_test.csv"), 
-            headers, 
-            data);
-
-        monitor.Processed += (_, _) => tcs.SetResult();
-        await tcs.Task;
-        await cts.CancelAsync();
-        await monitoringTask;
-
-        // ASSERTS
-        if (monitor.GetLastOperation().Exception != null)
-        {
-            throw monitor.GetLastOperation().Exception!;
-        }
-
-        Assert.Null(monitor.GetLastOperation().Exception);
-        Assert.Equal(0, monitor.ErrorCount);
-        Assert.Equal(1, monitor.ProcessedCount);
-        Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
-        Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
-        Assert.NotNull(monitor.LastResult().Stats);
-
-        var stats = await ReconciliationCsvFileProcessor.ReadStatsJsonFileAsync(
-            monitor.GetLastOperation().AssertSuccess().StatsJsonFile);
-
-        // Verify address comparison stats
-        Assert.True(stats.ContainsKey("PrimaryAddressSame"), "Stats should contain PrimaryAddressSame");
-        Assert.True(stats.ContainsKey("PrimaryAddressSamePercentage"), "Stats should contain PrimaryAddressSamePercentage");
-        Assert.True(stats.ContainsKey("AddressHistoriesIntersect"), "Stats should contain AddressHistoriesIntersect");
-        Assert.True(stats.ContainsKey("AddressHistoriesIntersectPercentage"), "Stats should contain AddressHistoriesIntersectPercentage");
-        Assert.True(stats.ContainsKey("PrimaryCMSAddressInPDSHistory"), "Stats should contain PrimaryCMSAddressInPDSHistory");
-        Assert.True(stats.ContainsKey("PrimaryCMSAddressInPDSHistoryPercentage"), "Stats should contain PrimaryCMSAddressInPDSHistoryPercentage");
-        Assert.True(stats.ContainsKey("PrimaryPDSAddressInCMSHistory"), "Stats should contain PrimaryPDSAddressInCMSHistory");
-        Assert.True(stats.ContainsKey("PrimaryPDSAddressInCMSHistoryPercentage"), "Stats should contain PrimaryPDSAddressInCMSHistoryPercentage");
-
-        // Expected counts:
-        Assert.Equal(4, stats.GetValueOrDefault("PrimaryAddressSame"));
-        Assert.Equal(40, stats.GetValueOrDefault("PrimaryAddressSamePercentage"));
-        
-        Assert.Equal(7, stats.GetValueOrDefault("AddressHistoriesIntersect"));
-        Assert.Equal(70, stats.GetValueOrDefault("AddressHistoriesIntersectPercentage"));
-        
-        Assert.Equal(7, stats.GetValueOrDefault("PrimaryCMSAddressInPDSHistory"));
-        Assert.Equal(70, stats.GetValueOrDefault("PrimaryCMSAddressInPDSHistoryPercentage"));
-        
-        Assert.Equal(6, stats.GetValueOrDefault("PrimaryPDSAddressInCMSHistory"));
-        Assert.Equal(60, stats.GetValueOrDefault("PrimaryPDSAddressInCMSHistoryPercentage"));
+        return data;
     }
 
     private ServiceProvider Bootstrap(bool enableReconciliation, Action<ServiceCollection>? configure = null)
