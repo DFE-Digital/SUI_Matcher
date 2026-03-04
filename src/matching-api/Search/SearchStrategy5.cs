@@ -10,7 +10,11 @@ namespace MatchingApi.Search;
 /// search, the match rate could increase. It would increase in cases where the first name 
 /// on the local authority side is a placeholder name, such as 'Baby' or 'Male Infant'.
 ///
-/// This theory proved to be false and no significant improvements occurred in these cases.
+/// Overall, on the reconciliation run, there was
+/// approximately a 3% increase in ‘Match’ results, which is significant. We
+/// theorized that removing the first name will likely give false positives;
+/// however, it is difficult to determine a false positive without more demographic
+/// details and/or the NBO.
 /// </summary>
 public class SearchStrategy5 : ISearchStrategy
 {
