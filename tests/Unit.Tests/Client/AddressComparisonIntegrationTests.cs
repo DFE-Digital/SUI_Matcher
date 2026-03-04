@@ -5,7 +5,6 @@ using MatchingApi.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
 
 using Moq;
@@ -13,7 +12,6 @@ using Moq;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
-using Shared.Util;
 
 using SUI.Client.Core;
 using SUI.Client.Core.Infrastructure.FileSystem;
