@@ -153,6 +153,10 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderMatchNhsNumber);
         headers.Add(HeaderMatchScore);
         headers.Add(HeaderMatchProcessStage);
+        headers.Add(HeaderPrimaryAddressSame);
+        headers.Add(HeaderAddressHistoriesIntersect);
+        headers.Add(HeaderPrimaryCMSAddressInPDSHistory);
+        headers.Add(HeaderPrimaryPDSAddressInCMSHistory);
     }
 
     private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, string differenceList)
