@@ -1141,7 +1141,10 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(result.OutputCsvFile);
 
         var fieldValuesAddedFromProcessing = records[0]
-            .Where(k => k.Key.StartsWith("SUI_"))
+            .Where(k => k.Key.StartsWith("SUI_") && 
+                        !k.Key.EndsWith("AddressSame") && // Field that is always populated.
+                        !k.Key.EndsWith("Intersect") && // Field that is always populated.
+                        !k.Key.EndsWith("History")) // Field that is always populated.
             .Select(kvp => kvp.Value).ToList();
         Assert.All(fieldValuesAddedFromProcessing, value => Assert.Equal("-", value));
     }
