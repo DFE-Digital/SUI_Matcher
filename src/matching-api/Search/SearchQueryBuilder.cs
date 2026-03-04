@@ -231,7 +231,7 @@ public class SearchQueryBuilder
     }
 
     /// <summary>
-    /// Family name, DOB and postcode
+    /// Family name, DOB range and postcode
     /// </summary>
     public void AddFuzzyFDRangePostcode()
     {
