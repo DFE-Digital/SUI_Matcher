@@ -89,6 +89,23 @@ Fuzzy search with given name, family name and DOB. Day swapped with month if day
 `given`=`topper`, <br>
 `birthdate`=`eq1960-09-06`<br>
 
+## Fuzzy FDRange Gender Postcode
+
+``_fuzzy-match`=`true`,<br>
+`family`=`harley`, <br>
+`given`=`topper`, <br>
+`gender`=`male`,<br>
+`birthdate`=`eq1960-06-09`,<br>
+`address-postalcode`=`WN4 9BP`<br>
+
+## Fuzzy FDRange Postcode
+
+``_fuzzy-match`=`true`,<br>
+`family`=`harley`, <br>
+`given`=`topper`, <br>
+`birthdate`=`eq1960-06-09`,<br>
+`address-postalcode`=`WN4 9BP`<br>
+
 ## Non-Fuzzy All
 
 Non-fuzzy search with all provided values.
@@ -164,3 +181,4 @@ Non-fuzzy search with given name, family name, DOB range 6 months either side of
 `birthdate`=`ge1960-01-09`&`birthdate`=`le1960-07-09`,<br>
 `address-postalcode`=`WN4 9BP`,<br>
 `history=true`<br>
+

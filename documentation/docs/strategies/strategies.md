@@ -112,6 +112,28 @@ Strategy 4 takes version 14 of Strategy 3, splits the given name into an array, 
 6. [Fuzzy GFD Range](rules.md#fuzzy-gfd-range)
 7. [Fuzzy GFD Range (Postcode)](rules.md#fuzzy-gfd-range-postcode)
 
+#### Version 2
+
+1. [Non Fuzzy GFD](rules.md#non-fuzzy-gfd)
+2. [Fuzzy GFD](rules.md#fuzzy-gfd)
+3. [Fuzzy All](rules.md#fuzzy-all)
+5. [Non Fuzzy GFD Range (Postcode)](rules.md#non-fuzzy-gfd-range-postcode)
+7. [Fuzzy GFD Range (Postcode)](rules.md#fuzzy-gfd-range-postcode)
+
+### Strategy 5
+
+Strategy 5 takes version 2 of Strategy 4, and added 2 new queries based on not using the Forename.
+
+#### Version 1
+
+1. [Non Fuzzy GFD](rules.md#non-fuzzy-gfd)
+2. [Fuzzy GFD](rules.md#fuzzy-gfd)
+3. [Fuzzy FDG postcode](rules.md#fuzzy-fdrange-g-postcode)
+4. [Fuzzy FD postcode](rules.md#fuzzy-fdrange-postcode)
+5. [Fuzzy All](rules.md#fuzzy-all)
+6. [Non Fuzzy GFD Range (Postcode)](rules.md#non-fuzzy-gfd-range-postcode)
+7. [Fuzzy GFD Range (Postcode)](rules.md#fuzzy-gfd-range-postcode)
+
 ## Return Results
 
 Each query to PDS via the matcher returns one of the following results:

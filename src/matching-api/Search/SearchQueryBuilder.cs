@@ -213,6 +213,39 @@ public class SearchQueryBuilder
             });
     }
 
+    /// <summary>
+    /// Family name, DOB range, Gender and postcode
+    /// </summary>
+    public void AddFuzzyFDRangeGPostcode()
+    {
+        _queries.Add("FuzzyFDRangeGPostcode",
+            new SearchQuery()
+            {
+                FuzzyMatch = true,
+                Given = [],
+                Gender = _model.Gender,
+                Family = _preprocessNames ? FamilyName : _model.Family,
+                Birthdate = DobRange,
+                AddressPostalcode = _model.AddressPostalCode
+            });
+    }
+
+    /// <summary>
+    /// Family name, DOB range and postcode
+    /// </summary>
+    public void AddFuzzyFDRangePostcode()
+    {
+        _queries.Add("FuzzyFDRangePostcode",
+            new SearchQuery()
+            {
+                FuzzyMatch = true,
+                Given = [],
+                Family = _preprocessNames ? FamilyName : _model.Family,
+                Birthdate = DobRange,
+                AddressPostalcode = _model.AddressPostalCode
+            });
+    }
+
     public void AddExactGfd()
     {
         _queries.Add("ExactGFD", new SearchQuery()
@@ -238,6 +271,8 @@ public class SearchQueryBuilder
             AddressPostalcode = _model.AddressPostalCode
         });
     }
+
+
 
     public void TryAddFuzzyAltDob()
     {
