@@ -14,6 +14,7 @@ using Shared.Models;
 using Shared.Util;
 
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Services;
 
 namespace SUI.Client.Core.Infrastructure.FileSystem;
 
@@ -94,6 +95,9 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderMatchProcessStage] = response?.MatchingResult?.ProcessStage ?? "-";
 
         RecordStats((ReconciliationCsvProcessStats)stats, response, differenceList);
+
+        var history = record.GetFirstValueOrDefault(mapping.ColumnMappings[CsvMappingConfig.NonRequestFieldsConstants.AddressHistory]);
+        RecordAddressStats((ReconciliationCsvProcessStats)stats, response, payload, history);
     }
 
     private void AddExtraCsvHeaders(HashSet<string> headers)
@@ -173,6 +177,8 @@ public class ReconciliationCsvFileProcessor(
                 stats.ErroredCount++;
                 break;
         }
+
+        
     }
 
     private static void UpdateStatsForField(
@@ -190,6 +196,79 @@ public class ReconciliationCsvFileProcessor(
         if (differenceList.Contains($"{fieldName}:NHS")) { incrementNhs(stats); }
         if (differenceList.Contains($"{fieldName}:LA")) { incrementLa(stats); }
         if (differenceList.Contains($"{fieldName}:Both")) { incrementBoth(stats); }
+    }
+
+    private static void RecordAddressStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, ReconciliationRequest request, string addressHistory)
+    {
+        if (response?.Person == null)
+        {
+            return;
+        }
+
+        var nhsPrimaryPostalCode = GetPrimaryPostalCode(response.Person);
+        var pdsAddressHistory = GetPdsAddressHistoryAsString(response.Person);
+
+        if (IsPrimaryAddressSame(request.AddressPostalCode, nhsPrimaryPostalCode))
+        {
+            stats.PrimaryAddressSame++;
+        }
+
+        if (DoAddressHistoriesIntersect(addressHistory, pdsAddressHistory))
+        {
+            stats.AddressHistoriesIntersect++;
+        }
+
+        if (IsPrimaryAddressInHistory(request.AddressPostalCode, pdsAddressHistory))
+        {
+            stats.PrimaryCMSAddressInPDSHistory++;
+        }
+
+        if (IsPrimaryAddressInHistory(nhsPrimaryPostalCode, addressHistory))
+        {
+            stats.PrimaryPDSAddressInCMSHistory++;
+        }
+    }
+
+    private static string? GetPrimaryPostalCode(NhsPerson person)
+    {
+        return person.AddressPostalCodes.FirstOrDefault();
+    }
+
+    private static string GetPdsAddressHistoryAsString(NhsPerson person)
+    {
+        return person.AddressHistory.Length > 0
+            ? string.Join("|", person.AddressHistory)
+            : string.Empty;
+    }
+
+    private static bool IsPrimaryAddressSame(string? localPostalCode, string? nhsPostalCode)
+    {
+        if (string.IsNullOrWhiteSpace(localPostalCode) || string.IsNullOrWhiteSpace(nhsPostalCode))
+        {
+            return false;
+        }
+
+        return localPostalCode.Equals(nhsPostalCode, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool DoAddressHistoriesIntersect(string? localAddress, string nhsAddressHistory)
+    {
+        if (string.IsNullOrWhiteSpace(localAddress) || string.IsNullOrWhiteSpace(nhsAddressHistory))
+        {
+            return false;
+        }
+
+        return AddressComparisonService.AddressesHistoryIntersect(localAddress, nhsAddressHistory);
+    }
+
+    private static bool IsPrimaryAddressInHistory(string? primaryAddress, string addressHistory)
+    {
+        if (string.IsNullOrWhiteSpace(primaryAddress) || string.IsNullOrWhiteSpace(addressHistory))
+        {
+            return false;
+        }
+
+        return AddressComparisonService.ContainsPostcode(addressHistory, primaryAddress);
     }
 
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
