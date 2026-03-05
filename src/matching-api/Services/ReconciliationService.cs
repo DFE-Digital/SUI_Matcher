@@ -98,7 +98,7 @@ public class ReconciliationService(
         }
 
         bool requestNhsNumberHasBeenSuperseded =
-            request.NhsNumber != requestNhsNumberDemographics.Result.NhsNumber;
+            requestNhsNumberDemographics.Result != null && request.NhsNumber != requestNhsNumberDemographics.Result.NhsNumber;
         // Since the demographics response will contain the new NHS number if the inputted
         // NHS number has been superseded.
         if (requestNhsNumberHasBeenSuperseded)

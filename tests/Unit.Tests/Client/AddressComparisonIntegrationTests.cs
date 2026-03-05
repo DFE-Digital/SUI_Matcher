@@ -119,6 +119,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         Assert.Equal(7, stats.GetValueOrDefault("AddressHistoriesIntersect"));
         Assert.Equal(70, stats.GetValueOrDefault("AddressHistoriesIntersectPercentage"));
 
+
         Assert.Equal(7, stats.GetValueOrDefault("PrimaryCMSAddressInPDSHistory"));
         Assert.Equal(70, stats.GetValueOrDefault("PrimaryCMSAddressInPDSHistoryPercentage"));
 
@@ -278,7 +279,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                     }
                 }
             ),
-            // Record 2: PrimaryCMSAddressInPDSHistory + AddressHistoriesIntersect = true (house number + postcode match in histories)
+            // Record 2: PrimaryAddressSame + PrimaryCMSAddressInPDSHistory + AddressHistoriesIntersect = true (house number + postcode match in histories)
             (
                 new D
                 {
@@ -343,7 +344,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                     [TestDataHeaders.Gender] = "2",
                     [TestDataHeaders.PostCode] = "SE1 1AA",
                     [TestDataHeaders.Email] = "test4@test.com",
-                    [TestDataHeaders.AddressHistory] = "current~40 High Street~London~SE1 2BB|",
+                    [TestDataHeaders.AddressHistory] = "1~40 High Street~London~SE1 2BB|2~30 Main St~London~SE1 1AA|",
                 },
                 new DemographicResult
                 {
@@ -441,7 +442,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                     }
                 }
             ),
-            // Record 8: PrimaryAddressSame + PrimaryPDSAddressInCMSHistory + AddressHistoriesIntersect + Both History checks
+            // Record 8: PrimaryAddressSame +  PrimaryCMSAddressInPDSHistory + PrimaryPDSAddressInCMSHistory + AddressHistoriesIntersect + Both History checks
             (
                 new D
                 {
@@ -452,7 +453,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                     [TestDataHeaders.Gender] = "1",
                     [TestDataHeaders.PostCode] = "EH1 1AA",
                     [TestDataHeaders.Email] = "test8@test.com",
-                    [TestDataHeaders.AddressHistory] = "current~100 Royal Mile~Edinburgh~EH1 1AA|previous~200 Old Town~Edinburgh~EH1 2BB|"
+                    [TestDataHeaders.AddressHistory] = "1~100 Royal Mile~Edinburgh~EH1 1AA|previous~200 Old Town~Edinburgh~EH1 2BB|"
                 },
                 new DemographicResult
                 {

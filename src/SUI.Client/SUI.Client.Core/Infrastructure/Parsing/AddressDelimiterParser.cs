@@ -1,13 +1,16 @@
-using SUI.Client.Core.Application.Models;
+using Shared.Models;
+using SUI.Client.Core.Domain.Models;
 
 namespace SUI.Client.Core.Infrastructure.Parsing;
 
 public static class AddressParser
 {
+    private const string MultipleAddressDelimiter = "|";
+
     /// <summary>
     /// Parses an address record delimited by "~" into its components, specifically extracting the house number and postcode.
     /// </summary>
-    public static AddressMinimal? ParseRecord(string record)
+    public static AddressMinimal? ParseRecord(string? record)
     {
         if (string.IsNullOrWhiteSpace(record))
             return null;
@@ -30,6 +33,80 @@ public static class AddressParser
             return null;
 
         return new AddressMinimal(houseNumber, postcode);
+    }
+
+    /// <summary>
+    /// Parses a history of address records delimited by "|" into an AddressHistory object.
+    /// Each record in the history is delimited by "~".
+    /// </summary>
+    public static AddressHistory ParseHistory(string? historyString, string? primaryPostcode = null)
+    {
+        if (string.IsNullOrWhiteSpace(historyString))
+        {
+            return new AddressHistory([]);
+        }
+
+        var parts = historyString.Split(MultipleAddressDelimiter, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var addresses = parts
+            .Select(ParseRecord)
+            .Where(a => a != null)
+            .Cast<AddressMinimal>()
+            .ToList();
+
+        AddressMinimal? primaryAddress = null;
+        if (!string.IsNullOrWhiteSpace(primaryPostcode))
+        {
+            var normalizedPrimary = NormalizePostcode(primaryPostcode);
+            // Search for the primary address in the parsed history
+            primaryAddress = addresses.FirstOrDefault(a => a.Postcode.Equals(normalizedPrimary, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return new AddressHistory(addresses, primaryAddress);
+    }
+
+    /// <summary>
+    /// Creates an AddressHistory from an NhsPerson's address history.
+    /// </summary>
+    public static AddressHistory FromNhsPerson(NhsPerson person)
+    {
+        var addresses = person.AddressHistory
+            .Select(ParseRecord)
+            .Where(a => a != null)
+            .Cast<AddressMinimal>()
+            .ToList();
+
+        var primaryPostcode = person.AddressPostalCodes.FirstOrDefault();
+        AddressMinimal? primaryAddress = null;
+
+        if (!string.IsNullOrWhiteSpace(primaryPostcode))
+        {
+            var normalizedPrimary = NormalizePostcode(primaryPostcode);
+            primaryAddress = addresses.FirstOrDefault(a => a.Postcode.Equals(normalizedPrimary, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return new AddressHistory(addresses, primaryAddress);
+    }
+
+    /// <summary>
+    /// Creates an AddressHistory from a primary postcode. 
+    /// Note: House number is not available here, so we might need to handle this.
+    /// However, in the CSV processor, we have the address line.
+    /// </summary>
+    public static AddressHistory FromPrimaryAddress(string? addressLine, string? postcode)
+    {
+        if (string.IsNullOrWhiteSpace(addressLine) || string.IsNullOrWhiteSpace(postcode))
+        {
+            return new AddressHistory([]);
+        }
+
+        var houseNumber = ExtractHouseNumber(addressLine);
+        if (houseNumber == null)
+        {
+            return new AddressHistory([]);
+        }
+
+        var address = new AddressMinimal(houseNumber, NormalizePostcode(postcode));
+        return new AddressHistory(new[] { address }, address);
     }
 
     private static string? ExtractHouseNumber(string addressLine)
@@ -67,9 +144,9 @@ public static class AddressParser
 
     private static string NormalizePostcode(string postcode)
     {
-        return postcode
-            .Trim()
-            .Replace(" ", "")
+        return new string(postcode
+            .Where(char.IsLetterOrDigit)
+            .ToArray())
             .ToUpperInvariant();
     }
 }
