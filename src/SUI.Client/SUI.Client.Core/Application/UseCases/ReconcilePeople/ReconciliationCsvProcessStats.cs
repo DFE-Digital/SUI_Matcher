@@ -1,4 +1,6 @@
-namespace SUI.Client.Core.Infrastructure.FileSystem;
+using SUI.Client.Core.Infrastructure.FileSystem;
+
+namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 public class ReconciliationCsvProcessStats : IStats
 {
