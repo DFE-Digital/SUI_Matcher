@@ -17,5 +17,11 @@ public class CsvMappingConfig
         [nameof(MatchPersonPayload.Gender)] = ["Gender"],
         [nameof(ReconciliationRequest.NhsNumber)] = ["NhsNumber", "NHSNumber"],
         [nameof(ReconciliationRequest.Phone)] = ["Phone", "PhoneNumber"],
+        [NonRequestFieldsConstants.AddressHistory] = ["AddressHistory"] // only exists in the CSV for reconciliation, not in the MatchPersonPayload
     };
+
+    public static class NonRequestFieldsConstants
+    {
+        public const string AddressHistory = "AddressHistory";
+    }
 }

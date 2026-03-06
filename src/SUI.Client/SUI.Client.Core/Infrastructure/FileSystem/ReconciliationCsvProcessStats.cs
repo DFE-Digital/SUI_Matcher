@@ -51,6 +51,11 @@ public class ReconciliationCsvProcessStats : IStats
     public int MatchingNhsNumberLaCount { get; set; }
     public int MatchingNhsNumberBothCount { get; set; }
 
+    public int PrimaryAddressSame { get; set; }
+    public int AddressHistoriesIntersect { get; set; }
+    public int PrimaryCMSAddressInPDSHistory { get; set; }
+    public int PrimaryPDSAddressInCMSHistory { get; set; }
+
     private readonly Lazy<double> _erroredPercentage;
     private readonly Lazy<double> _noDifferencePercentage;
     private readonly Lazy<double> _differencesPercentage;
@@ -59,6 +64,10 @@ public class ReconciliationCsvProcessStats : IStats
     private readonly Lazy<double> _patientNotFoundPercentage;
     private readonly Lazy<double> _missingNhsNumberPercentage;
     private readonly Lazy<double> _matchingSuccessPercentage;
+    private readonly Lazy<double> _primaryAddressSamePercentage;
+    private readonly Lazy<double> _addressHistoriesIntersectPercentage;
+    private readonly Lazy<double> _primaryCMSAddressInPDSHistoryPercentage;
+    private readonly Lazy<double> _primaryPDSAddressInCMSHistoryPercentage;
 
     public ReconciliationCsvProcessStats()
     {
@@ -70,6 +79,10 @@ public class ReconciliationCsvProcessStats : IStats
         _patientNotFoundPercentage = new Lazy<double>(() => ComputePercentage(PatientNotFound));
         _missingNhsNumberPercentage = new Lazy<double>(() => ComputePercentage(MissingNhsNumber));
         _matchingSuccessPercentage = new Lazy<double>(() => ComputePercentage(MatchingStatusMatch));
+        _primaryAddressSamePercentage = new Lazy<double>(() => ComputePercentage(PrimaryAddressSame));
+        _addressHistoriesIntersectPercentage = new Lazy<double>(() => ComputePercentage(AddressHistoriesIntersect));
+        _primaryCMSAddressInPDSHistoryPercentage = new Lazy<double>(() => ComputePercentage(PrimaryCMSAddressInPDSHistory));
+        _primaryPDSAddressInCMSHistoryPercentage = new Lazy<double>(() => ComputePercentage(PrimaryPDSAddressInCMSHistory));
     }
 
     private double ComputePercentage(int count) => Count == 0 ? 0 : Math.Round((double)count / Count * 100, 2);
@@ -82,6 +95,10 @@ public class ReconciliationCsvProcessStats : IStats
     public double PatientNotFoundPercentage => _patientNotFoundPercentage.Value;
     public double MissingNhsNumberPercentage => _missingNhsNumberPercentage.Value;
     public double MatchingSuccessPercentage => _matchingSuccessPercentage.Value;
+    public double PrimaryAddressSamePercentage => _primaryAddressSamePercentage.Value;
+    public double AddressHistoriesIntersectPercentage => _addressHistoriesIntersectPercentage.Value;
+    public double PrimaryCMSAddressInPDSHistoryPercentage => _primaryCMSAddressInPDSHistoryPercentage.Value;
+    public double PrimaryPDSAddressInCMSHistoryPercentage => _primaryPDSAddressInCMSHistoryPercentage.Value;
 
     public void ResetStats()
     {
@@ -122,5 +139,9 @@ public class ReconciliationCsvProcessStats : IStats
         MatchingStatusNoMatch = 0;
         MatchingStatusError = 0;
         MatchingStatusManyMatch = 0;
+        PrimaryAddressSame = 0;
+        AddressHistoriesIntersect = 0;
+        PrimaryCMSAddressInPDSHistory = 0;
+        PrimaryPDSAddressInCMSHistory = 0;
     }
 }
