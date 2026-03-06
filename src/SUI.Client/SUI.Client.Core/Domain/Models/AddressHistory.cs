@@ -39,17 +39,6 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
         return other.Addresses.Any(a => AreAddressesEqual(PrimaryAddress, a));
     }
 
-    public bool ContainsPostcode(string? postcode)
-    {
-        if (string.IsNullOrWhiteSpace(postcode))
-        {
-            return false;
-        }
-
-        var normalized = postcode.Trim().Replace(" ", "").ToUpperInvariant();
-        return _addresses.Any(a => a.Postcode.Equals(normalized, StringComparison.OrdinalIgnoreCase));
-    }
-
     private static bool AreAddressesEqual(AddressMinimal a1, AddressMinimal a2)
     {
         return a1.HouseNumber.Equals(a2.HouseNumber, StringComparison.OrdinalIgnoreCase) &&

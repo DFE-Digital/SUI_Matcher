@@ -88,28 +88,6 @@ public static class AddressParser
         return new AddressHistory(addresses, primaryAddress);
     }
 
-    /// <summary>
-    /// Creates an AddressHistory from a primary postcode. 
-    /// Note: House number is not available here, so we might need to handle this.
-    /// However, in the CSV processor, we have the address line.
-    /// </summary>
-    public static AddressHistory FromPrimaryAddress(string? addressLine, string? postcode)
-    {
-        if (string.IsNullOrWhiteSpace(addressLine) || string.IsNullOrWhiteSpace(postcode))
-        {
-            return new AddressHistory([]);
-        }
-
-        var houseNumber = ExtractHouseNumber(addressLine);
-        if (houseNumber == null)
-        {
-            return new AddressHistory([]);
-        }
-
-        var address = new AddressMinimal(houseNumber, NormalizePostcode(postcode));
-        return new AddressHistory(new[] { address }, address);
-    }
-
     private static string? ExtractHouseNumber(string addressLine)
     {
         if (string.IsNullOrWhiteSpace(addressLine))
