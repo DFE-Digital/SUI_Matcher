@@ -442,12 +442,12 @@ public class ReconciliationCsvFileProcessor(
 
         return statsData ?? new Dictionary<string, int>();
     }
-}
 
-public class AddressComparisonResult
-{
-    public bool PrimaryAddressSame { get; set; }
-    public bool AddressHistoriesIntersect { get; set; }
-    public bool PrimaryCMSAddressInPDSHistory { get; set; }
-    public bool PrimaryPDSAddressInCMSHistory { get; set; }
+    private class AddressComparisonResult
+    {
+        public bool PrimaryAddressSame { get; set; }
+        public bool AddressHistoriesIntersect { get; set; }
+        public bool PrimaryCMSAddressInPDSHistory { get; set; }
+        public bool PrimaryPDSAddressInCMSHistory { get; set; }
+    }
 }

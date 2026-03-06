@@ -1,4 +1,5 @@
 using Shared.Models;
+
 using SUI.Client.Core.Domain.Models;
 
 namespace SUI.Client.Core.Infrastructure.Parsing;
