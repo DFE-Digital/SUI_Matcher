@@ -1,3 +1,5 @@
+using SUI.Client.Core.Application.Interfaces;
+
 namespace SUI.Client.Core.Infrastructure.FileSystem;
 
 public class MatchingCsvProcessStats : IStats
