@@ -97,7 +97,7 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderPhone] = string.Join(" - ", response?.Person?.PhoneNumbers ?? ["-"]);
         record[HeaderAddressHistory] = CsvUtils.WrapInputForCsv(response?.Person?.AddressHistory);
         record[HeaderGeneralPractitionerOdsId] = response?.Person?.GeneralPractitionerOdsId ?? "-";
-        var differenceList = response?.DifferenceString ?? "-";
+        var differenceList = CreateDelimiterStringFromList(response?.DifferenceFields);
         record[HeaderDifferences] = differenceList;
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
         record[HeaderMatchNhsNumber] = response?.MatchingResult?.NhsNumber ?? "-";
@@ -112,6 +112,15 @@ public class ReconciliationCsvFileProcessor(
         ReconciliationCsvProcessStats.RecordMatchStatusStats(stats, response?.MatchingResult?.MatchStatus);
         ReconciliationCsvProcessStats.RecordReconciliationStatusStats(stats, response?.Status, differenceList);
         ReconciliationCsvProcessStats.RecordAddressStats(stats, addressComparisonResult);
+    }
+
+    private string CreateDelimiterStringFromList(List<string>? value)
+    {
+        if (value is null)
+        {
+            return "-";
+        }
+        return string.Join(" - ", value);
     }
 
     private static AddressComparisonResult GetAddressComparisonResult(ReconciliationRequest request, ReconciliationResponse? response, string? addressHistoryCsv)

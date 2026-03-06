@@ -49,7 +49,12 @@ public class ReconciliationService(
 
         // Compare matched NHS number's demographics to the request's demographics
         var differences = BuildDifferenceList(request, matchedNhsNumberDemographics.Result);
-        var differenceString = BuildDifferences(differences);
+        var differenceFields = differences
+            .Where(d => !string.IsNullOrEmpty(d.Local) && !string.IsNullOrEmpty(d.Nhs) && !d.Local.Equals(d.Nhs, StringComparison.OrdinalIgnoreCase))
+            .Select(d => d.FieldName)
+            .ToList();
+        var localMissingFields = differences.Where(d => string.IsNullOrEmpty(d.Local)).Select(d => d.FieldName).ToList();
+        var nhsMissingFields = differences.Where(d => string.IsNullOrEmpty(d.Nhs)).Select(d => d.FieldName).ToList();
 
         // Prepare response, with initial status on whether differences have occurred
         var reconResponse = new ReconciliationResponse
@@ -57,7 +62,6 @@ public class ReconciliationService(
             MatchingResult = matchingResponse.Result,
             Person = matchedNhsNumberDemographics.Result,
             Differences = differences,
-            DifferenceString = differenceString,
             Status = differences.Count == 0
                 ? ReconciliationStatus.NoDifferences
                 : ReconciliationStatus.Differences
@@ -118,49 +122,18 @@ public class ReconciliationService(
         var ageGroup = GetAgeGroup(reconciliationResponse.Person?.BirthDate);
         decimal score = personMatchResponse.Result?.Score ?? 0;
         logger.LogInformation(
-            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {Score}",
+            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, LocaMising: {LocalMissing}, NhsMissing: {NhsMissing} Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {Score}",
             ageGroup,
             request.Gender ?? "Unknown",
             request.AddressPostalCode ?? "Unknown",
-            JsonConvert.SerializeObject(reconciliationResponse.DifferenceString),
+            JsonConvert.SerializeObject(reconciliationResponse.DifferenceFields),
+            JsonConvert.SerializeObject(reconciliationResponse.MissingLocalFields),
+            JsonConvert.SerializeObject(reconciliationResponse.MissingNhsFields),
             reconciliationResponse.Status,
             personMatchResponse.Result?.MatchStatus,
             personMatchResponse.Result?.ProcessStage,
             score
         );
-    }
-
-    private static string BuildDifferences(List<Difference>? differences)
-    {
-        var sb = new StringBuilder();
-        if (differences == null)
-        {
-            return sb.ToString();
-        }
-
-        foreach (var difference in differences)
-        {
-            if (string.IsNullOrEmpty(difference.Local) && string.IsNullOrEmpty(difference.Nhs))
-            {
-                sb.Append($"{difference.FieldName}:Both");
-            }
-            else if (string.IsNullOrEmpty(difference.Local))
-            {
-                sb.Append($"{difference.FieldName}:LA");
-            }
-            else if (string.IsNullOrEmpty(difference.Nhs))
-            {
-                sb.Append($"{difference.FieldName}:NHS");
-            }
-            else
-            {
-                sb.Append($"{difference.FieldName}");
-            }
-
-            sb.Append(" - ");
-        }
-
-        return sb.ToString().EndsWith(" - ") ? sb.ToString(0, sb.Length - 3) : sb.ToString();
     }
 
     private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson? result)

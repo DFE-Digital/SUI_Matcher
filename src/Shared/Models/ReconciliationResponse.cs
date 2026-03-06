@@ -7,11 +7,12 @@ public class ReconciliationResponse
     public List<string> Errors { get; set; } = [];
 
     public List<Difference> Differences { get; set; } = [];
+    public List<string> DifferenceFields { get; set; } = [];
+    public List<string> MissingLocalFields { get; set; } = [];
+    public List<string> MissingNhsFields { get; set; } = [];
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ReconciliationStatus Status { get; set; }
-
-    public string DifferenceString { get; set; } = String.Empty;
 
     public MatchResult? MatchingResult { get; init; }
 }
