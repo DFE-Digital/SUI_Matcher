@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -25,7 +24,7 @@ public class ReconciliationCsvFileProcessor(
     IMatchingService matching,
     IOptions<CsvWatcherConfig> watcherConfig) : ICsvFileProcessor
 {
-    private readonly IStats _stats = new ReconciliationCsvProcessStats();
+    private readonly ReconciliationCsvProcessStats _stats = new();
     private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
     public const string HeaderNhsNo = "SUI_NHSNo";
     public const string HeaderGivenName = "SUI_GivenName";
@@ -50,7 +49,7 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderPrimaryCMSAddressInPDSHistory = "SUI_PrimaryCMSAddressInPDSHistory";
     public const string HeaderPrimaryPDSAddressInCMSHistory = "SUI_PrimaryPDSAddressInCMSHistory";
 
-    private async Task ProcessRecord(Dictionary<string, string> record, IStats stats)
+    private async Task ProcessRecord(Dictionary<string, string> record, ReconciliationCsvProcessStats stats)
     {
         string gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)])
             .ToLower();
@@ -109,13 +108,11 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderAddressHistoriesIntersect] = addressComparisonResult.AddressHistoriesIntersect.ToString();
         record[HeaderPrimaryCMSAddressInPDSHistory] = addressComparisonResult.PrimaryCMSAddressInPDSHistory.ToString();
         record[HeaderPrimaryPDSAddressInCMSHistory] = addressComparisonResult.PrimaryPDSAddressInCMSHistory.ToString();
-
-        ReconciliationStatsProcessor.RecordMatchStatusStats((ReconciliationCsvProcessStats)stats, response?.MatchingResult?.MatchStatus);
-        ReconciliationStatsProcessor.RecordReconciliationStatusStats((ReconciliationCsvProcessStats)stats, response?.Status, differenceList);
-        RecordAddressStats((ReconciliationCsvProcessStats)stats, addressComparisonResult);
+        
+        ReconciliationCsvProcessStats.RecordMatchStatusStats(stats, response?.MatchingResult?.MatchStatus);
+        ReconciliationCsvProcessStats.RecordReconciliationStatusStats(stats, response?.Status, differenceList);
+        ReconciliationCsvProcessStats.RecordAddressStats(stats, addressComparisonResult);
     }
-
-
 
     private static AddressComparisonResult GetAddressComparisonResult(ReconciliationRequest request, ReconciliationResponse? response, string? addressHistoryCsv)
     {
@@ -163,29 +160,7 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderPrimaryPDSAddressInCMSHistory);
     }
 
-    private static void RecordAddressStats(ReconciliationCsvProcessStats stats, AddressComparisonResult addressComparisonResult)
-    {
-
-        if (addressComparisonResult.PrimaryAddressSame)
-        {
-            stats.PrimaryAddressSame++;
-        }
-
-        if (addressComparisonResult.AddressHistoriesIntersect)
-        {
-            stats.AddressHistoriesIntersect++;
-        }
-
-        if (addressComparisonResult.PrimaryCMSAddressInPDSHistory)
-        {
-            stats.PrimaryCMSAddressInPDSHistory++;
-        }
-
-        if (addressComparisonResult.PrimaryPDSAddressInCMSHistory)
-        {
-            stats.PrimaryPDSAddressInCMSHistory++;
-        }
-    }
+    
 
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
@@ -359,11 +334,5 @@ public class ReconciliationCsvFileProcessor(
         return statsData ?? new Dictionary<string, int>();
     }
 
-    private class AddressComparisonResult
-    {
-        public bool PrimaryAddressSame { get; set; }
-        public bool AddressHistoriesIntersect { get; set; }
-        public bool PrimaryCMSAddressInPDSHistory { get; set; }
-        public bool PrimaryPDSAddressInCMSHistory { get; set; }
-    }
+    
 }
