@@ -50,8 +50,8 @@ public static class AddressParser
         var parts = historyString.Split(MultipleAddressDelimiter, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         var addresses = parts
             .Select(ParseRecord)
-            .Where(a => a != null)
-            .Cast<AddressMinimal>()
+            .Where(a => a is not null)
+            .Select(a => a!)
             .ToList();
 
         AddressMinimal? primaryAddress = null;
