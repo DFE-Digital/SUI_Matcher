@@ -132,15 +132,8 @@ public class ReconciliationCsvFileProcessor(
         result.AddressHistoriesIntersect = pdsAddressHistory.IntersectsWith(queryingAddressHistory);
 
 
-        if (queryingAddressHistory.PrimaryAddress != null)
-        {
-            result.PrimaryCMSAddressInPDSHistory = queryingAddressHistory.PrimaryAddressInHistoryOf(pdsAddressHistory);
-        }
-
-        if (pdsAddressHistory.PrimaryAddress != null)
-        {
-            result.PrimaryPDSAddressInCMSHistory = pdsAddressHistory.PrimaryAddressInHistoryOf(queryingAddressHistory);
-        }
+        result.PrimaryCMSAddressInPDSHistory = queryingAddressHistory.PrimaryAddressInHistoryOf(pdsAddressHistory);
+        result.PrimaryPDSAddressInCMSHistory = pdsAddressHistory.PrimaryAddressInHistoryOf(queryingAddressHistory);
 
         return result;
     }
