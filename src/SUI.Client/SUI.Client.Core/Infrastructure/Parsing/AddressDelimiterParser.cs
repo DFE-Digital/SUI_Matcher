@@ -51,7 +51,7 @@ public static class AddressParser
         var addresses = parts
             .Select(ParseRecord)
             .Where(a => a is not null)
-            .Select(a => a!)
+            .OfType<AddressMinimal>()
             .ToList();
 
         AddressMinimal? primaryAddress = null;
@@ -73,7 +73,7 @@ public static class AddressParser
         var addresses = person.AddressHistory
             .Select(ParseRecord)
             .Where(a => a != null)
-            .Cast<AddressMinimal>()
+            .OfType<AddressMinimal>()
             .ToList();
 
         var primaryPostcode = person.AddressPostalCodes.FirstOrDefault();
