@@ -63,7 +63,6 @@ public class ReconciliationService(
         {
             MatchingResult = matchingResponse.Result,
             Person = matchedNhsNumberDemographics.Result,
-            Differences = differences,
             Status = differences.Count == 0
                 ? ReconciliationStatus.NoDifferences
                 : ReconciliationStatus.Differences,
