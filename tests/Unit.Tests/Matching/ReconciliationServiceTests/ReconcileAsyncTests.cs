@@ -302,7 +302,9 @@ public class ReconcileAsyncTests
 
         // ASSERT
         Assert.Equal(successfulCase.ExpectedStatus, result.Status);
-        Assert.Equivalent(successfulCase.ExpectedDifferences, result.DifferenceFields);
+        Assert.Equal(successfulCase.ExpectedDifferences, result.DifferenceFields);
+        Assert.Equal(successfulCase.ExpectedMissingLocalFields, result.MissingLocalFields);
+        Assert.Equal(successfulCase.ExpectedMissingNhsFields, result.MissingNhsFields);
     }
 
 
