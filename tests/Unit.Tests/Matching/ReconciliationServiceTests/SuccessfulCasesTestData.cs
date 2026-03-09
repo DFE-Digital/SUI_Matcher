@@ -24,6 +24,19 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
 {
     public SuccessfulCasesTestData()
     {
+        AddNoDifferencesCase();
+        AddNhsNumberCases();
+        AddGivenNameCases();
+        AddFamilyNameCases();
+        AddBirthDateCases();
+        AddGenderCases();
+        AddPhoneNumberCases();
+        AddEmailCases();
+        AddPostcodeCases();
+    }
+
+    private void AddNoDifferencesCase()
+    {
         Add(new SuccessfulCase(
             CaseLabel: "No differences on all fields",
             Request: DavidSmithAsReconciliationRequest(),
@@ -34,15 +47,10 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             ExpectedDifferences: [],
             ExpectedMissingLocalFields: [],
             ExpectedMissingNhsFields: []));
+    }
 
-        /*
-         * For each field reporting differences for, test for:
-         * - Present in NHS, missing locally
-         * - Missing locally, present in NHS
-         * - Present in both, but with differences
-         */
-
-        #region NHS Number
+    private void AddNhsNumberCases()
+    {
         Add(new SuccessfulCase(
             CaseLabel: "NHS number present in NHS, missing locally",
             Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.NhsNumber = null),
@@ -64,9 +72,10 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             ExpectedDifferences: [nameof(ReconciliationRequest.NhsNumber)],
             ExpectedMissingLocalFields: [],
             ExpectedMissingNhsFields: []));
-        #endregion
+    }
 
-        #region Given name
+    private void AddGivenNameCases()
+    {
         Add(new SuccessfulCase(
             CaseLabel: "Given name present in NHS, missing locally",
             Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.Given = ""),
@@ -99,9 +108,10 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             ExpectedDifferences: [nameof(ReconciliationRequest.Given)],
             ExpectedMissingLocalFields: [],
             ExpectedMissingNhsFields: []));
-        #endregion
+    }
 
-        #region Family name
+    private void AddFamilyNameCases()
+    {
         Add(new SuccessfulCase(
             CaseLabel: "Family name present in NHS, missing locally",
             Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.Family = ""),
@@ -134,9 +144,10 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             ExpectedDifferences: [nameof(ReconciliationRequest.Family)],
             ExpectedMissingLocalFields: [],
             ExpectedMissingNhsFields: []));
-        #endregion
+    }
 
-        #region Birth date
+    private void AddBirthDateCases()
+    {
         Add(new SuccessfulCase(
            CaseLabel: "Birth date present in NHS, missing locally",
            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.BirthDate = null),
@@ -169,9 +180,10 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             ExpectedDifferences: [nameof(ReconciliationRequest.BirthDate)],
             ExpectedMissingLocalFields: [],
             ExpectedMissingNhsFields: []));
-        #endregion
+    }
 
-        #region Gender
+    private void AddGenderCases()
+    {
         Add(new SuccessfulCase(
            CaseLabel: "Gender present in NHS, missing locally",
            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.Gender = null),
@@ -204,9 +216,10 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             ExpectedDifferences: [nameof(ReconciliationRequest.Gender)],
             ExpectedMissingLocalFields: [],
             ExpectedMissingNhsFields: []));
-        #endregion
+    }
 
-        #region Phone number
+    private void AddPhoneNumberCases()
+    {
         Add(new SuccessfulCase(
            CaseLabel: "Phone number present in NHS, missing locally",
            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.Phone = null),
@@ -239,9 +252,10 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             ExpectedDifferences: [nameof(ReconciliationRequest.Phone)],
             ExpectedMissingLocalFields: [],
             ExpectedMissingNhsFields: []));
-        #endregion
+    }
 
-        #region Email
+    private void AddEmailCases()
+    {
         Add(new SuccessfulCase(
            CaseLabel: "Email present in NHS, missing locally",
            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.Email = null),
@@ -274,9 +288,10 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             ExpectedDifferences: [nameof(ReconciliationRequest.Email)],
             ExpectedMissingLocalFields: [],
             ExpectedMissingNhsFields: []));
-        #endregion
+    }
 
-        #region Postcode
+    private void AddPostcodeCases()
+    {
         Add(new SuccessfulCase(
            CaseLabel: "Postcode present in NHS, missing locally",
            Request: DavidSmithAsReconciliationRequest().Configure(rr => rr.AddressPostalCode = null),
@@ -309,7 +324,6 @@ public class SuccessfulCasesTestData : TheoryData<SuccessfulCase>
             ExpectedDifferences: [nameof(ReconciliationRequest.AddressPostalCode)],
             ExpectedMissingLocalFields: [],
             ExpectedMissingNhsFields: []));
-        #endregion
     }
 
     private static ReconciliationRequest DavidSmithAsReconciliationRequest() => new()
