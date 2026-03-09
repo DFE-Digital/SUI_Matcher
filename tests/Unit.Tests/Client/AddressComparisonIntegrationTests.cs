@@ -290,7 +290,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                     [TestDataHeaders.Gender] = "2",
                     [TestDataHeaders.PostCode] = "LS12 3EC",
                     [TestDataHeaders.Email] = "test2@test.com",
-                    [TestDataHeaders.AddressHistory] = "current~64 Lower Street~Leeds~West Yorkshire~LS12 3EC|previous~10 Old Street~Leeds~West Yorkshire~LS12 3EZ|"
+                    [TestDataHeaders.AddressHistory] = "previous~10 Old Street~Leeds~West Yorkshire~LS12 3EZ|current~64 Lower Street~Leeds~West Yorkshire~LS12 3EC|"
                 },
                 new DemographicResult
                 {
@@ -302,7 +302,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                         BirthDate = new DateOnly(1995, 05, 15),
                         Gender = "Female",
                         AddressPostalCodes = ["LS12 3EC"],
-                        AddressHistory = ["home~64 Lower Street~Leeds~West Yorkshire~LS12 3EC|", "previous~10 Old Street~Leeds~West Yorkshire~LS12 3EZ|"]
+                        AddressHistory = ["previous~10 Old Street~Leeds~West Yorkshire~LS12 3EZ|", "home~64 Lower Street~Leeds~West Yorkshire~LS12 3EC"]
                     }
                 }
             ),
@@ -329,7 +329,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                         BirthDate = new DateOnly(1985, 08, 20),
                         Gender = "Male",
                         AddressPostalCodes = ["M12BB"],
-                        AddressHistory = ["current~20 New Street~Manchester~M12BB|", "previous~15 Old Road~Manchester~M11AA|"]
+                        AddressHistory = ["previous~20 New Street~Manchester~M12BB|", "current~15 Old Road~Manchester~M11AA|"]
                     }
                 }
             ),
@@ -383,7 +383,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                         BirthDate = new DateOnly(1988, 03, 25),
                         Gender = "Male",
                         AddressPostalCodes = ["B11CC"],
-                        AddressHistory = ["home~50 Park Lane~Birmingham~B11CC|", "work~60 Office St~Birmingham~B12DD|"]
+                        AddressHistory = ["work~60 Office St~Birmingham~B12DD", "home~50 Park Lane~Birmingham~B11CC"]
                     }
                 }
             ),
@@ -411,7 +411,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                         BirthDate = new DateOnly(1990, 07, 30),
                         Gender = "Male",
                         AddressPostalCodes = ["G12BB"],
-                        AddressHistory = ["home~71 Different St~Glasgow~G13CC|"]
+                        AddressHistory = ["home~71 Different St~Glasgow~G12BB|"]
                     }
                 }
             ),
@@ -426,7 +426,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                     [TestDataHeaders.Gender] = "2",
                     [TestDataHeaders.PostCode] = "BS1 1AA",
                     [TestDataHeaders.Email] = "test7@test.com",
-                    [TestDataHeaders.AddressHistory] = "current~80 Garden Ave~Bristol~BS1 1AA|previous~90 Previous Rd~Bristol~BS1 3CC|"
+                    [TestDataHeaders.AddressHistory] = "previous~90 Previous Rd~Bristol~BS1 3CC|current~80 Garden Ave~Bristol~BS1 1AA"
                 },
                 new DemographicResult
                 {
@@ -438,7 +438,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                         BirthDate = new DateOnly(1998, 11, 05),
                         Gender = "Female",
                         AddressPostalCodes = ["BS1 2BB"],
-                        AddressHistory = ["current~80 Garden Ave~Bristol~BS1 1AA|", "old~90 Previous Rd~Bristol~BS1 3CC|"]
+                        AddressHistory = ["prev~80 Garden Ave~Bristol~BS1 1AA|", "current~101 Garden Ave~Bristol~BS1 2BB|"]
                     }
                 }
             ),
@@ -453,7 +453,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                     [TestDataHeaders.Gender] = "1",
                     [TestDataHeaders.PostCode] = "EH1 1AA",
                     [TestDataHeaders.Email] = "test8@test.com",
-                    [TestDataHeaders.AddressHistory] = "1~100 Royal Mile~Edinburgh~EH1 1AA|previous~200 Old Town~Edinburgh~EH1 2BB|"
+                    [TestDataHeaders.AddressHistory] = "previous~200 Old Town~Edinburgh~EH1 2BB|1~100 Royal Mile~Edinburgh~EH1 1AA|"
                 },
                 new DemographicResult
                 {
@@ -518,7 +518,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                         FamilyNames = ["Moore"],
                         BirthDate = new DateOnly(1987, 06, 18),
                         Gender = "Male",
-                        AddressPostalCodes = ["NR12BB"],
+                        AddressPostalCodes = ["NR1 2BB"],
                         AddressHistory = ["home~130 Modern Street~Norwich~NR1 2BB|"]
                     }
                 }
