@@ -64,7 +64,10 @@ public class ReconciliationService(
             Differences = differences,
             Status = differences.Count == 0
                 ? ReconciliationStatus.NoDifferences
-                : ReconciliationStatus.Differences
+                : ReconciliationStatus.Differences,
+            DifferenceFields = differenceFields,
+            MissingLocalFields = localMissingFields,
+            MissingNhsFields = nhsMissingFields
         };
 
         // Return early if the NHS number definitely can't be superseded
