@@ -37,6 +37,8 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderAddressHistory = "SUI_AddressHistory";
     public const string HeaderGeneralPractitionerOdsId = "SUI_GeneralPractitionerOdsId";
     public const string HeaderDifferences = "SUI_Differences";
+    public const string HeaderMissingLocalFields = "SUI_MissingLocalFields";
+    public const string HeaderMissingNhsFields = "SUI_MissingNhsFields";
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderMatchStatus = "SUI_MatchStatus";
     public const string HeaderMatchNhsNumber = "SUI_MatchNhsNumber";
@@ -99,6 +101,8 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderGeneralPractitionerOdsId] = response?.Person?.GeneralPractitionerOdsId ?? "-";
         var differenceList = CreateDelimiterStringFromList(response?.DifferenceFields);
         record[HeaderDifferences] = differenceList;
+        record[HeaderMissingLocalFields] = CreateDelimiterStringFromList(response?.MissingLocalFields);
+        record[HeaderMissingNhsFields] = CreateDelimiterStringFromList(response?.MissingNhsFields);
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
         record[HeaderMatchNhsNumber] = response?.MatchingResult?.NhsNumber ?? "-";
         record[HeaderMatchStatus] = response?.MatchingResult?.MatchStatus.ToString() ?? "-";
@@ -158,6 +162,8 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderAddressHistory);
         headers.Add(HeaderGeneralPractitionerOdsId);
         headers.Add(HeaderDifferences);
+        headers.Add(HeaderMissingLocalFields);
+        headers.Add(HeaderMissingNhsFields);
         headers.Add(HeaderStatus);
         headers.Add(HeaderMatchStatus);
         headers.Add(HeaderMatchNhsNumber);

@@ -37,7 +37,7 @@ public class MatchingServiceAdapter(Shared.Endpoint.IMatchingService matchingSer
             Gender = payload.Gender,
             Email = payload.Email,
             Given = payload.Given,
-            Phone = payload.Phone,
+            Phone = payload.Phone
         });
     }
 }
