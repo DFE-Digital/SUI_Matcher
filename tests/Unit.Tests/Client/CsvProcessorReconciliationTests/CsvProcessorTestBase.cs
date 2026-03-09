@@ -69,7 +69,7 @@ public class CsvProcessorTestBase(ITestOutputHelper testOutputHelper)
         return servicesCollection.BuildServiceProvider();
     }
 
-    public void AssertCsvFileRunSuccessfully(CsvFileMonitor monitor, int processedCount = 1)
+    public static void AssertCsvFileRunSuccessfully(CsvFileMonitor monitor, int processedCount = 1)
     {
         if (monitor.GetLastOperation().Exception != null)
         {

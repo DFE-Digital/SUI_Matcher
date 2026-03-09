@@ -123,7 +123,7 @@ public class ReconciliationCsvFileProcessor(
         ReconciliationCsvProcessStats.RecordAddressStats(stats, addressComparisonResult);
     }
 
-    private string CreateDelimiterStringFromList(List<string>? value)
+    private static string CreateDelimiterStringFromList(List<string>? value)
     {
         if (value is null)
         {
@@ -154,7 +154,7 @@ public class ReconciliationCsvFileProcessor(
         return result;
     }
 
-    private void AddExtraCsvHeaders(HashSet<string> headers)
+    private static void AddExtraCsvHeaders(HashSet<string> headers)
     {
         headers.Add(HeaderNhsNo);
         headers.Add(HeaderGivenName);
