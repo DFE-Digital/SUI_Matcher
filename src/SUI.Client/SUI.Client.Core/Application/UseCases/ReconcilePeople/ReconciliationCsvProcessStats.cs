@@ -150,7 +150,7 @@ public class ReconciliationCsvProcessStats : IStats
         PrimaryCMSAddressInPDSHistory = 0;
         PrimaryPDSAddressInCMSHistory = 0;
     }
-    
+
     public static void RecordMatchStatusStats(ReconciliationCsvProcessStats stats, MatchStatus? matchStatus)
     {
         stats.Count++;
@@ -212,7 +212,7 @@ public class ReconciliationCsvProcessStats : IStats
                 break;
         }
     }
-    
+
     public static void RecordAddressStats(ReconciliationCsvProcessStats stats, AddressComparisonResult addressComparisonResult)
     {
 
@@ -236,7 +236,7 @@ public class ReconciliationCsvProcessStats : IStats
             stats.PrimaryPDSAddressInCMSHistory++;
         }
     }
-    
+
     private static void UpdateStatsForField(
         string differenceList,
         ReconciliationCsvProcessStats stats,

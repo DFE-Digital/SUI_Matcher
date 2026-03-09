@@ -54,7 +54,7 @@ public class ReconciliationService(
             .Where(d => !string.IsNullOrEmpty(d.Local) && !string.IsNullOrEmpty(d.Nhs) && !d.Local.Equals(d.Nhs, StringComparison.OrdinalIgnoreCase))
             .Select(d => d.FieldName)
             .ToList();
-        
+
         // Can only get these if we get NHS demographics, so we build these after that step
         var nhsMissingFields = differences.Where(d => string.IsNullOrEmpty(d.Nhs)).Select(d => d.FieldName).ToList();
 
@@ -139,35 +139,35 @@ public class ReconciliationService(
             score
         );
     }
-    
+
     private static List<string> BuildLocalMissingFields(ReconciliationRequest request)
     {
         var missingFields = new List<string>();
-        
+
         if (string.IsNullOrEmpty(request.NhsNumber))
             missingFields.Add(nameof(request.NhsNumber));
-        
+
         if (!request.BirthDate.HasValue)
             missingFields.Add(nameof(request.BirthDate));
-        
+
         if (string.IsNullOrEmpty(request.Gender))
             missingFields.Add(nameof(request.Gender));
-        
+
         if (string.IsNullOrEmpty(request.Given))
             missingFields.Add(nameof(request.Given));
-        
+
         if (string.IsNullOrEmpty(request.Family))
             missingFields.Add(nameof(request.Family));
-        
+
         if (string.IsNullOrEmpty(request.Email))
             missingFields.Add(nameof(request.Email));
-        
+
         if (string.IsNullOrEmpty(request.Phone))
             missingFields.Add(nameof(request.Phone));
-        
+
         if (string.IsNullOrEmpty(request.AddressPostalCode))
             missingFields.Add(nameof(request.AddressPostalCode));
-        
+
         return missingFields;
     }
 

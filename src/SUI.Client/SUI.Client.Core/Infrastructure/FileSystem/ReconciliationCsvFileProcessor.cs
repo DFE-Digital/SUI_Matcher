@@ -112,7 +112,7 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderAddressHistoriesIntersect] = addressComparisonResult.AddressHistoriesIntersect.ToString();
         record[HeaderPrimaryCMSAddressInPDSHistory] = addressComparisonResult.PrimaryCMSAddressInPDSHistory.ToString();
         record[HeaderPrimaryPDSAddressInCMSHistory] = addressComparisonResult.PrimaryPDSAddressInCMSHistory.ToString();
-        
+
         ReconciliationCsvProcessStats.RecordMatchStatusStats(stats, response?.MatchingResult?.MatchStatus);
         ReconciliationCsvProcessStats.RecordReconciliationStatusStats(stats, response?.Status, differenceList);
         ReconciliationCsvProcessStats.RecordAddressStats(stats, addressComparisonResult);
@@ -175,7 +175,7 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderPrimaryPDSAddressInCMSHistory);
     }
 
-    
+
 
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
@@ -349,5 +349,5 @@ public class ReconciliationCsvFileProcessor(
         return statsData ?? new Dictionary<string, int>();
     }
 
-    
+
 }

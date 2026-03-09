@@ -17,7 +17,7 @@ public class CsvProcessorMissingFieldsTests(ITestOutputHelper testOutputHelper) 
 {
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
     private readonly Mock<IMatchingService> _matchingService = new(MockBehavior.Loose);
-    
+
     [Fact]
     public async Task Reconciliation_CsvHeaderDifferences_ShouldShowDifferences()
     {
@@ -149,12 +149,12 @@ public class CsvProcessorMissingFieldsTests(ITestOutputHelper testOutputHelper) 
 
         // ASSERTS
         AssertCsvFileRunSuccessfully(monitor);
-        
+
         (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
-        
+
         Assert.Equal("NhsNumber - Gender", records[0][ReconciliationCsvFileProcessor.HeaderMissingLocalFields]);
     }
-    
+
     [Fact]
     public async Task Reconciliation_CsvHeaderMissingNhsFields_ShouldWriteNhsMissingFields_WhenThereAreMissingFields()
     {
@@ -217,10 +217,10 @@ public class CsvProcessorMissingFieldsTests(ITestOutputHelper testOutputHelper) 
 
         // ASSERTS
         AssertCsvFileRunSuccessfully(monitor);
-        
+
         _nhsFhirClient.Verify(x => x.PerformSearchByNhsId(It.IsAny<string>()), Times.Once, "The PerformSearchByNhsId method should have been invoked once");
         (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(monitor.GetLastOperation().AssertSuccess().OutputCsvFile);
-        
+
         Assert.Equal("Email - Phone", records[0][ReconciliationCsvFileProcessor.HeaderMissingNhsFields]);
     }
 }

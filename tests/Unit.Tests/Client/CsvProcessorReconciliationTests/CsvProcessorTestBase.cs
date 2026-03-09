@@ -26,7 +26,7 @@ public class CsvProcessorTestBase(ITestOutputHelper testOutputHelper)
 {
     public required ITestOutputHelper TestContext = testOutputHelper;
     protected readonly TempDirectoryFixture _tempDir = new();
-    
+
     protected static class TestDataHeaders
     {
         public const string GivenName = "GivenName";
@@ -38,7 +38,7 @@ public class CsvProcessorTestBase(ITestOutputHelper testOutputHelper)
         public const string PostCode = "PostCode";
         public static string Phone = "Phone";
     }
-    
+
     protected ServiceProvider Bootstrap(bool enableReconciliation, Action<ServiceCollection>? configure = null)
     {
         var servicesCollection = new ServiceCollection();
@@ -75,7 +75,7 @@ public class CsvProcessorTestBase(ITestOutputHelper testOutputHelper)
         {
             throw monitor.GetLastOperation().Exception!;
         }
-        
+
         Assert.Null(monitor.GetLastOperation().Exception);
         Assert.Equal(0, monitor.ErrorCount);
         Assert.Equal(processedCount, monitor.ProcessedCount);
