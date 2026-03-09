@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 using Shared.Models;
 
 using SUI.Client.Core.Application.Interfaces;
@@ -16,35 +14,37 @@ public class ReconciliationCsvProcessStats : IStats
     public int InvalidNhsNumber { get; set; }
     public int PatientNotFound { get; set; }
     public int MissingNhsNumber { get; set; }
-    public int BirthDateCount { get; set; }
-    public int BirthDateNhsCount { get; set; }
-    public int BirthDateLaCount { get; set; }
-    public int BirthDateBothCount { get; set; }
 
-    public int EmailCount { get; set; }
-    public int EmailNhsCount { get; set; }
-    public int EmailLaCount { get; set; }
-    public int EmailBothCount { get; set; }
+    public int BirthDateDifferentCount { get; set; }
+    public int BirthDateNhsMissingCount { get; set; }
+    public int BirthDateLaMissingCount { get; set; }
+    public int BirthDateBothMissingCount { get; set; }
 
-    public int PhoneCount { get; set; }
-    public int PhoneNhsCount { get; set; }
-    public int PhoneLaCount { get; set; }
-    public int PhoneBothCount { get; set; }
+    public int EmailDifferenceCount { get; set; }
+    public int EmailNhsMissingCount { get; set; }
+    public int EmailLaMissingCount { get; set; }
+    public int EmailBothMissingCount { get; set; }
 
-    public int GivenNameCount { get; set; }
-    public int GivenNameNhsCount { get; set; }
-    public int GivenNameLaCount { get; set; }
-    public int GivenNameBothCount { get; set; }
+    public int PhoneDifferenceCount { get; set; }
+    public int PhoneNhsMissingCount { get; set; }
+    public int PhoneLaMissingCount { get; set; }
+    public int PhoneBothMissingCount { get; set; }
 
-    public int FamilyNameCount { get; set; }
-    public int FamilyNameNhsCount { get; set; }
-    public int FamilyNameLaCount { get; set; }
-    public int FamilyNameBothCount { get; set; }
+    public int GivenNameDifferenceCount { get; set; }
+    public int GivenNameNhsMissingCount { get; set; }
+    public int GivenNameLaMissingCount { get; set; }
+    public int GivenNameBothMissingCount { get; set; }
 
-    public int PostCodeCount { get; set; }
-    public int PostCodeNhsCount { get; set; }
-    public int PostCodeLaCount { get; set; }
-    public int PostCodeBothCount { get; set; }
+    public int FamilyNameDifferenceCount { get; set; }
+    public int FamilyNameNhsMissingCount { get; set; }
+    public int FamilyNameLaMissingCount { get; set; }
+    public int FamilyNameBothMissingCount { get; set; }
+
+    public int PostCodeDifferenceCount { get; set; }
+    public int PostCodeNhsMissingCount { get; set; }
+    public int PostCodeLaMissingCount { get; set; }
+    public int PostCodeBothMissingCount { get; set; }
+
     public int MatchingStatusMatch { get; set; }
     public int MatchingStatusPotentialMatch { get; set; }
     public int MatchingStatusLowConfidenceMatch { get; set; }
@@ -116,30 +116,30 @@ public class ReconciliationCsvProcessStats : IStats
         InvalidNhsNumber = 0;
         PatientNotFound = 0;
         MissingNhsNumber = 0;
-        BirthDateCount = 0;
-        BirthDateNhsCount = 0;
-        BirthDateLaCount = 0;
-        BirthDateBothCount = 0;
-        EmailCount = 0;
-        EmailNhsCount = 0;
-        EmailLaCount = 0;
-        EmailBothCount = 0;
-        PhoneCount = 0;
-        PhoneNhsCount = 0;
-        PhoneLaCount = 0;
-        PhoneBothCount = 0;
-        GivenNameCount = 0;
-        GivenNameNhsCount = 0;
-        GivenNameLaCount = 0;
-        GivenNameBothCount = 0;
-        FamilyNameCount = 0;
-        FamilyNameNhsCount = 0;
-        FamilyNameLaCount = 0;
-        FamilyNameBothCount = 0;
-        PostCodeCount = 0;
-        PostCodeNhsCount = 0;
-        PostCodeLaCount = 0;
-        PostCodeBothCount = 0;
+        BirthDateDifferentCount = 0;
+        BirthDateNhsMissingCount = 0;
+        BirthDateLaMissingCount = 0;
+        BirthDateBothMissingCount = 0;
+        EmailDifferenceCount = 0;
+        EmailNhsMissingCount = 0;
+        EmailLaMissingCount = 0;
+        EmailBothMissingCount = 0;
+        PhoneDifferenceCount = 0;
+        PhoneNhsMissingCount = 0;
+        PhoneLaMissingCount = 0;
+        PhoneBothMissingCount = 0;
+        GivenNameDifferenceCount = 0;
+        GivenNameNhsMissingCount = 0;
+        GivenNameLaMissingCount = 0;
+        GivenNameBothMissingCount = 0;
+        FamilyNameDifferenceCount = 0;
+        FamilyNameNhsMissingCount = 0;
+        FamilyNameLaMissingCount = 0;
+        FamilyNameBothMissingCount = 0;
+        PostCodeDifferenceCount = 0;
+        PostCodeNhsMissingCount = 0;
+        PostCodeLaMissingCount = 0;
+        PostCodeBothMissingCount = 0;
         MatchingStatusMatch = 0;
         MatchingStatusPotentialMatch = 0;
         MatchingStatusNoMatch = 0;
@@ -177,7 +177,7 @@ public class ReconciliationCsvProcessStats : IStats
         }
     }
 
-    public static void RecordReconciliationStatusStats(ReconciliationCsvProcessStats stats, ReconciliationStatus? status, string differenceList)
+    public static void RecordReconciliationStatusStats(ReconciliationCsvProcessStats stats, ReconciliationStatus? status, string[] differences, string[] missingLocal, string[] missingNhs)
     {
         switch (status)
         {
@@ -185,13 +185,13 @@ public class ReconciliationCsvProcessStats : IStats
                 stats.NoDifferenceCount++;
                 break;
             case ReconciliationStatus.Differences:
-                UpdateStatsForField(differenceList, stats, "BirthDate", s => s.BirthDateCount++, s => s.BirthDateNhsCount++, s => s.BirthDateLaCount++, s => s.BirthDateBothCount++);
-                UpdateStatsForField(differenceList, stats, "Email", s => s.EmailCount++, s => s.EmailNhsCount++, s => s.EmailLaCount++, s => s.EmailBothCount++);
-                UpdateStatsForField(differenceList, stats, "Phone", s => s.PhoneCount++, s => s.PhoneNhsCount++, s => s.PhoneLaCount++, s => s.PhoneBothCount++);
-                UpdateStatsForField(differenceList, stats, "Given", s => s.GivenNameCount++, s => s.GivenNameNhsCount++, s => s.GivenNameLaCount++, s => s.GivenNameBothCount++);
-                UpdateStatsForField(differenceList, stats, "Family", s => s.FamilyNameCount++, s => s.FamilyNameNhsCount++, s => s.FamilyNameLaCount++, s => s.FamilyNameBothCount++);
-                UpdateStatsForField(differenceList, stats, "AddressPostalCode", s => s.PostCodeCount++, s => s.PostCodeNhsCount++, s => s.PostCodeLaCount++, s => s.PostCodeBothCount++);
-                UpdateStatsForField(differenceList, stats, "MatchingNhsNumber", s => s.MatchingNhsNumberCount++, s => s.MatchingNhsNumberNhsCount++, s => s.MatchingNhsNumberLaCount++, s => s.MatchingNhsNumberBothCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "BirthDate", s => s.BirthDateDifferentCount++, s => s.BirthDateNhsMissingCount++, s => s.BirthDateLaMissingCount++, s => s.BirthDateBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "Email", s => s.EmailDifferenceCount++, s => s.EmailNhsMissingCount++, s => s.EmailLaMissingCount++, s => s.EmailBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "Phone", s => s.PhoneDifferenceCount++, s => s.PhoneNhsMissingCount++, s => s.PhoneLaMissingCount++, s => s.PhoneBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "Given", s => s.GivenNameDifferenceCount++, s => s.GivenNameNhsMissingCount++, s => s.GivenNameLaMissingCount++, s => s.GivenNameBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "Family", s => s.FamilyNameDifferenceCount++, s => s.FamilyNameNhsMissingCount++, s => s.FamilyNameLaMissingCount++, s => s.FamilyNameBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "AddressPostalCode", s => s.PostCodeDifferenceCount++, s => s.PostCodeNhsMissingCount++, s => s.PostCodeLaMissingCount++, s => s.PostCodeBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "NhsNumber", s => s.MatchingNhsNumberCount++, s => s.MatchingNhsNumberNhsCount++, s => s.MatchingNhsNumberLaCount++, s => s.MatchingNhsNumberBothCount++);
 
                 stats.DifferencesCount++;
                 break;
@@ -238,7 +238,9 @@ public class ReconciliationCsvProcessStats : IStats
     }
 
     private static void UpdateStatsForField(
-        string differenceList,
+        string[] differences,
+        string[] missingLocal,
+        string[] missingNhs,
         ReconciliationCsvProcessStats stats,
         string fieldName,
         Action<ReconciliationCsvProcessStats> incrementPlain,
@@ -246,11 +248,32 @@ public class ReconciliationCsvProcessStats : IStats
         Action<ReconciliationCsvProcessStats> incrementLa,
         Action<ReconciliationCsvProcessStats> incrementBoth)
     {
-        var plainRegex = new Regex($@"\b{fieldName}\b(?!:)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(300));
+        bool inDifferences = differences.Contains(fieldName);
+        bool inMissingLocal = missingLocal.Contains(fieldName);
+        bool inMissingNhs = missingNhs.Contains(fieldName);
 
-        if (plainRegex.IsMatch(differenceList)) { incrementPlain(stats); }
-        if (differenceList.Contains($"{fieldName}:NHS")) { incrementNhs(stats); }
-        if (differenceList.Contains($"{fieldName}:LA")) { incrementLa(stats); }
-        if (differenceList.Contains($"{fieldName}:Both")) { incrementBoth(stats); }
+
+        // // Field is missing in both systems
+        if (inMissingLocal && inMissingNhs)
+        {
+            incrementBoth(stats);
+        }
+        // Field exists in both but has different values
+        else if (inDifferences)
+        {
+            incrementPlain(stats);
+        }
+        // // Field is missing locally
+        else if (inMissingLocal)
+        {
+            incrementLa(stats);
+        }
+        // // Field is missing in NHS
+        else if (inMissingNhs)
+        {
+            incrementNhs(stats);
+        }
     }
+
+
 }

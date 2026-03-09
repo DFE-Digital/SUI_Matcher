@@ -114,7 +114,12 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderPrimaryPDSAddressInCMSHistory] = addressComparisonResult.PrimaryPDSAddressInCMSHistory.ToString();
 
         ReconciliationCsvProcessStats.RecordMatchStatusStats(stats, response?.MatchingResult?.MatchStatus);
-        ReconciliationCsvProcessStats.RecordReconciliationStatusStats(stats, response?.Status, differenceList);
+        ReconciliationCsvProcessStats.RecordReconciliationStatusStats(
+            stats,
+            response?.Status,
+            response?.DifferenceFields.ToArray() ?? [],
+            response?.MissingLocalFields.ToArray() ?? [],
+            response?.MissingNhsFields.ToArray() ?? []);
         ReconciliationCsvProcessStats.RecordAddressStats(stats, addressComparisonResult);
     }
 
