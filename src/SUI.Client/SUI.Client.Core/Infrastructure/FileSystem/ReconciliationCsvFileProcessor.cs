@@ -141,7 +141,7 @@ public class ReconciliationCsvFileProcessor(
         }
 
         var pdsAddressHistory = AddressParser.FromNhsPerson(response.Person);
-        var queryingAddressHistory = AddressParser.ParseHistory(addressHistoryCsv, request.AddressPostalCode);
+        var queryingAddressHistory = AddressParser.ParseHistory(addressHistoryCsv);
 
         result.PrimaryAddressSame = pdsAddressHistory.PrimaryAddressSameAs(queryingAddressHistory);
         result.AddressHistoriesIntersect = pdsAddressHistory.IntersectsWith(queryingAddressHistory);

@@ -22,12 +22,14 @@ public static class AddressParser
         if (parts.Length < 3)
             return null;
 
+        // Constraint that house number is always the first word in the second segment of the record
         var addressLine = parts[1];
         var houseNumber = ExtractHouseNumber(addressLine);
 
         if (houseNumber is null)
             return null;
 
+        // Constraint that postcode is always the last segment in the record
         var postcode = NormalizePostcode(parts[^1]);
 
         if (string.IsNullOrWhiteSpace(postcode))
@@ -39,8 +41,9 @@ public static class AddressParser
     /// <summary>
     /// Parses a history of address records delimited by "|" into an AddressHistory object.
     /// Each record in the history is delimited by "~".
+    /// <para>The order of the history string is preserved</para>
     /// </summary>
-    public static AddressHistory ParseHistory(string? historyString, string? primaryPostcode = null)
+    public static AddressHistory ParseHistory(string? historyString)
     {
         if (string.IsNullOrWhiteSpace(historyString))
         {
@@ -54,15 +57,11 @@ public static class AddressParser
             .OfType<AddressMinimal>()
             .ToList();
 
-        AddressMinimal? primaryAddress = null;
-        if (!string.IsNullOrWhiteSpace(primaryPostcode))
-        {
-            var normalizedPrimary = NormalizePostcode(primaryPostcode);
-            // Search for the primary address in the parsed history
-            primaryAddress = addresses.FirstOrDefault(a => a.Postcode.Equals(normalizedPrimary, StringComparison.OrdinalIgnoreCase));
-        }
-
-        return new AddressHistory(addresses, primaryAddress);
+        // TODO: Primary address is determined by ... (waiting for reply from CMS team on this)
+        var lastAddress = addresses.LastOrDefault();
+        return lastAddress is not null 
+            ? new AddressHistory(addresses, lastAddress) 
+            : new AddressHistory(addresses);
     }
 
     /// <summary>
@@ -79,6 +78,8 @@ public static class AddressParser
         var primaryPostcode = person.AddressPostalCodes.FirstOrDefault();
         AddressMinimal? primaryAddress = null;
 
+        // Assuming PDS is consistent in providing the primary address's postcode as the first entry in AddressPostalCodes,
+        // we can attempt to match it to one of the parsed addresses to identify the primary address.
         if (!string.IsNullOrWhiteSpace(primaryPostcode))
         {
             var normalizedPrimary = NormalizePostcode(primaryPostcode);
