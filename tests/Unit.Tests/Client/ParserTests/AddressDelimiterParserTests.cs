@@ -82,12 +82,12 @@ public class AddressDelimiterParserTests
 
     [Theory]
     [InlineData("YO1 6GA", "1~2 bob lane~Somewhere~YO1 6GA|", 1)] // trailing pipe should be ignored
-    [InlineData("YO1 6GA","|1~2 bob lane~Somewhere~YO1 6GA", 1)] // leading pipe should be ignored
-    [InlineData("YO1 6GA","1~2 bob lane~Somewhere~YO1 6GA||2~3 alice road~Elsewhere~YO2 7GB", 2)] // empty record between pipes should be ignored
+    [InlineData("YO1 6GA", "|1~2 bob lane~Somewhere~YO1 6GA", 1)] // leading pipe should be ignored
+    [InlineData("YO1 6GA", "1~2 bob lane~Somewhere~YO1 6GA||2~3 alice road~Elsewhere~YO2 7GB", 2)] // empty record between pipes should be ignored
     public void ParseHistory_IgnoresEmptyRecords(string primaryPostcode, string historyString, int expectedCount)
     {
         var result = AddressParser.ParseHistory(historyString, primaryPostcode);
-        
+
         Assert.NotNull(result);
         Assert.Equal(expectedCount, result.Addresses.Count);
     }
@@ -98,13 +98,13 @@ public class AddressDelimiterParserTests
     public void ParseHistory_PrimaryAddressIsLastEntryWithMatchingPostcode(string primaryPostcode, string historyString, string expectedHouseNumber, string expectedPostcode)
     {
         var result = AddressParser.ParseHistory(historyString, primaryPostcode);
-        
+
         Assert.NotNull(result);
         Assert.NotNull(result.PrimaryAddress);
         Assert.Equal(expectedHouseNumber, result.PrimaryAddress!.HouseNumber);
         Assert.Equal(expectedPostcode, result.PrimaryAddress.Postcode);
     }
-    
+
     [Fact]
     public void FromNhsPerson_PrimaryAddressIsLastEntryWithMatchingPostcode()
     {
@@ -118,7 +118,7 @@ public class AddressDelimiterParserTests
         var nhsPerson = new NhsPerson { AddressPostalCodes = [primaryPostcode], AddressHistory = history, NhsNumber = "1234567890" };
 
         var result = AddressParser.FromNhsPerson(nhsPerson);
-        
+
         Assert.NotNull(result);
         Assert.NotNull(result.PrimaryAddress);
         Assert.Equal("3", result.PrimaryAddress!.HouseNumber);
