@@ -58,7 +58,7 @@ public class ReconciliationService(
             .ToList();
 
         // Can only get these if we get NHS demographics, so we build these after that step
-        var nhsMissingFields = differences.Where(d => string.IsNullOrEmpty(d.Nhs)).Select(d => d.FieldName).ToList();
+        var nhsMissingFields = differences.Where(d => d.IsMissingNhs).Select(d => d.FieldName).ToList();
 
         // Prepare response, with initial status on whether differences have occurred
         var reconResponse = new ReconciliationResponse
