@@ -13,7 +13,9 @@ public class ReconciliationService(
 {
     public async Task<ReconciliationResponse> ReconcileAsync(ReconciliationRequest request)
     {
+        // Check which local fields are missing
         var localMissingFields = BuildLocalMissingFields(request);
+        
         // Match the request's demographics to an NHS number
         var matchingResponse = await matchingService.SearchAsync(request, false);
 
