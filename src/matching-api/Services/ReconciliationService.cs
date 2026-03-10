@@ -52,8 +52,8 @@ public class ReconciliationService(
 
         // Compare matched NHS number's demographics to the request's demographics
         var differences = BuildDifferenceList(request, matchedNhsNumberDemographics.Result);
-        var differenceFields = differences
-            .Where(d => !string.IsNullOrEmpty(d.Local) && !string.IsNullOrEmpty(d.Nhs) && !d.Local.Equals(d.Nhs, StringComparison.OrdinalIgnoreCase))
+        var fieldsWithDifferences = differences
+            .Where(d => d.BothSidesPresentAndDifferent)
             .Select(d => d.FieldName)
             .ToList();
 
@@ -68,7 +68,7 @@ public class ReconciliationService(
             Status = differences.Count == 0
                 ? ReconciliationStatus.NoDifferences
                 : ReconciliationStatus.Differences,
-            DifferenceFields = differenceFields,
+            DifferenceFields = fieldsWithDifferences,
             MissingLocalFields = localMissingFields,
             MissingNhsFields = nhsMissingFields
         };
