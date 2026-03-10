@@ -16,7 +16,7 @@ public class ReconciliationStatsTests
 
         // Act
         var stats = new ReconciliationCsvProcessStats();
-        ReconciliationCsvProcessStats.RecordReconciliationStatusStats(stats, ReconciliationStatus.Differences,
+        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
             differencesFields, missingLocalFields, missingNhsFields);
 
         // Assert
@@ -36,7 +36,7 @@ public class ReconciliationStatsTests
 
         // Act
         var stats = new ReconciliationCsvProcessStats();
-        ReconciliationCsvProcessStats.RecordReconciliationStatusStats(stats, ReconciliationStatus.Differences,
+        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
             differencesFields, missingLocalFields, missingNhsFields);
 
         // Assert
@@ -55,7 +55,7 @@ public class ReconciliationStatsTests
 
         // Act
         var stats = new ReconciliationCsvProcessStats();
-        ReconciliationCsvProcessStats.RecordReconciliationStatusStats(stats, ReconciliationStatus.Differences,
+        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
             differencesFields, missingLocalFields, missingNhsFields);
 
         // Assert
@@ -74,7 +74,7 @@ public class ReconciliationStatsTests
 
         // Act
         var stats = new ReconciliationCsvProcessStats();
-        ReconciliationCsvProcessStats.RecordReconciliationStatusStats(stats, ReconciliationStatus.Differences,
+        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
             differencesFields, missingLocalFields, missingNhsFields);
 
         // Assert

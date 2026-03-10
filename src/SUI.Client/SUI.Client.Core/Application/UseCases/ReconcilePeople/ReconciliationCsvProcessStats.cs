@@ -151,89 +151,89 @@ public class ReconciliationCsvProcessStats : IStats
         PrimaryPDSAddressInCMSHistory = 0;
     }
 
-    public static void RecordMatchStatusStats(ReconciliationCsvProcessStats stats, MatchStatus? matchStatus)
+    public void RecordMatchStatusStats(MatchStatus? matchStatus)
     {
-        stats.Count++;
+        Count++;
         switch (matchStatus)
         {
             case MatchStatus.Match:
-                stats.MatchingStatusMatch++;
+                MatchingStatusMatch++;
                 break;
             case MatchStatus.NoMatch:
-                stats.MatchingStatusNoMatch++;
+                MatchingStatusNoMatch++;
                 break;
             case MatchStatus.PotentialMatch:
-                stats.MatchingStatusPotentialMatch++;
+                MatchingStatusPotentialMatch++;
                 break;
             case MatchStatus.LowConfidenceMatch:
-                stats.MatchingStatusLowConfidenceMatch++;
+                MatchingStatusLowConfidenceMatch++;
                 break;
             case MatchStatus.ManyMatch:
-                stats.MatchingStatusManyMatch++;
+                MatchingStatusManyMatch++;
                 break;
             default:
-                stats.MatchingStatusError++;
+                MatchingStatusError++;
                 break;
         }
     }
 
-    public static void RecordReconciliationStatusStats(ReconciliationCsvProcessStats stats, ReconciliationStatus? status, string[] differences, string[] missingLocal, string[] missingNhs)
+    public void RecordReconciliationStatusStats(ReconciliationStatus? status, string[] differences, string[] missingLocal, string[] missingNhs)
     {
         switch (status)
         {
             case ReconciliationStatus.NoDifferences:
-                stats.NoDifferenceCount++;
+                NoDifferenceCount++;
                 break;
             case ReconciliationStatus.Differences:
-                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "BirthDate", s => s.BirthDateDifferentCount++, s => s.BirthDateNhsMissingCount++, s => s.BirthDateLaMissingCount++, s => s.BirthDateBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "Email", s => s.EmailDifferenceCount++, s => s.EmailNhsMissingCount++, s => s.EmailLaMissingCount++, s => s.EmailBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "Phone", s => s.PhoneDifferenceCount++, s => s.PhoneNhsMissingCount++, s => s.PhoneLaMissingCount++, s => s.PhoneBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "Given", s => s.GivenNameDifferenceCount++, s => s.GivenNameNhsMissingCount++, s => s.GivenNameLaMissingCount++, s => s.GivenNameBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "Family", s => s.FamilyNameDifferenceCount++, s => s.FamilyNameNhsMissingCount++, s => s.FamilyNameLaMissingCount++, s => s.FamilyNameBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "AddressPostalCode", s => s.PostCodeDifferenceCount++, s => s.PostCodeNhsMissingCount++, s => s.PostCodeLaMissingCount++, s => s.PostCodeBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, stats, "NhsNumber", s => s.MatchingNhsNumberCount++, s => s.MatchingNhsNumberNhsCount++, s => s.MatchingNhsNumberLaCount++, s => s.MatchingNhsNumberBothCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, "BirthDate", () => BirthDateDifferentCount++, () => BirthDateNhsMissingCount++, () => BirthDateLaMissingCount++, () => BirthDateBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, "Email", () => EmailDifferenceCount++, () => EmailNhsMissingCount++, () => EmailLaMissingCount++, () => EmailBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, "Phone", () => PhoneDifferenceCount++, () => PhoneNhsMissingCount++, () => PhoneLaMissingCount++, () => PhoneBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, "Given", () => GivenNameDifferenceCount++, () => GivenNameNhsMissingCount++, () => GivenNameLaMissingCount++, () => GivenNameBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, "Family", () => FamilyNameDifferenceCount++, () => FamilyNameNhsMissingCount++, () => FamilyNameLaMissingCount++, () => FamilyNameBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, "AddressPostalCode", () => PostCodeDifferenceCount++, () => PostCodeNhsMissingCount++, () => PostCodeLaMissingCount++, () => PostCodeBothMissingCount++);
+                UpdateStatsForField(differences, missingLocal, missingNhs, "NhsNumber", () => MatchingNhsNumberCount++, () => MatchingNhsNumberNhsCount++, () => MatchingNhsNumberLaCount++, () => MatchingNhsNumberBothCount++);
 
-                stats.DifferencesCount++;
+                DifferencesCount++;
                 break;
             case ReconciliationStatus.LocalNhsNumberIsSuperseded:
-                stats.SupersededNhsNumber++;
+                SupersededNhsNumber++;
                 break;
             case ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber:
-                stats.MissingNhsNumber++;
+                MissingNhsNumber++;
                 break;
             case ReconciliationStatus.LocalNhsNumberIsNotFoundInNhs:
-                stats.PatientNotFound++;
+                PatientNotFound++;
                 break;
             case ReconciliationStatus.LocalNhsNumberIsNotValid:
-                stats.InvalidNhsNumber++;
+                InvalidNhsNumber++;
                 break;
             default:
-                stats.ErroredCount++;
+                ErroredCount++;
                 break;
         }
     }
 
-    public static void RecordAddressStats(ReconciliationCsvProcessStats stats, AddressComparisonResult addressComparisonResult)
+    public void RecordAddressStats(AddressComparisonResult addressComparisonResult)
     {
 
         if (addressComparisonResult.PrimaryAddressSame)
         {
-            stats.PrimaryAddressSame++;
+            PrimaryAddressSame++;
         }
 
         if (addressComparisonResult.AddressHistoriesIntersect)
         {
-            stats.AddressHistoriesIntersect++;
+            AddressHistoriesIntersect++;
         }
 
         if (addressComparisonResult.PrimaryCMSAddressInPDSHistory)
         {
-            stats.PrimaryCMSAddressInPDSHistory++;
+            PrimaryCMSAddressInPDSHistory++;
         }
 
         if (addressComparisonResult.PrimaryPDSAddressInCMSHistory)
         {
-            stats.PrimaryPDSAddressInCMSHistory++;
+            PrimaryPDSAddressInCMSHistory++;
         }
     }
 
@@ -241,12 +241,11 @@ public class ReconciliationCsvProcessStats : IStats
         string[] differences,
         string[] missingLocal,
         string[] missingNhs,
-        ReconciliationCsvProcessStats stats,
         string fieldName,
-        Action<ReconciliationCsvProcessStats> incrementPlain,
-        Action<ReconciliationCsvProcessStats> incrementNhs,
-        Action<ReconciliationCsvProcessStats> incrementLa,
-        Action<ReconciliationCsvProcessStats> incrementBoth)
+        Action incrementPlain,
+        Action incrementNhs,
+        Action incrementLa,
+        Action incrementBoth)
     {
         bool inDifferences = differences.Contains(fieldName);
         bool inMissingLocal = missingLocal.Contains(fieldName);
@@ -256,22 +255,22 @@ public class ReconciliationCsvProcessStats : IStats
         // // Field is missing in both systems
         if (inMissingLocal && inMissingNhs)
         {
-            incrementBoth(stats);
+            incrementBoth();
         }
         // Field exists in both but has different values
         else if (inDifferences)
         {
-            incrementPlain(stats);
+            incrementPlain();
         }
         // // Field is missing locally
         else if (inMissingLocal)
         {
-            incrementLa(stats);
+            incrementLa();
         }
         // // Field is missing in NHS
         else if (inMissingNhs)
         {
-            incrementNhs(stats);
+            incrementNhs();
         }
     }
 
