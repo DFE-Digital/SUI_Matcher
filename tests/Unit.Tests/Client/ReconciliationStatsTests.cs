@@ -97,8 +97,8 @@ public class ReconciliationStatsTests
             differencesFields, missingLocalFields, missingNhsFields);
 
         // Assert
-        // DifferencesCount should only be incremented for actual differences, not for missing fields
-        Assert.Equal(2, stats.DifferencesCount);
+        // DifferencesCount is for when a record contains one or more differences.
+        Assert.Equal(1, stats.DifferencesCount);
 
         // Verify the actual differences were recorded
         Assert.Equal(1, stats.BirthDateDifferentCount);
