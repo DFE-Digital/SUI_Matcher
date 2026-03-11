@@ -356,3 +356,6 @@ coverage/
 *venv*
 
 .DS_Store
+
+# Husky.Net
+.husky/_
