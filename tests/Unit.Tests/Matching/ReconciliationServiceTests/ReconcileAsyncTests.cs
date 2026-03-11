@@ -62,7 +62,9 @@ public class ReconcileAsyncTests
 
         // No match status returned, with no differences or demographics returned
         Assert.Equal(ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber, result.Status);
-        Assert.Empty(result.Differences);
+        Assert.Empty(result.MissingLocalFields);
+        Assert.Empty(result.DifferenceFields);
+        Assert.Empty(result.MissingNhsFields);
         Assert.Null(result.Person);
     }
 
@@ -126,8 +128,8 @@ public class ReconcileAsyncTests
 
         // Invalid local NHS number status returned, and the NHS number should exist in the differences
         Assert.Equal(ReconciliationStatus.LocalNhsNumberIsNotValid, result.Status);
-        Assert.Single(result.Differences,
-            d => d is { FieldName: nameof(NhsPerson.NhsNumber), Local: InvalidNhsNumber, Nhs: ValidNhsNumber });
+        Assert.Single(result.DifferenceFields,
+            d => d is nameof(NhsPerson.NhsNumber));
     }
 
     [Fact]
@@ -195,8 +197,8 @@ public class ReconcileAsyncTests
 
         // Local NHS number is not found in NHS status returned, and the NHS number should exist in the differences
         Assert.Equal(ReconciliationStatus.LocalNhsNumberIsNotFoundInNhs, result.Status);
-        Assert.Single(result.Differences,
-            d => d is { FieldName: nameof(NhsPerson.NhsNumber), Local: ValidNhsNumber, Nhs: "9999999993" });
+        Assert.Single(result.DifferenceFields,
+            d => d is nameof(NhsPerson.NhsNumber));
     }
 
     [Fact]
@@ -264,8 +266,8 @@ public class ReconcileAsyncTests
 
         // Superseded status returned, and the NHS number should exist in the differences
         Assert.Equal(ReconciliationStatus.LocalNhsNumberIsSuperseded, result.Status);
-        Assert.Single(result.Differences,
-            d => d is { FieldName: nameof(NhsPerson.NhsNumber), Local: ValidNhsNumber, Nhs: "9999999993" });
+        Assert.Single(result.DifferenceFields,
+            d => d is nameof(NhsPerson.NhsNumber));
     }
 
     [Theory]
@@ -300,7 +302,9 @@ public class ReconcileAsyncTests
 
         // ASSERT
         Assert.Equal(successfulCase.ExpectedStatus, result.Status);
-        Assert.Equivalent(successfulCase.ExpectedDifferences, result.Differences);
+        Assert.Equal(successfulCase.ExpectedDifferences, result.DifferenceFields);
+        Assert.Equal(successfulCase.ExpectedMissingLocalFields, result.MissingLocalFields);
+        Assert.Equal(successfulCase.ExpectedMissingNhsFields, result.MissingNhsFields);
     }
 
 
@@ -384,10 +388,8 @@ public class ReconcileAsyncTests
         });
 
         // ASSERT
-        var nhsNumberDifference = result.Differences.SingleOrDefault(a => a.FieldName == "NhsNumber");
-        Assert.NotNull(nhsNumberDifference);             // NHS number in difference
-        Assert.Equal(nhsNoA, nhsNumberDifference.Local); // NHS number A is local
-        Assert.Equal(nhsNoB, nhsNumberDifference.Nhs);   // NHS number B is NHS
+        var nhsNumberDifference = result.DifferenceFields.SingleOrDefault(a => a == nameof(NhsPerson.NhsNumber));
+        Assert.NotNull(nhsNumberDifference);
 
         // Since we can individually fetch demographics for both NHS numbers,
         // the NHS number has not been superceded.

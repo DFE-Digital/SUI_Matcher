@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -14,7 +13,7 @@ using Shared.Models;
 using Shared.Util;
 
 using SUI.Client.Core.Application.Interfaces;
-using SUI.Client.Core.Domain.Models;
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 using SUI.Client.Core.Infrastructure.Parsing;
 
 namespace SUI.Client.Core.Infrastructure.FileSystem;
@@ -25,7 +24,7 @@ public class ReconciliationCsvFileProcessor(
     IMatchingService matching,
     IOptions<CsvWatcherConfig> watcherConfig) : ICsvFileProcessor
 {
-    private readonly IStats _stats = new ReconciliationCsvProcessStats();
+    private readonly ReconciliationCsvProcessStats _stats = new();
     private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
     public const string HeaderNhsNo = "SUI_NHSNo";
     public const string HeaderGivenName = "SUI_GivenName";
@@ -38,6 +37,8 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderAddressHistory = "SUI_AddressHistory";
     public const string HeaderGeneralPractitionerOdsId = "SUI_GeneralPractitionerOdsId";
     public const string HeaderDifferences = "SUI_Differences";
+    public const string HeaderMissingLocalFields = "SUI_MissingLocalFields";
+    public const string HeaderMissingNhsFields = "SUI_MissingNhsFields";
     public const string HeaderStatus = "SUI_Status";
     public const string HeaderMatchStatus = "SUI_MatchStatus";
     public const string HeaderMatchNhsNumber = "SUI_MatchNhsNumber";
@@ -50,7 +51,7 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderPrimaryCMSAddressInPDSHistory = "SUI_PrimaryCMSAddressInPDSHistory";
     public const string HeaderPrimaryPDSAddressInCMSHistory = "SUI_PrimaryPDSAddressInCMSHistory";
 
-    private async Task ProcessRecord(Dictionary<string, string> record, IStats stats)
+    private async Task ProcessRecord(Dictionary<string, string> record, ReconciliationCsvProcessStats stats)
     {
         string gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)])
             .ToLower();
@@ -98,8 +99,10 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderPhone] = string.Join(" - ", response?.Person?.PhoneNumbers ?? ["-"]);
         record[HeaderAddressHistory] = CsvUtils.WrapInputForCsv(response?.Person?.AddressHistory);
         record[HeaderGeneralPractitionerOdsId] = response?.Person?.GeneralPractitionerOdsId ?? "-";
-        var differenceList = response?.DifferenceString ?? "-";
+        var differenceList = CreateDelimiterStringFromList(response?.DifferenceFields);
         record[HeaderDifferences] = differenceList;
+        record[HeaderMissingLocalFields] = CreateDelimiterStringFromList(response?.MissingLocalFields);
+        record[HeaderMissingNhsFields] = CreateDelimiterStringFromList(response?.MissingNhsFields);
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
         record[HeaderMatchNhsNumber] = response?.MatchingResult?.NhsNumber ?? "-";
         record[HeaderMatchStatus] = response?.MatchingResult?.MatchStatus.ToString() ?? "-";
@@ -110,11 +113,23 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderPrimaryCMSAddressInPDSHistory] = addressComparisonResult.PrimaryCMSAddressInPDSHistory.ToString();
         record[HeaderPrimaryPDSAddressInCMSHistory] = addressComparisonResult.PrimaryPDSAddressInCMSHistory.ToString();
 
-        RecordStats((ReconciliationCsvProcessStats)stats, response, differenceList);
-        RecordAddressStats((ReconciliationCsvProcessStats)stats, addressComparisonResult);
+        stats.RecordMatchStatusStats(response?.MatchingResult?.MatchStatus);
+        stats.RecordReconciliationStatusStats(
+            response?.Status,
+            response?.DifferenceFields.ToArray() ?? [],
+            response?.MissingLocalFields.ToArray() ?? [],
+            response?.MissingNhsFields.ToArray() ?? []);
+        stats.RecordAddressStats(addressComparisonResult);
     }
 
-
+    private static string CreateDelimiterStringFromList(List<string>? value)
+    {
+        if (value is null)
+        {
+            return "-";
+        }
+        return string.Join(" - ", value);
+    }
 
     private static AddressComparisonResult GetAddressComparisonResult(ReconciliationRequest request, ReconciliationResponse? response, string? addressHistoryCsv)
     {
@@ -138,7 +153,7 @@ public class ReconciliationCsvFileProcessor(
         return result;
     }
 
-    private void AddExtraCsvHeaders(HashSet<string> headers)
+    private static void AddExtraCsvHeaders(HashSet<string> headers)
     {
         headers.Add(HeaderNhsNo);
         headers.Add(HeaderGivenName);
@@ -151,6 +166,8 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderAddressHistory);
         headers.Add(HeaderGeneralPractitionerOdsId);
         headers.Add(HeaderDifferences);
+        headers.Add(HeaderMissingLocalFields);
+        headers.Add(HeaderMissingNhsFields);
         headers.Add(HeaderStatus);
         headers.Add(HeaderMatchStatus);
         headers.Add(HeaderMatchNhsNumber);
@@ -162,107 +179,7 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderPrimaryPDSAddressInCMSHistory);
     }
 
-    private static void RecordStats(ReconciliationCsvProcessStats stats, ReconciliationResponse? response, string differenceList)
-    {
-        stats.Count++;
-        switch (response?.MatchingResult?.MatchStatus)
-        {
-            case MatchStatus.Match:
-                stats.MatchingStatusMatch++;
-                break;
-            case MatchStatus.NoMatch:
-                stats.MatchingStatusNoMatch++;
-                break;
-            case MatchStatus.PotentialMatch:
-                stats.MatchingStatusPotentialMatch++;
-                break;
-            case MatchStatus.LowConfidenceMatch:
-                stats.MatchingStatusLowConfidenceMatch++;
-                break;
-            case MatchStatus.ManyMatch:
-                stats.MatchingStatusManyMatch++;
-                break;
-            default:
-                stats.MatchingStatusError++;
-                break;
-        }
 
-        switch (response?.Status)
-        {
-            case ReconciliationStatus.NoDifferences:
-                stats.NoDifferenceCount++;
-                break;
-            case ReconciliationStatus.Differences:
-                UpdateStatsForField(differenceList, stats, "BirthDate", s => s.BirthDateCount++, s => s.BirthDateNhsCount++, s => s.BirthDateLaCount++, s => s.BirthDateBothCount++);
-                UpdateStatsForField(differenceList, stats, "Email", s => s.EmailCount++, s => s.EmailNhsCount++, s => s.EmailLaCount++, s => s.EmailBothCount++);
-                UpdateStatsForField(differenceList, stats, "Phone", s => s.PhoneCount++, s => s.PhoneNhsCount++, s => s.PhoneLaCount++, s => s.PhoneBothCount++);
-                UpdateStatsForField(differenceList, stats, "Given", s => s.GivenNameCount++, s => s.GivenNameNhsCount++, s => s.GivenNameLaCount++, s => s.GivenNameBothCount++);
-                UpdateStatsForField(differenceList, stats, "Family", s => s.FamilyNameCount++, s => s.FamilyNameNhsCount++, s => s.FamilyNameLaCount++, s => s.FamilyNameBothCount++);
-                UpdateStatsForField(differenceList, stats, "AddressPostalCode", s => s.PostCodeCount++, s => s.PostCodeNhsCount++, s => s.PostCodeLaCount++, s => s.PostCodeBothCount++);
-                UpdateStatsForField(differenceList, stats, "MatchingNhsNumber", s => s.MatchingNhsNumberCount++, s => s.MatchingNhsNumberNhsCount++, s => s.MatchingNhsNumberLaCount++, s => s.MatchingNhsNumberBothCount++);
-
-                stats.DifferencesCount++;
-                break;
-            case ReconciliationStatus.LocalNhsNumberIsSuperseded:
-                stats.SupersededNhsNumber++;
-                break;
-            case ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber:
-                stats.MissingNhsNumber++;
-                break;
-            case ReconciliationStatus.LocalNhsNumberIsNotFoundInNhs:
-                stats.PatientNotFound++;
-                break;
-            case ReconciliationStatus.LocalNhsNumberIsNotValid:
-                stats.InvalidNhsNumber++;
-                break;
-            default:
-                stats.ErroredCount++;
-                break;
-        }
-
-
-    }
-
-    private static void UpdateStatsForField(
-        string differenceList,
-        ReconciliationCsvProcessStats stats,
-        string fieldName,
-        Action<ReconciliationCsvProcessStats> incrementPlain,
-        Action<ReconciliationCsvProcessStats> incrementNhs,
-        Action<ReconciliationCsvProcessStats> incrementLa,
-        Action<ReconciliationCsvProcessStats> incrementBoth)
-    {
-        var plainRegex = new Regex($@"\b{fieldName}\b(?!:)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(300));
-
-        if (plainRegex.IsMatch(differenceList)) { incrementPlain(stats); }
-        if (differenceList.Contains($"{fieldName}:NHS")) { incrementNhs(stats); }
-        if (differenceList.Contains($"{fieldName}:LA")) { incrementLa(stats); }
-        if (differenceList.Contains($"{fieldName}:Both")) { incrementBoth(stats); }
-    }
-
-    private static void RecordAddressStats(ReconciliationCsvProcessStats stats, AddressComparisonResult addressComparisonResult)
-    {
-
-        if (addressComparisonResult.PrimaryAddressSame)
-        {
-            stats.PrimaryAddressSame++;
-        }
-
-        if (addressComparisonResult.AddressHistoriesIntersect)
-        {
-            stats.AddressHistoriesIntersect++;
-        }
-
-        if (addressComparisonResult.PrimaryCMSAddressInPDSHistory)
-        {
-            stats.PrimaryCMSAddressInPDSHistory++;
-        }
-
-        if (addressComparisonResult.PrimaryPDSAddressInCMSHistory)
-        {
-            stats.PrimaryPDSAddressInCMSHistory++;
-        }
-    }
 
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
@@ -436,11 +353,5 @@ public class ReconciliationCsvFileProcessor(
         return statsData ?? new Dictionary<string, int>();
     }
 
-    private class AddressComparisonResult
-    {
-        public bool PrimaryAddressSame { get; set; }
-        public bool AddressHistoriesIntersect { get; set; }
-        public bool PrimaryCMSAddressInPDSHistory { get; set; }
-        public bool PrimaryPDSAddressInCMSHistory { get; set; }
-    }
+
 }

@@ -1,5 +1,3 @@
-using System.Text;
-
 using Newtonsoft.Json;
 
 using Shared.Endpoint;
@@ -15,6 +13,9 @@ public class ReconciliationService(
 {
     public async Task<ReconciliationResponse> ReconcileAsync(ReconciliationRequest request)
     {
+        // Check which local fields are missing
+        var localMissingFields = BuildLocalMissingFields(request);
+
         // Match the request's demographics to an NHS number
         var matchingResponse = await matchingService.SearchAsync(request, false);
 
@@ -24,7 +25,8 @@ public class ReconciliationService(
             {
                 MatchingResult = matchingResponse.Result,
                 Status = ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber,
-                Errors = ["Local demographics did not match to an NHS number"]
+                Errors = ["Local demographics did not match to an NHS number"],
+                MissingLocalFields = localMissingFields
             };
             LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
             return reconciliationResponse;
@@ -41,7 +43,8 @@ public class ReconciliationService(
                 MatchingResult = matchingResponse.Result,
                 // Generic error, since we'd expect a matched number to return demographics
                 Status = ReconciliationStatus.Error,
-                Errors = [matchedNhsNumberDemographics.ErrorMessage ?? "Unknown error"]
+                Errors = [matchedNhsNumberDemographics.ErrorMessage ?? "Unknown error"],
+                MissingLocalFields = localMissingFields
             };
             LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
             return reconciliationResponse;
@@ -49,18 +52,25 @@ public class ReconciliationService(
 
         // Compare matched NHS number's demographics to the request's demographics
         var differences = BuildDifferenceList(request, matchedNhsNumberDemographics.Result);
-        var differenceString = BuildDifferences(differences);
+        var fieldsWithDifferences = differences
+            .Where(d => d.BothSidesPresentAndDifferent)
+            .Select(d => d.FieldName)
+            .ToList();
+
+        // Can only get these if we get NHS demographics, so we build these after that step
+        var nhsMissingFields = differences.Where(d => d.IsMissingNhs).Select(d => d.FieldName).ToList();
 
         // Prepare response, with initial status on whether differences have occurred
         var reconResponse = new ReconciliationResponse
         {
             MatchingResult = matchingResponse.Result,
             Person = matchedNhsNumberDemographics.Result,
-            Differences = differences,
-            DifferenceString = differenceString,
             Status = differences.Count == 0
                 ? ReconciliationStatus.NoDifferences
-                : ReconciliationStatus.Differences
+                : ReconciliationStatus.Differences,
+            DifferenceFields = fieldsWithDifferences,
+            MissingLocalFields = localMissingFields,
+            MissingNhsFields = nhsMissingFields
         };
 
         // Return early if the NHS number definitely can't be superseded
@@ -118,11 +128,13 @@ public class ReconciliationService(
         var ageGroup = GetAgeGroup(reconciliationResponse.Person?.BirthDate);
         decimal score = personMatchResponse.Result?.Score ?? 0;
         logger.LogInformation(
-            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {Score}",
+            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, LocalMissing: {LocalMissing}, NhsMissing: {NhsMissing} Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {Score}",
             ageGroup,
             request.Gender ?? "Unknown",
             request.AddressPostalCode ?? "Unknown",
-            JsonConvert.SerializeObject(reconciliationResponse.DifferenceString),
+            JsonConvert.SerializeObject(reconciliationResponse.DifferenceFields),
+            JsonConvert.SerializeObject(reconciliationResponse.MissingLocalFields),
+            JsonConvert.SerializeObject(reconciliationResponse.MissingNhsFields),
             reconciliationResponse.Status,
             personMatchResponse.Result?.MatchStatus,
             personMatchResponse.Result?.ProcessStage,
@@ -130,37 +142,35 @@ public class ReconciliationService(
         );
     }
 
-    private static string BuildDifferences(List<Difference>? differences)
+    private static List<string> BuildLocalMissingFields(ReconciliationRequest request)
     {
-        var sb = new StringBuilder();
-        if (differences == null)
-        {
-            return sb.ToString();
-        }
+        var missingFields = new List<string>();
 
-        foreach (var difference in differences)
-        {
-            if (string.IsNullOrEmpty(difference.Local) && string.IsNullOrEmpty(difference.Nhs))
-            {
-                sb.Append($"{difference.FieldName}:Both");
-            }
-            else if (string.IsNullOrEmpty(difference.Local))
-            {
-                sb.Append($"{difference.FieldName}:LA");
-            }
-            else if (string.IsNullOrEmpty(difference.Nhs))
-            {
-                sb.Append($"{difference.FieldName}:NHS");
-            }
-            else
-            {
-                sb.Append($"{difference.FieldName}");
-            }
+        if (string.IsNullOrEmpty(request.NhsNumber))
+            missingFields.Add(nameof(request.NhsNumber));
 
-            sb.Append(" - ");
-        }
+        if (!request.BirthDate.HasValue)
+            missingFields.Add(nameof(request.BirthDate));
 
-        return sb.ToString().EndsWith(" - ") ? sb.ToString(0, sb.Length - 3) : sb.ToString();
+        if (string.IsNullOrEmpty(request.Gender))
+            missingFields.Add(nameof(request.Gender));
+
+        if (string.IsNullOrEmpty(request.Given))
+            missingFields.Add(nameof(request.Given));
+
+        if (string.IsNullOrEmpty(request.Family))
+            missingFields.Add(nameof(request.Family));
+
+        if (string.IsNullOrEmpty(request.Email))
+            missingFields.Add(nameof(request.Email));
+
+        if (string.IsNullOrEmpty(request.Phone))
+            missingFields.Add(nameof(request.Phone));
+
+        if (string.IsNullOrEmpty(request.AddressPostalCode))
+            missingFields.Add(nameof(request.AddressPostalCode));
+
+        return missingFields;
     }
 
     private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson? result)
