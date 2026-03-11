@@ -1,24 +1,21 @@
 {
   "tasks": [
     {
-      "name": "format",
-      "group": "pre-commit",
+      "name": "Run csharpier",
       "command": "dotnet",
       "args": [
+        "csharpier",
         "format",
-        "--no-restore",
-        "--include",
         "${staged}"
       ],
       "include": [
         "**/*.cs",
         "**/*.csx",
         "**/*.csproj",
-        "**/*.sln",
-        "**/*.json",
+        "**/*.props",
+        "**/*.targets",
         "**/*.xml",
-        "**/*.yml",
-        "**/*.yaml"
+        "**/*.config"
       ]
     }
   ]
