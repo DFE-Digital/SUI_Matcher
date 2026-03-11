@@ -193,7 +193,6 @@ public class ReconciliationCsvProcessStats : IStats
                 UpdateStatsForField(differences, missingLocal, missingNhs, "AddressPostalCode", () => PostCodeDifferenceCount++, () => PostCodeNhsMissingCount++, () => PostCodeLaMissingCount++, () => PostCodeBothMissingCount++);
                 UpdateStatsForField(differences, missingLocal, missingNhs, "NhsNumber", () => MatchingNhsNumberCount++, () => MatchingNhsNumberNhsCount++, () => MatchingNhsNumberLaCount++, () => MatchingNhsNumberBothCount++);
 
-                DifferencesCount++;
                 break;
             case ReconciliationStatus.LocalNhsNumberIsSuperseded:
                 SupersededNhsNumber++;
@@ -237,7 +236,7 @@ public class ReconciliationCsvProcessStats : IStats
         }
     }
 
-    private static void UpdateStatsForField(
+    private void UpdateStatsForField(
         string[] differences,
         string[] missingLocal,
         string[] missingNhs,
@@ -261,6 +260,8 @@ public class ReconciliationCsvProcessStats : IStats
         else if (inDifferences)
         {
             incrementPlain();
+            DifferencesCount++;
+
         }
         // // Field is missing locally
         else if (inMissingLocal)
