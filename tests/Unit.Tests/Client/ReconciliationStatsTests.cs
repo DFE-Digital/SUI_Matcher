@@ -82,4 +82,31 @@ public class ReconciliationStatsTests
         Assert.Equal(0, stats.GivenNameLaMissingCount);
         Assert.Equal(1, stats.GivenNameBothMissingCount);
     }
+
+    [Fact]
+    public void RecordReconciliationStatusStats_ShouldOnlyIncrementDifferencesCount_WhenFieldsAreDifferent()
+    {
+        // Arrange
+        string[] differencesFields = ["BirthDate", "Given"];
+        string[] missingLocalFields = ["Email"];
+        string[] missingNhsFields = ["Phone"];
+
+        // Act
+        var stats = new ReconciliationCsvProcessStats();
+        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
+            differencesFields, missingLocalFields, missingNhsFields);
+
+        // Assert
+        // DifferencesCount is for when a record contains one or more differences.
+        Assert.Equal(1, stats.DifferencesCount);
+
+        // Verify the actual differences were recorded
+        Assert.Equal(1, stats.BirthDateDifferentCount);
+        Assert.Equal(1, stats.GivenNameDifferenceCount);
+
+        // Verify missing fields were recorded but didn't increment DifferencesCount
+        Assert.Equal(1, stats.EmailLaMissingCount);
+        Assert.Equal(1, stats.PhoneNhsMissingCount);
+    }
+
 }
