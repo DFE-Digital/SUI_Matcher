@@ -86,7 +86,6 @@ public static class AddressParser
     {
         return parts
             .Select(ParseRecord)
-            .Where(a => a is not null)
             .OfType<AddressMinimal>()
             .ToList();
     }
