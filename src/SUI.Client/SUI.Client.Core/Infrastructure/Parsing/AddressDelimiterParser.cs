@@ -22,6 +22,7 @@ public static class AddressParser
         if (parts.Length < 3)
             return null;
 
+        // Constraint that house number is always the first word in the second segment of the record
         var addressLine = parts[1];
         var houseNumber = ExtractHouseNumber(addressLine);
 
@@ -39,28 +40,22 @@ public static class AddressParser
     /// <summary>
     /// Parses a history of address records delimited by "|" into an AddressHistory object.
     /// Each record in the history is delimited by "~".
+    /// <para>The order of the history string is preserved</para>
     /// </summary>
-    public static AddressHistory ParseHistory(string? historyString, string? primaryPostcode = null)
+    public static AddressHistory ParseHistory(string? historyString, string? primaryPostcode)
     {
-        if (string.IsNullOrWhiteSpace(historyString))
+        if (string.IsNullOrWhiteSpace(historyString) || string.IsNullOrWhiteSpace(primaryPostcode))
         {
             return new AddressHistory([]);
         }
 
         var parts = historyString.Split(MultipleAddressDelimiter, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        var addresses = parts
-            .Select(ParseRecord)
-            .Where(a => a is not null)
-            .OfType<AddressMinimal>()
-            .ToList();
+        var addresses = ParseToAddressMinimalList(parts);
 
-        AddressMinimal? primaryAddress = null;
-        if (!string.IsNullOrWhiteSpace(primaryPostcode))
-        {
-            var normalizedPrimary = NormalizePostcode(primaryPostcode);
-            // Search for the primary address in the parsed history
-            primaryAddress = addresses.FirstOrDefault(a => a.Postcode.Equals(normalizedPrimary, StringComparison.OrdinalIgnoreCase));
-        }
+        // Primary address is identified by matching the provided primary postcode to the postcode of the parsed addresses and selecting the latest.
+        // Addresses 'should' be in chronological order, but we will select the last match as a fallback in case of duplicates or ordering issues.
+        var normalizedPostcode = NormalizePostcode(primaryPostcode);
+        AddressMinimal? primaryAddress = addresses.LastOrDefault(a => a.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase));
 
         return new AddressHistory(addresses, primaryAddress);
     }
@@ -70,22 +65,29 @@ public static class AddressParser
     /// </summary>
     public static AddressHistory FromNhsPerson(NhsPerson person)
     {
-        var addresses = person.AddressHistory
-            .Select(ParseRecord)
-            .Where(a => a != null)
-            .OfType<AddressMinimal>()
-            .ToList();
+        var addresses = ParseToAddressMinimalList(person.AddressHistory);
 
         var primaryPostcode = person.AddressPostalCodes.FirstOrDefault();
-        AddressMinimal? primaryAddress = null;
 
-        if (!string.IsNullOrWhiteSpace(primaryPostcode))
+        // Assuming PDS is consistent in providing the primary address's postcode as the first entry in AddressPostalCodes,
+        // we can attempt to match it to one of the parsed addresses to identify the primary address.
+        if (string.IsNullOrWhiteSpace(primaryPostcode))
         {
-            var normalizedPrimary = NormalizePostcode(primaryPostcode);
-            primaryAddress = addresses.FirstOrDefault(a => a.Postcode.Equals(normalizedPrimary, StringComparison.OrdinalIgnoreCase));
+            return new AddressHistory(addresses);
         }
 
+        var normalizedPostcode = NormalizePostcode(primaryPostcode);
+        AddressMinimal? primaryAddress = addresses.LastOrDefault(a => a.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase));
+
         return new AddressHistory(addresses, primaryAddress);
+    }
+
+    private static List<AddressMinimal> ParseToAddressMinimalList(string[] parts)
+    {
+        return parts
+            .Select(ParseRecord)
+            .OfType<AddressMinimal>()
+            .ToList();
     }
 
     private static string? ExtractHouseNumber(string addressLine)
