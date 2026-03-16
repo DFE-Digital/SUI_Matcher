@@ -14,7 +14,7 @@ public class AddressDelimiterParserTests
         var result = AddressParser.ParseRecord(historyString);
 
         Assert.NotNull(result);
-        Assert.Equal("2", result.HouseNumber);
+        Assert.Equal("2", result.AddressLineOne);
         Assert.Equal("YO16GA", result.Postcode);
     }
 
@@ -26,7 +26,7 @@ public class AddressDelimiterParserTests
         var result = AddressParser.ParseRecord(historyString);
 
         Assert.NotNull(result);
-        Assert.Equal(expectedHouse, result!.HouseNumber);
+        Assert.Equal(expectedHouse, result!.AddressLineOne);
         Assert.Equal(expectedPostcode, result.Postcode);
     }
 
@@ -49,7 +49,19 @@ public class AddressDelimiterParserTests
     {
         var result = AddressParser.ParseRecord(historyString);
 
-        Assert.Null(result);
+        Assert.Null(result?.AddressLineOne);
+        Assert.Null(result?.AddressLineTwo);
+    }
+    
+    [Theory]
+    [InlineData("1~2~bob lane~York~YO1 6GA", "2", null)]
+    [InlineData("1~2-4~bob lane~York~YO1 6GA", "2-4", null)]
+    public void ParseRecord_ReturnsCorrectDataInAddressLines(string historyString, string expectedLineOne, string? expectedLineTwo)
+    {
+        var result = AddressParser.ParseRecord(historyString);
+
+        Assert.Equal(expectedLineOne, result?.AddressLineOne);
+        Assert.Equal(expectedLineTwo, result?.AddressLineTwo);
     }
 
     [Fact]
@@ -60,7 +72,7 @@ public class AddressDelimiterParserTests
         var result = AddressParser.ParseRecord(historyString);
 
         Assert.NotNull(result);
-        Assert.Equal("2", result!.HouseNumber);
+        Assert.Equal("2", result!.AddressLineOne);
         Assert.Equal("YO16GA", result.Postcode);
     }
 
@@ -74,9 +86,9 @@ public class AddressDelimiterParserTests
 
         Assert.NotNull(result);
         Assert.Equal(2, result.Addresses.Count);
-        Assert.Equal("2", result.Addresses[0].HouseNumber);
+        Assert.Equal("2", result.Addresses[0].AddressLineOne);
         Assert.Equal("YO16GA", result.Addresses[0].Postcode);
-        Assert.Equal("3", result.Addresses[1].HouseNumber);
+        Assert.Equal("3", result.Addresses[1].AddressLineOne);
         Assert.Equal("YO27GB", result.Addresses[1].Postcode);
     }
 
@@ -101,7 +113,7 @@ public class AddressDelimiterParserTests
 
         Assert.NotNull(result);
         Assert.NotNull(result.PrimaryAddress);
-        Assert.Equal(expectedHouseNumber, result.PrimaryAddress!.HouseNumber);
+        Assert.Equal(expectedHouseNumber, result.PrimaryAddress!.AddressLineOne);
         Assert.Equal(expectedPostcode, result.PrimaryAddress.Postcode);
     }
 
@@ -121,7 +133,7 @@ public class AddressDelimiterParserTests
 
         Assert.NotNull(result);
         Assert.NotNull(result.PrimaryAddress);
-        Assert.Equal("3", result.PrimaryAddress!.HouseNumber);
+        Assert.Equal("3", result.PrimaryAddress!.AddressLineOne);
         Assert.Equal("YO27GB", result.PrimaryAddress.Postcode);
     }
 }

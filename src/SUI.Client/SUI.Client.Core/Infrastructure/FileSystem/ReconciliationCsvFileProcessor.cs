@@ -108,10 +108,10 @@ public class ReconciliationCsvFileProcessor(
         record[HeaderMatchStatus] = response?.MatchingResult?.MatchStatus.ToString() ?? "-";
         record[HeaderMatchScore] = response?.MatchingResult?.Score.ToString() ?? "-";
         record[HeaderMatchProcessStage] = response?.MatchingResult?.ProcessStage ?? "-";
-        record[HeaderPrimaryAddressSame] = addressComparisonResult.PrimaryAddressSame.ToString();
-        record[HeaderAddressHistoriesIntersect] = addressComparisonResult.AddressHistoriesIntersect.ToString();
-        record[HeaderPrimaryCMSAddressInPDSHistory] = addressComparisonResult.PrimaryCMSAddressInPDSHistory.ToString();
-        record[HeaderPrimaryPDSAddressInCMSHistory] = addressComparisonResult.PrimaryPDSAddressInCMSHistory.ToString();
+        record[HeaderPrimaryAddressSame] = addressComparisonResult.PrimaryAddressSame.GetResultMessage();
+        record[HeaderAddressHistoriesIntersect] = addressComparisonResult.AddressHistoriesIntersect.GetResultMessage();
+        record[HeaderPrimaryCMSAddressInPDSHistory] = addressComparisonResult.PrimaryCMSAddressInPDSHistory.GetResultMessage();
+        record[HeaderPrimaryPDSAddressInCMSHistory] = addressComparisonResult.PrimaryPDSAddressInCMSHistory.GetResultMessage();
 
         stats.RecordMatchStatusStats(response?.MatchingResult?.MatchStatus);
         stats.RecordReconciliationStatusStats(
@@ -131,9 +131,9 @@ public class ReconciliationCsvFileProcessor(
         return string.Join(" - ", value);
     }
 
-    private static AddressComparisonResult GetAddressComparisonResult(ReconciliationRequest request, ReconciliationResponse? response, string? addressHistoryCsv)
+    private static AddressComparisonResults GetAddressComparisonResult(ReconciliationRequest request, ReconciliationResponse? response, string? addressHistoryCsv)
     {
-        var result = new AddressComparisonResult();
+        var result = new AddressComparisonResults();
 
         if (response?.Person == null)
         {

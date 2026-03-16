@@ -1,3 +1,5 @@
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
+
 namespace SUI.Client.Core.Domain.Models;
 
 public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinimal? primaryAddress = null)
@@ -9,39 +11,248 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
     public AddressMinimal? PrimaryAddress { get; } = primaryAddress;
 
 
-    public bool PrimaryAddressSameAs(AddressHistory? other)
+    public AddressComparisonResult PrimaryAddressSameAs(AddressHistory? other)
     {
         if (PrimaryAddress == null || other?.PrimaryAddress == null)
         {
-            return false;
+            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
         }
 
         return AreAddressesEqual(PrimaryAddress, other.PrimaryAddress);
     }
 
-    public bool IntersectsWith(AddressHistory? other)
+    public AddressComparisonResult IntersectsWith(AddressHistory? other)
     {
         if (other == null)
         {
-            return false;
+            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
         }
 
-        return _addresses.Any(a1 => other.Addresses.Any(a2 => AreAddressesEqual(a1, a2)));
+        // Check all combinations and return the first match or uncertain result
+        foreach (var a1 in _addresses)
+        {
+            foreach (var a2 in other.Addresses)
+            {
+                var result = AreAddressesEqual(a1, a2);
+                if (result.Status is AddressComparisonResult.AddressMatchStatus.Matched or AddressComparisonResult.AddressMatchStatus.Uncertain)
+                {
+                    return result;
+                }
+            }
+        }
+
+        return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
     }
 
-    public bool PrimaryAddressInHistoryOf(AddressHistory? other)
+    public AddressComparisonResult PrimaryAddressInHistoryOf(AddressHistory? other)
     {
         if (PrimaryAddress == null || other == null)
+        {
+            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
+        }
+
+        // Check primary address against all addresses in other's history
+        foreach (var address in other.Addresses)
+        {
+            var result = AreAddressesEqual(PrimaryAddress, address);
+            if (result.Status == AddressComparisonResult.AddressMatchStatus.Matched ||
+                result.Status == AddressComparisonResult.AddressMatchStatus.Uncertain)
+            {
+                return result;
+            }
+        }
+
+        return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
+    }
+
+    private static AddressComparisonResult AreAddressesEqual(AddressMinimal a1, AddressMinimal a2)
+    {
+        // Rule 1: f postcodes don't match, return unmatched
+        if (!a1.Postcode.Equals(a2.Postcode, StringComparison.OrdinalIgnoreCase))
+        {
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Unmatched, 
+                AddressComparisonResult.AddressMatchReason.PostcodeMismatch);
+        }
+        
+
+        // Rule 2: Null checks - if lines 1 and 2 are null on both a1 and a2 then its a unmatched
+        if(string.IsNullOrWhiteSpace(a1.AddressLineOne) && string.IsNullOrWhiteSpace(a1.AddressLineTwo) &&
+           string.IsNullOrWhiteSpace(a2.AddressLineOne) && string.IsNullOrWhiteSpace(a2.AddressLineTwo))
+        {
+            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
+        }
+        
+
+        // Rule 3: Do address line one match exactly? = Match
+        if (!string.IsNullOrEmpty(a1.AddressLineOne) && a1.AddressLineOne.Equals(a2.AddressLineOne, StringComparison.OrdinalIgnoreCase))
+        {
+            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Matched);
+        }
+
+        var a1Number = ExtractBuildingNumber(a1.AddressLineOne);
+        var a2Number = ExtractBuildingNumber(a2.AddressLineOne);
+
+        // Rule 4: Do address line two match if address line 1 has no number? = Match
+        if (a1Number is not null && a2Number is not null)
+        {
+            if (!string.IsNullOrEmpty(a1.AddressLineTwo) && a1.AddressLineTwo.Equals(a2.AddressLineTwo, StringComparison.OrdinalIgnoreCase))
+            {
+                return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Matched);
+            }
+        }
+
+        // If we don't have building numbers to compare, we can't proceed with further checks
+        if (a1Number == null || a2Number == null)
+        {
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Unmatched,
+                AddressComparisonResult.AddressMatchReason.BuildingNumberMissing);
+        }
+
+        // Rule 5: Does address line one number exist in address line 2? = Uncertain
+        if (AddressLineContainsNumber(a2.AddressLineTwo, a1Number))
+        {
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Uncertain,
+                AddressComparisonResult.AddressMatchReason.FlatMissing);
+        }
+
+        // Rule 6: Does address line 2 number exist in address line 1? = Uncertain
+        if (AddressLineContainsNumber(a1.AddressLineTwo, a2Number))
+        {
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Uncertain,
+                AddressComparisonResult.AddressMatchReason.FlatMissing);
+        }
+
+        // Rule 7: Check for range matching scenarios
+        var a1IsRange = IsRange(a1Number);
+        var a2IsRange = IsRange(a2Number);
+
+        // Rule 7a: If both have the same range = Match
+        if (a1IsRange && a2IsRange && a1Number.Equals(a2Number, StringComparison.OrdinalIgnoreCase))
+        {
+            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Matched);
+        }
+
+        // Rule 7b: Is one a range and the other a single number within that range? = Uncertain
+        if (a1IsRange && !a2IsRange && IsNumberInRange(a2Number, a1Number))
+        {
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Uncertain,
+                AddressComparisonResult.AddressMatchReason.NumberRange);
+        }
+
+        if (a2IsRange && !a1IsRange && IsNumberInRange(a1Number, a2Number))
+        {
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Uncertain,
+                AddressComparisonResult.AddressMatchReason.NumberRange);
+        }
+
+        // Rule 8: Everything else = Unmatched
+        return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
+    }
+
+    /// <summary>
+    /// Extracts the building number from an address line (e.g., "12A" from "12A High Street").
+    /// Supports formats: "12", "12A", "12-14", "12A-14B"
+    /// </summary>
+    private static string? ExtractBuildingNumber(string? addressLine)
+    {
+        if (string.IsNullOrWhiteSpace(addressLine))
+            return null;
+
+        var trimmed = addressLine.Trim();
+        
+        // Must start with a digit
+        if (!char.IsDigit(trimmed[0]))
+            return null;
+
+        int i = 0;
+
+        // Read leading digits
+        while (i < trimmed.Length && char.IsDigit(trimmed[i]))
+            i++;
+
+        // Optional letter suffix (12A)
+        if (i < trimmed.Length && char.IsLetter(trimmed[i]))
+            i++;
+
+        // Check for range (12-14 or 12A-14B)
+        if (i < trimmed.Length && trimmed[i] == '-')
+        {
+            i++; // skip the dash
+            
+            // Read digits after dash
+            while (i < trimmed.Length && char.IsDigit(trimmed[i]))
+                i++;
+
+            // Optional letter suffix after second number
+            if (i < trimmed.Length && char.IsLetter(trimmed[i]))
+                i++;
+        }
+
+        // Must have whitespace or end of string after the number
+        if (i < trimmed.Length && !char.IsWhiteSpace(trimmed[i]))
+            return null;
+
+        return trimmed.Substring(0, i).ToUpperInvariant();
+    }
+
+    /// <summary>
+    /// Checks if a building number is a range format (e.g., "12-14", "12A-14B").
+    /// </summary>
+    private static bool IsRange(string buildingNumber)
+    {
+        return buildingNumber.Contains('-');
+    }
+
+    /// <summary>
+    /// Checks if a single building number exists within a range.
+    /// For example: "12" is in range "12-14", "13" is in range "12-14", "14" is in range "12-14"
+    /// Note: This only checks numeric values, ignoring any letter suffixes for the comparison.
+    /// </summary>
+    private static bool IsNumberInRange(string singleNumber, string rangeNumber)
+    {
+        if (!IsRange(rangeNumber))
+            return false;
+
+        var parts = rangeNumber.Split('-');
+        if (parts.Length != 2)
+            return false;
+
+        // Extract numeric parts only for comparison
+        var startNumStr = new string(parts[0].TakeWhile(char.IsDigit).ToArray());
+        var endNumStr = new string(parts[1].TakeWhile(char.IsDigit).ToArray());
+        var singleNumStr = new string(singleNumber.TakeWhile(char.IsDigit).ToArray());
+
+        if (string.IsNullOrEmpty(startNumStr) || string.IsNullOrEmpty(endNumStr) || string.IsNullOrEmpty(singleNumStr))
+            return false;
+
+        if (!int.TryParse(startNumStr, out var start) || 
+            !int.TryParse(endNumStr, out var end) || 
+            !int.TryParse(singleNumStr, out var single))
         {
             return false;
         }
 
-        return other.Addresses.Any(a => AreAddressesEqual(PrimaryAddress, a));
+        return single >= start && single <= end;
     }
 
-    private static bool AreAddressesEqual(AddressMinimal a1, AddressMinimal a2)
+    /// <summary>
+    /// Checks if an address line contains a specific building number anywhere in the text.
+    /// This is used to detect cases where a flat/apartment number might be in one line and the building number in another.
+    /// </summary>
+    private static bool AddressLineContainsNumber(string? addressLine, string buildingNumber)
     {
-        return a1.HouseNumber.Equals(a2.HouseNumber, StringComparison.OrdinalIgnoreCase) &&
-               a1.Postcode.Equals(a2.Postcode, StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(addressLine) || string.IsNullOrWhiteSpace(buildingNumber))
+            return false;
+
+        // Check if the building number appears as a standalone word in the address line
+        var words = addressLine.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        
+        return words.Any(word => word.Equals(buildingNumber, StringComparison.OrdinalIgnoreCase));
     }
 }

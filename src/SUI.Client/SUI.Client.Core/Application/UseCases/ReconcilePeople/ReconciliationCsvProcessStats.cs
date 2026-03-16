@@ -217,25 +217,25 @@ public class ReconciliationCsvProcessStats : IStats
         }
     }
 
-    public void RecordAddressStats(AddressComparisonResult addressComparisonResult)
+    public void RecordAddressStats(AddressComparisonResults addressComparisonResults)
     {
 
-        if (addressComparisonResult.PrimaryAddressSame)
+        if (addressComparisonResults.PrimaryAddressSame.Status == AddressComparisonResult.AddressMatchStatus.Matched)
         {
             PrimaryAddressSame++;
         }
 
-        if (addressComparisonResult.AddressHistoriesIntersect)
+        if (addressComparisonResults.AddressHistoriesIntersect.Status == AddressComparisonResult.AddressMatchStatus.Matched)
         {
             AddressHistoriesIntersect++;
         }
 
-        if (addressComparisonResult.PrimaryCMSAddressInPDSHistory)
+        if (addressComparisonResults.PrimaryCMSAddressInPDSHistory.Status == AddressComparisonResult.AddressMatchStatus.Matched)
         {
             PrimaryCMSAddressInPDSHistory++;
         }
 
-        if (addressComparisonResult.PrimaryPDSAddressInCMSHistory)
+        if (addressComparisonResults.PrimaryPDSAddressInCMSHistory.Status == AddressComparisonResult.AddressMatchStatus.Matched)
         {
             PrimaryPDSAddressInCMSHistory++;
         }
