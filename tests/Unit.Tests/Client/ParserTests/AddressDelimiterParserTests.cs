@@ -52,7 +52,7 @@ public class AddressDelimiterParserTests
         Assert.Null(result?.AddressLineOne);
         Assert.Null(result?.AddressLineTwo);
     }
-    
+
     [Theory]
     [InlineData("1~2~bob lane~York~YO1 6GA", "2", null)]
     [InlineData("1~2-4~bob lane~York~YO1 6GA", "2-4", null)]

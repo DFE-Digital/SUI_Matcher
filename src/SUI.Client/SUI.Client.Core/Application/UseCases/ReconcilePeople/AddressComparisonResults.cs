@@ -12,12 +12,12 @@ public class AddressComparisonResults
         new(AddressComparisonResult.AddressMatchStatus.None);
     public AddressComparisonResult PrimaryPDSAddressInCMSHistory { get; set; } =
         new(AddressComparisonResult.AddressMatchStatus.None);
-    
-    
+
+
 }
 
 public sealed record AddressComparisonResult(
-    AddressComparisonResult.AddressMatchStatus Status, 
+    AddressComparisonResult.AddressMatchStatus Status,
     AddressComparisonResult.AddressMatchReason Reason = AddressComparisonResult.AddressMatchReason.None)
 {
 
@@ -32,7 +32,7 @@ public sealed record AddressComparisonResult(
             _ => $"Unknown status: {Status}"
         };
     }
-    
+
     public enum AddressMatchStatus
     {
         None,
@@ -40,7 +40,7 @@ public sealed record AddressComparisonResult(
         Unmatched,
         Uncertain
     }
-    
+
     public enum AddressMatchReason
     {
         None,
@@ -50,4 +50,3 @@ public sealed record AddressComparisonResult(
         FlatMissing
     }
 }
-    

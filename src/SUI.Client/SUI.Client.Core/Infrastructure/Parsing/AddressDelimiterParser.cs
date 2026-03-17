@@ -27,7 +27,7 @@ public static class AddressParser
         // Extract line 1 - assumes address line 1
         var addressLine1 = parts[1];
         var addressLine1Number = ExtractHouseNumber(addressLine1);
-        
+
         // Extract line 2 - assumes address line 2
         var addressLine2 = parts[2];
         var addressLine2Number = ExtractHouseNumber(addressLine2);
@@ -97,7 +97,7 @@ public static class AddressParser
     {
         if (string.IsNullOrWhiteSpace(addressLine))
             return null;
-        
+
         if (!TryGetNumberFromAddressLine(addressLine, out var candidate))
         {
             return null;
@@ -130,7 +130,7 @@ public static class AddressParser
             .ToArray())
             .ToUpperInvariant();
     }
-    
+
     // "house number" or "street address" parser.
     // It’s designed to handle both standard numbers
     // and those slightly more complex variations you see,

@@ -245,7 +245,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         Assert.Equal("Unmatched", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory));
 
     }
-    
+
     [Fact]
     public async Task AddressComparison_ShouldHaveMixOfResults_OnlyPrimaryDoesNotMatch()
     {
@@ -277,10 +277,10 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                 }
             }
         );
-        
+
         SetupDependencies(testRecord.cmsData, testRecord.nhsData);
-        
-        
+
+
         // ACT
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(true, x =>
@@ -332,7 +332,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         Assert.Equal("Matched", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryCMSAddressInPDSHistory));
         Assert.Equal("Matched", lastRecord.GetValueOrDefault(ReconciliationCsvFileProcessor.HeaderPrimaryPDSAddressInCMSHistory));
     }
-    
+
     [Fact]
     public async Task AddressComparison_ShouldHaveMixOfResults_UncertainWhenCmsUsesRange()
     {
@@ -364,10 +364,10 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
                 }
             }
         );
-        
+
         SetupDependencies(testRecord.cmsData, testRecord.nhsData);
-        
-        
+
+
         // ACT
         var cts = new CancellationTokenSource();
         var provider = Bootstrap(true, x =>
@@ -706,7 +706,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         return data;
     }
 
-    private void SetupDependencies(Dictionary<string,string> cmsData, DemographicResult nhsData)
+    private void SetupDependencies(Dictionary<string, string> cmsData, DemographicResult nhsData)
     {
         _nhsFhirClient
             .Setup(x => x.PerformSearchByNhsId(cmsData[TestDataHeaders.NhsNumber]))

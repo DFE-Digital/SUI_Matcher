@@ -11,16 +11,16 @@ public class AddressHistoryTests
         // Arrange
         var addrPrime = new AddressMinimal("12", "York street", "YO16GA");
         var addrHistory = new AddressMinimal("12", "York street", "YO16GA");
-        
-        var addr2Prime = new AddressMinimal("12", "York street", "YO16GA");  
-        var addr2History = new AddressMinimal("12", "York street", "YO16GA");  
-        
+
+        var addr2Prime = new AddressMinimal("12", "York street", "YO16GA");
+        var addr2History = new AddressMinimal("12", "York street", "YO16GA");
+
         // Act
         var sut = new AddressHistory([addrHistory], addrPrime);
         var addr2Sut = new AddressHistory([addr2History], addr2Prime);
-        
+
         var result = sut.PrimaryAddressSameAs(addr2Sut);
-        
+
         // Assert
         Assert.Equal(AddressComparisonResult.AddressMatchStatus.Matched, result.Status);
     }
@@ -31,36 +31,36 @@ public class AddressHistoryTests
         // Arrange
         var addrPrime = new AddressMinimal("12", "York street", "YO16GA");
         var addrHistory = new AddressMinimal("12", "York street", "YO16GA");
-        
-        var addr2Prime = new AddressMinimal("13", "York street", "YO16GA");  
-        var addr2History = new AddressMinimal("13", "York street", "YO16GA");  
-        
+
+        var addr2Prime = new AddressMinimal("13", "York street", "YO16GA");
+        var addr2History = new AddressMinimal("13", "York street", "YO16GA");
+
         // Act
         var sut = new AddressHistory([addrHistory], addrPrime);
         var addr2Sut = new AddressHistory([addr2History], addr2Prime);
-        
+
         var result = sut.PrimaryAddressSameAs(addr2Sut);
-        
+
         // Assert
         Assert.Equal(AddressComparisonResult.AddressMatchStatus.Unmatched, result.Status);
     }
-    
+
     [Fact]
     public void PrimaryAddressSameAs_ShouldMatch_WhenFlatAddressExistsOnOneSide()
     {
         // Arrange
         var addrPrime = new AddressMinimal("Flat 1", "12 York street", "YO16GA");
         var addrHistory = new AddressMinimal("Flat 1", "12 York street", "YO16GA");
-        
-        var addr2Prime = new AddressMinimal("12", "York street", "YO16GA");  
-        var addr2History = new AddressMinimal("12", "York street", "YO16GA");  
-        
+
+        var addr2Prime = new AddressMinimal("12", "York street", "YO16GA");
+        var addr2History = new AddressMinimal("12", "York street", "YO16GA");
+
         // Act
         var sut = new AddressHistory([addrHistory], addrPrime);
         var addr2Sut = new AddressHistory([addr2History], addr2Prime);
-        
+
         var result = sut.PrimaryAddressSameAs(addr2Sut);
-        
+
         // Assert
         Assert.Equal(AddressComparisonResult.AddressMatchStatus.Uncertain, result.Status);
     }
@@ -70,16 +70,16 @@ public class AddressHistoryTests
     {
         var addrPrime = new AddressMinimal("Flat 1", "12 York street", "YO16GA");
         var addrHistory = new AddressMinimal("Flat 1", "12 York street", "YO16GA");
-        
-        var addr2Prime = new AddressMinimal("Flat 1", "12 York street", "YO16GA");  
-        var addr2History = new AddressMinimal("Flat 1", "12 York street", "YO16GA");  
-        
+
+        var addr2Prime = new AddressMinimal("Flat 1", "12 York street", "YO16GA");
+        var addr2History = new AddressMinimal("Flat 1", "12 York street", "YO16GA");
+
         // Act
         var sut = new AddressHistory([addrHistory], addrPrime);
         var addr2Sut = new AddressHistory([addr2History], addr2Prime);
-        
+
         var result = sut.PrimaryAddressSameAs(addr2Sut);
-        
+
         // Assert
         Assert.Equal(AddressComparisonResult.AddressMatchStatus.Matched, result.Status);
     }
@@ -89,16 +89,16 @@ public class AddressHistoryTests
     {
         var addrPrime = new AddressMinimal("", "York street", "YO16GA");
         var addrHistory = new AddressMinimal("", "York street", "YO16GA");
-        
-        var addr2Prime = new AddressMinimal("12", "York street", "YO16GA");  
-        var addr2History = new AddressMinimal("12", "York street", "YO16GA");  
-        
+
+        var addr2Prime = new AddressMinimal("12", "York street", "YO16GA");
+        var addr2History = new AddressMinimal("12", "York street", "YO16GA");
+
         // Act
         var sut = new AddressHistory([addrHistory], addrPrime);
         var addr2Sut = new AddressHistory([addr2History], addr2Prime);
-        
+
         var result = sut.PrimaryAddressSameAs(addr2Sut);
-        
+
         // Assert
         Assert.Equal(AddressComparisonResult.AddressMatchStatus.Unmatched, result.Status);
     }
