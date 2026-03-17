@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using Shared.Models;
 
 using SUI.Client.Core.Domain.Models;
@@ -22,19 +24,20 @@ public static class AddressParser
         if (parts.Length < 3)
             return null;
 
-        // Constraint that house number is always the first word in the second segment of the record
-        var addressLine = parts[1];
-        var houseNumber = ExtractHouseNumber(addressLine);
+        // Extract line 1 - assumes address line 1
+        var addressLine1 = parts[1];
+        var addressLine1Number = ExtractHouseNumber(addressLine1);
 
-        if (houseNumber is null)
-            return null;
+        // Extract line 2 - assumes address line 2
+        var addressLine2 = parts[2];
+        var addressLine2Number = ExtractHouseNumber(addressLine2);
 
         var postcode = NormalizePostcode(parts[^1]);
 
         if (string.IsNullOrWhiteSpace(postcode))
             return null;
 
-        return new AddressMinimal(houseNumber, postcode);
+        return new AddressMinimal(addressLine1Number, addressLine2Number, postcode);
     }
 
     /// <summary>
@@ -95,31 +98,28 @@ public static class AddressParser
         if (string.IsNullOrWhiteSpace(addressLine))
             return null;
 
-        // House number is the first word in the address line
-        var tokens = addressLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (tokens.Length == 0)
-            return null;
-
-        var candidate = tokens[0].ToUpperInvariant();
-
-        return IsValidHouseNumber(candidate) ? candidate : null;
-    }
-
-    private static bool IsValidHouseNumber(string value)
-    {
-        // Accept formats like "12" or "12A". Must start with a digit and can be followed by letters.
-        if (!char.IsDigit(value[0]))
-            return false;
-
-        if (value.Length == 1)
-            return true;
-
-        for (int i = 1; i < value.Length; i++)
+        if (!TryGetNumberFromAddressLine(addressLine, out var candidate))
         {
-            if (!char.IsDigit(value[i]) && !char.IsLetter(value[i]))
-                return false;
+            return null;
         }
 
+        return candidate;
+    }
+
+    private static bool TryGetNumberFromAddressLine(string addressLine, out string? number)
+    {
+        number = null;
+
+        if (string.IsNullOrWhiteSpace(addressLine))
+            return false;
+
+        var value = addressLine.Trim();
+        var match = LeadingNumberRegex.Match(value);
+
+        if (!match.Success)
+            return false;
+
+        number = match.Groups[1].Value.Replace(" ", "").ToUpperInvariant();
         return true;
     }
 
@@ -130,4 +130,11 @@ public static class AddressParser
             .ToArray())
             .ToUpperInvariant();
     }
+
+    // "house number" or "street address" parser.
+    // It’s designed to handle both standard numbers
+    // and those slightly more complex variations you see,
+    // like ranges or numbers with letters attached.
+    private static readonly Regex LeadingNumberRegex =
+        new(@"^(\d+\s*-\s*\d+|\d+[A-Za-z]?)\b", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
 }
