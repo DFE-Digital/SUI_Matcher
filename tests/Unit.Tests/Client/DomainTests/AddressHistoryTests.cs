@@ -83,6 +83,25 @@ public class AddressHistoryTests
         // Assert
         Assert.Equal(AddressComparisonResult.AddressMatchStatus.Matched, result.Status);
     }
+    
+    [Fact]
+    public void PrimaryAddressSameAs_ShouldBeMatch_WhenNumberExistsOnLine2()
+    {
+        var addrPrime = new AddressMinimal("Some house name", "12 York street", "YO16GA");
+        var addrHistory = new AddressMinimal("Some house name", "12 York street", "YO16GA");
+
+        var addr2Prime = new AddressMinimal("Some house name somewhere", "12 York street", "YO16GA");
+        var addr2History = new AddressMinimal("Some house name somewhere", "12 York street", "YO16GA");
+
+        // Act
+        var sut = new AddressHistory([addrHistory], addrPrime);
+        var addr2Sut = new AddressHistory([addr2History], addr2Prime);
+
+        var result = sut.PrimaryAddressSameAs(addr2Sut);
+
+        // Assert
+        Assert.Equal(AddressComparisonResult.AddressMatchStatus.Matched, result.Status);
+    }
 
     [Fact]
     public void PrimaryAddressSameAs_ShouldBeUnmatched_WhenNotEnoughInformationExists()
@@ -92,6 +111,26 @@ public class AddressHistoryTests
 
         var addr2Prime = new AddressMinimal("12", "York street", "YO16GA");
         var addr2History = new AddressMinimal("12", "York street", "YO16GA");
+
+        // Act
+        var sut = new AddressHistory([addrHistory], addrPrime);
+        var addr2Sut = new AddressHistory([addr2History], addr2Prime);
+
+        var result = sut.PrimaryAddressSameAs(addr2Sut);
+
+        // Assert
+        Assert.Equal(AddressComparisonResult.AddressMatchStatus.Unmatched, result.Status);
+    }
+    
+    [Fact]
+    public void PrimaryAddressSameAs_ShouldBeUnmatched_WhenNotEnoughInformationExistsOnBoth()
+    {
+        // Super edge case
+        var addrPrime = new AddressMinimal("", "", "YO16GA");
+        var addrHistory = new AddressMinimal("", "", "YO16GA");
+
+        var addr2Prime = new AddressMinimal("", "", "YO16GA");
+        var addr2History = new AddressMinimal("", "", "YO16GA");
 
         // Act
         var sut = new AddressHistory([addrHistory], addrPrime);
