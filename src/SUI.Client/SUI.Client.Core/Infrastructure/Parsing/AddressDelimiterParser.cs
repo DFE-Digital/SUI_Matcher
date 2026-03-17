@@ -136,5 +136,5 @@ public static class AddressParser
     // and those slightly more complex variations you see,
     // like ranges or numbers with letters attached.
     private static readonly Regex LeadingNumberRegex =
-        new(@"^(\d+\s*-\s*\d+|\d+[A-Za-z]?)\b", RegexOptions.Compiled,  TimeSpan.FromSeconds(1));
+        new(@"^(\d+\s*-\s*\d+|\d+[A-Za-z]?)\b", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
 }

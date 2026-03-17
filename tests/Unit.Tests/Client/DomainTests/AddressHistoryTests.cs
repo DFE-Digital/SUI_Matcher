@@ -83,7 +83,7 @@ public class AddressHistoryTests
         // Assert
         Assert.Equal(AddressComparisonResult.AddressMatchStatus.Matched, result.Status);
     }
-    
+
     [Fact]
     public void PrimaryAddressSameAs_ShouldBeMatch_WhenNumberExistsOnLine2()
     {
@@ -121,7 +121,7 @@ public class AddressHistoryTests
         // Assert
         Assert.Equal(AddressComparisonResult.AddressMatchStatus.Unmatched, result.Status);
     }
-    
+
     [Fact]
     public void PrimaryAddressSameAs_ShouldBeUnmatched_WhenNotEnoughInformationExistsOnBoth()
     {
