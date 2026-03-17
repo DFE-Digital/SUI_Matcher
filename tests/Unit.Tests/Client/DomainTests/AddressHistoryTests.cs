@@ -161,4 +161,46 @@ public class AddressHistoryTests
         // Assert
         Assert.Equal(AddressComparisonResult.AddressMatchStatus.Unmatched, result.Status);
     }
+
+    [Fact]
+    public void PrimaryAddressSameAs_ShouldBeUncertain_WhenOneAddressHasNumbersInBothLinesAndOtherHasSingleNumberThatMatches()
+    {
+        // Arrange - a1 has numbers in both lines (Flat 1, 12 York street) and a2 has only one number (12) that matches a1's Line2 number
+        var addrPrime = new AddressMinimal("1", "12 York street", "YO16GA");
+        var addrHistory = new AddressMinimal("1", "12 York street", "YO16GA");
+
+        var addr2Prime = new AddressMinimal("12", "York street", "YO16GA");
+        var addr2History = new AddressMinimal("12", "York street", "YO16GA");
+
+        // Act
+        var sut = new AddressHistory([addrHistory], addrPrime);
+        var addr2Sut = new AddressHistory([addr2History], addr2Prime);
+
+        var result = sut.PrimaryAddressSameAs(addr2Sut);
+
+        // Assert
+        Assert.Equal(AddressComparisonResult.AddressMatchStatus.Uncertain, result.Status);
+        Assert.Equal(AddressComparisonResult.AddressMatchReason.FlatMissing, result.Reason);
+    }
+
+    [Fact]
+    public void PrimaryAddressSameAs_ShouldBeUncertain_WhenOneAddressHasNumbersInBothLinesAndOtherHasSingleNumberThatMatches_Reverse()
+    {
+        // Arrange - a1 has numbers in both lines (Flat 1, 12 York street) and a2 has only one number (12) that matches a1's Line2 number
+        var addr2Prime = new AddressMinimal("1", "12 York street", "YO16GA");
+        var addr2History = new AddressMinimal("1", "12 York street", "YO16GA");
+
+        var addrPrime = new AddressMinimal("12", "York street", "YO16GA");
+        var addrHistory = new AddressMinimal("12", "York street", "YO16GA");
+
+        // Act
+        var sut = new AddressHistory([addrHistory], addrPrime);
+        var addr2Sut = new AddressHistory([addr2History], addr2Prime);
+
+        var result = sut.PrimaryAddressSameAs(addr2Sut);
+
+        // Assert
+        Assert.Equal(AddressComparisonResult.AddressMatchStatus.Uncertain, result.Status);
+        Assert.Equal(AddressComparisonResult.AddressMatchReason.FlatMissing, result.Reason);
+    }
 }
