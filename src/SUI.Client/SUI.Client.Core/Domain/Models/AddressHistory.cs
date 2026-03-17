@@ -67,7 +67,7 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
 
     private static AddressComparisonResult AreAddressesEqual(AddressMinimal a1, AddressMinimal a2)
     {
-        // Rule 1: f postcodes don't match, return unmatched
+        // Rule 1: If postcodes don't match, return unmatched
         if (!a1.Postcode.Equals(a2.Postcode, StringComparison.OrdinalIgnoreCase))
         {
             return new AddressComparisonResult(
@@ -75,34 +75,55 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
                 AddressComparisonResult.AddressMatchReason.PostcodeMismatch);
         }
         
-
-        // Rule 2: Null checks - if lines 1 and 2 are null on both a1 and a2 then its a unmatched
+        // Rule 2: Null checks - if lines 1 and 2 are null on both a1 and a2 then its unmatched
         if(string.IsNullOrWhiteSpace(a1.AddressLineOne) && string.IsNullOrWhiteSpace(a1.AddressLineTwo) &&
            string.IsNullOrWhiteSpace(a2.AddressLineOne) && string.IsNullOrWhiteSpace(a2.AddressLineTwo))
         {
             return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
         }
         
-
         // Rule 3: Do address line one match exactly? = Match
-        if (!string.IsNullOrEmpty(a1.AddressLineOne) && a1.AddressLineOne.Equals(a2.AddressLineOne, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrEmpty(a1.AddressLineOne) && 
+            a1.AddressLineOne.Equals(a2.AddressLineOne, StringComparison.OrdinalIgnoreCase))
         {
             return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Matched);
         }
 
-        var a1Number = ExtractBuildingNumber(a1.AddressLineOne);
-        var a2Number = ExtractBuildingNumber(a2.AddressLineOne);
+        // Extract building numbers from both lines
+        var a1Line1Number = ExtractBuildingNumber(a1.AddressLineOne);
+        var a2Line1Number = ExtractBuildingNumber(a2.AddressLineOne);
+        var a1Line2Number = ExtractBuildingNumber(a1.AddressLineTwo);
+        var a2Line2Number = ExtractBuildingNumber(a2.AddressLineTwo);
 
-        // Rule 4: Do address line two match if address line 1 has no number? = Match
-        if (a1Number is not null && a2Number is not null)
+        // Rule 4: If Line1 has no numbers on both addresses, compare Line2 numbers = Match
+        if (a1Line1Number == null && a2Line1Number == null)
         {
-            if (!string.IsNullOrEmpty(a1.AddressLineTwo) && a1.AddressLineTwo.Equals(a2.AddressLineTwo, StringComparison.OrdinalIgnoreCase))
+            // Both Line2 have numbers and they match
+            if (a1Line2Number != null && a2Line2Number != null && 
+                a1Line2Number.Equals(a2Line2Number, StringComparison.OrdinalIgnoreCase))
             {
                 return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Matched);
             }
+            
+            // Neither Line1 nor Line2 have numbers - can't compare
+            if (a1Line2Number == null && a2Line2Number == null)
+            {
+                return new AddressComparisonResult(
+                    AddressComparisonResult.AddressMatchStatus.Unmatched,
+                    AddressComparisonResult.AddressMatchReason.BuildingNumberMissing);
+            }
+            
+            // One has Line2 number, one doesn't
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Unmatched,
+                AddressComparisonResult.AddressMatchReason.BuildingNumberMissing);
         }
 
-        // If we don't have building numbers to compare, we can't proceed with further checks
+        // Determine which numbers to use for comparison (prefer Line1, fallback to Line2)
+        var a1Number = a1Line1Number ?? a1Line2Number;
+        var a2Number = a2Line1Number ?? a2Line2Number;
+
+        // If we still don't have building numbers to compare, we can't proceed
         if (a1Number == null || a2Number == null)
         {
             return new AddressComparisonResult(
@@ -110,7 +131,36 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
                 AddressComparisonResult.AddressMatchReason.BuildingNumberMissing);
         }
 
-        // Rule 5: Does address line one number exist in address line 2? = Uncertain
+        // Rule 5: Flat/apartment detection - if one address has numbers in both lines and the other doesn't
+        // This indicates potential flat/unit scenario where flat and building are on separate lines
+        var a1HasBothLineNumbers = a1Line1Number != null && a1Line2Number != null;
+        var a2HasBothLineNumbers = a2Line1Number != null && a2Line2Number != null;
+        
+        if (a1HasBothLineNumbers && !a2HasBothLineNumbers)
+        {
+            // Check if a2's number appears in either of a1's lines
+            if ((a1Line1Number != null && a1Line1Number.Equals(a2Number, StringComparison.OrdinalIgnoreCase)) ||
+                (a1Line2Number != null && a1Line2Number.Equals(a2Number, StringComparison.OrdinalIgnoreCase)))
+            {
+                return new AddressComparisonResult(
+                    AddressComparisonResult.AddressMatchStatus.Uncertain,
+                    AddressComparisonResult.AddressMatchReason.FlatMissing);
+            }
+        }
+        
+        if (a2HasBothLineNumbers && !a1HasBothLineNumbers)
+        {
+            // Check if a1's number appears in either of a2's lines
+            if ((a2Line1Number != null && a2Line1Number.Equals(a1Number, StringComparison.OrdinalIgnoreCase)) ||
+                (a2Line2Number != null && a2Line2Number.Equals(a1Number, StringComparison.OrdinalIgnoreCase)))
+            {
+                return new AddressComparisonResult(
+                    AddressComparisonResult.AddressMatchStatus.Uncertain,
+                    AddressComparisonResult.AddressMatchReason.FlatMissing);
+            }
+        }
+
+        // Rule 6: Does one address's number exist in the other's line 2 text? = Uncertain (Flat scenario)
         if (AddressLineContainsNumber(a2.AddressLineTwo, a1Number))
         {
             return new AddressComparisonResult(
@@ -118,7 +168,7 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
                 AddressComparisonResult.AddressMatchReason.FlatMissing);
         }
 
-        // Rule 6: Does address line 2 number exist in address line 1? = Uncertain
+        // Rule 7: Does the other address's number exist in line 2 text? = Uncertain (Flat scenario)
         if (AddressLineContainsNumber(a1.AddressLineTwo, a2Number))
         {
             return new AddressComparisonResult(
@@ -126,17 +176,17 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
                 AddressComparisonResult.AddressMatchReason.FlatMissing);
         }
 
-        // Rule 7: Check for range matching scenarios
+        // Rule 8: Check for range matching scenarios
         var a1IsRange = IsRange(a1Number);
         var a2IsRange = IsRange(a2Number);
 
-        // Rule 7a: If both have the same range = Match
+        // Rule 8a: If both have the same range = Match
         if (a1IsRange && a2IsRange && a1Number.Equals(a2Number, StringComparison.OrdinalIgnoreCase))
         {
             return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Matched);
         }
 
-        // Rule 7b: Is one a range and the other a single number within that range? = Uncertain
+        // Rule 8b: Is one a range and the other a single number within that range? = Uncertain
         if (a1IsRange && !a2IsRange && IsNumberInRange(a2Number, a1Number))
         {
             return new AddressComparisonResult(
@@ -151,7 +201,7 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
                 AddressComparisonResult.AddressMatchReason.NumberRange);
         }
 
-        // Rule 8: Everything else = Unmatched
+        // Rule 9: Everything else = Unmatched
         return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
     }
 
