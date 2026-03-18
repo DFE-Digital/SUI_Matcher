@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\Shared\Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Domain\Models\AddressFull.cs" />
+  </ItemGroup>
+
 </Project>
