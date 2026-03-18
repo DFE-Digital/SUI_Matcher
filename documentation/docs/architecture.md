@@ -239,7 +239,7 @@ Makes the external calls to the NHS PDS endpoints. Will get secrets from Key vau
 
 A reconciliation feature to allow records to be reconciled against PDS data. This is a separate feature to the matching service but does use the matching service to operate.
 
-See the [reconciliation documentation](./reconciliation.md) for more information.
+See the [reconciliation documentation](./reconciliation/reconciliation.md) for more information.
 
 ### Search Criteria
 

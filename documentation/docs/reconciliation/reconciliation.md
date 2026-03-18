@@ -1,5 +1,9 @@
 # Reconciliation
 
+## Links
+
+[Address Parsing](./address_parsing.md)
+
 ## Overview
 Reconciliation is a core feature of the SUI Matcher system that enables users to validate their local patient records against the national Personal Demographics Service (PDS). By uploading a set of records (typically via CSV), the system performs a multi-stage comparison to ensure data accuracy, identify discrepancies, and provide actionable insights for data cleansing.
 
