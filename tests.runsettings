@@ -16,8 +16,8 @@
 					<Exclude>[*.Tests?]*,*.g.*</Exclude>
 					<!-- [Assembly-Filter]Type-Filter -->
 					<ExcludeByFile>**/**/Program.cs</ExcludeByFile>
-          <ExcludeByFile>**/*.g.cs</ExcludeByFile>
-          <ExcludeByFile>**/obj/**</ExcludeByFile>
+                    <ExcludeByFile>**/*.g.cs</ExcludeByFile>
+                    <ExcludeByFile>**/obj/**</ExcludeByFile>
 					<!-- Globbing filter -->
 					<SkipAutoProps>true</SkipAutoProps>
 				</Configuration>
