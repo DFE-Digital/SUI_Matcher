@@ -18,6 +18,5 @@ public static class CsvUtils
         }
 
         return rawInput;
-
     }
 }

@@ -2,7 +2,10 @@ namespace SUI.Client.Core.Infrastructure.FileSystem;
 
 public static class CsvExtensions
 {
-    public static string GetFirstValueOrDefault(this Dictionary<string, string> record, IEnumerable<string> keys)
+    public static string GetFirstValueOrDefault(
+        this Dictionary<string, string> record,
+        IEnumerable<string> keys
+    )
     {
         foreach (var key in keys)
         {

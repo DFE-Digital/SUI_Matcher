@@ -1,15 +1,15 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
 using Shared.Util;
 
 namespace SUI.DBS.Response.Logger.Core.Watcher;
 
-[ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
+[ExcludeFromCodeCoverage(
+    Justification = "Uses real file system events, not mockable and permissions dependent"
+)]
 public class TxtFileMonitor
 {
     private readonly TxtFileWatcherService _fileWatcherService;
@@ -25,9 +25,15 @@ public class TxtFileMonitor
 
     public FileProcessedEnvelope? LastOperation { get; private set; }
 
-    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new InvalidOperationException("LastOperation is null");
+    public FileProcessedEnvelope GetLastOperation() =>
+        LastOperation ?? throw new InvalidOperationException("LastOperation is null");
 
-    public TxtFileMonitor(TxtFileWatcherService fileWatcherService, IOptions<TxtWatcherConfig> config, ILogger<TxtFileMonitor> logger, ITxtFileProcessor fileProcessor)
+    public TxtFileMonitor(
+        TxtFileWatcherService fileWatcherService,
+        IOptions<TxtWatcherConfig> config,
+        ILogger<TxtFileMonitor> logger,
+        ITxtFileProcessor fileProcessor
+    )
     {
         _fileWatcherService = fileWatcherService;
         _config = config.Value;
@@ -63,20 +69,36 @@ public class TxtFileMonitor
                 try
                 {
                     await ProcessFileAsync(filePath);
-                    await RetryUtil.RetryAsync(() =>
-                    {
-                        string destPath = Path.Combine(_config.ProcessedDirectory, Path.GetFileName(filePath));
-                        File.Copy(filePath, destPath);
-                        _logger.LogInformation("File moved to Processed directory: {DestPath}", destPath);
-                        Interlocked.Increment(ref _processedCount);
-                        return Task.CompletedTask;
-                    }, _config.RetryCount, _config.RetryDelayMs, _logger);
+                    await RetryUtil.RetryAsync(
+                        () =>
+                        {
+                            string destPath = Path.Combine(
+                                _config.ProcessedDirectory,
+                                Path.GetFileName(filePath)
+                            );
+                            File.Copy(filePath, destPath);
+                            _logger.LogInformation(
+                                "File moved to Processed directory: {DestPath}",
+                                destPath
+                            );
+                            Interlocked.Increment(ref _processedCount);
+                            return Task.CompletedTask;
+                        },
+                        _config.RetryCount,
+                        _config.RetryDelayMs,
+                        _logger
+                    );
 
                     LastOperation = new FileProcessedEnvelope(filePath);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogInformation(ex, "Error processing file {FilePath}: {Message}", filePath, ex.Message);
+                    _logger.LogInformation(
+                        ex,
+                        "Error processing file {FilePath}: {Message}",
+                        filePath,
+                        ex.Message
+                    );
                     Interlocked.Increment(ref _errorCount);
                     LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
@@ -91,6 +113,6 @@ public class TxtFileMonitor
         output.WriteLine($"Processed Count: {_processedCount}, Error Count: {_errorCount}");
     }
 
-    private async Task ProcessFileAsync(string filePath)
-        => await _fileProcessor.ProcessFileAsync(filePath);
+    private async Task ProcessFileAsync(string filePath) =>
+        await _fileProcessor.ProcessFileAsync(filePath);
 }

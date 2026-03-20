@@ -1,19 +1,30 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-
 using Microsoft.IdentityModel.Tokens;
 
 namespace ExternalApi.Util;
 
 public interface IJwtHandler
 {
-    string GenerateJwt(string keyOrPfx, string audience, string clientId, string kid, int expInMinutes = 1);
+    string GenerateJwt(
+        string keyOrPfx,
+        string audience,
+        string clientId,
+        string kid,
+        int expInMinutes = 1
+    );
 }
 
 public class JwtHandler : IJwtHandler
 {
-    public string GenerateJwt(string keyOrPfx, string audience, string clientId, string kid, int expInMinutes = 1)
+    public string GenerateJwt(
+        string keyOrPfx,
+        string audience,
+        string clientId,
+        string kid,
+        int expInMinutes = 1
+    )
     {
         if (keyOrPfx.Length <= 0)
         {
@@ -49,14 +60,11 @@ public class JwtHandler : IJwtHandler
         var rsa = RSA.Create();
         rsa.ImportRSAPrivateKey(keyBytes, out _);
 
-        var rsaSecurityKey = new RsaSecurityKey(rsa)
-        {
-            KeyId = kid
-        };
+        var rsaSecurityKey = new RsaSecurityKey(rsa) { KeyId = kid };
 
         return new SigningCredentials(rsaSecurityKey, SecurityAlgorithms.RsaSha512)
         {
-            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
+            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false },
         };
     }
 }

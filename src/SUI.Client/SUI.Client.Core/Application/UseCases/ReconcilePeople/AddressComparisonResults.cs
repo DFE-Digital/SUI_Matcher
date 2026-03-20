@@ -12,15 +12,14 @@ public class AddressComparisonResults
         new(AddressComparisonResult.AddressMatchStatus.None);
     public AddressComparisonResult PrimaryPDSAddressInCMSHistory { get; set; } =
         new(AddressComparisonResult.AddressMatchStatus.None);
-
-
 }
 
 public sealed record AddressComparisonResult(
     AddressComparisonResult.AddressMatchStatus Status,
-    AddressComparisonResult.AddressMatchReason Reason = AddressComparisonResult.AddressMatchReason.None)
+    AddressComparisonResult.AddressMatchReason Reason =
+        AddressComparisonResult.AddressMatchReason.None
+)
 {
-
     public string GetResultMessage()
     {
         return Status switch
@@ -29,7 +28,7 @@ public sealed record AddressComparisonResult(
             AddressMatchStatus.Unmatched => "Unmatched",
             AddressMatchStatus.Uncertain => $"Uncertain-{Reason.ToString()}",
             AddressMatchStatus.None => "NoComparison",
-            _ => $"Unknown status: {Status}"
+            _ => $"Unknown status: {Status}",
         };
     }
 
@@ -38,7 +37,7 @@ public sealed record AddressComparisonResult(
         None,
         Matched,
         Unmatched,
-        Uncertain
+        Uncertain,
     }
 
     public enum AddressMatchReason
@@ -47,6 +46,6 @@ public sealed record AddressComparisonResult(
         PostcodeMismatch,
         BuildingNumberMissing,
         NumberRange,
-        FlatMissing
+        FlatMissing,
     }
 }

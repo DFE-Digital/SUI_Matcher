@@ -12,8 +12,10 @@ public static class DataQualityEvaluatorService
         Action SetNotProvided
     );
 
-    public static DataQualityResult ToQualityResult(PersonSpecification spec,
-        IReadOnlyList<ValidationResponse.ValidationResult> validationResults)
+    public static DataQualityResult ToQualityResult(
+        PersonSpecification spec,
+        IReadOnlyList<ValidationResponse.ValidationResult> validationResults
+    )
     {
         var result = new DataQualityResult();
 
@@ -44,30 +46,42 @@ public static class DataQualityEvaluatorService
                 Name: nameof(PersonSpecification.Gender),
                 RequiredError: null,
                 InvalidError: PersonValidationConstants.GenderInvalid,
-                SetInvalid: () => { spec.Gender = null; },
+                SetInvalid: () =>
+                {
+                    spec.Gender = null;
+                },
                 SetNotProvided: () => { }
             ),
             new PropertyMapping(
                 Name: nameof(PersonSpecification.Phone),
                 RequiredError: null,
                 InvalidError: PersonValidationConstants.PhoneInvalid,
-                SetInvalid: () => { spec.Phone = null; },
+                SetInvalid: () =>
+                {
+                    spec.Phone = null;
+                },
                 SetNotProvided: () => { }
             ),
             new PropertyMapping(
                 Name: nameof(PersonSpecification.Email),
                 RequiredError: null,
                 InvalidError: PersonValidationConstants.EmailInvalid,
-                SetInvalid: () => { spec.Email = null; },
+                SetInvalid: () =>
+                {
+                    spec.Email = null;
+                },
                 SetNotProvided: () => { }
             ),
             new PropertyMapping(
                 Name: nameof(PersonSpecification.AddressPostalCode),
                 RequiredError: null,
                 InvalidError: PersonValidationConstants.PostCodeInvalid,
-                SetInvalid: () => { spec.AddressPostalCode = null; },
+                SetInvalid: () =>
+                {
+                    spec.AddressPostalCode = null;
+                },
                 SetNotProvided: () => { }
-            )
+            ),
         };
 
         foreach (var mapping in propertyMappings)
@@ -75,14 +89,17 @@ public static class DataQualityEvaluatorService
             var resultProp = typeof(DataQualityResult).GetProperty(mapping.Name);
             var specProp = typeof(PersonSpecification).GetProperty(mapping.Name);
 
-            if (resultProp == null) continue;
+            if (resultProp == null)
+                continue;
 
             var currentQuality = (QualityType)resultProp.GetValue(result)!;
 
-            if (currentQuality != QualityType.Valid) continue;
+            if (currentQuality != QualityType.Valid)
+                continue;
 
             var vResult = validationResults.FirstOrDefault(v =>
-                v.MemberNames.Contains(mapping.Name, StringComparer.OrdinalIgnoreCase));
+                v.MemberNames.Contains(mapping.Name, StringComparer.OrdinalIgnoreCase)
+            );
 
             if (vResult != null)
             {
@@ -91,13 +108,19 @@ public static class DataQualityEvaluatorService
                     resultProp.SetValue(result, QualityType.NotProvided);
                     mapping.SetNotProvided();
                 }
-                else if (mapping.InvalidError != null && vResult.ErrorMessage == mapping.InvalidError)
+                else if (
+                    mapping.InvalidError != null
+                    && vResult.ErrorMessage == mapping.InvalidError
+                )
                 {
                     resultProp.SetValue(result, QualityType.Invalid);
                     mapping.SetInvalid();
                 }
             }
-            else if (specProp != null && (string.IsNullOrEmpty(specProp.GetValue(spec)?.ToString())))
+            else if (
+                specProp != null
+                && (string.IsNullOrEmpty(specProp.GetValue(spec)?.ToString()))
+            )
             {
                 resultProp.SetValue(result, QualityType.NotProvided);
                 mapping.SetNotProvided();

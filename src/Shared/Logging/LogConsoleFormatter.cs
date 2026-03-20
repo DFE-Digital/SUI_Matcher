@@ -1,4 +1,3 @@
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
@@ -10,11 +9,10 @@ public class LogConsoleFormatter() : ConsoleFormatter(Shared.SharedConstants.Log
     public override void Write<TState>(
         in LogEntry<TState> logEntry,
         IExternalScopeProvider? scopeProvider,
-        TextWriter textWriter)
+        TextWriter textWriter
+    )
     {
-        string? message =
-            logEntry.Formatter?.Invoke(
-                logEntry.State, logEntry.Exception);
+        string? message = logEntry.Formatter?.Invoke(logEntry.State, logEntry.Exception);
 
         if (message is null)
         {
@@ -28,11 +26,15 @@ public class LogConsoleFormatter() : ConsoleFormatter(Shared.SharedConstants.Log
 
         if (searchId is not null && algorithmVersion is not null && !string.IsNullOrEmpty(strategy))
         {
-            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [{SharedConstants.SearchStrategy.LogName}={strategy}] [SearchId={searchId}] ");
+            textWriter.Write(
+                $"{DateTime.UtcNow} [{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [{SharedConstants.SearchStrategy.LogName}={strategy}] [SearchId={searchId}] "
+            );
         }
         else if (searchId is not null && algorithmVersion is not null)
         {
-            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [SearchId={searchId}] ");
+            textWriter.Write(
+                $"{DateTime.UtcNow} [{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [SearchId={searchId}] "
+            );
         }
         else if (searchId is not null)
         {
@@ -40,7 +42,9 @@ public class LogConsoleFormatter() : ConsoleFormatter(Shared.SharedConstants.Log
         }
         else if (reconcilationId is not null)
         {
-            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [ReconciliationId={reconcilationId}] ");
+            textWriter.Write(
+                $"{DateTime.UtcNow} [{logEntry.LogLevel}] [ReconciliationId={reconcilationId}] "
+            );
         }
         else
         {
@@ -49,5 +53,4 @@ public class LogConsoleFormatter() : ConsoleFormatter(Shared.SharedConstants.Log
 
         textWriter.WriteLine(message);
     }
-
 }

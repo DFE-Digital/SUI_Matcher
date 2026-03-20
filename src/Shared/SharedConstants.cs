@@ -18,6 +18,7 @@ public static class SharedConstants
     {
         public const string LogName = "SearchStrategy";
         public const string VersionErrorMessagePrefix = "Version not supported";
+
         public static class Strategies
         {
             public const string Strategy1 = "strategy1";

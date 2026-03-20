@@ -1,5 +1,4 @@
 using Shared.Models;
-
 using SUI.Client.Core.Application.Interfaces;
 
 namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
@@ -80,18 +79,29 @@ public class ReconciliationCsvProcessStats : IStats
         _erroredPercentage = new Lazy<double>(() => ComputePercentage(ErroredCount));
         _noDifferencePercentage = new Lazy<double>(() => ComputePercentage(NoDifferenceCount));
         _differencesPercentage = new Lazy<double>(() => ComputePercentage(DifferencesCount));
-        _supersededNhsNumberPercentage = new Lazy<double>(() => ComputePercentage(SupersededNhsNumber));
+        _supersededNhsNumberPercentage = new Lazy<double>(() =>
+            ComputePercentage(SupersededNhsNumber)
+        );
         _invalidNhsNumberPercentage = new Lazy<double>(() => ComputePercentage(InvalidNhsNumber));
         _patientNotFoundPercentage = new Lazy<double>(() => ComputePercentage(PatientNotFound));
         _missingNhsNumberPercentage = new Lazy<double>(() => ComputePercentage(MissingNhsNumber));
         _matchingSuccessPercentage = new Lazy<double>(() => ComputePercentage(MatchingStatusMatch));
-        _primaryAddressSamePercentage = new Lazy<double>(() => ComputePercentage(PrimaryAddressSame));
-        _addressHistoriesIntersectPercentage = new Lazy<double>(() => ComputePercentage(AddressHistoriesIntersect));
-        _primaryCMSAddressInPDSHistoryPercentage = new Lazy<double>(() => ComputePercentage(PrimaryCMSAddressInPDSHistory));
-        _primaryPDSAddressInCMSHistoryPercentage = new Lazy<double>(() => ComputePercentage(PrimaryPDSAddressInCMSHistory));
+        _primaryAddressSamePercentage = new Lazy<double>(() =>
+            ComputePercentage(PrimaryAddressSame)
+        );
+        _addressHistoriesIntersectPercentage = new Lazy<double>(() =>
+            ComputePercentage(AddressHistoriesIntersect)
+        );
+        _primaryCMSAddressInPDSHistoryPercentage = new Lazy<double>(() =>
+            ComputePercentage(PrimaryCMSAddressInPDSHistory)
+        );
+        _primaryPDSAddressInCMSHistoryPercentage = new Lazy<double>(() =>
+            ComputePercentage(PrimaryPDSAddressInCMSHistory)
+        );
     }
 
-    private double ComputePercentage(int count) => Count == 0 ? 0 : Math.Round((double)count / Count * 100, 2);
+    private double ComputePercentage(int count) =>
+        Count == 0 ? 0 : Math.Round((double)count / Count * 100, 2);
 
     public double ErroredPercentage => _erroredPercentage.Value;
     public double NoDifferencePercentage => _noDifferencePercentage.Value;
@@ -103,8 +113,10 @@ public class ReconciliationCsvProcessStats : IStats
     public double MatchingSuccessPercentage => _matchingSuccessPercentage.Value;
     public double PrimaryAddressSamePercentage => _primaryAddressSamePercentage.Value;
     public double AddressHistoriesIntersectPercentage => _addressHistoriesIntersectPercentage.Value;
-    public double PrimaryCMSAddressInPDSHistoryPercentage => _primaryCMSAddressInPDSHistoryPercentage.Value;
-    public double PrimaryPDSAddressInCMSHistoryPercentage => _primaryPDSAddressInCMSHistoryPercentage.Value;
+    public double PrimaryCMSAddressInPDSHistoryPercentage =>
+        _primaryCMSAddressInPDSHistoryPercentage.Value;
+    public double PrimaryPDSAddressInCMSHistoryPercentage =>
+        _primaryPDSAddressInCMSHistoryPercentage.Value;
 
     public void ResetStats()
     {
@@ -177,7 +189,12 @@ public class ReconciliationCsvProcessStats : IStats
         }
     }
 
-    public void RecordReconciliationStatusStats(ReconciliationStatus? status, string[] differences, string[] missingLocal, string[] missingNhs)
+    public void RecordReconciliationStatusStats(
+        ReconciliationStatus? status,
+        string[] differences,
+        string[] missingLocal,
+        string[] missingNhs
+    )
     {
         switch (status)
         {
@@ -185,13 +202,76 @@ public class ReconciliationCsvProcessStats : IStats
                 NoDifferenceCount++;
                 break;
             case ReconciliationStatus.Differences:
-                UpdateStatsForField(differences, missingLocal, missingNhs, "BirthDate", () => BirthDateDifferentCount++, () => BirthDateNhsMissingCount++, () => BirthDateLaMissingCount++, () => BirthDateBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, "Email", () => EmailDifferenceCount++, () => EmailNhsMissingCount++, () => EmailLaMissingCount++, () => EmailBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, "Phone", () => PhoneDifferenceCount++, () => PhoneNhsMissingCount++, () => PhoneLaMissingCount++, () => PhoneBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, "Given", () => GivenNameDifferenceCount++, () => GivenNameNhsMissingCount++, () => GivenNameLaMissingCount++, () => GivenNameBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, "Family", () => FamilyNameDifferenceCount++, () => FamilyNameNhsMissingCount++, () => FamilyNameLaMissingCount++, () => FamilyNameBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, "AddressPostalCode", () => PostCodeDifferenceCount++, () => PostCodeNhsMissingCount++, () => PostCodeLaMissingCount++, () => PostCodeBothMissingCount++);
-                UpdateStatsForField(differences, missingLocal, missingNhs, "NhsNumber", () => MatchingNhsNumberCount++, () => MatchingNhsNumberNhsCount++, () => MatchingNhsNumberLaCount++, () => MatchingNhsNumberBothCount++);
+                UpdateStatsForField(
+                    differences,
+                    missingLocal,
+                    missingNhs,
+                    "BirthDate",
+                    () => BirthDateDifferentCount++,
+                    () => BirthDateNhsMissingCount++,
+                    () => BirthDateLaMissingCount++,
+                    () => BirthDateBothMissingCount++
+                );
+                UpdateStatsForField(
+                    differences,
+                    missingLocal,
+                    missingNhs,
+                    "Email",
+                    () => EmailDifferenceCount++,
+                    () => EmailNhsMissingCount++,
+                    () => EmailLaMissingCount++,
+                    () => EmailBothMissingCount++
+                );
+                UpdateStatsForField(
+                    differences,
+                    missingLocal,
+                    missingNhs,
+                    "Phone",
+                    () => PhoneDifferenceCount++,
+                    () => PhoneNhsMissingCount++,
+                    () => PhoneLaMissingCount++,
+                    () => PhoneBothMissingCount++
+                );
+                UpdateStatsForField(
+                    differences,
+                    missingLocal,
+                    missingNhs,
+                    "Given",
+                    () => GivenNameDifferenceCount++,
+                    () => GivenNameNhsMissingCount++,
+                    () => GivenNameLaMissingCount++,
+                    () => GivenNameBothMissingCount++
+                );
+                UpdateStatsForField(
+                    differences,
+                    missingLocal,
+                    missingNhs,
+                    "Family",
+                    () => FamilyNameDifferenceCount++,
+                    () => FamilyNameNhsMissingCount++,
+                    () => FamilyNameLaMissingCount++,
+                    () => FamilyNameBothMissingCount++
+                );
+                UpdateStatsForField(
+                    differences,
+                    missingLocal,
+                    missingNhs,
+                    "AddressPostalCode",
+                    () => PostCodeDifferenceCount++,
+                    () => PostCodeNhsMissingCount++,
+                    () => PostCodeLaMissingCount++,
+                    () => PostCodeBothMissingCount++
+                );
+                UpdateStatsForField(
+                    differences,
+                    missingLocal,
+                    missingNhs,
+                    "NhsNumber",
+                    () => MatchingNhsNumberCount++,
+                    () => MatchingNhsNumberNhsCount++,
+                    () => MatchingNhsNumberLaCount++,
+                    () => MatchingNhsNumberBothCount++
+                );
 
                 // Only increment DifferencesCount once per record if there are actual differences
                 if (differences.Length > 0)
@@ -219,23 +299,34 @@ public class ReconciliationCsvProcessStats : IStats
 
     public void RecordAddressStats(AddressComparisonResults addressComparisonResults)
     {
-
-        if (addressComparisonResults.PrimaryAddressSame.Status == AddressComparisonResult.AddressMatchStatus.Matched)
+        if (
+            addressComparisonResults.PrimaryAddressSame.Status
+            == AddressComparisonResult.AddressMatchStatus.Matched
+        )
         {
             PrimaryAddressSame++;
         }
 
-        if (addressComparisonResults.AddressHistoriesIntersect.Status == AddressComparisonResult.AddressMatchStatus.Matched)
+        if (
+            addressComparisonResults.AddressHistoriesIntersect.Status
+            == AddressComparisonResult.AddressMatchStatus.Matched
+        )
         {
             AddressHistoriesIntersect++;
         }
 
-        if (addressComparisonResults.PrimaryCMSAddressInPDSHistory.Status == AddressComparisonResult.AddressMatchStatus.Matched)
+        if (
+            addressComparisonResults.PrimaryCMSAddressInPDSHistory.Status
+            == AddressComparisonResult.AddressMatchStatus.Matched
+        )
         {
             PrimaryCMSAddressInPDSHistory++;
         }
 
-        if (addressComparisonResults.PrimaryPDSAddressInCMSHistory.Status == AddressComparisonResult.AddressMatchStatus.Matched)
+        if (
+            addressComparisonResults.PrimaryPDSAddressInCMSHistory.Status
+            == AddressComparisonResult.AddressMatchStatus.Matched
+        )
         {
             PrimaryPDSAddressInCMSHistory++;
         }
@@ -249,12 +340,12 @@ public class ReconciliationCsvProcessStats : IStats
         Action incrementPlain,
         Action incrementNhs,
         Action incrementLa,
-        Action incrementBoth)
+        Action incrementBoth
+    )
     {
         bool inDifferences = differences.Contains(fieldName);
         bool inMissingLocal = missingLocal.Contains(fieldName);
         bool inMissingNhs = missingNhs.Contains(fieldName);
-
 
         // // Field is missing in both systems
         if (inMissingLocal && inMissingNhs)
@@ -265,7 +356,6 @@ public class ReconciliationCsvProcessStats : IStats
         else if (inDifferences)
         {
             incrementPlain();
-
         }
         // // Field is missing locally
         else if (inMissingLocal)
@@ -278,6 +368,4 @@ public class ReconciliationCsvProcessStats : IStats
             incrementNhs();
         }
     }
-
-
 }

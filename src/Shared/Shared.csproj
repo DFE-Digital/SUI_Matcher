@@ -1,24 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Aspire.Azure.Data.Tables" />
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
+    <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="MassTransit" />
+    <PackageReference Include="Microsoft.FeatureManagement" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-		<PackageReference Include="Aspire.Azure.Data.Tables" />
-		<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
-		<PackageReference Include="DotNetEnv" />
-		<PackageReference Include="MassTransit" />
-		<PackageReference Include="Microsoft.FeatureManagement" />
-	</ItemGroup>
+  <ItemGroup Label=".NET Aspire">
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+    <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+  </ItemGroup>
 
-	<ItemGroup Label=".NET Aspire">
-		<PackageReference Include="Microsoft.Extensions.Http.Resilience" />
-		<PackageReference Include="Microsoft.Extensions.ServiceDiscovery" />
-		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-		<PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Models\Client\" />
-	  <Folder Include="OpenTelemetry\" />
-	</ItemGroup>
-
+  <ItemGroup>
+    <Folder Include="Models\Client\" />
+    <Folder Include="OpenTelemetry\" />
+  </ItemGroup>
 </Project>

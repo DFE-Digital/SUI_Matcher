@@ -1,7 +1,5 @@
 using System.Text.RegularExpressions;
-
 using Shared.Models;
-
 using SUI.Client.Core.Domain.Models;
 
 namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
@@ -52,13 +50,18 @@ public static class AddressParser
             return new AddressHistory([]);
         }
 
-        var parts = historyString.Split(MultipleAddressDelimiter, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var parts = historyString.Split(
+            MultipleAddressDelimiter,
+            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
+        );
         var addresses = ParseToAddressMinimalList(parts);
 
         // Primary address is identified by matching the provided primary postcode to the postcode of the parsed addresses and selecting the latest.
         // Addresses 'should' be in chronological order, but we will select the last match as a fallback in case of duplicates or ordering issues.
         var normalizedPostcode = NormalizePostcode(primaryPostcode);
-        AddressMinimal? primaryAddress = addresses.LastOrDefault(a => a.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase));
+        AddressMinimal? primaryAddress = addresses.LastOrDefault(a =>
+            a.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase)
+        );
 
         return new AddressHistory(addresses, primaryAddress);
     }
@@ -80,17 +83,16 @@ public static class AddressParser
         }
 
         var normalizedPostcode = NormalizePostcode(primaryPostcode);
-        AddressMinimal? primaryAddress = addresses.LastOrDefault(a => a.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase));
+        AddressMinimal? primaryAddress = addresses.LastOrDefault(a =>
+            a.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase)
+        );
 
         return new AddressHistory(addresses, primaryAddress);
     }
 
     private static List<AddressMinimal> ParseToAddressMinimalList(string[] parts)
     {
-        return parts
-            .Select(ParseRecord)
-            .OfType<AddressMinimal>()
-            .ToList();
+        return parts.Select(ParseRecord).OfType<AddressMinimal>().ToList();
     }
 
     private static string? ExtractHouseNumber(string addressLine)
@@ -125,16 +127,16 @@ public static class AddressParser
 
     private static string NormalizePostcode(string postcode)
     {
-        return new string(postcode
-            .Where(char.IsLetterOrDigit)
-            .ToArray())
-            .ToUpperInvariant();
+        return new string(postcode.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
     }
 
     // "house number" or "street address" parser.
     // It’s designed to handle both standard numbers
     // and those slightly more complex variations you see,
     // like ranges or numbers with letters attached.
-    private static readonly Regex LeadingNumberRegex =
-        new(@"^(\d+\s*-\s*\d+|\d+[A-Za-z]?)\b", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+    private static readonly Regex LeadingNumberRegex = new(
+        @"^(\d+\s*-\s*\d+|\d+[A-Za-z]?)\b",
+        RegexOptions.Compiled,
+        TimeSpan.FromSeconds(1)
+    );
 }

@@ -9,16 +9,18 @@ public class SearchSpecificationTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("strategy1")]
-    public void ShouldAlwaysDefaultValueOnSearchStrategy_WhenNotProvidedInPersonSpecification(string? val)
+    public void ShouldAlwaysDefaultValueOnSearchStrategy_WhenNotProvidedInPersonSpecification(
+        string? val
+    )
     {
         // Arrange
-        SearchSpecification personSpecification = new()
-        {
-            SearchStrategy = val!
-        };
+        SearchSpecification personSpecification = new() { SearchStrategy = val! };
 
         // Act
-        Assert.Equal(SharedConstants.SearchStrategy.Strategies.Strategy1, personSpecification.SearchStrategy);
+        Assert.Equal(
+            SharedConstants.SearchStrategy.Strategies.Strategy1,
+            personSpecification.SearchStrategy
+        );
     }
 
     [Fact]
@@ -27,10 +29,13 @@ public class SearchSpecificationTests
         // Arrange
         SearchSpecification personSpecification = new()
         {
-            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy2
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy2,
         };
 
         // Act
-        Assert.Equal(SharedConstants.SearchStrategy.Strategies.Strategy2, personSpecification.SearchStrategy);
+        Assert.Equal(
+            SharedConstants.SearchStrategy.Strategies.Strategy2,
+            personSpecification.SearchStrategy
+        );
     }
 }

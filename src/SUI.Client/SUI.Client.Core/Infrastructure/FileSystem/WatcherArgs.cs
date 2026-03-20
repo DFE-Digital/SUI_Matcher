@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-
 using CommandLine;
 
 namespace SUI.Client.Core.Infrastructure.FileSystem;
@@ -19,15 +18,34 @@ public class WatcherArgs
     [Option('g', "enable-gender", Required = false, HelpText = "Enable gender option.")]
     public bool EnableGenderSearch { get; set; } = false;
 
-    [Option('r', "enable-reconciliation", Required = false, HelpText = "Enable reconciliation report.")]
+    [Option(
+        'r',
+        "enable-reconciliation",
+        Required = false,
+        HelpText = "Enable reconciliation report."
+    )]
     public bool EnableReconciliation { get; set; } = false;
 
-    [Option('m', "matched-dir", Required = false, HelpText = "Directory to write matched records to. If not set, this feature is disabled.")]
+    [Option(
+        'm',
+        "matched-dir",
+        Required = false,
+        HelpText = "Directory to write matched records to. If not set, this feature is disabled."
+    )]
     public string? MatchedRecordsDirectory { get; set; }
 
-    [Option('s', "search-strategy", Required = false, HelpText = "Choose only if you understand the different algorithms in the API")]
+    [Option(
+        's',
+        "search-strategy",
+        Required = false,
+        HelpText = "Choose only if you understand the different algorithms in the API"
+    )]
     public string? SearchStrategy { get; set; }
 
-    [Option("strategy-version", Required = false, HelpText = "Choose only if you understand the different algorithms in the API")]
+    [Option(
+        "strategy-version",
+        Required = false,
+        HelpText = "Choose only if you understand the different algorithms in the API"
+    )]
     public int? StrategyVersion { get; set; }
 }

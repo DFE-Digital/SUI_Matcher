@@ -1,13 +1,10 @@
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
-
 using ExternalApi;
 using ExternalApi.Services;
 using ExternalApi.Util;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
-
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
@@ -31,20 +28,27 @@ builder.Services.AddSingleton<INhsFhirClient, NhsFhirClient>();
 builder.Services.AddSingleton<IJwtHandler, JwtHandler>();
 builder.Services.AddTransient<IFhirClientFactory, FhirClientFactory>();
 
-
 builder.Services.Configure<NhsAuthConfigOptions>(builder.Configuration.GetSection("NhsAuthConfig"));
 
 // Setup client factory for external API calls
-builder.Services.AddHttpClient("nhs-auth-api", client =>
-    {
-        client.BaseAddress = new Uri(builder.Configuration["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"]!);
-    })
+builder
+    .Services.AddHttpClient(
+        "nhs-auth-api",
+        client =>
+        {
+            client.BaseAddress = new Uri(
+                builder.Configuration["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"]!
+            );
+        }
+    )
     .AddServiceDiscovery()
     .AddStandardResilienceHandler();
 
 builder.Services.AddSingleton<SecretClient>(_ =>
 {
-    var keyVaultString = builder.Configuration.GetConnectionString("secrets") ?? throw new InvalidOperationException("Key Vault URI is not configured.");
+    var keyVaultString =
+        builder.Configuration.GetConnectionString("secrets")
+        ?? throw new InvalidOperationException("Key Vault URI is not configured.");
     var uri = new Uri(keyVaultString);
     return new SecretClient(uri, new DefaultAzureCredential());
 });
@@ -54,32 +58,40 @@ builder.Services.AddProblemDetails();
 
 if (builder.Configuration.GetValue<bool>("EnableAuth"))
 {
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddMicrosoftIdentityWebApi(options =>
-        {
-            builder.Configuration.Bind("AzureAdExternal", options);
-            options.TokenValidationParameters.NameClaimType = "name";
+    builder
+        .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(
+            options =>
+            {
+                builder.Configuration.Bind("AzureAdExternal", options);
+                options.TokenValidationParameters.NameClaimType = "name";
+            },
+            options =>
+            {
+                builder.Configuration.Bind("AzureAdExternal", options);
+            }
+        );
 
-        }, options => { builder.Configuration.Bind("AzureAdExternal", options); });
-
-    builder.Services.AddAuthorizationBuilder()
-        .AddPolicy("AuthPolicy", policy =>
-            policy.RequireRole("ExternalApi"));
+    builder
+        .Services.AddAuthorizationBuilder()
+        .AddPolicy("AuthPolicy", policy => policy.RequireRole("ExternalApi"));
 }
 
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddApiVersioning(options =>
-{
-    options.DefaultApiVersion = new ApiVersion(1);
-    options.ApiVersionReader = new UrlSegmentApiVersionReader();
-}).AddApiExplorer(options =>
-{
-    options.GroupNameFormat = "'v'V";
-    options.SubstituteApiVersionInUrl = true;
-});
+builder
+    .Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1);
+        options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    })
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'V";
+        options.SubstituteApiVersionInUrl = true;
+    });
 
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
@@ -90,9 +102,7 @@ var apiVersionSet = app.NewApiVersionSet()
     .ReportApiVersions()
     .Build();
 
-var versionedGroup = app
-    .MapGroup("api/v{version:apiVersion}")
-    .WithApiVersionSet(apiVersionSet);
+var versionedGroup = app.MapGroup("api/v{version:apiVersion}").WithApiVersionSet(apiVersionSet);
 
 app.UseExceptionHandler();
 

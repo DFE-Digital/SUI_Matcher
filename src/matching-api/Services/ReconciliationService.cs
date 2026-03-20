@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-
 using Shared.Endpoint;
 using Shared.Models;
 using Shared.Util;
@@ -9,7 +8,8 @@ namespace MatchingApi.Services;
 public class ReconciliationService(
     IMatchingService matchingService,
     ILogger<ReconciliationService> logger,
-    INhsFhirClient nhsFhirClient) : IReconciliationService
+    INhsFhirClient nhsFhirClient
+) : IReconciliationService
 {
     public async Task<ReconciliationResponse> ReconcileAsync(ReconciliationRequest request)
     {
@@ -26,17 +26,21 @@ public class ReconciliationService(
                 MatchingResult = matchingResponse.Result,
                 Status = ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber,
                 Errors = ["Local demographics did not match to an NHS number"],
-                MissingLocalFields = localMissingFields
+                MissingLocalFields = localMissingFields,
             };
             LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
             return reconciliationResponse;
         }
 
         // Fetch the NHS demographics for the matched NHS number
-        var matchedNhsNumberDemographics =
-            await nhsFhirClient.PerformSearchByNhsId(matchingResponse.Result?.NhsNumber);
+        var matchedNhsNumberDemographics = await nhsFhirClient.PerformSearchByNhsId(
+            matchingResponse.Result?.NhsNumber
+        );
 
-        if (matchedNhsNumberDemographics.Status == Status.Error || matchedNhsNumberDemographics.Result == null)
+        if (
+            matchedNhsNumberDemographics.Status == Status.Error
+            || matchedNhsNumberDemographics.Result == null
+        )
         {
             var reconciliationResponse = new ReconciliationResponse
             {
@@ -44,7 +48,7 @@ public class ReconciliationService(
                 // Generic error, since we'd expect a matched number to return demographics
                 Status = ReconciliationStatus.Error,
                 Errors = [matchedNhsNumberDemographics.ErrorMessage ?? "Unknown error"],
-                MissingLocalFields = localMissingFields
+                MissingLocalFields = localMissingFields,
             };
             LogReconciliationCompleted(request, matchingResponse, reconciliationResponse);
             return reconciliationResponse;
@@ -58,24 +62,29 @@ public class ReconciliationService(
             .ToList();
 
         // Can only get these if we get NHS demographics, so we build these after that step
-        var nhsMissingFields = differences.Where(d => d.IsMissingNhs).Select(d => d.FieldName).ToList();
+        var nhsMissingFields = differences
+            .Where(d => d.IsMissingNhs)
+            .Select(d => d.FieldName)
+            .ToList();
 
         // Prepare response, with initial status on whether differences have occurred
         var reconResponse = new ReconciliationResponse
         {
             MatchingResult = matchingResponse.Result,
             Person = matchedNhsNumberDemographics.Result,
-            Status = differences.Count == 0
-                ? ReconciliationStatus.NoDifferences
-                : ReconciliationStatus.Differences,
+            Status =
+                differences.Count == 0
+                    ? ReconciliationStatus.NoDifferences
+                    : ReconciliationStatus.Differences,
             DifferenceFields = fieldsWithDifferences,
             MissingLocalFields = localMissingFields,
-            MissingNhsFields = nhsMissingFields
+            MissingNhsFields = nhsMissingFields,
         };
 
         // Return early if the NHS number definitely can't be superseded
-        var nhsNumberCantBeSuperseded = string.IsNullOrEmpty(request.NhsNumber)
-                                        || request.NhsNumber == matchedNhsNumberDemographics.Result.NhsNumber;
+        var nhsNumberCantBeSuperseded =
+            string.IsNullOrEmpty(request.NhsNumber)
+            || request.NhsNumber == matchedNhsNumberDemographics.Result.NhsNumber;
         if (nhsNumberCantBeSuperseded)
         {
             LogReconciliationCompleted(request, matchingResponse, reconResponse);
@@ -92,23 +101,26 @@ public class ReconciliationService(
             return reconResponse;
         }
 
-        // Request demographics 
-        var requestNhsNumberDemographics =
-            await nhsFhirClient.PerformSearchByNhsId(request.NhsNumber);
+        // Request demographics
+        var requestNhsNumberDemographics = await nhsFhirClient.PerformSearchByNhsId(
+            request.NhsNumber
+        );
 
         // If no success when fetching the NHS number from the request, return the result with these as errors
         if (requestNhsNumberDemographics.Status != Status.Success)
         {
-            reconResponse.Status = requestNhsNumberDemographics.Status == Status.PatientNotFound
-                ? ReconciliationStatus.LocalNhsNumberIsNotFoundInNhs
-                : ReconciliationStatus.Error;
+            reconResponse.Status =
+                requestNhsNumberDemographics.Status == Status.PatientNotFound
+                    ? ReconciliationStatus.LocalNhsNumberIsNotFoundInNhs
+                    : ReconciliationStatus.Error;
             reconResponse.Errors = [requestNhsNumberDemographics.ErrorMessage ?? "Unknown error"];
             LogReconciliationCompleted(request, matchingResponse, reconResponse);
             return reconResponse;
         }
 
         bool requestNhsNumberHasBeenSuperseded =
-            requestNhsNumberDemographics.Result != null && request.NhsNumber != requestNhsNumberDemographics.Result.NhsNumber;
+            requestNhsNumberDemographics.Result != null
+            && request.NhsNumber != requestNhsNumberDemographics.Result.NhsNumber;
         // Since the demographics response will contain the new NHS number if the inputted
         // NHS number has been superseded.
         if (requestNhsNumberHasBeenSuperseded)
@@ -123,7 +135,11 @@ public class ReconciliationService(
     private static string GetAgeGroup(DateOnly? birthDate) =>
         !birthDate.HasValue ? "Unknown" : PersonSpecificationUtils.GetAgeGroup(birthDate.Value);
 
-    private void LogReconciliationCompleted(ReconciliationRequest request, PersonMatchResponse personMatchResponse, ReconciliationResponse reconciliationResponse)
+    private void LogReconciliationCompleted(
+        ReconciliationRequest request,
+        PersonMatchResponse personMatchResponse,
+        ReconciliationResponse reconciliationResponse
+    )
     {
         var ageGroup = GetAgeGroup(reconciliationResponse.Person?.BirthDate);
         decimal score = personMatchResponse.Result?.Score ?? 0;
@@ -173,7 +189,10 @@ public class ReconciliationService(
         return missingFields;
     }
 
-    private static List<Difference> BuildDifferenceList(ReconciliationRequest request, NhsPerson? result)
+    private static List<Difference> BuildDifferenceList(
+        ReconciliationRequest request,
+        NhsPerson? result
+    )
     {
         var differences = new List<Difference>();
         if (result == null)
@@ -181,35 +200,81 @@ public class ReconciliationService(
             return differences;
         }
 
-        AddDifferenceIfUnequal(differences, nameof(request.NhsNumber), request.NhsNumber, result.NhsNumber);
-        AddDifferenceIfUnequal(differences, nameof(request.BirthDate), request.BirthDate, result.BirthDate);
+        AddDifferenceIfUnequal(
+            differences,
+            nameof(request.NhsNumber),
+            request.NhsNumber,
+            result.NhsNumber
+        );
+        AddDifferenceIfUnequal(
+            differences,
+            nameof(request.BirthDate),
+            request.BirthDate,
+            result.BirthDate
+        );
         AddDifferenceIfUnequal(differences, nameof(request.Gender), request.Gender, result.Gender);
-        AddDifferenceIfUnequal(differences, nameof(request.Given), request.Given, result.GivenNames);
-        AddDifferenceIfUnequal(differences, nameof(request.Family), request.Family, result.FamilyNames);
+        AddDifferenceIfUnequal(
+            differences,
+            nameof(request.Given),
+            request.Given,
+            result.GivenNames
+        );
+        AddDifferenceIfUnequal(
+            differences,
+            nameof(request.Family),
+            request.Family,
+            result.FamilyNames
+        );
         AddDifferenceIfUnequal(differences, nameof(request.Email), request.Email, result.Emails);
-        AddDifferenceIfUnequal(differences, nameof(request.Phone), request.Phone, result.PhoneNumbers);
-        AddDifferenceIfUnequal(differences, nameof(request.AddressPostalCode), request.AddressPostalCode, result.AddressPostalCodes);
+        AddDifferenceIfUnequal(
+            differences,
+            nameof(request.Phone),
+            request.Phone,
+            result.PhoneNumbers
+        );
+        AddDifferenceIfUnequal(
+            differences,
+            nameof(request.AddressPostalCode),
+            request.AddressPostalCode,
+            result.AddressPostalCodes
+        );
 
         return differences;
     }
 
-    private static void AddDifferenceIfUnequal(List<Difference> diffs, string fieldName, string? local, string? nhs)
+    private static void AddDifferenceIfUnequal(
+        List<Difference> diffs,
+        string fieldName,
+        string? local,
+        string? nhs
+    )
     {
-        bool areTheSame = !string.IsNullOrEmpty(local)
-                          && !string.IsNullOrEmpty(nhs)
-                          && local.Equals(nhs, StringComparison.OrdinalIgnoreCase);
+        bool areTheSame =
+            !string.IsNullOrEmpty(local)
+            && !string.IsNullOrEmpty(nhs)
+            && local.Equals(nhs, StringComparison.OrdinalIgnoreCase);
 
         if (!areTheSame)
         {
-            diffs.Add(new Difference { FieldName = fieldName, Local = local, Nhs = nhs });
+            diffs.Add(
+                new Difference
+                {
+                    FieldName = fieldName,
+                    Local = local,
+                    Nhs = nhs,
+                }
+            );
         }
     }
 
-    private static void AddDifferenceIfUnequal(List<Difference> diffs, string fieldName, DateOnly? local, DateOnly? nhs)
+    private static void AddDifferenceIfUnequal(
+        List<Difference> diffs,
+        string fieldName,
+        DateOnly? local,
+        DateOnly? nhs
+    )
     {
-        bool areTheSame = local.HasValue
-                          && nhs.HasValue
-                          && local.Value == nhs.Value;
+        bool areTheSame = local.HasValue && nhs.HasValue && local.Value == nhs.Value;
 
         if (areTheSame)
         {
@@ -217,25 +282,40 @@ public class ReconciliationService(
         }
 
         const string dateFormat = "yyyy-MM-dd";
-        diffs.Add(new Difference
-        {
-            FieldName = fieldName,
-            Local = local?.ToString(dateFormat),
-            Nhs = nhs?.ToString(dateFormat)
-        });
+        diffs.Add(
+            new Difference
+            {
+                FieldName = fieldName,
+                Local = local?.ToString(dateFormat),
+                Nhs = nhs?.ToString(dateFormat),
+            }
+        );
     }
 
-    private static void AddDifferenceIfUnequal(List<Difference> diffs, string fieldName, string? local, string[] nhsValues)
+    private static void AddDifferenceIfUnequal(
+        List<Difference> diffs,
+        string fieldName,
+        string? local,
+        string[] nhsValues
+    )
     {
-        bool areTheSame = !string.IsNullOrEmpty(local)
-                          && nhsValues.Length > 0
-                          && nhsValues.Contains(local, StringComparer.OrdinalIgnoreCase);
+        bool areTheSame =
+            !string.IsNullOrEmpty(local)
+            && nhsValues.Length > 0
+            && nhsValues.Contains(local, StringComparer.OrdinalIgnoreCase);
 
         if (areTheSame)
         {
             return;
         }
 
-        diffs.Add(new Difference { FieldName = fieldName, Local = local, Nhs = string.Join(", ", nhsValues) });
+        diffs.Add(
+            new Difference
+            {
+                FieldName = fieldName,
+                Local = local,
+                Nhs = string.Join(", ", nhsValues),
+            }
+        );
     }
 }

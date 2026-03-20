@@ -1,19 +1,13 @@
 ﻿using System.Diagnostics;
-
 using MatchingApi.Search;
 using MatchingApi.Services;
-
 using Microsoft.Extensions.Logging;
-
 using Moq;
-
 using Newtonsoft.Json;
-
 using Shared;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
-
 using Unit.Tests.Util;
 
 namespace Unit.Tests.Matching;
@@ -28,7 +22,12 @@ public sealed class MatchingServiceTests
 
     public MatchingServiceTests()
     {
-        _sut = new MatchingService(_loggerMock.Object, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+        _sut = new MatchingService(
+            _loggerMock.Object,
+            _nhsFhirClient.Object,
+            _validationService,
+            _auditLogger.Object
+        );
     }
 
     [Fact]
@@ -47,21 +46,31 @@ public sealed class MatchingServiceTests
             OptionalProperties = new Dictionary<string, object>
             {
                 { "CustomProperty1", "Value1" },
-                { "CustomProperty2", "Value2" }
-            }
+                { "CustomProperty2", "Value2" },
+            },
         };
 
-        // Act 
+        // Act
         await _sut.SearchAsync(personSpecification);
 
         // Assert
-        _loggerMock.Verify(logger => logger.Log(
-            LogLevel.Information,
-            It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("CustomProperty1") && v.ToString()!.Contains("Value1") &&
-                                          v.ToString()!.Contains("CustomProperty2") && v.ToString()!.Contains("Value2")),
-            null,
-            It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.AtLeastOnce);
+        _loggerMock.Verify(
+            logger =>
+                logger.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>(
+                        (v, t) =>
+                            v.ToString()!.Contains("CustomProperty1")
+                            && v.ToString()!.Contains("Value1")
+                            && v.ToString()!.Contains("CustomProperty2")
+                            && v.ToString()!.Contains("Value2")
+                    ),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.AtLeastOnce
+        );
     }
 
     [Fact]
@@ -71,26 +80,29 @@ public sealed class MatchingServiceTests
 
         Assert.NotNull(result);
         Assert.Equal(MatchStatus.Error, result.Result!.MatchStatus);
-        Assert.Equal(JsonConvert.SerializeObject(new DataQualityResult
-        {
-            Given = QualityType.NotProvided,
-            Family = QualityType.NotProvided,
-            BirthDate = QualityType.NotProvided,
-            Gender = QualityType.NotProvided,
-            Phone = QualityType.NotProvided,
-            Email = QualityType.NotProvided,
-            AddressPostalCode = QualityType.NotProvided
-        }), JsonConvert.SerializeObject(result.DataQuality));
+        Assert.Equal(
+            JsonConvert.SerializeObject(
+                new DataQualityResult
+                {
+                    Given = QualityType.NotProvided,
+                    Family = QualityType.NotProvided,
+                    BirthDate = QualityType.NotProvided,
+                    Gender = QualityType.NotProvided,
+                    Phone = QualityType.NotProvided,
+                    Email = QualityType.NotProvided,
+                    AddressPostalCode = QualityType.NotProvided,
+                }
+            ),
+            JsonConvert.SerializeObject(result.DataQuality)
+        );
     }
 
     [Fact]
     public async Task MultipleMatches()
     {
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.MultiMatched
-            });
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.MultiMatched });
 
         var model = new SearchSpecification
         {
@@ -116,8 +128,6 @@ public sealed class MatchingServiceTests
     {
         var dateOfBirth = DateOnly.Parse(dob);
 
-
-
         var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
@@ -133,20 +143,18 @@ public sealed class MatchingServiceTests
 
         Assert.NotNull(result);
         Assert.Equal(MatchStatus.NoMatch, result.Result!.MatchStatus);
-        _nhsFhirClient.Verify(x => x.PerformSearch(It.IsAny<SearchQuery>()), Times.Exactly(expectedSearchStrategiesUsed));
+        _nhsFhirClient.Verify(
+            x => x.PerformSearch(It.IsAny<SearchQuery>()),
+            Times.Exactly(expectedSearchStrategiesUsed)
+        );
     }
 
     [Fact]
     public async Task NoMatch()
     {
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Unmatched
-            });
-
-
-
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.Unmatched });
 
         var model = new SearchSpecification
         {
@@ -169,12 +177,11 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task ShouldReturnPotentialMatch_WhenScoreIs94()
     {
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Matched,
-                Score = 0.94m
-            });
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(
+                new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.94m }
+            );
 
         var model = new SearchSpecification
         {
@@ -197,12 +204,11 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task SingleConfirmedMatch()
     {
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Matched,
-                Score = 0.99m
-            });
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(
+                new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.99m }
+            );
 
         var model = new SearchSpecification
         {
@@ -226,7 +232,8 @@ public sealed class MatchingServiceTests
     public async Task LowConfidenceMatch()
     {
         var callCount = 0;
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(() =>
             {
                 callCount++;
@@ -234,7 +241,7 @@ public sealed class MatchingServiceTests
                 {
                     1 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.81m },
                     2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.84m },
-                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched }
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched },
                 };
             });
 
@@ -254,19 +261,22 @@ public sealed class MatchingServiceTests
         Assert.NotNull(result);
         Assert.Equal(MatchStatus.LowConfidenceMatch, result.Result!.MatchStatus);
         Assert.Equal(0.84m, result.Result.Score);
-
     }
 
     [Fact]
     public async Task SingleQuotesInGivenAndFamilyAreEscaped()
     {
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.Is<SearchQuery>(q =>
-            q.Given!.Contains("O'Connor") && q.Family!.Contains("D'Angelo"))))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Matched,
-                Score = 0.95m
-            });
+        _nhsFhirClient
+            .Setup(x =>
+                x.PerformSearch(
+                    It.Is<SearchQuery>(q =>
+                        q.Given!.Contains("O'Connor") && q.Family!.Contains("D'Angelo")
+                    )
+                )
+            )
+            .ReturnsAsync(
+                new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.95m }
+            );
 
         var model = new SearchSpecification
         {
@@ -286,8 +296,13 @@ public sealed class MatchingServiceTests
         Assert.Equal(0.95m, result.Result.Score);
 
         // Verify that PerformSearch was called with the correct values
-        _nhsFhirClient.Verify(x => x.PerformSearch(It.Is<SearchQuery>(q =>
-            q.Given!.Contains("O'Connor") && q.Family!.Contains("D'Angelo"))));
+        _nhsFhirClient.Verify(x =>
+            x.PerformSearch(
+                It.Is<SearchQuery>(q =>
+                    q.Given!.Contains("O'Connor") && q.Family!.Contains("D'Angelo")
+                )
+            )
+        );
     }
 
     [Fact]
@@ -299,7 +314,11 @@ public sealed class MatchingServiceTests
         var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateOnly(eighteenYearsAgo.Year, eighteenYearsAgo.Month, eighteenYearsAgo.Day),
+            BirthDate = new DateOnly(
+                eighteenYearsAgo.Year,
+                eighteenYearsAgo.Month,
+                eighteenYearsAgo.Day
+            ),
             Email = "test@test.com",
             Family = "Smith",
             Given = "John",
@@ -307,12 +326,11 @@ public sealed class MatchingServiceTests
             Phone = "000000000",
         };
 
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Matched,
-                Score = 0.99m
-            });
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(
+                new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.99m }
+            );
 
         using var activity = new Activity("TestActivity");
         activity.Start();
@@ -321,16 +339,22 @@ public sealed class MatchingServiceTests
         await _sut.SearchAsync(model);
 
         // Assert
-        _loggerMock.Verify(logger => logger.Log(
+        _loggerMock.Verify(logger =>
+            logger.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("[MATCH_COMPLETED]") &&
-                                              v.ToString()!.Contains("MatchStatus: Match") &&
-                                              v.ToString()!.Contains("AgeGroup: 16-18 years") &&
-                                              v.ToString()!.Contains("Gender: male") &&
-                                              v.ToString()!.Contains("Postcode: TQ12 5HH")),
+                It.Is<It.IsAnyType>(
+                    (v, t) =>
+                        v.ToString()!.Contains("[MATCH_COMPLETED]")
+                        && v.ToString()!.Contains("MatchStatus: Match")
+                        && v.ToString()!.Contains("AgeGroup: 16-18 years")
+                        && v.ToString()!.Contains("Gender: male")
+                        && v.ToString()!.Contains("Postcode: TQ12 5HH")
+                ),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()));
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+            )
+        );
     }
 
     [Fact]
@@ -340,30 +364,35 @@ public sealed class MatchingServiceTests
         var logMessages = new List<string>();
         var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddConsole(options => options.FormatterName = SharedConstants.LogFormatter)
-                .AddConsoleFormatter<TestLogConsoleFormatter, TestConsoleFormatterOptions>(options =>
-                {
-                    options.TestLogMessages = logMessages;
-                });
+            builder
+                .AddConsole(options => options.FormatterName = SharedConstants.LogFormatter)
+                .AddConsoleFormatter<TestLogConsoleFormatter, TestConsoleFormatterOptions>(
+                    options =>
+                    {
+                        options.TestLogMessages = logMessages;
+                    }
+                );
         });
 
         var logger = loggerFactory.CreateLogger<MatchingService>();
-        _sut = new MatchingService(logger, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+        _sut = new MatchingService(
+            logger,
+            _nhsFhirClient.Object,
+            _validationService,
+            _auditLogger.Object
+        );
 
         var model = new SearchSpecification
         {
             BirthDate = new DateOnly(1970, 1, 1),
             Family = "Smith",
             Given = "John",
-            StrategyVersion = 3
+            StrategyVersion = 3,
         };
 
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Matched,
-                Score = 1
-            });
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.Matched, Score = 1 });
 
         using var activity = new Activity("TestActivity");
         activity.Start();
@@ -379,11 +408,9 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task MultipleMatchesNoLogic()
     {
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.MultiMatched
-            });
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.MultiMatched });
 
         var model = new PersonSpecificationForNoLogic
         {
@@ -405,11 +432,9 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task NoMatchNoLogic()
     {
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Unmatched
-            });
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.Unmatched });
 
         var model = new PersonSpecificationForNoLogic
         {
@@ -432,12 +457,11 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task SingleConfirmedMatchNoLogic()
     {
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Matched,
-                Score = 0.99m
-            });
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(
+                new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.99m }
+            );
 
         var model = new PersonSpecificationForNoLogic
         {
@@ -466,18 +490,21 @@ public sealed class MatchingServiceTests
         var model = new SearchSpecification
         {
             AddressPostalCode = "TQ12 5HH",
-            BirthDate = new DateOnly(eighteenYearsAgo.Year, eighteenYearsAgo.Month, eighteenYearsAgo.Day),
+            BirthDate = new DateOnly(
+                eighteenYearsAgo.Year,
+                eighteenYearsAgo.Month,
+                eighteenYearsAgo.Day
+            ),
             Family = "Smith",
             Given = "John",
-            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy2
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy2,
         };
 
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
-            .ReturnsAsync(new SearchResult
-            {
-                Type = SearchResult.ResultType.Matched,
-                Score = 0.99m
-            });
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(
+                new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.99m }
+            );
 
         using var activity = new Activity("TestActivity");
         activity.Start();
@@ -486,9 +513,13 @@ public sealed class MatchingServiceTests
         await _sut.SearchAsync(model);
 
         // Assert
-        _nhsFhirClient.Verify(x => x.PerformSearch(It.Is<SearchQuery>(q =>
-            (q.FuzzyMatch == null || q.FuzzyMatch == false) && q.ExactMatch == false)));
-
+        _nhsFhirClient.Verify(x =>
+            x.PerformSearch(
+                It.Is<SearchQuery>(q =>
+                    (q.FuzzyMatch == null || q.FuzzyMatch == false) && q.ExactMatch == false
+                )
+            )
+        );
     }
 
     [Fact]
@@ -497,7 +528,8 @@ public sealed class MatchingServiceTests
         // This is an introduced feature so we can test if better results do appear even after the first one match is found.
         // Arrange
         var callCount = 0;
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(() =>
             {
                 callCount++;
@@ -507,7 +539,7 @@ public sealed class MatchingServiceTests
                     2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.97m },
                     3 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.98m },
                     4 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.84m },
-                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched } // Everything else returns unmatched
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched }, // Everything else returns unmatched
                 };
             });
 
@@ -517,7 +549,7 @@ public sealed class MatchingServiceTests
             Family = "Smith",
             Given = "John",
             SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy4,
-            StrategyVersion = 2 // Contains 5 queries
+            StrategyVersion = 2, // Contains 5 queries
         };
 
         // Act
@@ -533,15 +565,26 @@ public sealed class MatchingServiceTests
     {
         // Arrange
         var callCount = 0;
-        _nhsFhirClient.Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(() =>
             {
                 callCount++;
                 return callCount switch
                 {
-                    1 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.95m, NhsNumber = "123" },
-                    2 => new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.96m, NhsNumber = "456" },
-                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched }
+                    1 => new SearchResult
+                    {
+                        Type = SearchResult.ResultType.Matched,
+                        Score = 0.95m,
+                        NhsNumber = "123",
+                    },
+                    2 => new SearchResult
+                    {
+                        Type = SearchResult.ResultType.Matched,
+                        Score = 0.96m,
+                        NhsNumber = "456",
+                    },
+                    _ => new SearchResult { Type = SearchResult.ResultType.Unmatched },
                 };
             });
 
@@ -549,7 +592,7 @@ public sealed class MatchingServiceTests
         {
             BirthDate = new DateOnly(2000, 11, 16),
             Family = "Smith",
-            Given = "John"
+            Given = "John",
         };
 
         // Act

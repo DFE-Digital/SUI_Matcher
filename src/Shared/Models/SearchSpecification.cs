@@ -5,7 +5,10 @@ public class SearchSpecification : PersonSpecification
     public string SearchStrategy
     {
         get;
-        init => field = string.IsNullOrEmpty(value) ? SharedConstants.SearchStrategy.Strategies.Strategy1 : value;
+        init =>
+            field = string.IsNullOrEmpty(value)
+                ? SharedConstants.SearchStrategy.Strategies.Strategy1
+                : value;
     } = SharedConstants.SearchStrategy.Strategies.Strategy1;
 
     public int? StrategyVersion { get; set; }

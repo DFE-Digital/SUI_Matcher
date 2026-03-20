@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -10,11 +9,13 @@ public static class HostBuilderExtensions
 {
     public static IHostBuilder ConfigureAppSettingsJsonFile(this IHostBuilder builder)
     {
-        return builder.ConfigureAppConfiguration((hostingContext, config) =>
-        {
-            config.SetBasePath(AppContext.BaseDirectory);
-            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-            config.AddEnvironmentVariables();
-        });
+        return builder.ConfigureAppConfiguration(
+            (hostingContext, config) =>
+            {
+                config.SetBasePath(AppContext.BaseDirectory);
+                config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                config.AddEnvironmentVariables();
+            }
+        );
     }
 }

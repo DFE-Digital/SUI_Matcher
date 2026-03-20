@@ -13,5 +13,5 @@ public enum Status
     Success,
     InvalidNhsNumber,
     PatientNotFound,
-    Error
+    Error,
 }

@@ -1,15 +1,17 @@
 ﻿using Microsoft.Extensions.Logging;
-
 using Xunit.Abstractions;
 
 namespace Unit.Tests.Util;
 
-public class TestContextLoggerProvider(ITestOutputHelper testContext, List<string>? logMessages = null)
-    : ILoggerProvider
+public class TestContextLoggerProvider(
+    ITestOutputHelper testContext,
+    List<string>? logMessages = null
+) : ILoggerProvider
 {
     private readonly List<string> _logMessages = logMessages ?? new();
 
-    public ILogger CreateLogger(string categoryName) => new TestContextLogger(testContext, categoryName, _logMessages);
+    public ILogger CreateLogger(string categoryName) =>
+        new TestContextLogger(testContext, categoryName, _logMessages);
 
     public void Dispose()
     {
@@ -22,7 +24,11 @@ public class TestContextLoggerProvider(ITestOutputHelper testContext, List<strin
         private readonly string _categoryName;
         private readonly List<string> _logMessages;
 
-        public TestContextLogger(ITestOutputHelper testContext, string categoryName, List<string>? logMessages = null)
+        public TestContextLogger(
+            ITestOutputHelper testContext,
+            string categoryName,
+            List<string>? logMessages = null
+        )
         {
             _testContext = testContext;
             _categoryName = categoryName;
@@ -33,7 +39,13 @@ public class TestContextLoggerProvider(ITestOutputHelper testContext, List<strin
 
         public bool IsEnabled(LogLevel logLevel) => true;
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter
+        )
         {
             _testContext.WriteLine($"[{logLevel}] {_categoryName}: {formatter(state, exception)}");
 

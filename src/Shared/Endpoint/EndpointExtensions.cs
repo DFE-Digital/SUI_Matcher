@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -12,15 +10,21 @@ namespace Shared.Endpoint;
 /// <summary>
 /// Ref: https://github.com/m-jovanovic/minimal-endpoints/blob/main/MinimalEndpoints/Extensions/EndpointExtensions.cs
 /// </summary>
-[ExcludeFromCodeCoverage(Justification = "This is a extension class for registering and mapping endpoints.")]
+[ExcludeFromCodeCoverage(
+    Justification = "This is a extension class for registering and mapping endpoints."
+)]
 public static class EndpointExtensions
 {
-    public static IServiceCollection AddEndpoints(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddEndpoints(
+        this IServiceCollection services,
+        Assembly assembly
+    )
     {
         ServiceDescriptor[] serviceDescriptors = assembly
-            .DefinedTypes
-            .Where(type => type is { IsAbstract: false, IsInterface: false } &&
-                           type.IsAssignableTo(typeof(IEndpoint)))
+            .DefinedTypes.Where(type =>
+                type is { IsAbstract: false, IsInterface: false }
+                && type.IsAssignableTo(typeof(IEndpoint))
+            )
             .Select(type => ServiceDescriptor.Transient(typeof(IEndpoint), type))
             .ToArray();
 
@@ -29,9 +33,14 @@ public static class EndpointExtensions
         return services;
     }
 
-    public static IApplicationBuilder MapEndpoints(this WebApplication app, RouteGroupBuilder? routeGroupBuilder = null)
+    public static IApplicationBuilder MapEndpoints(
+        this WebApplication app,
+        RouteGroupBuilder? routeGroupBuilder = null
+    )
     {
-        IEnumerable<IEndpoint> endpoints = app.Services.GetRequiredService<IEnumerable<IEndpoint>>();
+        IEnumerable<IEndpoint> endpoints = app.Services.GetRequiredService<
+            IEnumerable<IEndpoint>
+        >();
 
         IEndpointRouteBuilder builder = routeGroupBuilder is null ? app : routeGroupBuilder;
 

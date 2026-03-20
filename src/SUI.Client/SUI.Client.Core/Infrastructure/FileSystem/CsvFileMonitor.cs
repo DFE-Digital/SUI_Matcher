@@ -1,14 +1,14 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
 using Shared.Util;
 
 namespace SUI.Client.Core.Infrastructure.FileSystem;
 
-[ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
+[ExcludeFromCodeCoverage(
+    Justification = "Uses real file system events, not mockable and permissions dependent"
+)]
 public class CsvFileMonitor : IDisposable
 {
     private readonly CsvWatcherConfig _config;
@@ -24,11 +24,16 @@ public class CsvFileMonitor : IDisposable
 
     public FileProcessedEnvelope? LastOperation { get; private set; }
 
-    public FileProcessedEnvelope GetLastOperation() => LastOperation ?? throw new InvalidOperationException("LastOperation is null");
+    public FileProcessedEnvelope GetLastOperation() =>
+        LastOperation ?? throw new InvalidOperationException("LastOperation is null");
 
     public ProcessCsvFileResult LastResult() => GetLastOperation().AssertSuccess();
 
-    public CsvFileMonitor(IOptions<CsvWatcherConfig> config, ILogger<CsvFileMonitor> logger, ICsvFileProcessor fileProcessor)
+    public CsvFileMonitor(
+        IOptions<CsvWatcherConfig> config,
+        ILogger<CsvFileMonitor> logger,
+        ICsvFileProcessor fileProcessor
+    )
     {
         _config = config.Value;
         _logger = logger;
@@ -69,33 +74,55 @@ public class CsvFileMonitor : IDisposable
                 try
                 {
                     var processCsvFileResult = await ProcessFileAsync(filePath);
-                    await RetryUtil.RetryAsync(() =>
-                    {
-                        string destPath = Path.Combine(processCsvFileResult.OutputDirectory, Path.GetFileName(filePath));
-                        File.Move(filePath, destPath);
-                        _logger.LogInformation("File moved to Processed directory: {DestPath}", destPath);
-                        Interlocked.Increment(ref _processedCount);
-                        return Task.CompletedTask;
-                    }, _config.RetryCount, _config.RetryDelayMs, _logger);
+                    await RetryUtil.RetryAsync(
+                        () =>
+                        {
+                            string destPath = Path.Combine(
+                                processCsvFileResult.OutputDirectory,
+                                Path.GetFileName(filePath)
+                            );
+                            File.Move(filePath, destPath);
+                            _logger.LogInformation(
+                                "File moved to Processed directory: {DestPath}",
+                                destPath
+                            );
+                            Interlocked.Increment(ref _processedCount);
+                            return Task.CompletedTask;
+                        },
+                        _config.RetryCount,
+                        _config.RetryDelayMs,
+                        _logger
+                    );
 
-                    LastOperation = new FileProcessedEnvelope(filePath, result: processCsvFileResult);
+                    LastOperation = new FileProcessedEnvelope(
+                        filePath,
+                        result: processCsvFileResult
+                    );
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogInformation(ex, "Error processing file {FilePath}: {Message}", filePath, ex.Message);
+                    _logger.LogInformation(
+                        ex,
+                        "Error processing file {FilePath}: {Message}",
+                        filePath,
+                        ex.Message
+                    );
                     Interlocked.Increment(ref _errorCount);
                     LastOperation = new FileProcessedEnvelope(filePath, exception: ex);
                 }
 
-                _logger.LogInformation("Finished processing file: {FileName}", Path.GetFileName(filePath));
+                _logger.LogInformation(
+                    "Finished processing file: {FileName}",
+                    Path.GetFileName(filePath)
+                );
                 Processed?.Invoke(this, LastOperation);
             }
             await Task.Delay(_config.ProcessingDelayMs, cancellationToken);
         }
     }
 
-    private async Task<ProcessCsvFileResult> ProcessFileAsync(string filePath)
-        => await _fileProcessor.ProcessCsvFileAsync(filePath, _config.ProcessedDirectory);
+    private async Task<ProcessCsvFileResult> ProcessFileAsync(string filePath) =>
+        await _fileProcessor.ProcessCsvFileAsync(filePath, _config.ProcessedDirectory);
 
     public void PrintStats(TextWriter output)
     {

@@ -1,15 +1,11 @@
 ﻿using System.Diagnostics;
-
 using MatchingApi.Search;
-
 using Newtonsoft.Json;
-
 using Shared;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
 using Shared.Util;
-
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace MatchingApi.Services;
@@ -18,53 +14,76 @@ public class MatchingService(
     ILogger<MatchingService> logger,
     INhsFhirClient nhsFhirClient,
     IValidationService validationService,
-    IAuditLogger auditLogger) : IMatchingService
+    IAuditLogger auditLogger
+) : IMatchingService
 {
-    public async Task<PersonMatchResponse> SearchAsync(SearchSpecification searchSpecification, bool logMatch = true)
+    public async Task<PersonMatchResponse> SearchAsync(
+        SearchSpecification searchSpecification,
+        bool logMatch = true
+    )
     {
         var searchId = HashUtil.StoreUniqueSearchIdFor(searchSpecification);
-        var searchStrategy = SearchStrategyFactory.Get(searchSpecification.SearchStrategy, searchSpecification.StrategyVersion);
-        StoreAlgorithmVersion(searchStrategy.GetAlgorithmVersion(), searchSpecification.SearchStrategy);
+        var searchStrategy = SearchStrategyFactory.Get(
+            searchSpecification.SearchStrategy,
+            searchSpecification.StrategyVersion
+        );
+        StoreAlgorithmVersion(
+            searchStrategy.GetAlgorithmVersion(),
+            searchSpecification.SearchStrategy
+        );
 
-        var auditDetails = new Dictionary<string, string>
-        {
-            { "SearchId", searchId }
-        };
-        await auditLogger.LogAsync(new AuditLogEntry(AuditLogEntry.AuditLogAction.Match, auditDetails));
+        var auditDetails = new Dictionary<string, string> { { "SearchId", searchId } };
+        await auditLogger.LogAsync(
+            new AuditLogEntry(AuditLogEntry.AuditLogAction.Match, auditDetails)
+        );
 
         var validationResults = validationService.Validate(searchSpecification);
 
-        var dataQualityResult = DataQualityEvaluatorService.ToQualityResult(searchSpecification, validationResults.Results!.ToList());
+        var dataQualityResult = DataQualityEvaluatorService.ToQualityResult(
+            searchSpecification,
+            validationResults.Results!.ToList()
+        );
 
         if (!HasMinDataRequirements(dataQualityResult))
         {
-            logger.LogInformation("Person data validation resulted in: {QualityResult}",
-                JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
+            logger.LogInformation(
+                "Person data validation resulted in: {QualityResult}",
+                JsonConvert.SerializeObject(dataQualityResult.ToDictionary())
+            );
 
-            logger.LogError("The minimized data requirements for a search weren't met, returning match status 'Error'");
+            logger.LogError(
+                "The minimized data requirements for a search weren't met, returning match status 'Error'"
+            );
 
             return new PersonMatchResponse
             {
-                Result = new MatchResult { MatchStatus = MatchStatus.Error, },
-                DataQuality = dataQualityResult
+                Result = new MatchResult { MatchStatus = MatchStatus.Error },
+                DataQuality = dataQualityResult,
             };
         }
 
         var result = await MatchAsync(searchSpecification, searchStrategy);
         if (logMatch)
         {
-            LogMatchCompletion(searchSpecification, result.Status, dataQualityResult, result.Score ?? 0,
-                result.ProcessStage);
+            LogMatchCompletion(
+                searchSpecification,
+                result.Status,
+                dataQualityResult,
+                result.Score ?? 0,
+                result.ProcessStage
+            );
         }
 
-        logger.LogInformation("The person match request resulted in match status '{Status}' " +
-                              "and confidence score '{Score}' " +
-                              "at process stage ({ProcessStage}), and the data quality was " +
-                              "{QualityResult}",
+        logger.LogInformation(
+            "The person match request resulted in match status '{Status}' "
+                + "and confidence score '{Score}' "
+                + "at process stage ({ProcessStage}), and the data quality was "
+                + "{QualityResult}",
             result.Status.ToString(),
             result.Score ?? 0,
             result.ProcessStage,
-            JsonConvert.SerializeObject(dataQualityResult.ToDictionary()));
+            JsonConvert.SerializeObject(dataQualityResult.ToDictionary())
+        );
 
         return new PersonMatchResponse
         {
@@ -75,11 +94,13 @@ public class MatchingService(
                 NhsNumber = result.Result?.NhsNumber,
                 ProcessStage = result.ProcessStage,
             },
-            DataQuality = dataQualityResult
+            DataQuality = dataQualityResult,
         };
     }
 
-    public async Task<PersonMatchResponse> SearchNoLogicAsync(PersonSpecificationForNoLogic personSpecification)
+    public async Task<PersonMatchResponse> SearchNoLogicAsync(
+        PersonSpecificationForNoLogic personSpecification
+    )
     {
         var result = await MatchNoLogicAsync(personSpecification);
         return new PersonMatchResponse
@@ -97,13 +118,19 @@ public class MatchingService(
     {
         Activity.Current?.SetBaggage("AlgorithmVersion", versionNumber.ToString());
         Activity.Current?.SetBaggage(SharedConstants.SearchStrategy.LogName, searchStrategy);
-        logger.LogInformation("StoreAlgorithmVersion: Version: {Version}, Strategy {Strategy}", versionNumber, searchStrategy);
+        logger.LogInformation(
+            "StoreAlgorithmVersion: Version: {Version}, Strategy {Strategy}",
+            versionNumber,
+            searchStrategy
+        );
     }
 
     public async Task<DemographicResponse?> GetDemographicsAsync(DemographicRequest request)
     {
         logger.LogInformation("Searching for matching person by NHS number");
-        await auditLogger.LogAsync(new AuditLogEntry(AuditLogEntry.AuditLogAction.Demographic, null));
+        await auditLogger.LogAsync(
+            new AuditLogEntry(AuditLogEntry.AuditLogAction.Demographic, null)
+        );
 
         var validationResults = validationService.Validate(request);
 
@@ -111,7 +138,7 @@ public class MatchingService(
         {
             return new DemographicResponse
             {
-                Errors = validationResults.Results.Select(r => r.ErrorMessage ?? "").ToList()
+                Errors = validationResults.Results.Select(r => r.ErrorMessage ?? "").ToList(),
             };
         }
 
@@ -119,18 +146,17 @@ public class MatchingService(
         return new DemographicResponse()
         {
             Result = result.Result,
-            Errors = result.ErrorMessage is null ? [] : [result.ErrorMessage]
+            Errors = result.ErrorMessage is null ? [] : [result.ErrorMessage],
         };
     }
-
-
 
     private void LogMatchCompletion(
         PersonSpecification personSpecification,
         MatchStatus matchStatus,
         DataQualityResult dataQualityResult,
         decimal score,
-        string? resultProcessStage)
+        string? resultProcessStage
+    )
     {
         var ageGroup = personSpecification.BirthDate.HasValue
             ? PersonSpecificationUtils.GetAgeGroup(personSpecification.BirthDate.Value)
@@ -151,12 +177,12 @@ public class MatchingService(
 
     private static bool HasMinDataRequirements(DataQualityResult dataQualityResult)
     {
-        return dataQualityResult is
-        {
-            Given: QualityType.Valid,
-            Family: QualityType.Valid,
-            BirthDate: QualityType.Valid
-        };
+        return dataQualityResult
+            is {
+                Given: QualityType.Valid,
+                Family: QualityType.Valid,
+                BirthDate: QualityType.Valid
+            };
     }
 
     private async Task<MatchResult2> MatchNoLogicAsync(PersonSpecificationForNoLogic model)
@@ -178,7 +204,7 @@ public class MatchingService(
             Phone = model.Phone,
             Birthdate = model.RawBirthDate,
             FuzzyMatch = model.FuzzyMatch,
-            ExactMatch = model.ExactMatch
+            ExactMatch = model.ExactMatch,
         };
 
         var matchStatus = MatchStatus.Error;
@@ -191,7 +217,10 @@ public class MatchingService(
 
         logger.LogInformation(
             "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
-            "SimpleQuery", searchResult.Type, searchResult.Score);
+            "SimpleQuery",
+            searchResult.Type,
+            searchResult.Score
+        );
 
         switch (searchResult.Type)
         {
@@ -206,7 +235,12 @@ public class MatchingService(
                 break;
         }
 
-        return new MatchResult2(searchResult, matchStatus, searchResult.Score.GetValueOrDefault(), String.Empty);
+        return new MatchResult2(
+            searchResult,
+            matchStatus,
+            searchResult.Score.GetValueOrDefault(),
+            String.Empty
+        );
     }
 
     private async Task<MatchResult2> MatchAsync(SearchSpecification model, ISearchStrategy strategy)
@@ -221,7 +255,10 @@ public class MatchingService(
             var queryCode = queryEntry.Key;
             var query = queryEntry.Value;
 
-            logger.LogInformation("Performing search query ({Query}) against Nhs Fhir API", queryCode);
+            logger.LogInformation(
+                "Performing search query ({Query}) against Nhs Fhir API",
+                queryCode
+            );
 
             var searchResult = await nhsFhirClient.PerformSearch(query);
             if (searchResult != null)
@@ -231,30 +268,54 @@ public class MatchingService(
                     var score = searchResult.Score.GetValueOrDefault();
                     var status = GetMatchStatusFromScore(score);
 
-                    bestQueryResult = UpdateSingleMatchBestQueryResult(searchResult, bestQueryResult, queryCode, score, status);
+                    bestQueryResult = UpdateSingleMatchBestQueryResult(
+                        searchResult,
+                        bestQueryResult,
+                        queryCode,
+                        score,
+                        status
+                    );
 
                     if (score >= 0.95m)
                     {
                         if (firstMatchedQueryResult == null)
                         {
-                            firstMatchedQueryResult = new MatchResult2(searchResult, status, score, queryCode);
+                            firstMatchedQueryResult = new MatchResult2(
+                                searchResult,
+                                status,
+                                score,
+                                queryCode
+                            );
                         }
                         else // Multiple high confidence matches found
                         {
                             // we need to check if the NHS number is the same as the first match to determine if this is a logical multi match or not
-                            var nhsNumberIsDifferent = searchResult.NhsNumber != firstMatchedQueryResult.Result?.NhsNumber;
-                            LogLogicalMultiMatch(queryCode, searchResult.Score, firstMatchedQueryResult.Score, nhsNumberIsDifferent);
+                            var nhsNumberIsDifferent =
+                                searchResult.NhsNumber != firstMatchedQueryResult.Result?.NhsNumber;
+                            LogLogicalMultiMatch(
+                                queryCode,
+                                searchResult.Score,
+                                firstMatchedQueryResult.Score,
+                                nhsNumberIsDifferent
+                            );
 
                             if (nhsNumberIsDifferent)
                             {
                                 // Taking the latest match result as we do not support returning many. Logs can determine other details.
-                                logicalManyMatch = new MatchResult2(MatchStatus.ManyMatch, queryCode);
+                                logicalManyMatch = new MatchResult2(
+                                    MatchStatus.ManyMatch,
+                                    queryCode
+                                );
                             }
                         }
                     }
                 }
 
-                bestQueryResult = UpdateMultipleMatchBestQueryResult(searchResult, bestQueryResult, queryCode);
+                bestQueryResult = UpdateMultipleMatchBestQueryResult(
+                    searchResult,
+                    bestQueryResult,
+                    queryCode
+                );
             }
         }
 
@@ -269,16 +330,28 @@ public class MatchingService(
         {
             logger.LogInformation(
                 "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
-                firstMatchedQueryResult.ProcessStage, firstMatchedQueryResult.Status.ToString(), firstMatchedQueryResult.Score);
+                firstMatchedQueryResult.ProcessStage,
+                firstMatchedQueryResult.Status.ToString(),
+                firstMatchedQueryResult.Score
+            );
             return firstMatchedQueryResult;
         }
 
         // Next best match that is not a 'Match'
         if (bestQueryResult.CurrentSearchResult != null)
         {
-            logger.LogInformation("Search query ({Query}) resulted in status '{Status}'", bestQueryResult.CurrentQueryCode, bestQueryResult.CurrentStatus);
+            logger.LogInformation(
+                "Search query ({Query}) resulted in status '{Status}'",
+                bestQueryResult.CurrentQueryCode,
+                bestQueryResult.CurrentStatus
+            );
 
-            return new MatchResult2(bestQueryResult.CurrentSearchResult, bestQueryResult.CurrentStatus, bestQueryResult.CurrentScore, bestQueryResult.CurrentQueryCode);
+            return new MatchResult2(
+                bestQueryResult.CurrentSearchResult,
+                bestQueryResult.CurrentStatus,
+                bestQueryResult.CurrentScore,
+                bestQueryResult.CurrentQueryCode
+            );
         }
 
         logger.LogInformation("Search algorithm resulted in status 'NoMatch'");
@@ -286,16 +359,29 @@ public class MatchingService(
         return new MatchResult2(MatchStatus.NoMatch);
     }
 
-    private void LogLogicalMultiMatch(string queryCode, decimal? currentScore, decimal? firstMatchScore, bool nhsNumberIsDifferent)
+    private void LogLogicalMultiMatch(
+        string queryCode,
+        decimal? currentScore,
+        decimal? firstMatchScore,
+        bool nhsNumberIsDifferent
+    )
     {
-        logger.LogInformation("[MatchedQueryResult] queryCode: {QueryCode} NhsNumberIsDifferent: {NhsNumberDiff} and first match score: {FirstScore} and current score: {CurrentScore}",
+        logger.LogInformation(
+            "[MatchedQueryResult] queryCode: {QueryCode} NhsNumberIsDifferent: {NhsNumberDiff} and first match score: {FirstScore} and current score: {CurrentScore}",
             queryCode,
             nhsNumberIsDifferent,
             firstMatchScore,
-            currentScore);
+            currentScore
+        );
     }
 
-    private static BestQueryResult UpdateSingleMatchBestQueryResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode, decimal score, MatchStatus status)
+    private static BestQueryResult UpdateSingleMatchBestQueryResult(
+        SearchResult searchResult,
+        BestQueryResult bestQueryResult,
+        string queryCode,
+        decimal score,
+        MatchStatus status
+    )
     {
         if (score > bestQueryResult.CurrentScore)
         {
@@ -304,26 +390,36 @@ public class MatchingService(
                 CurrentQueryCode = queryCode,
                 CurrentScore = score,
                 CurrentStatus = status,
-                CurrentSearchResult = searchResult
+                CurrentSearchResult = searchResult,
             };
         }
 
         return bestQueryResult;
     }
 
-    private BestQueryResult UpdateMultipleMatchBestQueryResult(SearchResult searchResult, BestQueryResult bestQueryResult, string queryCode)
+    private BestQueryResult UpdateMultipleMatchBestQueryResult(
+        SearchResult searchResult,
+        BestQueryResult bestQueryResult,
+        string queryCode
+    )
     {
         if (searchResult.Type == SearchResult.ResultType.MultiMatched)
         {
-            logger.LogInformation("Search query ({Query}) resulted in status 'ManyMatch'", queryCode);
+            logger.LogInformation(
+                "Search query ({Query}) resulted in status 'ManyMatch'",
+                queryCode
+            );
 
-            if (bestQueryResult.CurrentScore == 0 && (int)MatchStatus.ManyMatch <= (int)bestQueryResult.CurrentStatus)
+            if (
+                bestQueryResult.CurrentScore == 0
+                && (int)MatchStatus.ManyMatch <= (int)bestQueryResult.CurrentStatus
+            )
             {
                 return bestQueryResult with
                 {
                     CurrentStatus = MatchStatus.ManyMatch,
                     CurrentQueryCode = queryCode,
-                    CurrentSearchResult = searchResult
+                    CurrentSearchResult = searchResult,
                 };
             }
         }
@@ -339,14 +435,14 @@ public class MatchingService(
             case >= 0.85m:
                 return MatchStatus.PotentialMatch;
             default:
+            {
+                if (score != 0 && score < 0.85m)
                 {
-                    if (score != 0 && score < 0.85m)
-                    {
-                        return MatchStatus.LowConfidenceMatch;
-                    }
-
-                    return MatchStatus.NoMatch;
+                    return MatchStatus.LowConfidenceMatch;
                 }
+
+                return MatchStatus.NoMatch;
+            }
         }
     }
 

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -8,7 +7,9 @@ namespace SUI.DBS.Response.Logger.Core.Watcher;
 /// <summary>
 /// Wrapper for FileSystemWatcher
 /// </summary>
-[ExcludeFromCodeCoverage(Justification = "Uses real file system events, not mockable and permissions dependent")]
+[ExcludeFromCodeCoverage(
+    Justification = "Uses real file system events, not mockable and permissions dependent"
+)]
 public sealed class TxtFileWatcherService : IDisposable
 {
     private readonly FileSystemWatcher _watcher;
@@ -25,7 +26,7 @@ public sealed class TxtFileWatcherService : IDisposable
         Directory.CreateDirectory(config1.IncomingDirectory);
         _watcher = new FileSystemWatcher(config1.IncomingDirectory, "*.txt")
         {
-            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
         };
 
         _watcher.Created += OnCreated;
