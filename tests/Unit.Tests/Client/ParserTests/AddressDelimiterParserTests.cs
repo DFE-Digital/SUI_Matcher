@@ -1,6 +1,5 @@
 using Shared.Models;
-
-using SUI.Client.Core.Infrastructure.Parsing;
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 namespace Unit.Tests.Client.ParserTests;
 
@@ -21,7 +20,11 @@ public class AddressDelimiterParserTests
     [Theory]
     [InlineData("1~12A Bob Lane~Somewhere~YO1 6GA", "12A", "YO16GA")]
     [InlineData("1~  99  Bob Lane~Somewhere~yo1 6ga", "99", "YO16GA")]
-    public void ParseRecord_HandlesSpacingAndCasing(string historyString, string expectedHouse, string expectedPostcode)
+    public void ParseRecord_HandlesSpacingAndCasing(
+        string historyString,
+        string expectedHouse,
+        string expectedPostcode
+    )
     {
         var result = AddressParser.ParseRecord(historyString);
 
@@ -56,7 +59,11 @@ public class AddressDelimiterParserTests
     [Theory]
     [InlineData("1~2~bob lane~York~YO1 6GA", "2", null)]
     [InlineData("1~2-4~bob lane~York~YO1 6GA", "2-4", null)]
-    public void ParseRecord_ReturnsCorrectDataInAddressLines(string historyString, string expectedLineOne, string? expectedLineTwo)
+    public void ParseRecord_ReturnsCorrectDataInAddressLines(
+        string historyString,
+        string expectedLineOne,
+        string? expectedLineTwo
+    )
     {
         var result = AddressParser.ParseRecord(historyString);
 
@@ -80,7 +87,8 @@ public class AddressDelimiterParserTests
     public void ParseHistory_ParsesMultipleRecords_DelimitedByPipe()
     {
         const string primaryPostcode = "YO2 7GB";
-        const string historyString = "1~2 bob lane~Somewhere~YO1 6GA|2~3 alice road~Elsewhere~YO2 7GB";
+        const string historyString =
+            "1~2 bob lane~Somewhere~YO1 6GA|2~3 alice road~Elsewhere~YO2 7GB";
 
         var result = AddressParser.ParseHistory(historyString, primaryPostcode);
 
@@ -96,7 +104,11 @@ public class AddressDelimiterParserTests
     [InlineData("YO1 6GA", "1~2 bob lane~Somewhere~YO1 6GA|", 1)] // trailing pipe should be ignored
     [InlineData("YO1 6GA", "|1~2 bob lane~Somewhere~YO1 6GA", 1)] // leading pipe should be ignored
     [InlineData("YO1 6GA", "1~2 bob lane~Somewhere~YO1 6GA||2~3 alice road~Elsewhere~YO2 7GB", 2)] // empty record between pipes should be ignored
-    public void ParseHistory_IgnoresEmptyRecords(string primaryPostcode, string historyString, int expectedCount)
+    public void ParseHistory_IgnoresEmptyRecords(
+        string primaryPostcode,
+        string historyString,
+        int expectedCount
+    )
     {
         var result = AddressParser.ParseHistory(historyString, primaryPostcode);
 
@@ -105,9 +117,24 @@ public class AddressDelimiterParserTests
     }
 
     [Theory]
-    [InlineData("YO27GB", "1~2 bob lane~Somewhere~YO1 6GA|2~3 alice road~Elsewhere~YO2 7GB", "3", "YO27GB")]
-    [InlineData("YO27GB", "|2~alice road~Elsewhere~YO2 7GB|1~2 bob lane~Somewhere~YO1 6GA|2~3~alice road~Elsewhere~YO2 7GB", "3", "YO27GB")]
-    public void ParseHistory_PrimaryAddressIsLastEntryWithMatchingPostcode(string primaryPostcode, string historyString, string expectedHouseNumber, string expectedPostcode)
+    [InlineData(
+        "YO27GB",
+        "1~2 bob lane~Somewhere~YO1 6GA|2~3 alice road~Elsewhere~YO2 7GB",
+        "3",
+        "YO27GB"
+    )]
+    [InlineData(
+        "YO27GB",
+        "|2~alice road~Elsewhere~YO2 7GB|1~2 bob lane~Somewhere~YO1 6GA|2~3~alice road~Elsewhere~YO2 7GB",
+        "3",
+        "YO27GB"
+    )]
+    public void ParseHistory_PrimaryAddressIsLastEntryWithMatchingPostcode(
+        string primaryPostcode,
+        string historyString,
+        string expectedHouseNumber,
+        string expectedPostcode
+    )
     {
         var result = AddressParser.ParseHistory(historyString, primaryPostcode);
 
@@ -122,12 +149,13 @@ public class AddressDelimiterParserTests
     {
         // Arrange
         const string primaryPostcode = "YO2 7GB";
-        string[] history =
-        [
-            "1~2 bob lane~Somewhere~YO1 6GA",
-            "2~3 alice road~Elsewhere~YO2 7GB"
-        ];
-        var nhsPerson = new NhsPerson { AddressPostalCodes = [primaryPostcode], AddressHistory = history, NhsNumber = "1234567890" };
+        string[] history = ["1~2 bob lane~Somewhere~YO1 6GA", "2~3 alice road~Elsewhere~YO2 7GB"];
+        var nhsPerson = new NhsPerson
+        {
+            AddressPostalCodes = [primaryPostcode],
+            AddressHistory = history,
+            NhsNumber = "1234567890",
+        };
 
         var result = AddressParser.FromNhsPerson(nhsPerson);
 
