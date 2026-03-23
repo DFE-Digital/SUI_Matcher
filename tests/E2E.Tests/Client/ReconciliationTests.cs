@@ -32,13 +32,13 @@ public class ReconciliationTests(AppHostFixture fixture, TempDirectoryFixture te
             stats =>
             {
                 // Assert stats
-                var count = stats[nameof(ReconciliationCsvProcessStats.Count)];
+                var count = stats[nameof(ReconciliationProcessStats.Count)];
                 Assert.Equal(1, count);
                 Assert.Equal(
                     1,
-                    stats[nameof(ReconciliationCsvProcessStats.MatchingStatusLowConfidenceMatch)]
+                    stats[nameof(ReconciliationProcessStats.MatchingStatusLowConfidenceMatch)]
                 );
-                Assert.Equal(1, stats[nameof(ReconciliationCsvProcessStats.DifferencesCount)]); // Only diff is DOB
+                Assert.Equal(1, stats[nameof(ReconciliationProcessStats.DifferencesCount)]); // Only diff is DOB
             }
         );
     }

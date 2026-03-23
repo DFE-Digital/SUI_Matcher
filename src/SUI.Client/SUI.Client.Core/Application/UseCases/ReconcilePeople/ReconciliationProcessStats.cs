@@ -3,7 +3,7 @@ using SUI.Client.Core.Application.Interfaces;
 
 namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
-public class ReconciliationCsvProcessStats : IStats
+public class ReconciliationProcessStats : IStats
 {
     public int Count { get; set; }
     public int ErroredCount { get; set; }
@@ -74,7 +74,7 @@ public class ReconciliationCsvProcessStats : IStats
     private readonly Lazy<double> _primaryCMSAddressInPDSHistoryPercentage;
     private readonly Lazy<double> _primaryPDSAddressInCMSHistoryPercentage;
 
-    public ReconciliationCsvProcessStats()
+    public ReconciliationProcessStats()
     {
         _erroredPercentage = new Lazy<double>(() => ComputePercentage(ErroredCount));
         _noDifferencePercentage = new Lazy<double>(() => ComputePercentage(NoDifferenceCount));
