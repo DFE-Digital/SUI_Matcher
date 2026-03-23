@@ -20,7 +20,7 @@ public class ReconciliationCsvFileProcessor(
     IOptions<CsvWatcherConfig> watcherConfig
 ) : ICsvFileProcessor
 {
-    private readonly ReconciliationCsvProcessStats _stats = new();
+    private readonly ReconciliationProcessStats _stats = new();
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         WriteIndented = true,
@@ -52,7 +52,7 @@ public class ReconciliationCsvFileProcessor(
 
     private async Task ProcessRecord(
         Dictionary<string, string> record,
-        ReconciliationCsvProcessStats stats
+        ReconciliationProcessStats stats
     )
     {
         string gender = record

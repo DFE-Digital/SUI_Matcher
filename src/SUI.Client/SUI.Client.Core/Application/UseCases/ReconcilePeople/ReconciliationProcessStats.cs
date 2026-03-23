@@ -3,7 +3,7 @@ using SUI.Client.Core.Application.Interfaces;
 
 namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
-public class ReconciliationCsvProcessStats : IStats
+public class ReconciliationProcessStats : IStats
 {
     public int Count { get; set; }
     public int ErroredCount { get; set; }
@@ -74,7 +74,7 @@ public class ReconciliationCsvProcessStats : IStats
     private readonly Lazy<double> _primaryCMSAddressInPDSHistoryPercentage;
     private readonly Lazy<double> _primaryPDSAddressInCMSHistoryPercentage;
 
-    public ReconciliationCsvProcessStats()
+    public ReconciliationProcessStats()
     {
         _erroredPercentage = new Lazy<double>(() => ComputePercentage(ErroredCount));
         _noDifferencePercentage = new Lazy<double>(() => ComputePercentage(NoDifferenceCount));
@@ -196,6 +196,11 @@ public class ReconciliationCsvProcessStats : IStats
         string[] missingNhs
     )
     {
+        UpdateStatsInput input = new(
+            Differences: differences,
+            MissingLocal: missingLocal,
+            MissingNhs: missingNhs
+        );
         switch (status)
         {
             case ReconciliationStatus.NoDifferences:
@@ -203,9 +208,7 @@ public class ReconciliationCsvProcessStats : IStats
                 break;
             case ReconciliationStatus.Differences:
                 UpdateStatsForField(
-                    differences,
-                    missingLocal,
-                    missingNhs,
+                    input,
                     "BirthDate",
                     () => BirthDateDifferentCount++,
                     () => BirthDateNhsMissingCount++,
@@ -213,9 +216,7 @@ public class ReconciliationCsvProcessStats : IStats
                     () => BirthDateBothMissingCount++
                 );
                 UpdateStatsForField(
-                    differences,
-                    missingLocal,
-                    missingNhs,
+                    input,
                     "Email",
                     () => EmailDifferenceCount++,
                     () => EmailNhsMissingCount++,
@@ -223,9 +224,7 @@ public class ReconciliationCsvProcessStats : IStats
                     () => EmailBothMissingCount++
                 );
                 UpdateStatsForField(
-                    differences,
-                    missingLocal,
-                    missingNhs,
+                    input,
                     "Phone",
                     () => PhoneDifferenceCount++,
                     () => PhoneNhsMissingCount++,
@@ -233,9 +232,7 @@ public class ReconciliationCsvProcessStats : IStats
                     () => PhoneBothMissingCount++
                 );
                 UpdateStatsForField(
-                    differences,
-                    missingLocal,
-                    missingNhs,
+                    input,
                     "Given",
                     () => GivenNameDifferenceCount++,
                     () => GivenNameNhsMissingCount++,
@@ -243,9 +240,7 @@ public class ReconciliationCsvProcessStats : IStats
                     () => GivenNameBothMissingCount++
                 );
                 UpdateStatsForField(
-                    differences,
-                    missingLocal,
-                    missingNhs,
+                    input,
                     "Family",
                     () => FamilyNameDifferenceCount++,
                     () => FamilyNameNhsMissingCount++,
@@ -253,9 +248,7 @@ public class ReconciliationCsvProcessStats : IStats
                     () => FamilyNameBothMissingCount++
                 );
                 UpdateStatsForField(
-                    differences,
-                    missingLocal,
-                    missingNhs,
+                    input,
                     "AddressPostalCode",
                     () => PostCodeDifferenceCount++,
                     () => PostCodeNhsMissingCount++,
@@ -263,9 +256,7 @@ public class ReconciliationCsvProcessStats : IStats
                     () => PostCodeBothMissingCount++
                 );
                 UpdateStatsForField(
-                    differences,
-                    missingLocal,
-                    missingNhs,
+                    input,
                     "NhsNumber",
                     () => MatchingNhsNumberCount++,
                     () => MatchingNhsNumberNhsCount++,
@@ -332,10 +323,14 @@ public class ReconciliationCsvProcessStats : IStats
         }
     }
 
-    private void UpdateStatsForField(
-        string[] differences,
-        string[] missingLocal,
-        string[] missingNhs,
+    private sealed record UpdateStatsInput(
+        string[] Differences,
+        string[] MissingLocal,
+        string[] MissingNhs
+    );
+
+    private static void UpdateStatsForField(
+        UpdateStatsInput input,
         string fieldName,
         Action incrementPlain,
         Action incrementNhs,
@@ -343,9 +338,9 @@ public class ReconciliationCsvProcessStats : IStats
         Action incrementBoth
     )
     {
-        bool inDifferences = differences.Contains(fieldName);
-        bool inMissingLocal = missingLocal.Contains(fieldName);
-        bool inMissingNhs = missingNhs.Contains(fieldName);
+        bool inDifferences = input.Differences.Contains(fieldName);
+        bool inMissingLocal = input.MissingLocal.Contains(fieldName);
+        bool inMissingNhs = input.MissingNhs.Contains(fieldName);
 
         // // Field is missing in both systems
         if (inMissingLocal && inMissingNhs)

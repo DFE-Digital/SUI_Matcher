@@ -14,7 +14,7 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = [];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
+        var stats = new ReconciliationProcessStats();
         stats.RecordReconciliationStatusStats(
             ReconciliationStatus.Differences,
             differencesFields,
@@ -38,7 +38,7 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = [];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
+        var stats = new ReconciliationProcessStats();
         stats.RecordReconciliationStatusStats(
             ReconciliationStatus.Differences,
             differencesFields,
@@ -61,7 +61,7 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = ["Given"];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
+        var stats = new ReconciliationProcessStats();
         stats.RecordReconciliationStatusStats(
             ReconciliationStatus.Differences,
             differencesFields,
@@ -84,7 +84,7 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = ["Given"];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
+        var stats = new ReconciliationProcessStats();
         stats.RecordReconciliationStatusStats(
             ReconciliationStatus.Differences,
             differencesFields,
@@ -107,7 +107,7 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = ["Phone"];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
+        var stats = new ReconciliationProcessStats();
         stats.RecordReconciliationStatusStats(
             ReconciliationStatus.Differences,
             differencesFields,
