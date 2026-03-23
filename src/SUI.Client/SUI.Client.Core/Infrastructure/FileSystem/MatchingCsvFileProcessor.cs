@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Shared.Models;
 using Shared.Util;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.UseCases.MatchPeople;
 
 namespace SUI.Client.Core.Infrastructure.FileSystem;
 
@@ -18,7 +19,7 @@ public class MatchingCsvFileProcessor(
     IOptions<CsvWatcherConfig> watcherConfig
 ) : ICsvFileProcessor
 {
-    private readonly IStats _stats = new MatchingCsvProcessStats();
+    private readonly IStats _stats = new MatchingProcessStats();
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         WriteIndented = true,
@@ -70,7 +71,7 @@ public class MatchingCsvFileProcessor(
         record[HeaderScore] = response?.Result?.Score.ToString() ?? "-";
         record[HeaderNhsNo] = response?.Result?.NhsNumber ?? "-";
 
-        RecordStats((MatchingCsvProcessStats)stats, response);
+        RecordStats((MatchingProcessStats)stats, response);
     }
 
     private void AddExtraCsvHeaders(HashSet<string> headers)
@@ -181,7 +182,7 @@ public class MatchingCsvFileProcessor(
         return optionalFields;
     }
 
-    private static void RecordStats(MatchingCsvProcessStats stats, PersonMatchResponse? response)
+    private static void RecordStats(MatchingProcessStats stats, PersonMatchResponse? response)
     {
         stats.Count++;
         switch (response?.Result?.MatchStatus)

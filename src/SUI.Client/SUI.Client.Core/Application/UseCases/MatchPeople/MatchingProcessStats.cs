@@ -1,8 +1,8 @@
 using SUI.Client.Core.Application.Interfaces;
 
-namespace SUI.Client.Core.Infrastructure.FileSystem;
+namespace SUI.Client.Core.Application.UseCases.MatchPeople;
 
-public class MatchingCsvProcessStats : IStats
+public class MatchingProcessStats : IStats
 {
     public int Count { get; set; }
     public int ErroredCount { get; set; }
@@ -19,7 +19,7 @@ public class MatchingCsvProcessStats : IStats
     private readonly Lazy<double> _manyMatchPercentage;
     private readonly Lazy<double> _noMatchPercentage;
 
-    public MatchingCsvProcessStats()
+    public MatchingProcessStats()
     {
         _erroredPercentage = new Lazy<double>(() => ComputePercentage(ErroredCount));
         _matchedPercentage = new Lazy<double>(() => ComputePercentage(CountMatched));
