@@ -4,7 +4,7 @@ using Shared.Models;
 
 using SUI.Client.Core.Domain.Models;
 
-namespace SUI.Client.Core.Infrastructure.Parsing;
+namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 public static class AddressParser
 {
