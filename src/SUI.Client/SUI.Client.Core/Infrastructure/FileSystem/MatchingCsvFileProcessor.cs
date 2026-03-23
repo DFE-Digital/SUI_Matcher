@@ -19,7 +19,7 @@ public class MatchingCsvFileProcessor(
     IOptions<CsvWatcherConfig> watcherConfig
 ) : ICsvFileProcessor
 {
-    private readonly IStats _stats = new MatchingProcessStats();
+    private readonly MatchingProcessStats _stats = new();
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         WriteIndented = true,
