@@ -1,6 +1,6 @@
 # Address Parsing & Comparison Rules
 
-This document outlines the algorithmic logic used to compare addresses between Wigan CMS and PDS records. The logic is
+This document outlines the algorithmic logic used to compare addresses between CMS and PDS records. The logic is
 designed to handle the inconsistencies of manual data entry while
 operating without external validation tools.
 
@@ -14,20 +14,20 @@ The comparison follows a strict hierarchy of rules. The process stops as soon as
 - Rule: Postcodes must match exactly (ignoring spaces and casing).
 - Result: If postcodes differ, the addresses are immediately marked as Unmatched.
 
-2. Exact Match (The "Golden" Rule)
+1. Exact Match (The "Golden" Rule)
    We check if the primary address lines are identical.
 
 - Rule: Compare Address Line 1 from both records.
 - Result: If they are identical strings, the record is Matched.
 
-3. Building Number Extraction & Fallback
+1. Building Number Extraction & Fallback
    If strings aren't identical, we extract the "Building Number" (e.g., "12", "12A", or "12-14").
 
 - Preference: The parser looks at Line 1 first.
 - Fallback: If Line 1 contains no digits, it attempts to extract a number from Line 2.
 - Result: If no building number can be found in either line for both records, they are Unmatched.
 
-4. Flat & Apartment Detection
+1. Flat & Apartment Detection
    This identifies scenarios where one system splits the flat and building number across two lines, while the other
    combines them or omits one.
 
@@ -36,7 +36,7 @@ The comparison follows a strict hierarchy of rules. The process stops as soon as
 - Rule: We also check if the building number from Record A appears anywhere as a word inside Line 2 of Record B.
 - Result: If a cross-line match is found, the status is Uncertain (Reason: FlatMissing).
 
-5. Range Matching
+1. Range Matching
    Handles differences in how multi-building addresses are recorded.
 
 - Exact Range: "12-14" vs "12-14" = Matched.
