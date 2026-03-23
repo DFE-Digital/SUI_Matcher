@@ -1,8 +1,6 @@
 using System.Diagnostics;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-
 using Shared;
 using Shared.Logging;
 
@@ -47,7 +45,10 @@ public class LogConsoleFormatterTests
         _formatter.Write(in logEntry, scopeProvider: null, _writer);
 
         var output = _writer.ToString();
-        Assert.Contains("[Information] [Algorithm=v1] [SearchStrategy=strat1] [SearchId=123] Test Message", output);
+        Assert.Contains(
+            "[Information] [Algorithm=v1] [SearchStrategy=strat1] [SearchId=123] Test Message",
+            output
+        );
     }
 
     [Fact]
@@ -119,6 +120,7 @@ public class LogConsoleFormatterTests
             new EventId(0),
             "Test Message",
             null,
-            (state, ex) => (nullState ? null : state.ToString())!);
+            (state, ex) => (nullState ? null : state.ToString())!
+        );
     }
 }

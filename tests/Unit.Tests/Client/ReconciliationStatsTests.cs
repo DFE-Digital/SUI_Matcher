@@ -1,5 +1,4 @@
 using Shared.Models;
-
 using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 namespace Unit.Tests.Client;
@@ -15,9 +14,13 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = [];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
-        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
-            differencesFields, missingLocalFields, missingNhsFields);
+        var stats = new ReconciliationProcessStats();
+        stats.RecordReconciliationStatusStats(
+            ReconciliationStatus.Differences,
+            differencesFields,
+            missingLocalFields,
+            missingNhsFields
+        );
 
         // Assert
         Assert.Equal(1, stats.BirthDateDifferentCount);
@@ -35,9 +38,13 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = [];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
-        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
-            differencesFields, missingLocalFields, missingNhsFields);
+        var stats = new ReconciliationProcessStats();
+        stats.RecordReconciliationStatusStats(
+            ReconciliationStatus.Differences,
+            differencesFields,
+            missingLocalFields,
+            missingNhsFields
+        );
 
         // Assert
         Assert.Equal(1, stats.BirthDateLaMissingCount);
@@ -54,9 +61,13 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = ["Given"];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
-        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
-            differencesFields, missingLocalFields, missingNhsFields);
+        var stats = new ReconciliationProcessStats();
+        stats.RecordReconciliationStatusStats(
+            ReconciliationStatus.Differences,
+            differencesFields,
+            missingLocalFields,
+            missingNhsFields
+        );
 
         // Assert
         Assert.Equal(1, stats.GivenNameNhsMissingCount);
@@ -73,9 +84,13 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = ["Given"];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
-        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
-            differencesFields, missingLocalFields, missingNhsFields);
+        var stats = new ReconciliationProcessStats();
+        stats.RecordReconciliationStatusStats(
+            ReconciliationStatus.Differences,
+            differencesFields,
+            missingLocalFields,
+            missingNhsFields
+        );
 
         // Assert
         Assert.Equal(0, stats.GivenNameNhsMissingCount);
@@ -92,9 +107,13 @@ public class ReconciliationStatsTests
         string[] missingNhsFields = ["Phone"];
 
         // Act
-        var stats = new ReconciliationCsvProcessStats();
-        stats.RecordReconciliationStatusStats(ReconciliationStatus.Differences,
-            differencesFields, missingLocalFields, missingNhsFields);
+        var stats = new ReconciliationProcessStats();
+        stats.RecordReconciliationStatusStats(
+            ReconciliationStatus.Differences,
+            differencesFields,
+            missingLocalFields,
+            missingNhsFields
+        );
 
         // Assert
         // DifferencesCount is for when a record contains one or more differences.
@@ -108,5 +127,4 @@ public class ReconciliationStatsTests
         Assert.Equal(1, stats.EmailLaMissingCount);
         Assert.Equal(1, stats.PhoneNhsMissingCount);
     }
-
 }

@@ -1,16 +1,12 @@
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
-
 using DotNetEnv;
-
 using MatchingApi;
 using MatchingApi.Services;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
-
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
@@ -28,18 +24,25 @@ builder.Services.AddProblemDetails();
 
 if (builder.Configuration.GetValue<bool>("EnableAuth"))
 {
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddMicrosoftIdentityWebApi(options =>
-        {
-            builder.Configuration.Bind("AzureAdMatching", options);
-            options.TokenValidationParameters.NameClaimType = "name";
-        }, options => { builder.Configuration.Bind("AzureAdMatching", options); })
+    builder
+        .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(
+            options =>
+            {
+                builder.Configuration.Bind("AzureAdMatching", options);
+                options.TokenValidationParameters.NameClaimType = "name";
+            },
+            options =>
+            {
+                builder.Configuration.Bind("AzureAdMatching", options);
+            }
+        )
         .EnableTokenAcquisitionToCallDownstreamApi(options => { })
         .AddInMemoryTokenCaches();
 
-    builder.Services.AddAuthorizationBuilder()
-        .AddPolicy("AuthPolicy", policy =>
-            policy.RequireRole("MatchingApi"));
+    builder
+        .Services.AddAuthorizationBuilder()
+        .AddPolicy("AuthPolicy", policy => policy.RequireRole("MatchingApi"));
 }
 
 builder.Services.AddHttpContextAccessor();
@@ -61,9 +64,9 @@ if (auditFeatureFlag)
 builder.Services.AddSingleton(Channel.CreateUnbounded<AuditLogEntry>());
 builder.Services.AddSingleton<IAuditLogger, ChannelAuditLogger>();
 
-IHttpClientBuilder client =
-    builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(static client =>
-        client.BaseAddress = new Uri("https+http://external-api"));
+IHttpClientBuilder client = builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(
+    static client => client.BaseAddress = new Uri("https+http://external-api")
+);
 
 if (builder.Configuration.GetValue<bool>("EnableAuth"))
 {
@@ -73,15 +76,17 @@ if (builder.Configuration.GetValue<bool>("EnableAuth"))
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddApiVersioning(options =>
-{
-    options.DefaultApiVersion = new ApiVersion(1);
-    options.ApiVersionReader = new UrlSegmentApiVersionReader();
-}).AddApiExplorer(options =>
-{
-    options.GroupNameFormat = "'v'V";
-    options.SubstituteApiVersionInUrl = true;
-});
+builder
+    .Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1);
+        options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    })
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'V";
+        options.SubstituteApiVersionInUrl = true;
+    });
 
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
@@ -98,9 +103,7 @@ var apiVersionSet = app.NewApiVersionSet()
     .ReportApiVersions()
     .Build();
 
-var versionedGroup = app
-    .MapGroup("api/v{version:apiVersion}")
-    .WithApiVersionSet(apiVersionSet);
+var versionedGroup = app.MapGroup("api/v{version:apiVersion}").WithApiVersionSet(apiVersionSet);
 
 app.UseExceptionHandler();
 

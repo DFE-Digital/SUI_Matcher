@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-
 using Shared.Models;
 
 namespace Integration.Tests.External;
@@ -24,7 +23,7 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
             FuzzyMatch = true,
             Family = "CHISLETT",
             Given = ["OCTAVIA"],
-            Birthdate = ["eq2008-09-20"]
+            Birthdate = ["eq2008-09-20"],
         };
 
         // Act
@@ -50,7 +49,7 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
             FuzzyMatch = true,
             Family = "CHISLETTE",
             Given = ["OCTAVIAN"],
-            Birthdate = ["eq2008-09-21"]
+            Birthdate = ["eq2008-09-21"],
         };
 
         // Act
@@ -76,7 +75,7 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
             FuzzyMatch = true,
             Family = "CHISLETT",
             Given = ["OCTAVIA"],
-            Birthdate = ["ge2008-09-21"]
+            Birthdate = ["ge2008-09-21"],
         };
 
         // Act
@@ -98,7 +97,10 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
         const string validNhsNumber = "9000000009";
 
         // Act
-        var response = await _httpClient.PostAsJsonAsync("/api/v1/demographics", new DemographicRequest { NhsNumber = validNhsNumber });
+        var response = await _httpClient.PostAsJsonAsync(
+            "/api/v1/demographics",
+            new DemographicRequest { NhsNumber = validNhsNumber }
+        );
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<DemographicResponse>();
@@ -114,7 +116,10 @@ public class ExternalApiIntegrationTests : IClassFixture<ExternalApiFixture>
         const string invalidNhsNumber = "9000000012";
 
         // Act
-        var response = await _httpClient.PostAsJsonAsync("/api/v1/demographics", new DemographicRequest { NhsNumber = invalidNhsNumber });
+        var response = await _httpClient.PostAsJsonAsync(
+            "/api/v1/demographics",
+            new DemographicRequest { NhsNumber = invalidNhsNumber }
+        );
         response.EnsureSuccessStatusCode();
 
         // Assert

@@ -16,10 +16,13 @@ public class ReconciliationRequestTests
             Gender = "Male",
             AddressPostalCode = "A2 7CB",
             Email = "david.smith@example.com",
-            Phone = "123454321"
+            Phone = "123454321",
         };
 
         // All above fields, in that order, separated by '|', encoded as UTF8 and put through SHA256
-        Assert.Equal("3C962EF930C5FE6F961BDA338FA6DFBE4FB2ACAC0E5D2A5D72B8D42442F852CC", request.ReconciliationId);
+        Assert.Equal(
+            "3C962EF930C5FE6F961BDA338FA6DFBE4FB2ACAC0E5D2A5D72B8D42442F852CC",
+            request.ReconciliationId
+        );
     }
 }

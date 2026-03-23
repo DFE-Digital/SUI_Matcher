@@ -1,20 +1,15 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
-
 using CsvHelper;
 using CsvHelper.Configuration;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
 using Shared;
 using Shared.Models;
 using Shared.Util;
-
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.UseCases.ReconcilePeople;
-using SUI.Client.Core.Infrastructure.Parsing;
 
 namespace SUI.Client.Core.Infrastructure.FileSystem;
 
@@ -22,10 +17,14 @@ public class ReconciliationCsvFileProcessor(
     ILogger<ReconciliationCsvFileProcessor> logger,
     CsvMappingConfig mapping,
     IMatchingService matching,
-    IOptions<CsvWatcherConfig> watcherConfig) : ICsvFileProcessor
+    IOptions<CsvWatcherConfig> watcherConfig
+) : ICsvFileProcessor
 {
-    private readonly ReconciliationCsvProcessStats _stats = new();
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+    private readonly ReconciliationProcessStats _stats = new();
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        WriteIndented = true,
+    };
     public const string HeaderNhsNo = "SUI_NHSNo";
     public const string HeaderGivenName = "SUI_GivenName";
     public const string HeaderAddressPostalCode = "SUI_PostalCode";
@@ -51,9 +50,13 @@ public class ReconciliationCsvFileProcessor(
     public const string HeaderPrimaryCMSAddressInPDSHistory = "SUI_PrimaryCMSAddressInPDSHistory";
     public const string HeaderPrimaryPDSAddressInCMSHistory = "SUI_PrimaryPDSAddressInCMSHistory";
 
-    private async Task ProcessRecord(Dictionary<string, string> record, ReconciliationCsvProcessStats stats)
+    private async Task ProcessRecord(
+        Dictionary<string, string> record,
+        ReconciliationProcessStats stats
+    )
     {
-        string gender = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)])
+        string gender = record
+            .GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)])
             .ToLower();
 
         if (int.TryParse(gender, out int _))
@@ -64,61 +67,91 @@ public class ReconciliationCsvFileProcessor(
             record[nameof(ReconciliationRequest.Gender)] = genderFromNumber;
         }
 
-        var dob = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(ReconciliationRequest.BirthDate)]);
+        var dob = record.GetFirstValueOrDefault(
+            mapping.ColumnMappings[nameof(ReconciliationRequest.BirthDate)]
+        );
         ReconciliationRequest payload = new()
         {
-            NhsNumber = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(ReconciliationRequest.NhsNumber)]),
-            Given = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(ReconciliationRequest.Given)]),
-            Family = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(ReconciliationRequest.Family)]),
-            BirthDate =
-                dob.ToDateOnly([Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish]),
-            Email = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(ReconciliationRequest.Email)]),
-            AddressPostalCode =
-                record.GetFirstValueOrDefault(
-                    mapping.ColumnMappings[nameof(ReconciliationRequest.AddressPostalCode)]),
+            NhsNumber = record.GetFirstValueOrDefault(
+                mapping.ColumnMappings[nameof(ReconciliationRequest.NhsNumber)]
+            ),
+            Given = record.GetFirstValueOrDefault(
+                mapping.ColumnMappings[nameof(ReconciliationRequest.Given)]
+            ),
+            Family = record.GetFirstValueOrDefault(
+                mapping.ColumnMappings[nameof(ReconciliationRequest.Family)]
+            ),
+            BirthDate = dob.ToDateOnly([
+                Constants.DateFormat,
+                Constants.DateAltFormat,
+                Constants.DateAltFormatBritish,
+            ]),
+            Email = record.GetFirstValueOrDefault(
+                mapping.ColumnMappings[nameof(ReconciliationRequest.Email)]
+            ),
+            AddressPostalCode = record.GetFirstValueOrDefault(
+                mapping.ColumnMappings[nameof(ReconciliationRequest.AddressPostalCode)]
+            ),
             Gender = gender,
-            Phone = record.GetFirstValueOrDefault(mapping.ColumnMappings[nameof(ReconciliationRequest.Phone)]),
-            SearchStrategy = watcherConfig.Value.SearchStrategy ?? SharedConstants.SearchStrategy.Strategies.Strategy1,
-            StrategyVersion = watcherConfig.Value.StrategyVersion
+            Phone = record.GetFirstValueOrDefault(
+                mapping.ColumnMappings[nameof(ReconciliationRequest.Phone)]
+            ),
+            SearchStrategy =
+                watcherConfig.Value.SearchStrategy
+                ?? SharedConstants.SearchStrategy.Strategies.Strategy1,
+            StrategyVersion = watcherConfig.Value.StrategyVersion,
         };
 
         var response = await matching.ReconcilePersonAsync(payload);
 
-        var addressComparisonResult = GetAddressComparisonResult(
+        var addressComparisonResult = AddressComparisonOrchestrator.GetAddressComparisonResult(
             payload,
             response,
-            record.GetFirstValueOrDefault(mapping.ColumnMappings[CsvMappingConfig.NonRequestFieldsConstants.AddressHistory]));
+            record.GetFirstValueOrDefault(
+                mapping.ColumnMappings[CsvMappingConfig.NonRequestFieldsConstants.AddressHistory]
+            )
+        );
 
         record[HeaderNhsNo] = response?.Person?.NhsNumber ?? "-";
         record[HeaderGivenName] = string.Join(" - ", response?.Person?.GivenNames ?? ["-"]);
         record[HeaderFamilyName] = string.Join(" - ", response?.Person?.FamilyNames ?? ["-"]);
         record[HeaderBirthDate] = response?.Person?.BirthDate.ToString() ?? "-";
         record[HeaderGender] = response?.Person?.Gender ?? "-";
-        record[HeaderAddressPostalCode] = string.Join(" - ", response?.Person?.AddressPostalCodes ?? ["-"]);
+        record[HeaderAddressPostalCode] = string.Join(
+            " - ",
+            response?.Person?.AddressPostalCodes ?? ["-"]
+        );
         record[HeaderEmail] = string.Join(" - ", response?.Person?.Emails ?? ["-"]);
         record[HeaderPhone] = string.Join(" - ", response?.Person?.PhoneNumbers ?? ["-"]);
         record[HeaderAddressHistory] = CsvUtils.WrapInputForCsv(response?.Person?.AddressHistory);
         record[HeaderGeneralPractitionerOdsId] = response?.Person?.GeneralPractitionerOdsId ?? "-";
         var differenceList = CreateDelimiterStringFromList(response?.DifferenceFields);
         record[HeaderDifferences] = differenceList;
-        record[HeaderMissingLocalFields] = CreateDelimiterStringFromList(response?.MissingLocalFields);
+        record[HeaderMissingLocalFields] = CreateDelimiterStringFromList(
+            response?.MissingLocalFields
+        );
         record[HeaderMissingNhsFields] = CreateDelimiterStringFromList(response?.MissingNhsFields);
         record[HeaderStatus] = response?.Status.ToString() ?? "-";
         record[HeaderMatchNhsNumber] = response?.MatchingResult?.NhsNumber ?? "-";
         record[HeaderMatchStatus] = response?.MatchingResult?.MatchStatus.ToString() ?? "-";
         record[HeaderMatchScore] = response?.MatchingResult?.Score.ToString() ?? "-";
         record[HeaderMatchProcessStage] = response?.MatchingResult?.ProcessStage ?? "-";
-        record[HeaderPrimaryAddressSame] = addressComparisonResult.PrimaryAddressSame.GetResultMessage();
-        record[HeaderAddressHistoriesIntersect] = addressComparisonResult.AddressHistoriesIntersect.GetResultMessage();
-        record[HeaderPrimaryCMSAddressInPDSHistory] = addressComparisonResult.PrimaryCMSAddressInPDSHistory.GetResultMessage();
-        record[HeaderPrimaryPDSAddressInCMSHistory] = addressComparisonResult.PrimaryPDSAddressInCMSHistory.GetResultMessage();
+        record[HeaderPrimaryAddressSame] =
+            addressComparisonResult.PrimaryAddressSame.GetResultMessage();
+        record[HeaderAddressHistoriesIntersect] =
+            addressComparisonResult.AddressHistoriesIntersect.GetResultMessage();
+        record[HeaderPrimaryCMSAddressInPDSHistory] =
+            addressComparisonResult.PrimaryCMSAddressInPDSHistory.GetResultMessage();
+        record[HeaderPrimaryPDSAddressInCMSHistory] =
+            addressComparisonResult.PrimaryPDSAddressInCMSHistory.GetResultMessage();
 
         stats.RecordMatchStatusStats(response?.MatchingResult?.MatchStatus);
         stats.RecordReconciliationStatusStats(
             response?.Status,
             response?.DifferenceFields.ToArray() ?? [],
             response?.MissingLocalFields.ToArray() ?? [],
-            response?.MissingNhsFields.ToArray() ?? []);
+            response?.MissingNhsFields.ToArray() ?? []
+        );
         stats.RecordAddressStats(addressComparisonResult);
     }
 
@@ -129,28 +162,6 @@ public class ReconciliationCsvFileProcessor(
             return "-";
         }
         return string.Join(" - ", value);
-    }
-
-    private static AddressComparisonResults GetAddressComparisonResult(ReconciliationRequest request, ReconciliationResponse? response, string? addressHistoryCsv)
-    {
-        var result = new AddressComparisonResults();
-
-        if (response?.Person == null)
-        {
-            return result;
-        }
-
-        var pdsAddressHistory = AddressParser.FromNhsPerson(response.Person);
-        var queryingAddressHistory = AddressParser.ParseHistory(addressHistoryCsv, request.AddressPostalCode);
-
-        result.PrimaryAddressSame = pdsAddressHistory.PrimaryAddressSameAs(queryingAddressHistory);
-        result.AddressHistoriesIntersect = pdsAddressHistory.IntersectsWith(queryingAddressHistory);
-
-
-        result.PrimaryCMSAddressInPDSHistory = queryingAddressHistory.PrimaryAddressInHistoryOf(pdsAddressHistory);
-        result.PrimaryPDSAddressInCMSHistory = pdsAddressHistory.PrimaryAddressInHistoryOf(queryingAddressHistory);
-
-        return result;
     }
 
     private static void AddExtraCsvHeaders(HashSet<string> headers)
@@ -179,8 +190,6 @@ public class ReconciliationCsvFileProcessor(
         headers.Add(HeaderPrimaryPDSAddressInCMSHistory);
     }
 
-
-
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
         if (!File.Exists(filePath))
@@ -190,11 +199,15 @@ public class ReconciliationCsvFileProcessor(
 
         var ts = $"_{DateTime.Now:yyyyMMdd-HHmmss}";
 
-        var outputDirectory =
-            Path.Combine(outputPath, string.Concat(ts, "__", Path.GetFileNameWithoutExtension(filePath)));
+        var outputDirectory = Path.Combine(
+            outputPath,
+            string.Concat(ts, "__", Path.GetFileNameWithoutExtension(filePath))
+        );
         Directory.CreateDirectory(outputDirectory);
 
-        (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(filePath);
+        (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(
+            filePath
+        );
 
         AddExtraCsvHeaders(headers);
 
@@ -203,8 +216,11 @@ public class ReconciliationCsvFileProcessor(
         var progressStopwatch = new Stopwatch();
         progressStopwatch.Start();
 
-        logger.LogInformation("Beginning to process {TotalRecords} records from file: {FilePath}", totalRecords,
-            filePath);
+        logger.LogInformation(
+            "Beginning to process {TotalRecords} records from file: {FilePath}",
+            totalRecords,
+            filePath
+        );
 
         foreach (var record in records)
         {
@@ -212,7 +228,11 @@ public class ReconciliationCsvFileProcessor(
             // Log progress at least every 5 seconds so we can see how many records are being processed over time.
             if (progressStopwatch.ElapsedMilliseconds >= 5000)
             {
-                logger.LogInformation("{Current} of {Total} records processed", currentRecord, totalRecords);
+                logger.LogInformation(
+                    "{Current} of {Total} records processed",
+                    currentRecord,
+                    totalRecords
+                );
                 progressStopwatch.Restart();
             }
 
@@ -227,15 +247,21 @@ public class ReconciliationCsvFileProcessor(
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
         await WriteCsvAsync(outputFilePath, headers, records);
 
-
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, _stats);
-        var csvResult = new ProcessCsvFileResult(outputFilePath, statsJsonFileName, _stats, outputDirectory);
+        var csvResult = new ProcessCsvFileResult(
+            outputFilePath,
+            statsJsonFileName,
+            _stats,
+            outputDirectory
+        );
         _stats.ResetStats();
         return csvResult;
     }
 
-    public static async Task<(HashSet<string> Headers, List<Dictionary<string, string>> Records)> ReadCsvAsync(
-        string filePath)
+    public static async Task<(
+        HashSet<string> Headers,
+        List<Dictionary<string, string>> Records
+    )> ReadCsvAsync(string filePath)
     {
         var headers = new HashSet<string>();
         var records = new List<Dictionary<string, string>>();
@@ -246,13 +272,17 @@ public class ReconciliationCsvFileProcessor(
         }
 
         using (var reader = new StreamReader(filePath))
-        using (var csv = new CsvReader(reader,
-                   new CsvConfiguration(CultureInfo.InvariantCulture)
-                   {
-                       IgnoreBlankLines = true,
-                       MissingFieldFound = null,
-                       HeaderValidated = null
-                   }))
+        using (
+            var csv = new CsvReader(
+                reader,
+                new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    IgnoreBlankLines = true,
+                    MissingFieldFound = null,
+                    HeaderValidated = null,
+                }
+            )
+        )
         {
             await csv.ReadAsync();
             csv.ReadHeader();
@@ -281,11 +311,17 @@ public class ReconciliationCsvFileProcessor(
     /// Writes a CSV file asynchronously with the provided headers and records.
     /// The output file name is based on the input file name, suffixed with "_output_{timestamp}".
     /// </summary>
-    public static async Task<string> WriteCsvAsync(string fileName, HashSet<string> headers,
-        List<Dictionary<string, string>> records)
+    public static async Task<string> WriteCsvAsync(
+        string fileName,
+        HashSet<string> headers,
+        List<Dictionary<string, string>> records
+    )
     {
         await using var writer = new StreamWriter(fileName);
-        await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
+        await using var csv = new CsvWriter(
+            writer,
+            new CsvConfiguration(CultureInfo.InvariantCulture)
+        );
 
         foreach (var header in headers)
         {
@@ -293,7 +329,6 @@ public class ReconciliationCsvFileProcessor(
         }
 
         await csv.NextRecordAsync();
-
 
         foreach (var record in records)
         {
@@ -308,20 +343,33 @@ public class ReconciliationCsvFileProcessor(
         return fileName;
     }
 
-    private static string GetOutputFileName(string timestamp, string outputDirectory, string fileName)
+    private static string GetOutputFileName(
+        string timestamp,
+        string outputDirectory,
+        string fileName
+    )
     {
         var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
         var extension = Path.GetExtension(fileName);
         return Path.Combine(outputDirectory, $"{filenameWithoutExt}_output_{timestamp}{extension}");
     }
 
-    private static async Task<bool> IsFileReadyAsync(string filePath, int maxAttempts = 5, int delayMs = 1000)
+    private static async Task<bool> IsFileReadyAsync(
+        string filePath,
+        int maxAttempts = 5,
+        int delayMs = 1000
+    )
     {
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             try
             {
-                await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
+                await using var stream = new FileStream(
+                    filePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.None
+                );
                 return true;
             }
             catch (IOException)
@@ -336,7 +384,10 @@ public class ReconciliationCsvFileProcessor(
     private static string WriteStatsJsonFile(string outputDirectory, string ts, object stats)
     {
         var statsJsonFileName = GetOutputFileName(ts, outputDirectory, "stats.json");
-        File.WriteAllText(statsJsonFileName, JsonSerializer.Serialize(stats, JsonSerializerOptions));
+        File.WriteAllText(
+            statsJsonFileName,
+            JsonSerializer.Serialize(stats, JsonSerializerOptions)
+        );
         return statsJsonFileName;
     }
 
@@ -352,6 +403,4 @@ public class ReconciliationCsvFileProcessor(
 
         return statsData ?? new Dictionary<string, int>();
     }
-
-
 }

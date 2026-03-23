@@ -1,5 +1,4 @@
 using MatchingApi.Services;
-
 using Shared.Models;
 
 namespace Unit.Tests.Matching;
@@ -16,8 +15,8 @@ public class DataQualityEvaluatorServiceTests
             new ValidationResponse.ValidationResult
             {
                 MemberNames = ["Given"],
-                ErrorMessage = PersonValidationConstants.GivenNameRequired
-            }
+                ErrorMessage = PersonValidationConstants.GivenNameRequired,
+            },
         };
 
         // Act
@@ -37,8 +36,8 @@ public class DataQualityEvaluatorServiceTests
             new ValidationResponse.ValidationResult
             {
                 MemberNames = ["Email"],
-                ErrorMessage = PersonValidationConstants.EmailInvalid
-            }
+                ErrorMessage = PersonValidationConstants.EmailInvalid,
+            },
         };
 
         // Act
@@ -66,7 +65,6 @@ public class DataQualityEvaluatorServiceTests
         // Assert.Equal(QualityType.NotProvided, result.Phone);
         // Assert.Equal(QualityType.NotProvided, result.Email);
         // Assert.Equal(QualityType.NotProvided, result.Gender);
-
     }
 
     [Theory]

@@ -1,11 +1,8 @@
 using System.Diagnostics;
 using System.Security.Claims;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Diagnostics.Enrichment;
-
 using Moq;
-
 using Shared.Logging;
 
 namespace Unit.Tests.Logging;

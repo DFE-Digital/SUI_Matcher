@@ -15,19 +15,21 @@ public class SearchResult
         Matched,
         Unmatched,
         MultiMatched,
-        Error
+        Error,
     }
 
-    public static SearchResult Match(string nhsNumber, decimal? score) => new()
-    {
-        Type = ResultType.Matched,
-        NhsNumber = nhsNumber,
-        Score = score,
-    };
+    public static SearchResult Match(string nhsNumber, decimal? score) =>
+        new()
+        {
+            Type = ResultType.Matched,
+            NhsNumber = nhsNumber,
+            Score = score,
+        };
 
     public static SearchResult Unmatched() => new() { Type = ResultType.Unmatched };
 
     public static SearchResult MultiMatched() => new() { Type = ResultType.MultiMatched };
 
-    public static SearchResult Error(string errorMessage) => new() { Type = ResultType.Error, ErrorMessage = errorMessage };
+    public static SearchResult Error(string errorMessage) =>
+        new() { Type = ResultType.Error, ErrorMessage = errorMessage };
 }

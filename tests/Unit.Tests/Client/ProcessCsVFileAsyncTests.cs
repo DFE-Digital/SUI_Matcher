@@ -1,10 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
 using Moq;
-
 using Shared.Models;
-
 using SUI.Client.Core;
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Infrastructure.FileSystem;
@@ -27,11 +24,17 @@ public class ProcessCsVFileAsyncTests : IDisposable
         var watcherConfig = Options.Create(new CsvWatcherConfig { EnableGenderSearch = true });
 
         MatchPersonPayload? capturedPayload = null;
-        mockApi.Setup(x => x.MatchPersonAsync(It.IsAny<MatchPersonPayload>()))
+        mockApi
+            .Setup(x => x.MatchPersonAsync(It.IsAny<MatchPersonPayload>()))
             .Callback<MatchPersonPayload>(p => capturedPayload = p)
             .ReturnsAsync(new PersonMatchResponse());
 
-        var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
+        var processor = new MatchingCsvFileProcessor(
+            mockLogger.Object,
+            mapping,
+            mockApi.Object,
+            watcherConfig
+        );
 
         // Prepare test CSV file with all optional fields
         var tempDir = Path.GetTempPath();
@@ -47,7 +50,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
             "ActiveEHM",
             "Ethnicity",
             "ImmigrationStatus",
-            "AddressHistory"
+            "AddressHistory",
         };
         var records = new List<Dictionary<string, string>>
         {
@@ -61,7 +64,7 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 ["ActiveEHM"] = "EHM321",
                 ["Ethnicity"] = "A1 - White-British",
                 ["ImmigrationStatus"] = "Settled",
-            }
+            },
         };
         await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, records);
         _testFiles.Add(filePath);
@@ -87,35 +90,52 @@ public class ProcessCsVFileAsyncTests : IDisposable
             /* set up mappings as needed */
         };
         var tempDir = Path.GetTempPath();
-        var watcherConfig =
-            Options.Create(new CsvWatcherConfig() { MatchedRecordsDirectory = $"{tempDir}/Processed/Matched" });
+        var watcherConfig = Options.Create(
+            new CsvWatcherConfig() { MatchedRecordsDirectory = $"{tempDir}/Processed/Matched" }
+        );
 
-        mockApi.SetupSequence(x => x.MatchPersonAsync(It.IsAny<MatchPersonPayload>()))
-            .ReturnsAsync(new PersonMatchResponse()
-            {
-                Result = new MatchResult() { MatchStatus = MatchStatus.Match, NhsNumber = "123467890" }
-            })
-            .ReturnsAsync(new PersonMatchResponse()
-            {
-                Result = new MatchResult() { MatchStatus = MatchStatus.PotentialMatch, NhsNumber = "111111111" }
-            })
-            .ReturnsAsync(new PersonMatchResponse()
-            {
-                Result = new MatchResult() { MatchStatus = MatchStatus.ManyMatch }
-            });
+        mockApi
+            .SetupSequence(x => x.MatchPersonAsync(It.IsAny<MatchPersonPayload>()))
+            .ReturnsAsync(
+                new PersonMatchResponse()
+                {
+                    Result = new MatchResult()
+                    {
+                        MatchStatus = MatchStatus.Match,
+                        NhsNumber = "123467890",
+                    },
+                }
+            )
+            .ReturnsAsync(
+                new PersonMatchResponse()
+                {
+                    Result = new MatchResult()
+                    {
+                        MatchStatus = MatchStatus.PotentialMatch,
+                        NhsNumber = "111111111",
+                    },
+                }
+            )
+            .ReturnsAsync(
+                new PersonMatchResponse()
+                {
+                    Result = new MatchResult() { MatchStatus = MatchStatus.ManyMatch },
+                }
+            );
 
-        var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
+        var processor = new MatchingCsvFileProcessor(
+            mockLogger.Object,
+            mapping,
+            mockApi.Object,
+            watcherConfig
+        );
 
         var filePath = Path.Combine(tempDir, "test.csv");
         var outputPath = tempDir;
-        var headers = new HashSet<string>
-        {
-            "Id",
-            "Given",
-            "Family",
-            "DOB"
-        };
-        var dob = DateTime.Now.AddYears(-10).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First());
+        var headers = new HashSet<string> { "Id", "Given", "Family", "DOB" };
+        var dob = DateTime
+            .Now.AddYears(-10)
+            .ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First());
         var records = new List<Dictionary<string, string>>
         {
             new()
@@ -123,22 +143,22 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 ["Id"] = "L1",
                 ["Given"] = "John",
                 ["Family"] = "Smith",
-                ["DOB"] = dob
+                ["DOB"] = dob,
             },
             new()
             {
                 ["Id"] = "L2",
                 ["Given"] = "Jane",
                 ["Family"] = "Doe",
-                ["DOB"] = dob
+                ["DOB"] = dob,
             },
             new()
             {
                 ["Id"] = "L3",
                 ["Given"] = "Jim",
                 ["Family"] = "Beam",
-                ["DOB"] = dob
-            }
+                ["DOB"] = dob,
+            },
         };
 
         await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, records);
@@ -168,35 +188,53 @@ public class ProcessCsVFileAsyncTests : IDisposable
             /* set up mappings as needed */
         };
         var tempDir = Path.GetTempPath();
-        var watcherConfig =
-            Options.Create(new CsvWatcherConfig() { MatchedRecordsDirectory = $"{tempDir}/Processed/Matched" });
+        var watcherConfig = Options.Create(
+            new CsvWatcherConfig() { MatchedRecordsDirectory = $"{tempDir}/Processed/Matched" }
+        );
 
-        mockApi.SetupSequence(x => x.MatchPersonAsync(It.IsAny<MatchPersonPayload>()))
-            .ReturnsAsync(new PersonMatchResponse()
-            {
-                Result = new MatchResult() { MatchStatus = MatchStatus.Match, NhsNumber = "123467890" }
-            })
-            .ReturnsAsync(new PersonMatchResponse()
-            {
-                Result = new MatchResult() { MatchStatus = MatchStatus.Match, NhsNumber = "0987654321" }
-            })
-            .ReturnsAsync(new PersonMatchResponse()
-            {
-                Result = new MatchResult() { MatchStatus = MatchStatus.Match, NhsNumber = "1029384756" }
-            });
+        mockApi
+            .SetupSequence(x => x.MatchPersonAsync(It.IsAny<MatchPersonPayload>()))
+            .ReturnsAsync(
+                new PersonMatchResponse()
+                {
+                    Result = new MatchResult()
+                    {
+                        MatchStatus = MatchStatus.Match,
+                        NhsNumber = "123467890",
+                    },
+                }
+            )
+            .ReturnsAsync(
+                new PersonMatchResponse()
+                {
+                    Result = new MatchResult()
+                    {
+                        MatchStatus = MatchStatus.Match,
+                        NhsNumber = "0987654321",
+                    },
+                }
+            )
+            .ReturnsAsync(
+                new PersonMatchResponse()
+                {
+                    Result = new MatchResult()
+                    {
+                        MatchStatus = MatchStatus.Match,
+                        NhsNumber = "1029384756",
+                    },
+                }
+            );
 
-        var processor = new MatchingCsvFileProcessor(mockLogger.Object, mapping, mockApi.Object, watcherConfig);
-
+        var processor = new MatchingCsvFileProcessor(
+            mockLogger.Object,
+            mapping,
+            mockApi.Object,
+            watcherConfig
+        );
 
         var filePath = Path.Combine(tempDir, "test.csv");
         var outputPath = tempDir;
-        var headers = new HashSet<string>
-        {
-            "DOB",
-            "Id",
-            "Given",
-            "Family"
-        };
+        var headers = new HashSet<string> { "DOB", "Id", "Given", "Family" };
         var records = new List<Dictionary<string, string>>
         {
             new()
@@ -204,24 +242,29 @@ public class ProcessCsVFileAsyncTests : IDisposable
                 ["Id"] = "L1",
                 ["Given"] = "John",
                 ["Family"] = "Smith",
-                ["DOB"] = DateTime.Now.AddYears(-19).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()) // Not Child age
+                ["DOB"] = DateTime
+                    .Now.AddYears(-19)
+                    .ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()), // Not Child age
             },
             new()
             {
                 ["Id"] = "L2",
                 ["Given"] = "Jane",
                 ["Family"] = "Doe",
-                ["DOB"] = DateTime.Now.AddYears(-3).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()) // Child age
+                ["DOB"] = DateTime
+                    .Now.AddYears(-3)
+                    .ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()), // Child age
             },
             new()
             {
                 ["Id"] = "L3",
                 ["Given"] = "Jim",
                 ["Family"] = "Beam",
-                ["DOB"] = DateTime.Now.AddYears(-1).ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()) // Child age
-            }
+                ["DOB"] = DateTime
+                    .Now.AddYears(-1)
+                    .ToString(MatchingCsvFileProcessor.AcceptedCsvDateFormats.First()), // Child age
+            },
         };
-
 
         await ReconciliationCsvFileProcessor.WriteCsvAsync(filePath, headers, records);
         await processor.ProcessCsvFileAsync(filePath, outputPath);

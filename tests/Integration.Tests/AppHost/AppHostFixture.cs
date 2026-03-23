@@ -1,21 +1,24 @@
 using Azure.Core;
 using Azure.Identity;
-
 using FluentAssertions.Execution;
 using FluentAssertions.Primitives;
-
 using WireMock.Admin.Requests;
 using WireMock.Client;
 using WireMock.Types;
 
 namespace Integration.Tests.AppHost;
 
-public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Projects.AppHost)), IAsyncLifetime
+public sealed class AppHostFixture()
+    : DistributedApplicationFactory(typeof(Projects.AppHost)),
+        IAsyncLifetime
 {
     private DistributedApplication? _app;
     private IResourceBuilder<WireMockServerResource> NhsAuthMockService { get; set; } = null!;
 
-    protected override void OnBuilderCreating(DistributedApplicationOptions applicationOptions, HostApplicationBuilderSettings hostOptions)
+    protected override void OnBuilderCreating(
+        DistributedApplicationOptions applicationOptions,
+        HostApplicationBuilderSettings hostOptions
+    )
     {
         applicationOptions.AssemblyName = typeof(Projects.AppHost).Assembly.FullName;
         applicationOptions.DisableDashboard = true;
@@ -23,14 +26,17 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
 
     protected override void OnBuilderCreated(DistributedApplicationBuilder applicationBuilder)
     {
-        NhsAuthMockService = applicationBuilder.AddWireMock("mock-auth-api", WireMockServerArguments.DefaultPort)
+        NhsAuthMockService = applicationBuilder
+            .AddWireMock("mock-auth-api", WireMockServerArguments.DefaultPort)
             .WithApiMappingBuilder(MockNhsFhirServer.SetupAsync);
     }
 
     protected override void OnBuilding(DistributedApplicationBuilder applicationBuilder)
     {
-        var resources = applicationBuilder.Resources
-            .Where(res => (res.Name == "external-api") || res.Name == "matching-api" || res.Name == "yarp")
+        var resources = applicationBuilder
+            .Resources.Where(res =>
+                (res.Name == "external-api") || res.Name == "matching-api" || res.Name == "yarp"
+            )
             .OfType<ProjectResource>()
             .ToArray();
 
@@ -39,25 +45,34 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
             applicationBuilder.Resources.Remove(resource);
         }
 
-        var externalApi = applicationBuilder.AddProject<Projects.External>("external-api")
+        var externalApi = applicationBuilder
+            .AddProject<Projects.External>("external-api")
             .WithEnvironment(ctx =>
             {
-                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"] = $"{NhsAuthMockService.GetEndpoint("http").Url}/personal-demographics/FHIR/R4/";
-                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"] = $"{NhsAuthMockService.GetEndpoint("http").Url}/oauth2/token";
-                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES"] = "1";
+                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"] =
+                    $"{NhsAuthMockService.GetEndpoint("http").Url}/personal-demographics/FHIR/R4/";
+                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"] =
+                    $"{NhsAuthMockService.GetEndpoint("http").Url}/oauth2/token";
+                ctx.EnvironmentVariables[
+                    "NhsAuthConfig:NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES"
+                ] = "1";
             })
             .WaitFor(NhsAuthMockService);
 
-        var matchingApi = applicationBuilder.AddProject<Projects.Matching>("matching-api")
+        var matchingApi = applicationBuilder
+            .AddProject<Projects.Matching>("matching-api")
             .WithReference(externalApi)
             .WaitFor(NhsAuthMockService);
 
-        applicationBuilder.AddProject<Projects.Yarp>("yarp")
+        applicationBuilder
+            .AddProject<Projects.Yarp>("yarp")
             .WithEnvironment(ctx =>
             {
                 ctx.EnvironmentVariables["ConnectionStrings:secrets"] = "http://localhost:8080";
             })
-            .WithReference(matchingApi).WaitFor(matchingApi).WaitFor(NhsAuthMockService);
+            .WithReference(matchingApi)
+            .WaitFor(matchingApi)
+            .WaitFor(NhsAuthMockService);
     }
 
     protected override void OnBuilt(DistributedApplication application)
@@ -93,10 +108,18 @@ public sealed class AppHostFixture() : DistributedApplicationFactory(typeof(Proj
             configuration["AzureAdWatcher:TenantId"],
             configuration["AzureAdWatcher:ClientId"],
             configuration["AzureAdWatcher:ClientSecret"],
-            new ClientSecretCredentialOptions { AuthorityHost = new Uri(configuration["AzureAdWatcher:Authority"] ?? string.Empty) });
-        var tokenRequestContext = new TokenRequestContext(
-            [configuration["AzureAdWatcher:Scopes"] ?? string.Empty]);
-        AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
+            new ClientSecretCredentialOptions
+            {
+                AuthorityHost = new Uri(configuration["AzureAdWatcher:Authority"] ?? string.Empty),
+            }
+        );
+        var tokenRequestContext = new TokenRequestContext([
+            configuration["AzureAdWatcher:Scopes"] ?? string.Empty,
+        ]);
+        AccessToken token = clientSecretCredential
+            .GetTokenAsync(tokenRequestContext)
+            .GetAwaiter()
+            .GetResult();
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
 
         return client;
@@ -107,12 +130,21 @@ public static class WireMockExtensions
 {
     public static async Task<WireMockReceivedAssertions> Should(this IWireMockAdminApi instance)
     {
-        return new WireMockReceivedAssertions(await instance.GetRequestsAsync(), AssertionChain.GetOrCreate());
+        return new WireMockReceivedAssertions(
+            await instance.GetRequestsAsync(),
+            AssertionChain.GetOrCreate()
+        );
     }
 }
 
-public class WireMockReceivedAssertions(IList<LogEntryModel> logEntryModels, AssertionChain assertionChain)
-    : ReferenceTypeAssertions<IList<LogEntryModel>, WireMockReceivedAssertions>(logEntryModels, assertionChain)
+public class WireMockReceivedAssertions(
+    IList<LogEntryModel> logEntryModels,
+    AssertionChain assertionChain
+)
+    : ReferenceTypeAssertions<IList<LogEntryModel>, WireMockReceivedAssertions>(
+        logEntryModels,
+        assertionChain
+    )
 {
     public WireMockAssertions HaveReceivedNoCalls()
     {
@@ -138,8 +170,10 @@ public class WireMockAssertions(IList<LogEntryModel> logEntryModels, int? callsC
     {
         var actualCount = logEntryModels.Count(entry => entry.Request.AbsolutePath == path);
 
-        Assert.True(callsCount == actualCount,
-            $"For path '{path}' there were {actualCount} calls, instead of the expected {callsCount}");
+        Assert.True(
+            callsCount == actualCount,
+            $"For path '{path}' there were {actualCount} calls, instead of the expected {callsCount}"
+        );
     }
 
     public void AtPathWithResponse(string path)
@@ -151,8 +185,10 @@ public class WireMockAssertions(IList<LogEntryModel> logEntryModels, int? callsC
             return entry.Request.AbsolutePath == path && entry.Response.Body != null;
         });
 
-        Assert.True(callsCount == actualCount,
-            $"For path '{path}' there were {actualCount} calls, instead of the expected {callsCount}");
+        Assert.True(
+            callsCount == actualCount,
+            $"For path '{path}' there were {actualCount} calls, instead of the expected {callsCount}"
+        );
     }
 
     public void AtPathAndParamsWithResponse(string path, Dictionary<string, string> parameters)
@@ -182,8 +218,10 @@ public class WireMockAssertions(IList<LogEntryModel> logEntryModels, int? callsC
             return entry.Request.AbsolutePath == path && entry.Response.Body != null;
         });
 
-        Assert.True(callsCount == actualCount,
-            $"For path '{path}' there were {actualCount} calls, instead of the expected {callsCount}");
+        Assert.True(
+            callsCount == actualCount,
+            $"For path '{path}' there were {actualCount} calls, instead of the expected {callsCount}"
+        );
     }
 }
 

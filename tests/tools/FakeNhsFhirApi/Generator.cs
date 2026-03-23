@@ -1,8 +1,6 @@
 ﻿using System.Globalization;
 using System.Reflection;
-
 using Bogus;
-
 using CsvHelper;
 
 namespace FakeNhsFhirApi;
@@ -28,10 +26,36 @@ public static class Generator
 
         var faker = new Faker();
 
-        var singleMatchHighs = Enumerable.Range(0, CalcSubsetSize(count, 90)).Select(x => CreateFakeItem(singleMatchJsonTemplate, faker, "single_match (high)", faker.Random.Double(0.95, 1))).ToArray();
-        var singleMatchLows = Enumerable.Range(0, CalcSubsetSize(count, 5)).Select(x => CreateFakeItem(singleMatchJsonTemplate, faker, "single_match (low)", faker.Random.Double(0.85, 0.949999999))).ToArray();
-        var multiMatch = Enumerable.Range(0, CalcSubsetSize(count, 2)).Select(x => CreateFakeItem(multiMatchJsonTemplate, faker, "multi_match", 0)).ToArray();
-        var noMatch = Enumerable.Range(0, CalcSubsetSize(count, 3)).Select(x => CreateFakeItem(noMatchJsonTemplate, faker, "no_match", 0)).ToArray();
+        var singleMatchHighs = Enumerable
+            .Range(0, CalcSubsetSize(count, 90))
+            .Select(x =>
+                CreateFakeItem(
+                    singleMatchJsonTemplate,
+                    faker,
+                    "single_match (high)",
+                    faker.Random.Double(0.95, 1)
+                )
+            )
+            .ToArray();
+        var singleMatchLows = Enumerable
+            .Range(0, CalcSubsetSize(count, 5))
+            .Select(x =>
+                CreateFakeItem(
+                    singleMatchJsonTemplate,
+                    faker,
+                    "single_match (low)",
+                    faker.Random.Double(0.85, 0.949999999)
+                )
+            )
+            .ToArray();
+        var multiMatch = Enumerable
+            .Range(0, CalcSubsetSize(count, 2))
+            .Select(x => CreateFakeItem(multiMatchJsonTemplate, faker, "multi_match", 0))
+            .ToArray();
+        var noMatch = Enumerable
+            .Range(0, CalcSubsetSize(count, 3))
+            .Select(x => CreateFakeItem(noMatchJsonTemplate, faker, "no_match", 0))
+            .ToArray();
 
         FakeItem[] fullset = [.. singleMatchHighs, .. singleMatchLows, .. multiMatch, .. noMatch];
 
@@ -43,14 +67,20 @@ public static class Generator
     private static string GetResourceText(string name)
     {
         var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream($"{nameof(FakeNhsFhirApi)}.Resources.{name}")
-                           ?? throw new InvalidOperationException("Resource not found.");
+        using var stream =
+            assembly.GetManifestResourceStream($"{nameof(FakeNhsFhirApi)}.Resources.{name}")
+            ?? throw new InvalidOperationException("Resource not found.");
         using var reader = new StreamReader(stream);
         var content = reader.ReadToEnd();
         return content;
     }
 
-    private static string MergeTemplate(string template, FakeItem fakeItem, FakePerson person, Faker faker)
+    private static string MergeTemplate(
+        string template,
+        FakeItem fakeItem,
+        FakePerson person,
+        Faker faker
+    )
     {
         return template
             .Replace(PlaceholderGiven, person.Given)
@@ -64,7 +94,11 @@ public static class Generator
             .Replace(PlaceholderNhsId2, faker.Random.AlphaNumeric(10).ToUpper());
     }
 
-    private static List<List<T>> SplitIntoRandomBatches<T>(List<T> items, int minBatchSize, int maxBatchSize)
+    private static List<List<T>> SplitIntoRandomBatches<T>(
+        List<T> items,
+        int minBatchSize,
+        int maxBatchSize
+    )
     {
         if (items == null || items.Count == 0)
             throw new ArgumentException("The list cannot be null or empty.");
@@ -110,9 +144,15 @@ public static class Generator
         }
     }
 
-    private static int CalcSubsetSize(int total, int percentage) => (int)Math.Floor(total * ((double)percentage / 100));
+    private static int CalcSubsetSize(int total, int percentage) =>
+        (int)Math.Floor(total * ((double)percentage / 100));
 
-    private static FakeItem CreateFakeItem(string jsonTemplate, Faker faker, string matchType, double score)
+    private static FakeItem CreateFakeItem(
+        string jsonTemplate,
+        Faker faker,
+        string matchType,
+        double score
+    )
     {
         var fakeItem = new FakeItem
         {
@@ -120,14 +160,16 @@ public static class Generator
             {
                 Family = faker.Name.LastName(),
                 Given = faker.Name.FirstName(),
-                Dob = faker.Date.BetweenDateOnly(new DateOnly(1995, 1, 1), new DateOnly(2016, 1, 1)).ToString("yyyy-MM-dd"),
+                Dob = faker
+                    .Date.BetweenDateOnly(new DateOnly(1995, 1, 1), new DateOnly(2016, 1, 1))
+                    .ToString("yyyy-MM-dd"),
                 NhsId = faker.Random.AlphaNumeric(10).ToUpper(),
                 Email = faker.Internet.Email(),
                 Phone = faker.Phone.PhoneNumber("(01###) ### ###"),
-                Gender = faker.Random.Bool() ? "male" : "female"
+                Gender = faker.Random.Bool() ? "male" : "female",
             },
             MatchType = matchType,
-            Score = score
+            Score = score,
         };
 
         fakeItem.ResponseJson = MergeTemplate(jsonTemplate, fakeItem, fakeItem.Person, faker);
@@ -148,19 +190,21 @@ public static class Generator
     {
         var dir = Path.Combine(@base, $"sample_{suffix}");
         Directory.CreateDirectory(dir);
-        var baselineData = batch.Select(x => new
-        {
-            x.Person.Given,
-            x.Person.Family,
-            x.Person.Dob,
-            x.Person.Gender,
-            x.Person.Email,
-            x.Person.Phone,
-            __Expected_NHS_ID = x.Person.NhsId,
-            __Expected_Match_Type = x.MatchType,
-            __Expected_Score = x.Score.ToString(),
-            __curl = $"curl \"http://localhost:{port}{PlaceholderSearchApiUri}?given={x.Person.Given}&family={x.Person.Family}&birthdate=eq{x.Person.Dob}\""
-        }).ToList();
+        var baselineData = batch
+            .Select(x => new
+            {
+                x.Person.Given,
+                x.Person.Family,
+                x.Person.Dob,
+                x.Person.Gender,
+                x.Person.Email,
+                x.Person.Phone,
+                __Expected_NHS_ID = x.Person.NhsId,
+                __Expected_Match_Type = x.MatchType,
+                __Expected_Score = x.Score.ToString(),
+                __curl = $"curl \"http://localhost:{port}{PlaceholderSearchApiUri}?given={x.Person.Given}&family={x.Person.Family}&birthdate=eq{x.Person.Dob}\"",
+            })
+            .ToList();
 
         var inputSampleData = batch.Select(x => x.Person).ToList();
 

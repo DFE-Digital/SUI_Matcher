@@ -1,6 +1,5 @@
 using MatchingApi.Exceptions;
 using MatchingApi.Search;
-
 using Shared;
 using Shared.Models;
 
@@ -21,7 +20,10 @@ public class SearchStrategyTests
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy3, typeof(SearchStrategy3))]
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy4, typeof(SearchStrategy4))]
     [InlineData(SharedConstants.SearchStrategy.Strategies.Strategy5, typeof(SearchStrategy5))]
-    public void SearchStrategyFactory_ReturnsCorrectStrategyInstance(string strategyName, Type expectedType)
+    public void SearchStrategyFactory_ReturnsCorrectStrategyInstance(
+        string strategyName,
+        Type expectedType
+    )
     {
         var factory = SearchStrategyFactory.Get(strategyName);
         Assert.IsType(expectedType, factory);

@@ -4,7 +4,8 @@ namespace FakeNhsFhirApi;
 
 public class FakePerson
 {
-    [Name("DOB")] public string Dob { get; set; } = null!;
+    [Name("DOB")]
+    public string Dob { get; set; } = null!;
 
     [Name("Email")]
     public string Email { get; set; } = null!;
@@ -17,6 +18,7 @@ public class FakePerson
 
     [Name("GivenName")]
     public string Given { get; set; } = null!;
+
     [Ignore]
     public string NhsId { get; set; } = null!;
 

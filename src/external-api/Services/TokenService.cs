@@ -1,10 +1,7 @@
 using System.Net;
 using System.Text.Json.Nodes;
-
 using Azure.Security.KeyVault.Secrets;
-
 using ExternalApi.Util;
-
 using Microsoft.Extensions.Options;
 
 namespace ExternalApi.Services;
@@ -21,8 +18,8 @@ public class TokenService(
     ILogger<TokenService> logger,
     IJwtHandler jwtHandler,
     IHttpClientFactory httpClientFactory,
-    SecretClient secretClient)
-    : ITokenService
+    SecretClient secretClient
+) : ITokenService
 {
     protected static class NhsDigitalKeyConstants
     {
@@ -33,7 +30,9 @@ public class TokenService(
     }
 
     // Key vault Client
-    private readonly int _accountTokenExpiresInMinutes = options.Value.NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES ?? NhsDigitalKeyConstants.AccountTokenExpiresInMinutes;
+    private readonly int _accountTokenExpiresInMinutes =
+        options.Value.NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES
+        ?? NhsDigitalKeyConstants.AccountTokenExpiresInMinutes;
     private string? _privateKey;
     private string? _clientId;
     private string? _kid;
@@ -60,17 +59,24 @@ public class TokenService(
 
         // Perform request to NHS auth endpoint
         _accessTokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_accountTokenExpiresInMinutes);
-        _accessToken = await AccessToken(_accountTokenExpiresInMinutes) ??
-                       throw new InvalidOperationException("Failed to get access token");
+        _accessToken =
+            await AccessToken(_accountTokenExpiresInMinutes)
+            ?? throw new InvalidOperationException("Failed to get access token");
 
         return _accessToken;
     }
 
     public async Task Initialise()
     {
-        _privateKey = await GetSecretMaterial(NhsDigitalKeyConstants.PrivateKey) ?? throw new InvalidOperationException("Failed to get private key");
-        _clientId = await GetSecretMaterial(NhsDigitalKeyConstants.ClientId) ?? throw new InvalidOperationException("Failed to get client id");
-        _kid = await GetSecretMaterial(NhsDigitalKeyConstants.Kid) ?? throw new InvalidOperationException("Failed to get kid");
+        _privateKey =
+            await GetSecretMaterial(NhsDigitalKeyConstants.PrivateKey)
+            ?? throw new InvalidOperationException("Failed to get private key");
+        _clientId =
+            await GetSecretMaterial(NhsDigitalKeyConstants.ClientId)
+            ?? throw new InvalidOperationException("Failed to get client id");
+        _kid =
+            await GetSecretMaterial(NhsDigitalKeyConstants.Kid)
+            ?? throw new InvalidOperationException("Failed to get kid");
     }
 
     protected virtual async Task<string?> GetSecretMaterial(string secretName)
@@ -82,13 +88,19 @@ public class TokenService(
     private async Task<string?> AccessToken(int expInMinutes = 1)
     {
         var authAddress = _httpClient.BaseAddress!.ToString();
-        var jwt = jwtHandler.GenerateJwt(_privateKey!, authAddress, _clientId!, _kid!, expInMinutes);
+        var jwt = jwtHandler.GenerateJwt(
+            _privateKey!,
+            authAddress,
+            _clientId!,
+            _kid!,
+            expInMinutes
+        );
 
         var values = new Dictionary<string, string>
         {
-            {"grant_type", "client_credentials"},
-            {"client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
-            {"client_assertion", jwt},
+            { "grant_type", "client_credentials" },
+            { "client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" },
+            { "client_assertion", jwt },
         };
         var content = new FormUrlEncodedContent(values);
 

@@ -1,7 +1,5 @@
 using Microsoft.Extensions.Logging;
-
 using Moq;
-
 using Shared.Util;
 
 namespace Unit.Tests.Util;
@@ -16,13 +14,17 @@ public class RetryUtilTests
 
         await RetryUtil.RetryAsync(action, 3, 100, logger.Object);
 
-        logger.Verify(l => l.Log(
-                It.IsAny<LogLevel>(),
-                It.IsAny<EventId>(),
-                It.IsAny<It.IsAnyType>(),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Never);
+        logger.Verify(
+            l =>
+                l.Log(
+                    It.IsAny<LogLevel>(),
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.Never
+        );
     }
 
     [Fact]
@@ -41,13 +43,17 @@ public class RetryUtilTests
 
         await RetryUtil.RetryAsync(action, 3, 100, logger.Object);
 
-        logger.Verify(l => l.Log(
-                It.IsAny<LogLevel>(),
-                It.IsAny<EventId>(),
-                It.IsAny<It.IsAnyType>(),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Exactly(1));
+        logger.Verify(
+            l =>
+                l.Log(
+                    It.IsAny<LogLevel>(),
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.Exactly(1)
+        );
     }
 
     [Fact]
@@ -62,15 +68,21 @@ public class RetryUtilTests
             throw new Exception("Simulated failure");
         });
 
-        await Assert.ThrowsAsync<Exception>(() => RetryUtil.RetryAsync(action, 3, 100, logger.Object));
+        await Assert.ThrowsAsync<Exception>(() =>
+            RetryUtil.RetryAsync(action, 3, 100, logger.Object)
+        );
 
         Assert.Equal(3, attempts);
-        logger.Verify(l => l.Log(
-                It.IsAny<LogLevel>(),
-                It.IsAny<EventId>(),
-                It.IsAny<It.IsAnyType>(),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Exactly(3));
+        logger.Verify(
+            l =>
+                l.Log(
+                    It.IsAny<LogLevel>(),
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.Exactly(3)
+        );
     }
 }

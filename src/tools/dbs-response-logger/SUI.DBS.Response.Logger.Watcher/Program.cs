@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
 using Shared.Extensions;
 using Shared.Util;
-
 using SUI.DBS.Response.Logger.Core.Extensions;
 using SUI.DBS.Response.Logger.Core.Watcher;
 
@@ -12,15 +10,17 @@ Rule.Assert(args.Length == 2, "Usage: dbsw <watch_directory>");
 
 var builder = Host.CreateDefaultBuilder();
 builder.ConfigureAppSettingsJsonFile();
-builder.ConfigureServices((hostContext, services) =>
-{
-    services.AddClientCore(hostContext.Configuration);
-    services.Configure<TxtWatcherConfig>(x =>
+builder.ConfigureServices(
+    (hostContext, services) =>
     {
-        x.IncomingDirectory = args[0];
-        x.ProcessedDirectory = args[1];
-    });
-});
+        services.AddClientCore(hostContext.Configuration);
+        services.Configure<TxtWatcherConfig>(x =>
+        {
+            x.IncomingDirectory = args[0];
+            x.ProcessedDirectory = args[1];
+        });
+    }
+);
 
 var host = builder.Build();
 var cts = new CancellationTokenSource();

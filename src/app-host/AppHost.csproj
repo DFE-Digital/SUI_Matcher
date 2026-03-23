@@ -1,28 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireVersion)" />
 
-	<Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireVersion)" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>35d1c875-6b35-46ad-8913-aea85a53b9c2</UserSecretsId>
+  </PropertyGroup>
 
-	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<UserSecretsId>35d1c875-6b35-46ad-8913-aea85a53b9c2</UserSecretsId>
-	</PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Azure.Security.KeyVault" />
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Azure" />
+    <PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
+    <PackageReference Include="Aspire.Hosting.Azure.Storage" />
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
+    <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="AspNetCore.HealthChecks.Uris" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Aspire.Azure.Security.KeyVault" />
-		<PackageReference Include="Aspire.Hosting.AppHost" />
-		<PackageReference Include="Aspire.Hosting.Azure" />
-		<PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
-		<PackageReference Include="Aspire.Hosting.Azure.Storage" />
-		<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
-		<PackageReference Include="DotNetEnv" />
-        <PackageReference Include="AspNetCore.HealthChecks.Uris" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\matching-api\Matching.csproj" />
-		<ProjectReference Include="..\external-api\External.csproj" />
-		<ProjectReference Include="..\SUI.Client\SUI.Client.Watcher\SUI.Client.Watcher.csproj" />
-		<ProjectReference Include="..\Yarp\Yarp.csproj" />
-	</ItemGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\matching-api\Matching.csproj" />
+    <ProjectReference Include="..\external-api\External.csproj" />
+    <ProjectReference Include="..\SUI.Client\SUI.Client.Watcher\SUI.Client.Watcher.csproj" />
+    <ProjectReference Include="..\Yarp\Yarp.csproj" />
+  </ItemGroup>
 </Project>

@@ -21,6 +21,7 @@ public class TempDirectoryFixture
     public string IncomingDirectoryPath => Path.Combine(BaseDirectoryPath, "Incoming");
 
     public string ProcessedDirectoryPath => Path.Combine(BaseDirectoryPath, "Processed");
+
     public void Dispose()
     {
         Directory.Delete(BaseDirectoryPath, recursive: true);

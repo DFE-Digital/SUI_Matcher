@@ -2,7 +2,10 @@ using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 namespace SUI.Client.Core.Domain.Models;
 
-public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinimal? primaryAddress = null)
+public class AddressHistory(
+    IEnumerable<AddressMinimal> addresses,
+    AddressMinimal? primaryAddress = null
+)
 {
     private readonly List<AddressMinimal> _addresses = addresses.ToList();
 
@@ -10,12 +13,13 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
 
     public AddressMinimal? PrimaryAddress { get; } = primaryAddress;
 
-
     public AddressComparisonResult PrimaryAddressSameAs(AddressHistory? other)
     {
         if (PrimaryAddress == null || other?.PrimaryAddress == null)
         {
-            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Unmatched
+            );
         }
 
         return AreAddressesEqual(PrimaryAddress, other.PrimaryAddress);
@@ -25,7 +29,9 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
     {
         if (other == null)
         {
-            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Unmatched
+            );
         }
 
         // Check all combinations and return the first match or uncertain result
@@ -34,7 +40,11 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
             foreach (var a2 in other.Addresses)
             {
                 var result = AreAddressesEqual(a1, a2);
-                if (result.Status is AddressComparisonResult.AddressMatchStatus.Matched or AddressComparisonResult.AddressMatchStatus.Uncertain)
+                if (
+                    result.Status
+                    is AddressComparisonResult.AddressMatchStatus.Matched
+                        or AddressComparisonResult.AddressMatchStatus.Uncertain
+                )
                 {
                     return result;
                 }
@@ -48,15 +58,19 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
     {
         if (PrimaryAddress == null || other == null)
         {
-            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Unmatched
+            );
         }
 
         // Check primary address against all addresses in other's history
         foreach (var address in other.Addresses)
         {
             var result = AreAddressesEqual(PrimaryAddress, address);
-            if (result.Status == AddressComparisonResult.AddressMatchStatus.Matched ||
-                result.Status == AddressComparisonResult.AddressMatchStatus.Uncertain)
+            if (
+                result.Status == AddressComparisonResult.AddressMatchStatus.Matched
+                || result.Status == AddressComparisonResult.AddressMatchStatus.Uncertain
+            )
             {
                 return result;
             }
@@ -72,19 +86,28 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
         {
             return new AddressComparisonResult(
                 AddressComparisonResult.AddressMatchStatus.Unmatched,
-                AddressComparisonResult.AddressMatchReason.PostcodeMismatch);
+                AddressComparisonResult.AddressMatchReason.PostcodeMismatch
+            );
         }
 
         // Rule 2: Null checks - if lines 1 and 2 are null on both a1 and a2 then its unmatched
-        if (string.IsNullOrWhiteSpace(a1.AddressLineOne) && string.IsNullOrWhiteSpace(a1.AddressLineTwo) &&
-           string.IsNullOrWhiteSpace(a2.AddressLineOne) && string.IsNullOrWhiteSpace(a2.AddressLineTwo))
+        if (
+            string.IsNullOrWhiteSpace(a1.AddressLineOne)
+            && string.IsNullOrWhiteSpace(a1.AddressLineTwo)
+            && string.IsNullOrWhiteSpace(a2.AddressLineOne)
+            && string.IsNullOrWhiteSpace(a2.AddressLineTwo)
+        )
         {
-            return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Unmatched);
+            return new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Unmatched
+            );
         }
 
         // Rule 3: Do address line one match exactly? = Match
-        if (!string.IsNullOrEmpty(a1.AddressLineOne) &&
-            a1.AddressLineOne.Equals(a2.AddressLineOne, StringComparison.OrdinalIgnoreCase))
+        if (
+            !string.IsNullOrEmpty(a1.AddressLineOne)
+            && a1.AddressLineOne.Equals(a2.AddressLineOne, StringComparison.OrdinalIgnoreCase)
+        )
         {
             return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Matched);
         }
@@ -99,10 +122,15 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
         if (a1Line1Number == null && a2Line1Number == null)
         {
             // Both Line2 have numbers and they match
-            if (a1Line2Number != null && a2Line2Number != null &&
-                a1Line2Number.Equals(a2Line2Number, StringComparison.OrdinalIgnoreCase))
+            if (
+                a1Line2Number != null
+                && a2Line2Number != null
+                && a1Line2Number.Equals(a2Line2Number, StringComparison.OrdinalIgnoreCase)
+            )
             {
-                return new AddressComparisonResult(AddressComparisonResult.AddressMatchStatus.Matched);
+                return new AddressComparisonResult(
+                    AddressComparisonResult.AddressMatchStatus.Matched
+                );
             }
 
             // Neither Line1 nor Line2 have numbers - can't compare
@@ -110,13 +138,15 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
             {
                 return new AddressComparisonResult(
                     AddressComparisonResult.AddressMatchStatus.Unmatched,
-                    AddressComparisonResult.AddressMatchReason.BuildingNumberMissing);
+                    AddressComparisonResult.AddressMatchReason.BuildingNumberMissing
+                );
             }
 
             // One has Line2 number, one doesn't
             return new AddressComparisonResult(
                 AddressComparisonResult.AddressMatchStatus.Unmatched,
-                AddressComparisonResult.AddressMatchReason.BuildingNumberMissing);
+                AddressComparisonResult.AddressMatchReason.BuildingNumberMissing
+            );
         }
 
         // Determine which numbers to use for comparison (prefer Line1, fallback to Line2)
@@ -128,7 +158,8 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
         {
             return new AddressComparisonResult(
                 AddressComparisonResult.AddressMatchStatus.Unmatched,
-                AddressComparisonResult.AddressMatchReason.BuildingNumberMissing);
+                AddressComparisonResult.AddressMatchReason.BuildingNumberMissing
+            );
         }
 
         // Rule 5: Flat/apartment detection - if one address has numbers in both lines and the other doesn't
@@ -139,24 +170,42 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
         if (a1HasBothLineNumbers && !a2HasBothLineNumbers)
         {
             // Check if a2's number appears in either of a1's lines
-            if ((a1Line1Number != null && a1Line1Number.Equals(a2Number, StringComparison.OrdinalIgnoreCase)) ||
-                (a1Line2Number != null && a1Line2Number.Equals(a2Number, StringComparison.OrdinalIgnoreCase)))
+            if (
+                (
+                    a1Line1Number != null
+                    && a1Line1Number.Equals(a2Number, StringComparison.OrdinalIgnoreCase)
+                )
+                || (
+                    a1Line2Number != null
+                    && a1Line2Number.Equals(a2Number, StringComparison.OrdinalIgnoreCase)
+                )
+            )
             {
                 return new AddressComparisonResult(
                     AddressComparisonResult.AddressMatchStatus.Uncertain,
-                    AddressComparisonResult.AddressMatchReason.FlatMissing);
+                    AddressComparisonResult.AddressMatchReason.FlatMissing
+                );
             }
         }
 
         if (a2HasBothLineNumbers && !a1HasBothLineNumbers)
         {
             // Check if a1's number appears in either of a2's lines
-            if ((a2Line1Number != null && a2Line1Number.Equals(a1Number, StringComparison.OrdinalIgnoreCase)) ||
-                (a2Line2Number != null && a2Line2Number.Equals(a1Number, StringComparison.OrdinalIgnoreCase)))
+            if (
+                (
+                    a2Line1Number != null
+                    && a2Line1Number.Equals(a1Number, StringComparison.OrdinalIgnoreCase)
+                )
+                || (
+                    a2Line2Number != null
+                    && a2Line2Number.Equals(a1Number, StringComparison.OrdinalIgnoreCase)
+                )
+            )
             {
                 return new AddressComparisonResult(
                     AddressComparisonResult.AddressMatchStatus.Uncertain,
-                    AddressComparisonResult.AddressMatchReason.FlatMissing);
+                    AddressComparisonResult.AddressMatchReason.FlatMissing
+                );
             }
         }
 
@@ -165,7 +214,8 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
         {
             return new AddressComparisonResult(
                 AddressComparisonResult.AddressMatchStatus.Uncertain,
-                AddressComparisonResult.AddressMatchReason.FlatMissing);
+                AddressComparisonResult.AddressMatchReason.FlatMissing
+            );
         }
 
         // Rule 7: Does the other address's number exist in line 2 text? = Uncertain (Flat scenario)
@@ -173,7 +223,8 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
         {
             return new AddressComparisonResult(
                 AddressComparisonResult.AddressMatchStatus.Uncertain,
-                AddressComparisonResult.AddressMatchReason.FlatMissing);
+                AddressComparisonResult.AddressMatchReason.FlatMissing
+            );
         }
 
         // Rule 8: Check for range matching scenarios
@@ -191,14 +242,16 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
         {
             return new AddressComparisonResult(
                 AddressComparisonResult.AddressMatchStatus.Uncertain,
-                AddressComparisonResult.AddressMatchReason.NumberRange);
+                AddressComparisonResult.AddressMatchReason.NumberRange
+            );
         }
 
         if (a2IsRange && !a1IsRange && IsNumberInRange(a1Number, a2Number))
         {
             return new AddressComparisonResult(
                 AddressComparisonResult.AddressMatchStatus.Uncertain,
-                AddressComparisonResult.AddressMatchReason.NumberRange);
+                AddressComparisonResult.AddressMatchReason.NumberRange
+            );
         }
 
         // Rule 9: Everything else = Unmatched
@@ -278,12 +331,18 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
         var endNumStr = new string(parts[1].TakeWhile(char.IsDigit).ToArray());
         var singleNumStr = new string(singleNumber.TakeWhile(char.IsDigit).ToArray());
 
-        if (string.IsNullOrEmpty(startNumStr) || string.IsNullOrEmpty(endNumStr) || string.IsNullOrEmpty(singleNumStr))
+        if (
+            string.IsNullOrEmpty(startNumStr)
+            || string.IsNullOrEmpty(endNumStr)
+            || string.IsNullOrEmpty(singleNumStr)
+        )
             return false;
 
-        if (!int.TryParse(startNumStr, out var start) ||
-            !int.TryParse(endNumStr, out var end) ||
-            !int.TryParse(singleNumStr, out var single))
+        if (
+            !int.TryParse(startNumStr, out var start)
+            || !int.TryParse(endNumStr, out var end)
+            || !int.TryParse(singleNumStr, out var single)
+        )
         {
             return false;
         }
@@ -301,7 +360,10 @@ public class AddressHistory(IEnumerable<AddressMinimal> addresses, AddressMinima
             return false;
 
         // Check if the building number appears as a standalone word in the address line
-        var words = addressLine.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var words = addressLine.Split(
+            [' ', ','],
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+        );
 
         return words.Any(word => word.Equals(buildingNumber, StringComparison.OrdinalIgnoreCase));
     }

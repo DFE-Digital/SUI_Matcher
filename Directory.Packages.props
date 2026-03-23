@@ -28,19 +28,40 @@
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUi" Version="9.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.23.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="$(AspnetVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="$(AspnetVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="$(AspnetVersion)" />
+    <PackageVersion
+      Include="Microsoft.Extensions.ApiDescription.Server"
+      Version="$(AspnetVersion)"
+    />
+    <PackageVersion
+      Include="Microsoft.Extensions.Configuration.Abstractions"
+      Version="$(AspnetVersion)"
+    />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(AspnetVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(AspnetVersion)" />
+    <PackageVersion
+      Include="Microsoft.Extensions.Configuration.Binder"
+      Version="$(AspnetVersion)"
+    />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(AspnetVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(AspnetVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(AspnetVersion)" />
+    <PackageVersion
+      Include="Microsoft.Extensions.DependencyInjection.Abstractions"
+      Version="$(AspnetVersion)"
+    />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(AspnetVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="$(AspnetVersion)" />
+    <PackageVersion
+      Include="Microsoft.Extensions.Hosting.WindowsServices"
+      Version="$(AspnetVersion)"
+    />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Systemd" Version="$(AspnetVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(AspnetVersion)" />
+    <PackageVersion
+      Include="Microsoft.Extensions.Hosting.Abstractions"
+      Version="$(AspnetVersion)"
+    />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(AspnetVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(AspnetVersion)" />
+    <PackageVersion
+      Include="Microsoft.Extensions.Logging.Abstractions"
+      Version="$(AspnetVersion)"
+    />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(AspnetVersion)" />
     <PackageVersion Include="Microsoft.FeatureManagement" Version="4.2.1" />
     <PackageVersion Include="Microsoft.FeatureManagement.AspNetCore" Version="4.2.1" />
@@ -81,14 +102,35 @@
     <!-- Aspire Custom Extensions -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.8.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="$(AspireVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery.Abstractions" Version="$(AspireVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery.Yarp" Version="$(AspireVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery.Dns" Version="$(AspireVersion)" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion
+      Include="Microsoft.Extensions.ServiceDiscovery.Abstractions"
+      Version="$(AspireVersion)"
+    />
+    <PackageVersion
+      Include="Microsoft.Extensions.ServiceDiscovery.Yarp"
+      Version="$(AspireVersion)"
+    />
+    <PackageVersion
+      Include="Microsoft.Extensions.ServiceDiscovery.Dns"
+      Version="$(AspireVersion)"
+    />
+    <PackageVersion
+      Include="OpenTelemetry.Exporter.OpenTelemetryProtocol"
+      Version="$(OpenTelemetryVersion)"
+    />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion
+      Include="OpenTelemetry.Instrumentation.AspNetCore"
+      Version="$(OpenTelemetryVersion)"
+    />
+    <PackageVersion
+      Include="OpenTelemetry.Instrumentation.Http"
+      Version="$(OpenTelemetryVersion)"
+    />
+    <PackageVersion
+      Include="OpenTelemetry.Instrumentation.Runtime"
+      Version="$(OpenTelemetryVersion)"
+    />
   </ItemGroup>
   <ItemGroup>
     <!-- Healthchecks -->

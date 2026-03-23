@@ -1,16 +1,15 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Utility;
-
 using Shared.Endpoint;
 using Shared.Models;
 using Shared.Util;
 
 namespace ExternalApi.Services;
 
-public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhirClient> logger) : INhsFhirClient
+public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhirClient> logger)
+    : INhsFhirClient
 {
-
     // Performs search against Nhs Digital FHIR API
     // Returns SearchResult indicating match status
     public async Task<SearchResult?> PerformSearch(SearchQuery query)
@@ -27,9 +26,10 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
 
             if (patient == null)
             {
-                var isMultipleMatches = fhirClient.LastBodyAsResource is OperationOutcome outcome &&
-                    outcome.Issue.Count > 0 &&
-                    outcome.Issue[0].Code == OperationOutcome.IssueType.MultipleMatches;
+                var isMultipleMatches =
+                    fhirClient.LastBodyAsResource is OperationOutcome outcome
+                    && outcome.Issue.Count > 0
+                    && outcome.Issue[0].Code == OperationOutcome.IssueType.MultipleMatches;
 
                 if (isMultipleMatches)
                 {
@@ -37,7 +37,9 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                     return SearchResult.MultiMatched();
                 }
 
-                return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response");
+                return SearchResult.Error(
+                    "Error occurred while parsing Nhs Digital FHIR API search response"
+                );
             }
 
             logger.LogInformation("{EntryCount} patient record(s) found", patient.Entry.Count);
@@ -56,7 +58,9 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
 
                     return SearchResult.Match(patient.Entry[0].Resource?.Id ?? string.Empty, score);
                 default:
-                    return SearchResult.Error("Error occurred while parsing Nhs Digital FHIR API search response, more than 1 entry found");
+                    return SearchResult.Error(
+                        "Error occurred while parsing Nhs Digital FHIR API search response, more than 1 entry found"
+                    );
             }
         }
         catch (Exception ex)
@@ -74,7 +78,9 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
         {
             var fhirClient = fhirClientFactory.CreateFhirClient();
 
-            var data = await fhirClient.ReadAsync<Patient>(ResourceIdentity.Build("Patient", nhsId));
+            var data = await fhirClient.ReadAsync<Patient>(
+                ResourceIdentity.Build("Patient", nhsId)
+            );
             if (data == null)
             {
                 logger.LogInformation("Patient record not found for Nhs number");
@@ -82,34 +88,78 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             }
 
             logger.LogInformation("Patient record found for Nhs number");
-            logger.LogInformation("Security flags {SecurityFlag}", string.Join(',', data.Meta?.Security.Select(c => c.Code) ?? []));
+            logger.LogInformation(
+                "Security flags {SecurityFlag}",
+                string.Join(',', data.Meta?.Security.Select(c => c.Code) ?? [])
+            );
             return new DemographicResult
             {
                 Result = new NhsPerson
                 {
                     NhsNumber = data.Id ?? String.Empty,
-                    AddressPostalCodes = data.Address.Where(s => s.Period?.End == null && s.PostalCode != null).Select(s => s.PostalCode).OfType<string>().ToArray(),
+                    AddressPostalCodes = data
+                        .Address.Where(s => s.Period?.End == null && s.PostalCode != null)
+                        .Select(s => s.PostalCode)
+                        .OfType<string>()
+                        .ToArray(),
                     Gender = data.Gender.GetLiteral(),
-                    BirthDate = data.BirthDate.ToDateOnly([Constants.DateFormat, Constants.DateAltFormat, Constants.DateAltFormatBritish]),
-                    Emails = data.Telecom
-                     .Where(s => s.System is ContactPoint.ContactPointSystem.Email && s.Period?.End is null).Select(s => s.Value).OfType<string>().ToArray(),
-                    PhoneNumbers = data.Telecom
-                     .Where(s => s.System is ContactPoint.ContactPointSystem.Phone
-                         or ContactPoint.ContactPointSystem.Sms && s.Period?.End is null).Select(s => s.Value).OfType<string>().ToArray(),
-                    FamilyNames = data.Name.Where(s => s.Period?.End is null).Select(s => s.Family).OfType<string>().ToArray(),
-                    GivenNames = data.Name.Where(s => s.Period?.End is null).SelectMany(s => s.Given).OfType<string>().ToArray(),
-                    AddressHistory = data.Address.Select((s, i) => $"{(s.Use)?.ToString().ToLower()}~{string.Join("~", s.Line)}~{s.PostalCode}" + "|").ToArray(),
+                    BirthDate = data.BirthDate.ToDateOnly([
+                        Constants.DateFormat,
+                        Constants.DateAltFormat,
+                        Constants.DateAltFormatBritish,
+                    ]),
+                    Emails = data
+                        .Telecom.Where(s =>
+                            s.System is ContactPoint.ContactPointSystem.Email
+                            && s.Period?.End is null
+                        )
+                        .Select(s => s.Value)
+                        .OfType<string>()
+                        .ToArray(),
+                    PhoneNumbers = data
+                        .Telecom.Where(s =>
+                            s.System
+                                is ContactPoint.ContactPointSystem.Phone
+                                    or ContactPoint.ContactPointSystem.Sms
+                            && s.Period?.End is null
+                        )
+                        .Select(s => s.Value)
+                        .OfType<string>()
+                        .ToArray(),
+                    FamilyNames = data
+                        .Name.Where(s => s.Period?.End is null)
+                        .Select(s => s.Family)
+                        .OfType<string>()
+                        .ToArray(),
+                    GivenNames = data
+                        .Name.Where(s => s.Period?.End is null)
+                        .SelectMany(s => s.Given)
+                        .OfType<string>()
+                        .ToArray(),
+                    AddressHistory = data
+                        .Address.Select(
+                            (s, i) =>
+                                $"{(s.Use)?.ToString().ToLower()}~{string.Join("~", s.Line)}~{s.PostalCode}"
+                                + "|"
+                        )
+                        .ToArray(),
                     // Always contains zero or one general practitioner object.
-                    GeneralPractitionerOdsId = data.GeneralPractitioner.FirstOrDefault()?.Identifier?.Value
+                    GeneralPractitionerOdsId = data
+                        .GeneralPractitioner.FirstOrDefault()
+                        ?.Identifier?.Value,
                 },
-                Status = Status.Success
+                Status = Status.Success,
             };
         }
         catch (Exception ex)
         {
             var status = Status.Error;
             var fhirError = string.Empty;
-            if (ex is FhirOperationException { Outcome: not null } fex && fex.Outcome.Issue.Count > 0 && fex.Outcome?.Issue[0].Details?.Coding.Count > 0)
+            if (
+                ex is FhirOperationException { Outcome: not null } fex
+                && fex.Outcome.Issue.Count > 0
+                && fex.Outcome?.Issue[0].Details?.Coding.Count > 0
+            )
             {
                 Coding coding = fex.Outcome.Issue[0].Details!.Coding[0];
                 fhirError = $" - {coding.Display}";
@@ -123,17 +173,25 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                     status = Status.PatientNotFound;
                 }
             }
-            logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search by NHS ID{FhirError}", fhirError);
+            logger.LogError(
+                ex,
+                "Error occurred while performing Nhs Digital FHIR API search by NHS ID{FhirError}",
+                fhirError
+            );
             return DemographicResult(fhirError, status);
         }
     }
 
-    private static DemographicResult DemographicResult(string fhirError = "", Status status = Status.Error)
+    private static DemographicResult DemographicResult(
+        string fhirError = "",
+        Status status = Status.Error
+    )
     {
         return new DemographicResult
         {
-            ErrorMessage = "Error occurred while performing Nhs Digital FHIR API search by NHS ID" + fhirError,
-            Status = status
+            ErrorMessage =
+                "Error occurred while performing Nhs Digital FHIR API search by NHS ID" + fhirError,
+            Status = status,
         };
     }
 

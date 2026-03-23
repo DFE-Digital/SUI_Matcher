@@ -4,7 +4,12 @@ namespace Shared.Util;
 
 public static class RetryUtil
 {
-    public static async Task RetryAsync(Func<Task> action, int retryCount, int delayMs, ILogger logger)
+    public static async Task RetryAsync(
+        Func<Task> action,
+        int retryCount,
+        int delayMs,
+        ILogger logger
+    )
     {
         int attempts = 0;
         while (attempts < retryCount)
@@ -17,7 +22,13 @@ public static class RetryUtil
             catch (Exception ex)
             {
                 attempts++;
-                logger.LogInformation(ex, "Retry attempt {Attempts} failed: {Message}. Retrying in {DelayMs}ms.", attempts, ex.Message, delayMs);
+                logger.LogInformation(
+                    ex,
+                    "Retry attempt {Attempts} failed: {Message}. Retrying in {DelayMs}ms.",
+                    attempts,
+                    ex.Message,
+                    delayMs
+                );
 
                 if (attempts >= retryCount)
                     throw;
@@ -26,5 +37,4 @@ public static class RetryUtil
             }
         }
     }
-
 }

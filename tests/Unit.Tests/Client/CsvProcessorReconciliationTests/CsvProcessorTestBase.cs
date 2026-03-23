@@ -1,23 +1,16 @@
 using System.Threading.Channels;
-
 using MatchingApi.Services;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.FeatureManagement;
-
 using Shared.Endpoint;
 using Shared.Logging;
-
 using SUI.Client.Core;
 using SUI.Client.Core.Infrastructure.FileSystem;
-
 using Unit.Tests.Util;
 using Unit.Tests.Util.Adapters;
-
 using Xunit.Abstractions;
-
 using IMatchingService = SUI.Client.Core.Application.Interfaces.IMatchingService;
 
 namespace Unit.Tests.Client.CsvProcessorReconciliationTests;
@@ -39,12 +32,16 @@ public class CsvProcessorTestBase(ITestOutputHelper testOutputHelper)
         public static string Phone = "Phone";
     }
 
-    protected ServiceProvider Bootstrap(bool enableReconciliation, Action<ServiceCollection>? configure = null)
+    protected ServiceProvider Bootstrap(
+        bool enableReconciliation,
+        Action<ServiceCollection>? configure = null
+    )
     {
         var servicesCollection = new ServiceCollection();
-        servicesCollection.AddLogging(b => b.AddDebug().AddProvider(new TestContextLoggerProvider(TestContext)));
-        var config = new ConfigurationBuilder()
-            .Build();
+        servicesCollection.AddLogging(b =>
+            b.AddDebug().AddProvider(new TestContextLoggerProvider(TestContext))
+        );
+        var config = new ConfigurationBuilder().Build();
 
         servicesCollection.Configure<CsvWatcherConfig>(x =>
         {

@@ -7,5 +7,5 @@ public enum MatchStatus
     LowConfidenceMatch,
     ManyMatch,
     NoMatch,
-    Error
+    Error,
 }
