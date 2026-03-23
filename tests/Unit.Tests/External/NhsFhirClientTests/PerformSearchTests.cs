@@ -1,7 +1,5 @@
 using ExternalApi.Services;
-
 using Shared.Models;
-
 using Task = System.Threading.Tasks.Task;
 
 namespace Unit.Tests.External.NhsFhirClientTests;
@@ -20,8 +18,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
             Birthdate = ["eq1980-01-01"],
         };
         var testFhirClient = new TestFhirClientSuccess("https://fhir.api.endpoint");
-        _fhirClientFactory.Setup(f => f.CreateFhirClient())
-            .Returns(testFhirClient);
+        _fhirClientFactory.Setup(f => f.CreateFhirClient()).Returns(testFhirClient);
 
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
@@ -38,11 +35,15 @@ public class PerformSearchTests : BaseNhsFhirClientTests
     public async Task ShouldGetSearchResultsMultiMatched_WhenMultipleMatches()
     {
         // Arrange
-        var searchQuery = new SearchQuery { Family = "Doe", Given = ["John"], Birthdate = ["eq1980-01-01"], };
+        var searchQuery = new SearchQuery
+        {
+            Family = "Doe",
+            Given = ["John"],
+            Birthdate = ["eq1980-01-01"],
+        };
 
         var testFhirClient = new TestFhirClientMultiMatch("https://fhir.api.endpoint");
-        _fhirClientFactory.Setup(f => f.CreateFhirClient())
-            .Returns(testFhirClient);
+        _fhirClientFactory.Setup(f => f.CreateFhirClient()).Returns(testFhirClient);
 
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
@@ -58,11 +59,15 @@ public class PerformSearchTests : BaseNhsFhirClientTests
     public async Task ShouldGetSearchResultsError_WhenMoreThanOneEntryIsFound()
     {
         // Arrange
-        var searchQuery = new SearchQuery { Family = "Doe", Given = ["John"], Birthdate = ["eq1980-01-01"], };
+        var searchQuery = new SearchQuery
+        {
+            Family = "Doe",
+            Given = ["John"],
+            Birthdate = ["eq1980-01-01"],
+        };
 
         var testFhirClient = new UnknownCaseFhirClient("https://fhir.api.endpoint");
-        _fhirClientFactory.Setup(f => f.CreateFhirClient())
-            .Returns(testFhirClient);
+        _fhirClientFactory.Setup(f => f.CreateFhirClient()).Returns(testFhirClient);
 
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
@@ -78,11 +83,15 @@ public class PerformSearchTests : BaseNhsFhirClientTests
     public async Task ShouldGetSearchResultsUnmatched_WhenNoMatches()
     {
         // Arrange
-        var searchQuery = new SearchQuery { Family = "NotExistent", Given = ["IAm"], Birthdate = ["eq1900-01-01"], };
+        var searchQuery = new SearchQuery
+        {
+            Family = "NotExistent",
+            Given = ["IAm"],
+            Birthdate = ["eq1900-01-01"],
+        };
 
         var testFhirClient = new TestFhirClientUnmatched("https://fhir.api.endpoint");
-        _fhirClientFactory.Setup(f => f.CreateFhirClient())
-            .Returns(testFhirClient);
+        _fhirClientFactory.Setup(f => f.CreateFhirClient()).Returns(testFhirClient);
 
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
@@ -98,11 +107,15 @@ public class PerformSearchTests : BaseNhsFhirClientTests
     public async Task ShouldGetSearchResultsError_WhenAnExceptionIsThrown()
     {
         // Arrange
-        var searchQuery = new SearchQuery { Family = "Error", Given = ["IAm"], Birthdate = ["eq1900-01-01"], };
+        var searchQuery = new SearchQuery
+        {
+            Family = "Error",
+            Given = ["IAm"],
+            Birthdate = ["eq1900-01-01"],
+        };
 
         var testFhirClient = new TestFhirClientError("https://fhir.api.endpoint");
-        _fhirClientFactory.Setup(f => f.CreateFhirClient())
-            .Returns(testFhirClient);
+        _fhirClientFactory.Setup(f => f.CreateFhirClient()).Returns(testFhirClient);
 
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 

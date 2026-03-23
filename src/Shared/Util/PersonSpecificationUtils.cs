@@ -19,7 +19,7 @@ public static class PersonSpecificationUtils
             "1" => "male",
             "2" => "female",
             "9" => "not specified",
-            _ => "unknown"
+            _ => "unknown",
         };
     }
 
@@ -40,7 +40,7 @@ public static class PersonSpecificationUtils
             <= 11 => "8-11 years",
             <= 15 => "12-15 years",
             <= 18 => "16-18 years",
-            _ => "Over 18 years"
+            _ => "Over 18 years",
         };
     }
 

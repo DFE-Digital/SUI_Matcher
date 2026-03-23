@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -12,11 +11,11 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
-	<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
-	<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
-	<PackageReference Include="OxyPlot.Core" />
-	<PackageReference Include="OxyPlot.SkiaSharp" />
-	<PackageReference Include="QuestPDF" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="OxyPlot.Core" />
+    <PackageReference Include="OxyPlot.SkiaSharp" />
+    <PackageReference Include="QuestPDF" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,5 +25,4 @@
   <ItemGroup>
     <Compile Remove="Domain\Models\AddressFull.cs" />
   </ItemGroup>
-
 </Project>

@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-
 using Shared.Models;
 
 namespace Shared.Util;
@@ -24,20 +23,23 @@ public static class HashUtil
         }
         return gender;
     }
+
     private static string FormatPostalCode(string inputPostalCode)
     {
         if (string.IsNullOrWhiteSpace(inputPostalCode))
         {
             return "";
         }
-        return new string(inputPostalCode
-            .Where(c => !char.IsWhiteSpace(c))
-            .ToArray())
-            .ToLowerInvariant();
+        return new string(
+            inputPostalCode.Where(c => !char.IsWhiteSpace(c)).ToArray()
+        ).ToLowerInvariant();
     }
 
-    private static string FormatName(string name) => string.IsNullOrWhiteSpace(name) ? "" : name!.ToLowerInvariant();
-    private static string FormatBirthDate(DateOnly? birthDate) => birthDate is DateOnly date ? date.ToString("dd/MM/yyyy") : "";
+    private static string FormatName(string name) =>
+        string.IsNullOrWhiteSpace(name) ? "" : name!.ToLowerInvariant();
+
+    private static string FormatBirthDate(DateOnly? birthDate) =>
+        birthDate is DateOnly date ? date.ToString("dd/MM/yyyy") : "";
 
     private static string CreateHash(string data)
     {
@@ -52,7 +54,14 @@ public static class HashUtil
 
         return builder.ToString();
     }
-    private static string PrepareDataString(string given, string family, string birthDate, string gender, string postalCode)
+
+    private static string PrepareDataString(
+        string given,
+        string family,
+        string birthDate,
+        string gender,
+        string postalCode
+    )
     {
         return $"{given}{family}{birthDate}{gender}{postalCode}";
     }
@@ -86,5 +95,4 @@ public static class HashUtil
         Activity.Current?.SetBaggage("SearchId", hash);
         return hash;
     }
-
 }

@@ -2,11 +2,8 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using Shared.Models;
 using Shared.Util;
 
@@ -33,8 +30,10 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
         activity.Start();
 
-        Activity.Current?.SetBaggage("responseFileLastModified",
-            $"{File.GetLastWriteTime(filePath).Date:yyyy-MM-dd}");
+        Activity.Current?.SetBaggage(
+            "responseFileLastModified",
+            $"{File.GetLastWriteTime(filePath).Date:yyyy-MM-dd}"
+        );
 
         AssertFileExists(filePath);
 
@@ -88,15 +87,20 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
             );
         }
 
-        logger.LogInformation("The DBS results file has {RecordCount} records, batch search resulted in Match='{Matches}' and NoMatch='{NoMatches}'"
-            , recordCount
-            , matches
-            , noMatches);
+        logger.LogInformation(
+            "The DBS results file has {RecordCount} records, batch search resulted in Match='{Matches}' and NoMatch='{NoMatches}'",
+            recordCount,
+            matches,
+            noMatches
+        );
 
         activity.Stop();
     }
 
-    private static MatchPersonResult ParseMatchPersonResult(RecordColumn[] recordColumns, string[] recordData)
+    private static MatchPersonResult ParseMatchPersonResult(
+        RecordColumn[] recordColumns,
+        string[] recordData
+    )
     {
         var result = new MatchPersonResult();
 
@@ -129,10 +133,22 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
         return result;
     }
-    private static DateOnly? ToDateOnly(string? value)
-        => !string.IsNullOrWhiteSpace(value) && DateOnly.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) ? date : null;
-    public static string ToPostCode(string? value)
-        => !string.IsNullOrWhiteSpace(value) ? value : "Unknown";
+
+    private static DateOnly? ToDateOnly(string? value) =>
+        !string.IsNullOrWhiteSpace(value)
+        && DateOnly.TryParseExact(
+            value,
+            "yyyyMMdd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out DateOnly date
+        )
+            ? date
+            : null;
+
+    public static string ToPostCode(string? value) =>
+        !string.IsNullOrWhiteSpace(value) ? value : "Unknown";
+
     public static string GetAgeGroup(DateOnly birthDate)
     {
         var dateOnlyNow = DateOnly.FromDateTime(DateTime.Now);
@@ -150,7 +166,7 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
             <= 11 => "8-11 years",
             <= 15 => "12-15 years",
             <= 18 => "16-18 years",
-            _ => "Over 18 years"
+            _ => "Over 18 years",
         };
     }
 }

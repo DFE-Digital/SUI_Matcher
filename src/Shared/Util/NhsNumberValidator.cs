@@ -16,7 +16,8 @@ public static class NhsNumberValidator
     {
         _ = number ?? throw new ArgumentNullException(nameof(number));
 
-        if (IsAnInvalidLength(number)) return false;
+        if (IsAnInvalidLength(number))
+            return false;
 
         var characters = ConvertStringToDigits(number);
         var checkSum = ExtractCheckDigit(characters);
@@ -40,7 +41,8 @@ public static class NhsNumberValidator
         var position = 0;
         var lastCharacter = characters.Count;
 
-        return characters.TakeWhile(_ => position != lastCharacter - 1)
+        return characters
+            .TakeWhile(_ => position != lastCharacter - 1)
             .Sum(character => character * Weightings[position++]);
     }
 

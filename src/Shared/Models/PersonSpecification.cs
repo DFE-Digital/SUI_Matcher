@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-
 using Shared.Converter;
 
 namespace Shared.Models;
@@ -41,7 +40,14 @@ public class PersonSpecification
     public string[]? RawBirthDate { get; set; }
 
     [JsonConverter(typeof(GenderToLowercaseConverter))]
-    [AllowedValues("male", "female", "unknown", "other", null, ErrorMessage = PersonValidationConstants.GenderInvalid)]
+    [AllowedValues(
+        "male",
+        "female",
+        "unknown",
+        "other",
+        null,
+        ErrorMessage = PersonValidationConstants.GenderInvalid
+    )]
     [JsonPropertyName("gender")]
     public string? Gender { get; set; }
 
@@ -53,7 +59,10 @@ public class PersonSpecification
     [JsonPropertyName("email")]
     public string? Email { get; set; }
 
-    [RegularExpression("^(([A-Z][0-9]{1,2})|(([A-Z][A-HJ-Y][0-9]{1,2})|(([A-Z][0-9][A-Z])|([A-Z][A-HJ-Y][0-9]?[A-Z])))) [0-9][A-Z]{2}$", ErrorMessage = PersonValidationConstants.PostCodeInvalid)]
+    [RegularExpression(
+        "^(([A-Z][0-9]{1,2})|(([A-Z][A-HJ-Y][0-9]{1,2})|(([A-Z][0-9][A-Z])|([A-Z][A-HJ-Y][0-9]?[A-Z])))) [0-9][A-Z]{2}$",
+        ErrorMessage = PersonValidationConstants.PostCodeInvalid
+    )]
     [JsonPropertyName("addresspostalcode")]
     public string? AddressPostalCode { get; set; }
 

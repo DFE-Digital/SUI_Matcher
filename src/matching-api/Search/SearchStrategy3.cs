@@ -1,5 +1,4 @@
 using MatchingApi.Exceptions;
-
 using Shared;
 using Shared.Models;
 
@@ -12,14 +11,33 @@ public class SearchStrategy3 : ISearchStrategy
 {
     // Version 14 so far is the most optimal based on observed performance.
     private int AlgorithmVersion { get; }
-    private static readonly IReadOnlyCollection<int?> AllVersions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    private static readonly IReadOnlyCollection<int?> AllVersions =
+    [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+    ];
 
     public SearchStrategy3(int? version = null)
     {
         AlgorithmVersion = version ?? 14;
         if (!AllVersions.Contains(AlgorithmVersion))
             throw new InvalidStrategyException(
-                $"{SharedConstants.SearchStrategy.VersionErrorMessagePrefix} ({version}) For strategy ({SharedConstants.SearchStrategy.Strategies.Strategy3})");
+                $"{SharedConstants.SearchStrategy.VersionErrorMessagePrefix} ({version}) For strategy ({SharedConstants.SearchStrategy.Strategies.Strategy3})"
+            );
     }
 
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)
@@ -29,7 +47,10 @@ public class SearchStrategy3 : ISearchStrategy
         return VersionFactory(AlgorithmVersion, queryBuilder);
     }
 
-    private static OrderedDictionary<string, SearchQuery> VersionFactory(int version, SearchQueryBuilder queryBuilder)
+    private static OrderedDictionary<string, SearchQuery> VersionFactory(
+        int version,
+        SearchQueryBuilder queryBuilder
+    )
     {
         return version switch
         {
@@ -49,7 +70,10 @@ public class SearchStrategy3 : ISearchStrategy
             14 => Version14(queryBuilder),
             15 => Version15(queryBuilder),
             16 => Version16(queryBuilder),
-            _ => throw new ArgumentOutOfRangeException(nameof(version), $"Unsupported version: {version}")
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(version),
+                $"Unsupported version: {version}"
+            ),
         };
     }
 

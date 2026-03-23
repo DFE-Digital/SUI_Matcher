@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-
 using Microsoft.Extensions.Logging;
 
 namespace Shared.Logging;
@@ -31,7 +30,8 @@ public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
 
     protected partial class JsonFileLogger : ILogger
     {
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => default!;
 
         public bool IsEnabled(LogLevel logLevel) => true;
 
@@ -60,7 +60,13 @@ public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
             _categoryName = categoryName;
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter
+        )
         {
             string message = formatter(state, exception);
 
@@ -78,9 +84,17 @@ public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
             var timeStamp = DateTime.Now;
 
             // to timestamp historic dbs searches in their date specific log files
-            var responseFileLastModified = Activity.Current?.GetBaggageItem("responseFileLastModified");
-            if (responseFileLastModified is not null &&
-                DateTime.TryParse(responseFileLastModified, CultureInfo.InvariantCulture, out DateTime responseFileLastModifiedDate))
+            var responseFileLastModified = Activity.Current?.GetBaggageItem(
+                "responseFileLastModified"
+            );
+            if (
+                responseFileLastModified is not null
+                && DateTime.TryParse(
+                    responseFileLastModified,
+                    CultureInfo.InvariantCulture,
+                    out DateTime responseFileLastModifiedDate
+                )
+            )
             {
                 timeStamp = responseFileLastModifiedDate.Date + timeStamp.TimeOfDay;
             }
@@ -91,13 +105,14 @@ public partial class JsonFileLoggerProvider(string filePath) : ILoggerProvider
                 { "LogLevel", logLevel.ToString() },
                 { "Category", _categoryName },
                 { "Message", message },
-                { "Exception", exception?.ToString() }
+                { "Exception", exception?.ToString() },
             };
 
             if (state is IEnumerable<KeyValuePair<string, object?>> formattedLogValues)
             {
-                foreach (var item in formattedLogValues
-                             .Where(item => WordOnlyRegex().IsMatch(item.Key)))
+                foreach (
+                    var item in formattedLogValues.Where(item => WordOnlyRegex().IsMatch(item.Key))
+                )
                 {
                     logEntry[item.Key] = item.Value;
                 }

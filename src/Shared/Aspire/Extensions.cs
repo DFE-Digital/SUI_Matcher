@@ -1,10 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-
 using Azure.Monitor.OpenTelemetry.AspNetCore;
-
 using MassTransit.Logging;
 using MassTransit.Monitoring;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,21 +9,24 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
-
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-
 using Shared.Logging;
 
 namespace Shared.Aspire;
 
-[ExcludeFromCodeCoverage(Justification = "This is a extension class for configuring the application.")]
+[ExcludeFromCodeCoverage(
+    Justification = "This is a extension class for configuring the application."
+)]
 public static class Extensions
 {
-    public static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
+    public static IHostApplicationBuilder AddDefaultHealthChecks(
+        this IHostApplicationBuilder builder
+    )
     {
-        builder.Services.AddHealthChecks()
+        builder
+            .Services.AddHealthChecks()
             // Add a default liveness check to ensure app is responsive
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
 
@@ -48,21 +48,29 @@ public static class Extensions
         return builder;
     }
 
-    private static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
+    private static IHostApplicationBuilder ConfigureOpenTelemetry(
+        this IHostApplicationBuilder builder
+    )
     {
         builder.Logging.EnableEnrichment();
         builder.Services.AddLogEnricher<ApplicationEnricher>();
-        builder.Logging.AddConsole(options => options.FormatterName = Shared.SharedConstants.LogFormatter).AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
+        builder
+            .Logging.AddConsole(options =>
+                options.FormatterName = Shared.SharedConstants.LogFormatter
+            )
+            .AddConsoleFormatter<LogConsoleFormatter, ConsoleFormatterOptions>();
         builder.Logging.AddOpenTelemetry(logging =>
         {
             logging.IncludeFormattedMessage = true;
             logging.IncludeScopes = true;
         });
 
-        var openTelemetryBuilder = builder.Services.AddOpenTelemetry()
+        var openTelemetryBuilder = builder
+            .Services.AddOpenTelemetry()
             .WithMetrics(metrics =>
             {
-                metrics.AddAspNetCoreInstrumentation()
+                metrics
+                    .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
                     .AddMeter(InstrumentationOptions.MeterName)
@@ -70,16 +78,23 @@ public static class Extensions
             })
             .WithTracing(tracing =>
             {
-                tracing.AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation()
-                        .AddSource(DiagnosticHeaders.DefaultListenerName)
-                        .AddSource("Marten")
-                        .AddSource("Yarp.ReverseProxy");
+                tracing
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddSource(DiagnosticHeaders.DefaultListenerName)
+                    .AddSource("Marten")
+                    .AddSource("Yarp.ReverseProxy");
             });
 
-        if (!string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"])) // Only enable Azure Monitor / App Insights if the connection string is set
+        if (
+            !string.IsNullOrWhiteSpace(
+                builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]
+            )
+        ) // Only enable Azure Monitor / App Insights if the connection string is set
         {
-            openTelemetryBuilder.UseAzureMonitor(x => x.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
+            openTelemetryBuilder.UseAzureMonitor(x =>
+                x.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]
+            );
         }
 
         builder.AddOpenTelemetryExporters();
@@ -97,18 +112,22 @@ public static class Extensions
             app.MapHealthChecks("/health");
 
             // Only health checks tagged with the "live" tag must pass for app to be considered alive
-            app.MapHealthChecks("/alive", new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains("live")
-            });
+            app.MapHealthChecks(
+                "/alive",
+                new HealthCheckOptions { Predicate = r => r.Tags.Contains("live") }
+            );
         }
 
         return app;
     }
 
-    private static IHostApplicationBuilder AddOpenTelemetryExporters(this IHostApplicationBuilder builder)
+    private static IHostApplicationBuilder AddOpenTelemetryExporters(
+        this IHostApplicationBuilder builder
+    )
     {
-        var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
+        var useOtlpExporter = !string.IsNullOrWhiteSpace(
+            builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]
+        );
 
         if (useOtlpExporter)
         {

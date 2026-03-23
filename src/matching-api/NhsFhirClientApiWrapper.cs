@@ -9,7 +9,7 @@ public class NhsFhirClientApiWrapper(HttpClient httpClient) : INhsFhirClient
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/search")
         {
-            Content = JsonContent.Create(query)
+            Content = JsonContent.Create(query),
         };
         var response = await httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
@@ -21,7 +21,7 @@ public class NhsFhirClientApiWrapper(HttpClient httpClient) : INhsFhirClient
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/demographics")
         {
-            Content = JsonContent.Create(new DemographicRequest { NhsNumber = nhsId })
+            Content = JsonContent.Create(new DemographicRequest { NhsNumber = nhsId }),
         };
         var response = await httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
@@ -30,7 +30,9 @@ public class NhsFhirClientApiWrapper(HttpClient httpClient) : INhsFhirClient
 
         if (result == null)
         {
-            throw new InvalidOperationException("Failed to deserialize DemographicResult from the response.");
+            throw new InvalidOperationException(
+                "Failed to deserialize DemographicResult from the response."
+            );
         }
 
         return result;

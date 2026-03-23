@@ -90,8 +90,16 @@ public class AddressHistoryTests
         var addrPrime = new AddressMinimal("Some house name", "12 York street", "YO16GA");
         var addrHistory = new AddressMinimal("Some house name", "12 York street", "YO16GA");
 
-        var addr2Prime = new AddressMinimal("Some house name somewhere", "12 York street", "YO16GA");
-        var addr2History = new AddressMinimal("Some house name somewhere", "12 York street", "YO16GA");
+        var addr2Prime = new AddressMinimal(
+            "Some house name somewhere",
+            "12 York street",
+            "YO16GA"
+        );
+        var addr2History = new AddressMinimal(
+            "Some house name somewhere",
+            "12 York street",
+            "YO16GA"
+        );
 
         // Act
         var sut = new AddressHistory([addrHistory], addrPrime);

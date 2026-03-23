@@ -1,9 +1,7 @@
 using System;
 using System.Globalization;
-
 using Shared.Models;
 using Shared.Util;
-
 using Xunit;
 
 namespace Unit.Tests.Util;
@@ -19,7 +17,7 @@ public class HashUtilTest
             Family = "Doe",
             Gender = "male",
             BirthDate = new DateOnly(1990, 1, 1),
-            AddressPostalCode = "AB1 2CD"
+            AddressPostalCode = "AB1 2CD",
         };
 
         var hash1 = HashUtil.StoreUniqueSearchIdFor(person);
@@ -37,7 +35,7 @@ public class HashUtilTest
             Family = "Doe",
             Gender = "male",
             BirthDate = new DateOnly(1990, 1, 1),
-            AddressPostalCode = "AB1 2CD"
+            AddressPostalCode = "AB1 2CD",
         };
 
         var person2 = new PersonSpecification
@@ -46,7 +44,7 @@ public class HashUtilTest
             Family = "doe",
             Gender = "male",
             BirthDate = new DateOnly(1990, 1, 1),
-            AddressPostalCode = "AB1 2CD"
+            AddressPostalCode = "AB1 2CD",
         };
 
         var hash1 = HashUtil.StoreUniqueSearchIdFor(person1);
@@ -68,7 +66,7 @@ public class HashUtilTest
             Family = "Doe",
             Gender = genderInput,
             BirthDate = new DateOnly(1990, 1, 1),
-            AddressPostalCode = "AB1 2CD"
+            AddressPostalCode = "AB1 2CD",
         };
 
         var hash = HashUtil.StoreUniqueSearchIdFor(person);
@@ -85,7 +83,7 @@ public class HashUtilTest
             Family = "Doe",
             Gender = "",
             BirthDate = new DateOnly(1990, 1, 1),
-            AddressPostalCode = "AB1 2CD"
+            AddressPostalCode = "AB1 2CD",
         };
 
         var matchResult = new MatchPersonResult
@@ -94,7 +92,7 @@ public class HashUtilTest
             Family = "Doe",
             Gender = "",
             BirthDate = new DateOnly(1990, 1, 1),
-            AddressPostalCode = "AB1 2CD"
+            AddressPostalCode = "AB1 2CD",
         };
 
         var hash = HashUtil.StoreUniqueSearchIdFor(person);
@@ -115,7 +113,7 @@ public class HashUtilTest
             Family = "Doe",
             Gender = "male",
             BirthDate = new DateOnly(1990, 1, 1),
-            AddressPostalCode = "AB1 2CD"
+            AddressPostalCode = "AB1 2CD",
         };
 
         var person2 = new PersonSpecification
@@ -124,7 +122,7 @@ public class HashUtilTest
             Family = "Doe",
             Gender = "male",
             BirthDate = new DateOnly(1990, 1, 1),
-            AddressPostalCode = " ab1   2cd "
+            AddressPostalCode = " ab1   2cd ",
         };
 
         var hash1 = HashUtil.StoreUniqueSearchIdFor(person1);
@@ -142,7 +140,7 @@ public class HashUtilTest
             Family = "Doe",
             Gender = "male",
             BirthDate = DateOnly.Parse("October 21, 2015", CultureInfo.InvariantCulture),
-            AddressPostalCode = "AB1 2CD"
+            AddressPostalCode = "AB1 2CD",
         };
 
         var person2 = new PersonSpecification
@@ -151,7 +149,7 @@ public class HashUtilTest
             Family = "Doe",
             Gender = "male",
             BirthDate = new DateOnly(2015, 10, 21),
-            AddressPostalCode = " ab1   2cd "
+            AddressPostalCode = " ab1   2cd ",
         };
 
         var hash1 = HashUtil.StoreUniqueSearchIdFor(person1);
@@ -169,7 +167,7 @@ public class HashUtilTest
             Family = "Smith",
             Gender = "female",
             BirthDate = new DateOnly(2004, 5, 15),
-            AddressPostalCode = "XY9 8ZW"
+            AddressPostalCode = "XY9 8ZW",
         };
         var hash1 = HashUtil.StoreUniqueSearchIdFor(person);
         var hash2 = "2f383866c432df9a75556ed5d732bb8e348b134b8bfc5c5394990af77090c155";
@@ -186,7 +184,7 @@ public class HashUtilTest
             Family = "Smith",
             Gender = "female",
             BirthDate = new DateOnly(2004, 5, 15),
-            AddressPostalCode = "XY9 8ZW"
+            AddressPostalCode = "XY9 8ZW",
         };
         var matchPerson = new MatchPersonResult
         {
@@ -194,7 +192,7 @@ public class HashUtilTest
             Family = "Smith",
             Gender = "female",
             BirthDate = new DateOnly(2004, 5, 15),
-            AddressPostalCode = "XY9 8ZW"
+            AddressPostalCode = "XY9 8ZW",
         };
         var hash1 = HashUtil.StoreUniqueSearchIdFor(personSpec);
         var hash2 = HashUtil.StoreUniqueSearchIdFor(matchPerson);

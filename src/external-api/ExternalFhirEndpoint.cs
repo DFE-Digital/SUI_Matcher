@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-
 using Shared.Endpoint;
 using Shared.Models;
 
@@ -12,13 +11,20 @@ public class ExternalFhirEndpoint(INhsFhirClient fhirClient) : IEndpoint
     {
         var configuration = app.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        var search = app.MapPost("/search", async (SearchQuery query) => await fhirClient.PerformSearch(query));
+        var search = app.MapPost(
+            "/search",
+            async (SearchQuery query) => await fhirClient.PerformSearch(query)
+        );
         if (configuration.GetValue<bool>("EnableAuth"))
         {
             search.RequireAuthorization("AuthPolicy");
         }
 
-        var demographics = app.MapPost("/demographics", async (DemographicRequest request) => await fhirClient.PerformSearchByNhsId(request.NhsNumber));
+        var demographics = app.MapPost(
+            "/demographics",
+            async (DemographicRequest request) =>
+                await fhirClient.PerformSearchByNhsId(request.NhsNumber)
+        );
         if (configuration.GetValue<bool>("EnableAuth"))
         {
             demographics.RequireAuthorization("AuthPolicy");

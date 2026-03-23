@@ -3,12 +3,17 @@ using Azure.Identity;
 
 namespace Integration.Tests.External;
 
-public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(Projects.External)), IAsyncLifetime
+public sealed class ExternalApiFixture()
+    : DistributedApplicationFactory(typeof(Projects.External)),
+        IAsyncLifetime
 {
     private DistributedApplication? _app;
     public IResourceBuilder<WireMockServerResource>? NhsAuthMockService { get; private set; }
 
-    protected override void OnBuilderCreating(DistributedApplicationOptions applicationOptions, HostApplicationBuilderSettings hostOptions)
+    protected override void OnBuilderCreating(
+        DistributedApplicationOptions applicationOptions,
+        HostApplicationBuilderSettings hostOptions
+    )
     {
         applicationOptions.AssemblyName = typeof(Projects.External).Assembly.FullName;
         applicationOptions.DisableDashboard = true;
@@ -16,14 +21,17 @@ public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(
 
     protected override void OnBuilderCreated(DistributedApplicationBuilder applicationBuilder)
     {
-        NhsAuthMockService = applicationBuilder.AddWireMock("mock-auth-api", WireMockServerArguments.DefaultPort)
+        NhsAuthMockService = applicationBuilder
+            .AddWireMock("mock-auth-api", WireMockServerArguments.DefaultPort)
             .WithApiMappingBuilder(MockNhsFhirServer.SetupAsync);
     }
 
     protected override void OnBuilding(DistributedApplicationBuilder applicationBuilder)
     {
-        var resources = applicationBuilder.Resources
-            .Where(res => res.Name == "external-api" || res.Name == "matching-api" || res.Name == "yarp")
+        var resources = applicationBuilder
+            .Resources.Where(res =>
+                res.Name == "external-api" || res.Name == "matching-api" || res.Name == "yarp"
+            )
             .OfType<ProjectResource>()
             .ToArray();
 
@@ -32,21 +40,30 @@ public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(
             applicationBuilder.Resources.Remove(resource);
         }
 
-        var externalApi = applicationBuilder.AddProject<Projects.External>("external-api")
+        var externalApi = applicationBuilder
+            .AddProject<Projects.External>("external-api")
             .WithEnvironment(ctx =>
             {
-                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"] = $"{NhsAuthMockService?.GetEndpoint("http").Url}/personal-demographics/FHIR/R4/";
-                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"] = $"{NhsAuthMockService?.GetEndpoint("http").Url}/oauth2/token";
-                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES"] = "5";
+                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"] =
+                    $"{NhsAuthMockService?.GetEndpoint("http").Url}/personal-demographics/FHIR/R4/";
+                ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"] =
+                    $"{NhsAuthMockService?.GetEndpoint("http").Url}/oauth2/token";
+                ctx.EnvironmentVariables[
+                    "NhsAuthConfig:NHS_DIGITAL_ACCESS_TOKEN_EXPIRES_IN_MINUTES"
+                ] = "5";
             })
             .WaitFor(NhsAuthMockService!);
 
-        var matchingApi = applicationBuilder.AddProject<Projects.Matching>("matching-api")
+        var matchingApi = applicationBuilder
+            .AddProject<Projects.Matching>("matching-api")
             .WithReference(externalApi)
             .WaitFor(NhsAuthMockService!);
 
-        applicationBuilder.AddProject<Projects.Yarp>("yarp")
-            .WithReference(matchingApi).WaitFor(matchingApi).WaitFor(NhsAuthMockService!);
+        applicationBuilder
+            .AddProject<Projects.Yarp>("yarp")
+            .WithReference(matchingApi)
+            .WaitFor(matchingApi)
+            .WaitFor(NhsAuthMockService!);
     }
 
     public HttpClient CreateSecureClient()
@@ -62,10 +79,18 @@ public sealed class ExternalApiFixture() : DistributedApplicationFactory(typeof(
             configuration["AzureAdMatching:TenantId"],
             configuration["AzureAdMatching:ClientId"],
             configuration["AzureAdMatching:ClientSecret"],
-            new ClientSecretCredentialOptions { AuthorityHost = new Uri(configuration["AzureAdMatching:Instance"] ?? string.Empty) });
-        var tokenRequestContext = new TokenRequestContext(
-            [configuration["AzureAdMatching:Scopes"] ?? string.Empty]);
-        AccessToken token = clientSecretCredential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
+            new ClientSecretCredentialOptions
+            {
+                AuthorityHost = new Uri(configuration["AzureAdMatching:Instance"] ?? string.Empty),
+            }
+        );
+        var tokenRequestContext = new TokenRequestContext([
+            configuration["AzureAdMatching:Scopes"] ?? string.Empty,
+        ]);
+        AccessToken token = clientSecretCredential
+            .GetTokenAsync(tokenRequestContext)
+            .GetAwaiter()
+            .GetResult();
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
 
         return client;

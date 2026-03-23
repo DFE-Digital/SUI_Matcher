@@ -1,9 +1,6 @@
 using MatchingApi.Services;
-
 using Microsoft.Extensions.Logging.Abstractions;
-
 using Moq;
-
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
@@ -20,14 +17,19 @@ public class MatchingServiceDemographicTests
     public async Task ShouldReturnDemographics()
     {
         // Arrange
-        _nhsFhirClient.Setup(x => x.PerformSearchByNhsId("1234567890"))
-            .ReturnsAsync(new DemographicResult() { Result = new NhsPerson { NhsNumber = "1234567890" } });
-        var sut = new MatchingService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+        _nhsFhirClient
+            .Setup(x => x.PerformSearchByNhsId("1234567890"))
+            .ReturnsAsync(
+                new DemographicResult() { Result = new NhsPerson { NhsNumber = "1234567890" } }
+            );
+        var sut = new MatchingService(
+            NullLogger<MatchingService>.Instance,
+            _nhsFhirClient.Object,
+            _validationService,
+            _auditLogger.Object
+        );
 
-        var request = new DemographicRequest
-        {
-            NhsNumber = "1234567890"
-        };
+        var request = new DemographicRequest { NhsNumber = "1234567890" };
 
         // Act
         var result = await sut.GetDemographicsAsync(request);
@@ -44,12 +46,14 @@ public class MatchingServiceDemographicTests
     public async Task ShouldReturnErrors_WhenValidationErrorOccurs(string nhsId, string message)
     {
         // Arrange
-        var sut = new MatchingService(NullLogger<MatchingService>.Instance, _nhsFhirClient.Object, _validationService, _auditLogger.Object);
+        var sut = new MatchingService(
+            NullLogger<MatchingService>.Instance,
+            _nhsFhirClient.Object,
+            _validationService,
+            _auditLogger.Object
+        );
 
-        var request = new DemographicRequest
-        {
-            NhsNumber = nhsId
-        };
+        var request = new DemographicRequest { NhsNumber = nhsId };
 
         // Act
         var result = await sut.GetDemographicsAsync(request);

@@ -1,7 +1,5 @@
 using ExternalApi.Services;
-
 using Hl7.Fhir.Model;
-
 using Shared.Models;
 
 namespace Unit.Tests.Client;
@@ -20,7 +18,7 @@ public class FieldComparerServiceTests
             Gender = "male",
             Family = "Smith",
             Given = ["John"],
-            Email = "john.doe@example.com"
+            Email = "john.doe@example.com",
         };
 
         var patient = new Patient
@@ -29,11 +27,19 @@ public class FieldComparerServiceTests
             Address = [new Address { PostalCode = "54321" }],
             Telecom =
             [
-                new ContactPoint { Value = "555-5678", System = ContactPoint.ContactPointSystem.Phone },
-                new ContactPoint { Value = "john.doe@example.com", System = ContactPoint.ContactPointSystem.Email }
+                new ContactPoint
+                {
+                    Value = "555-5678",
+                    System = ContactPoint.ContactPointSystem.Phone,
+                },
+                new ContactPoint
+                {
+                    Value = "john.doe@example.com",
+                    System = ContactPoint.ContactPointSystem.Email,
+                },
             ],
             Gender = AdministrativeGender.Female,
-            Name = [new HumanName { Family = "Smith", Given = ["Jane"] }]
+            Name = [new HumanName { Family = "Smith", Given = ["Jane"] }],
         };
 
         // Act
@@ -53,15 +59,9 @@ public class FieldComparerServiceTests
     public void ShouldIdentifyBirthdateAsTheSame()
     {
         // Arrange
-        var query = new SearchQuery
-        {
-            Birthdate = ["eq1980-01-01"]
-        };
+        var query = new SearchQuery { Birthdate = ["eq1980-01-01"] };
 
-        var patient = new Patient
-        {
-            BirthDate = "1980-01-01"
-        };
+        var patient = new Patient { BirthDate = "1980-01-01" };
 
         // Act
         var differences = FieldComparerService.ComparePatientFields(query, patient);

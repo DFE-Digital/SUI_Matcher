@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-
 using Shared.Endpoint;
 using Shared.Models;
 
@@ -15,11 +14,13 @@ public class ValidationService : IValidationService
 
         var response = new ValidationResponse
         {
-            Results = validationResults.Select(result => new ValidationResponse.ValidationResult
-            {
-                MemberNames = result.MemberNames,
-                ErrorMessage = result.ErrorMessage
-            }).ToList()
+            Results = validationResults
+                .Select(result => new ValidationResponse.ValidationResult
+                {
+                    MemberNames = result.MemberNames,
+                    ErrorMessage = result.ErrorMessage,
+                })
+                .ToList(),
         };
 
         return response;

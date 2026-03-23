@@ -1,7 +1,5 @@
 using System.Threading.Channels;
-
 using Azure.Data.Tables;
-
 using Shared;
 using Shared.Logging;
 
@@ -11,12 +9,15 @@ public class AuditLogBackgroundService(
     ILogger<AuditLogBackgroundService> logger,
     Channel<AuditLogEntry> channel,
     TableServiceClient client,
-    IHttpContextAccessor httpContextAccessor)
-    : BackgroundService
+    IHttpContextAccessor httpContextAccessor
+) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await client.CreateTableIfNotExistsAsync(SharedConstants.AuditLog.AzStorageTableName, stoppingToken);
+        await client.CreateTableIfNotExistsAsync(
+            SharedConstants.AuditLog.AzStorageTableName,
+            stoppingToken
+        );
 
         await foreach (var entry in channel.Reader.ReadAllAsync(stoppingToken))
         {
@@ -31,7 +32,9 @@ public class AuditLogBackgroundService(
             var partitionKey = $"{user}_{timeStamp:yyyy-MM-dd}";
             try
             {
-                var tableClient = client.GetTableClient(SharedConstants.AuditLog.AzStorageTableName);
+                var tableClient = client.GetTableClient(
+                    SharedConstants.AuditLog.AzStorageTableName
+                );
 
                 // ! Will always be Unknown user until we implement authentication
                 var entity = new TableEntity
@@ -42,7 +45,7 @@ public class AuditLogBackgroundService(
                     ["Action"] = entry.Action.ToString(),
                     ["Timestamp"] = timeStamp,
                     ["SearchId"] = entry.Metadata.GetValueOrDefault("SearchId", string.Empty),
-                    ["Metadata"] = JsonSerializer.Serialize(entry.Metadata)
+                    ["Metadata"] = JsonSerializer.Serialize(entry.Metadata),
                 };
                 await tableClient.AddEntityAsync(entity, stoppingToken);
             }

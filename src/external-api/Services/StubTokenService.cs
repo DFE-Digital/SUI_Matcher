@@ -1,10 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
-
 using Azure.Security.KeyVault.Secrets;
-
 using ExternalApi.Util;
-
 using Microsoft.Extensions.Options;
 
 namespace ExternalApi.Services;
@@ -12,8 +9,11 @@ namespace ExternalApi.Services;
 [ExcludeFromCodeCoverage(Justification = "Stub for testing purposes")]
 public class StubTokenService(
     IOptions<NhsAuthConfigOptions> options,
-    ILogger<StubTokenService> logger, IJwtHandler jwtHandler, IHttpClientFactory httpClientFactory, SecretClient secretClient) :
-    TokenService(options, logger, jwtHandler, httpClientFactory, secretClient)
+    ILogger<StubTokenService> logger,
+    IJwtHandler jwtHandler,
+    IHttpClientFactory httpClientFactory,
+    SecretClient secretClient
+) : TokenService(options, logger, jwtHandler, httpClientFactory, secretClient)
 {
     private readonly IOptions<NhsAuthConfigOptions> _options = options;
 

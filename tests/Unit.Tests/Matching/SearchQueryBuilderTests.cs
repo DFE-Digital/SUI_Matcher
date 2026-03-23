@@ -1,5 +1,4 @@
 using MatchingApi.Search;
-
 using Shared.Models;
 
 namespace Unit.Tests.Matching;
@@ -11,11 +10,13 @@ public class SearchQueryBuilderTests
     [InlineData("AB123CD", "AB*")]
     public void AddsPostcodeWildcardCorrectly(string postcode, string expected)
     {
-        var builder = new SearchQueryBuilder(new SearchSpecification
-        {
-            BirthDate = DateOnly.FromDateTime(DateTime.Now),
-            AddressPostalCode = postcode
-        });
+        var builder = new SearchQueryBuilder(
+            new SearchSpecification
+            {
+                BirthDate = DateOnly.FromDateTime(DateTime.Now),
+                AddressPostalCode = postcode,
+            }
+        );
 
         builder.AddFuzzyGfdRangePostcodeWildcard();
 
@@ -29,12 +30,14 @@ public class SearchQueryBuilderTests
     [Fact]
     public void ShouldIncludeHistoryOnNonFuzzyQueries()
     {
-        var builder = new SearchQueryBuilder(new SearchSpecification
-        {
-            Given = "John",
-            Family = "Doe",
-            BirthDate = DateOnly.FromDateTime(new DateTime(2010, 1, 1))
-        });
+        var builder = new SearchQueryBuilder(
+            new SearchSpecification
+            {
+                Given = "John",
+                Family = "Doe",
+                BirthDate = DateOnly.FromDateTime(new DateTime(2010, 1, 1)),
+            }
+        );
 
         builder.AddNonFuzzyGfd();
         builder.AddNonFuzzyGfdRange();
@@ -52,15 +55,22 @@ public class SearchQueryBuilderTests
     [InlineData("John", new[] { "John" }, "Smith", "Smith")]
     [InlineData("John James Steve", new[] { "John", "James", "Steve" }, "Smith (Jones)", "Smith")]
     [InlineData("John-James Steve", new[] { "John-James", "Steve" }, "Smith-Jones", "Smith-Jones")]
-    public void AddNonFuzzyGfdAddsPreprocessedNamesCorrectly(string given, string[] givenExpected, string family, string familyExpected)
+    public void AddNonFuzzyGfdAddsPreprocessedNamesCorrectly(
+        string given,
+        string[] givenExpected,
+        string family,
+        string familyExpected
+    )
     {
-        var builder = new SearchQueryBuilder(new SearchSpecification
-        {
-            Given = given,
-            Family = family,
-            BirthDate = DateOnly.FromDateTime(new DateTime(2010, 1, 1))
-        },
-        preprocessNames: true);
+        var builder = new SearchQueryBuilder(
+            new SearchSpecification
+            {
+                Given = given,
+                Family = family,
+                BirthDate = DateOnly.FromDateTime(new DateTime(2010, 1, 1)),
+            },
+            preprocessNames: true
+        );
 
         builder.AddNonFuzzyGfd();
 

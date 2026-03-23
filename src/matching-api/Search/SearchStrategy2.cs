@@ -1,5 +1,4 @@
 using MatchingApi.Exceptions;
-
 using Shared;
 using Shared.Models;
 
@@ -19,7 +18,8 @@ public class SearchStrategy2 : ISearchStrategy
         AlgorithmVersion = version ?? 1;
         if (!AllVersions.Contains(AlgorithmVersion))
             throw new InvalidStrategyException(
-                $"{SharedConstants.SearchStrategy.VersionErrorMessagePrefix} ({version}) For strategy ({SharedConstants.SearchStrategy.Strategies.Strategy2})");
+                $"{SharedConstants.SearchStrategy.VersionErrorMessagePrefix} ({version}) For strategy ({SharedConstants.SearchStrategy.Strategies.Strategy2})"
+            );
     }
 
     public OrderedDictionary<string, SearchQuery> BuildQuery(SearchSpecification model)

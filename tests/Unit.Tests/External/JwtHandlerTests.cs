@@ -1,5 +1,4 @@
 using ExternalApi.Util;
-
 using Unit.Tests.Util;
 
 namespace Unit.Tests.External;
@@ -9,7 +8,6 @@ public class JwtHandlerTests
     [Fact]
     public void GenerateJwt_ReturnsValidToken_WhenGivenValidRsaKey()
     {
-
         const string audience = "test-audience";
         const string clientId = "test-client";
         const string kid = "test-kid";

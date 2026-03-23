@@ -1,5 +1,4 @@
 using ExternalApi.Services;
-
 using Shared.Models;
 
 namespace Unit.Tests.External.Services;
@@ -10,7 +9,12 @@ public class SearchParamsFactoryTests
     public void Create_ShouldOutputExpectedSearchParams_FromSearchQuery()
     {
         // Arrange
-        var query = new SearchQuery { Family = "Doe", Given = ["Jon"], Birthdate = ["eq1900-01-01"], };
+        var query = new SearchQuery
+        {
+            Family = "Doe",
+            Given = ["Jon"],
+            Birthdate = ["eq1900-01-01"],
+        };
         ;
 
         // Act
@@ -20,7 +24,10 @@ public class SearchParamsFactoryTests
         // Check regular parameters
         Assert.Contains(searchParams.Parameters, p => p is { Item1: "family", Item2: "Doe" });
         Assert.Contains(searchParams.Parameters, p => p is { Item1: "given", Item2: "Jon" });
-        Assert.Contains(searchParams.Parameters, p => p is { Item1: "birthdate", Item2: "eq1900-01-01" });
+        Assert.Contains(
+            searchParams.Parameters,
+            p => p is { Item1: "birthdate", Item2: "eq1900-01-01" }
+        );
 
         // Check that no unexpected parameters exist
         Assert.Equal(3, searchParams.Parameters.Count);

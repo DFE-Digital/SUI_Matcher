@@ -1,9 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
 using Shared.Models;
-
 using WireMock.Client;
 
 namespace Integration.Tests.AppHost;
@@ -23,7 +21,7 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         _nhsAuthMockApi = fixture.NhsAuthMockApi();
         _httpClientJsonOptions = new JsonSerializerOptions
         {
-            Converters = { new JsonStringEnumConverter() }
+            Converters = { new JsonStringEnumConverter() },
         };
     }
 
@@ -36,7 +34,10 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact]
     public async Task AppHostRunsCleanly()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification()));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(new PersonSpecification())
+        );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -46,16 +47,23 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact]
     public async Task MatchingApi_Match()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "OCTAVIA",
-            Family = "CHISLETT",
-            BirthDate = DateOnly.Parse("2008-09-20"),
-        }));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification
+                {
+                    Given = "OCTAVIA",
+                    Family = "CHISLETT",
+                    BirthDate = DateOnly.Parse("2008-09-20"),
+                }
+            )
+        );
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(
+            _httpClientJsonOptions
+        );
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.Match, personMatchResponse.Result.MatchStatus);
     }
@@ -63,16 +71,23 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact]
     public async Task MatchingApi_ShouldReturnPotentialMatchStatus_WhenScoreIsBetween85And95()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "Hannah",
-            Family = "Robinson",
-            BirthDate = DateOnly.Parse("2005-10-15"),
-        }));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification
+                {
+                    Given = "Hannah",
+                    Family = "Robinson",
+                    BirthDate = DateOnly.Parse("2005-10-15"),
+                }
+            )
+        );
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(
+            _httpClientJsonOptions
+        );
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.PotentialMatch, personMatchResponse.Result.MatchStatus);
     }
@@ -80,16 +95,23 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact]
     public async Task MatchingApi_ShouldReturnLowConfidenceMatchStatus_WhenScoreExistsAndLessThan85()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "Joe",
-            Family = "Robinson",
-            BirthDate = DateOnly.Parse("2005-10-15"),
-        }));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification
+                {
+                    Given = "Joe",
+                    Family = "Robinson",
+                    BirthDate = DateOnly.Parse("2005-10-15"),
+                }
+            )
+        );
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(
+            _httpClientJsonOptions
+        );
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.LowConfidenceMatch, personMatchResponse.Result.MatchStatus);
     }
@@ -97,16 +119,23 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact]
     public async Task MatchingApi_NoMatch()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "OCTAVIAN",
-            Family = "CHISLETTE",
-            BirthDate = DateOnly.Parse("2008-09-21"),
-        }));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification
+                {
+                    Given = "OCTAVIAN",
+                    Family = "CHISLETTE",
+                    BirthDate = DateOnly.Parse("2008-09-21"),
+                }
+            )
+        );
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(
+            _httpClientJsonOptions
+        );
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.NoMatch, personMatchResponse.Result.MatchStatus);
     }
@@ -116,16 +145,23 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact]
     public async Task MatchingApi_ManyMatch()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "John",
-            Family = "Doe",
-            BirthDate = DateOnly.Parse("2010-01-01"),
-        }));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification
+                {
+                    Given = "John",
+                    Family = "Doe",
+                    BirthDate = DateOnly.Parse("2010-01-01"),
+                }
+            )
+        );
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(
+            _httpClientJsonOptions
+        );
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.ManyMatch, personMatchResponse.Result.MatchStatus);
     }
@@ -137,22 +173,24 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact]
     public async Task MatchingApi_InvalidSearchData_ErrorResponse()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "",
-            BirthDate = DateOnly.Parse("2010-01-01"),
-        }));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification { Given = "", BirthDate = DateOnly.Parse("2010-01-01") }
+            )
+        );
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(
+            _httpClientJsonOptions
+        );
         Assert.NotNull(personMatchResponse?.Result);
         Assert.NotNull(personMatchResponse.DataQuality);
         Assert.Equal(MatchStatus.Error, personMatchResponse.Result.MatchStatus);
         Assert.Equal(QualityType.NotProvided, personMatchResponse.DataQuality.Given);
         Assert.Equal(QualityType.NotProvided, personMatchResponse.DataQuality.Family);
         Assert.Equal(QualityType.Valid, personMatchResponse.DataQuality.BirthDate);
-
     }
 
     // Client supplies enough data to get a match, but some invalid fields
@@ -160,20 +198,27 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact]
     public async Task MatchingApi_MatchWithSomeInvalidFields()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "OCTAVIA",
-            Family = "CHISLETT",
-            BirthDate = DateOnly.Parse("2008-09-20"),
-            Email = "not an email",
-            Gender = "car",
-            Phone = "hello",
-            AddressPostalCode = "12@24"
-        }));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification
+                {
+                    Given = "OCTAVIA",
+                    Family = "CHISLETT",
+                    BirthDate = DateOnly.Parse("2008-09-20"),
+                    Email = "not an email",
+                    Gender = "car",
+                    Phone = "hello",
+                    AddressPostalCode = "12@24",
+                }
+            )
+        );
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(
+            _httpClientJsonOptions
+        );
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.Match, personMatchResponse.Result.MatchStatus);
         Assert.NotNull(personMatchResponse.DataQuality);
@@ -190,41 +235,60 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     {
         for (var i = 0; i < 2; i++)
         {
-            await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-            {
-                Given = "OCTAVIA",
-                Family = "CHISLETT",
-                BirthDate = DateOnly.Parse("2008-09-20"),
-            }));
+            await _client.PostAsync(
+                "matching/api/v1/matchperson",
+                JsonContent.Create(
+                    new PersonSpecification
+                    {
+                        Given = "OCTAVIA",
+                        Family = "CHISLETT",
+                        BirthDate = DateOnly.Parse("2008-09-20"),
+                    }
+                )
+            );
         }
 
         // Confirms that the access token is cached
-        (await _nhsAuthMockApi.Should()).HaveReceived(1).Calls()
+        (await _nhsAuthMockApi.Should())
+            .HaveReceived(1)
+            .Calls()
             .AtPath("/oauth2/token");
 
         await Task.Delay(TimeSpan.FromMinutes(1));
 
-        await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "OCTAVIA",
-            Family = "CHISLETT",
-            BirthDate = DateOnly.Parse("2008-09-20"),
-        }));
+        await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification
+                {
+                    Given = "OCTAVIA",
+                    Family = "CHISLETT",
+                    BirthDate = DateOnly.Parse("2008-09-20"),
+                }
+            )
+        );
 
         // Confirms that a new token was requested
-        (await _nhsAuthMockApi.Should()).HaveReceived(2).Calls()
+        (await _nhsAuthMockApi.Should())
+            .HaveReceived(2)
+            .Calls()
             .AtPath("/oauth2/token");
     }
 
     [Fact]
     public async Task MatchingApi_Response_IncludesExcludes_Appropriate_Headers()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "OCTAVIA",
-            Family = "CHISLETT",
-            BirthDate = DateOnly.Parse("2008-09-20"),
-        }));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification
+                {
+                    Given = "OCTAVIA",
+                    Family = "CHISLETT",
+                    BirthDate = DateOnly.Parse("2008-09-20"),
+                }
+            )
+        );
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
@@ -233,7 +297,6 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
         Assert.True(response.Headers.Contains("Content-Security-Policy"));
         Assert.True(response.Headers.Contains("Strict-Transport-Security"));
         Assert.True(response.Headers.Contains("X-Frame-Options"));
-
     }
 
     // tests if the best in the bunch of ordered queries will be returned over the initial result
@@ -241,25 +304,35 @@ public class AppHostIntegrationTests : IClassFixture<AppHostFixture>
     [Fact]
     public async Task MatchingApi_BestOfTheBunchSearch()
     {
-        var response = await _client.PostAsync("matching/api/v1/matchperson", JsonContent.Create(new PersonSpecification
-        {
-            Given = "Joe",
-            Family = "Mock",
-            BirthDate = DateOnly.Parse("2005-10-15"),
-        }));
+        var response = await _client.PostAsync(
+            "matching/api/v1/matchperson",
+            JsonContent.Create(
+                new PersonSpecification
+                {
+                    Given = "Joe",
+                    Family = "Mock",
+                    BirthDate = DateOnly.Parse("2005-10-15"),
+                }
+            )
+        );
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(_httpClientJsonOptions);
+        var personMatchResponse = await response.Content.ReadFromJsonAsync<PersonMatchResponse>(
+            _httpClientJsonOptions
+        );
         Assert.NotNull(personMatchResponse?.Result);
         Assert.Equal(MatchStatus.PotentialMatch, personMatchResponse.Result.MatchStatus);
 
         var calls = (await _nhsAuthMockApi.Should()).HaveReceived(4).Calls();
-        calls.AtPathAndParamsWithResponse("/personal-demographics/FHIR/R4/Patient", new()
-        {
-            {"given", "Joe"},
-            {"family", "Mock"},
-            {"birthdate", "eq2005-10-15"},
-        });
+        calls.AtPathAndParamsWithResponse(
+            "/personal-demographics/FHIR/R4/Patient",
+            new()
+            {
+                { "given", "Joe" },
+                { "family", "Mock" },
+                { "birthdate", "eq2005-10-15" },
+            }
+        );
     }
 }

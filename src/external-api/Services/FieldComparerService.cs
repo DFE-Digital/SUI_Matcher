@@ -1,5 +1,4 @@
 using Hl7.Fhir.Model;
-
 using Shared.Models;
 
 namespace ExternalApi.Services;
@@ -16,25 +15,60 @@ public static class FieldComparerService
     {
         var differentFields = new List<string>();
 
-        CompareField(query.Birthdate?.FirstOrDefault(), $"eq{patient.BirthDate}", nameof(SearchQuery.Birthdate), differentFields);
-        CompareField(query.AddressPostalcode, patient.Address.FirstOrDefault()?.PostalCode, nameof(SearchQuery.AddressPostalcode), differentFields);
-        CompareField(query.Gender, patient.Gender?.ToString(), nameof(SearchQuery.Gender), differentFields);
-        CompareField(query.Family, patient.Name.FirstOrDefault()?.Family, nameof(SearchQuery.Family), differentFields);
-        CompareField(query.Given?.FirstOrDefault(), patient.Name.FirstOrDefault()?.Given.FirstOrDefault(), nameof(SearchQuery.Given), differentFields);
+        CompareField(
+            query.Birthdate?.FirstOrDefault(),
+            $"eq{patient.BirthDate}",
+            nameof(SearchQuery.Birthdate),
+            differentFields
+        );
+        CompareField(
+            query.AddressPostalcode,
+            patient.Address.FirstOrDefault()?.PostalCode,
+            nameof(SearchQuery.AddressPostalcode),
+            differentFields
+        );
+        CompareField(
+            query.Gender,
+            patient.Gender?.ToString(),
+            nameof(SearchQuery.Gender),
+            differentFields
+        );
+        CompareField(
+            query.Family,
+            patient.Name.FirstOrDefault()?.Family,
+            nameof(SearchQuery.Family),
+            differentFields
+        );
+        CompareField(
+            query.Given?.FirstOrDefault(),
+            patient.Name.FirstOrDefault()?.Given.FirstOrDefault(),
+            nameof(SearchQuery.Given),
+            differentFields
+        );
 
-        var email = patient.Telecom.FirstOrDefault(x => x.System == ContactPoint.ContactPointSystem.Email)?.Value;
+        var email = patient
+            .Telecom.FirstOrDefault(x => x.System == ContactPoint.ContactPointSystem.Email)
+            ?.Value;
         CompareField(query.Email, email, nameof(SearchQuery.Email), differentFields);
 
-        var phone = patient.Telecom.FirstOrDefault(x => x.System == ContactPoint.ContactPointSystem.Phone)?.Value;
+        var phone = patient
+            .Telecom.FirstOrDefault(x => x.System == ContactPoint.ContactPointSystem.Phone)
+            ?.Value;
         CompareField(query.Phone, phone, nameof(SearchQuery.Phone), differentFields);
 
         return differentFields;
     }
 
-    private static void CompareField(string? queryValue, string? resourceValue, string fieldName, List<string> differentFields)
+    private static void CompareField(
+        string? queryValue,
+        string? resourceValue,
+        string fieldName,
+        List<string> differentFields
+    )
     {
         // Assumption that we don't compare if our input is null
-        if (queryValue is null) return;
+        if (queryValue is null)
+            return;
 
         if (!queryValue.Equals(resourceValue, StringComparison.OrdinalIgnoreCase))
         {

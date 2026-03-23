@@ -24,12 +24,15 @@ public class MatchingCsvProcessStats : IStats
         _erroredPercentage = new Lazy<double>(() => ComputePercentage(ErroredCount));
         _matchedPercentage = new Lazy<double>(() => ComputePercentage(CountMatched));
         _potentialMatchPercentage = new Lazy<double>(() => ComputePercentage(CountPotentialMatch));
-        _lowConfidenceMatchPercentage = new Lazy<double>(() => ComputePercentage(CountLowConfidenceMatch));
+        _lowConfidenceMatchPercentage = new Lazy<double>(() =>
+            ComputePercentage(CountLowConfidenceMatch)
+        );
         _manyMatchPercentage = new Lazy<double>(() => ComputePercentage(CountManyMatch));
         _noMatchPercentage = new Lazy<double>(() => ComputePercentage(CountNoMatch));
     }
 
-    private double ComputePercentage(int count) => Count == 0 ? 0 : Math.Round((double)count / Count * 100, 2);
+    private double ComputePercentage(int count) =>
+        Count == 0 ? 0 : Math.Round((double)count / Count * 100, 2);
 
     public double ErroredPercentage => _erroredPercentage.Value;
     public double MatchedPercentage => _matchedPercentage.Value;
@@ -37,6 +40,7 @@ public class MatchingCsvProcessStats : IStats
     public double LowConfidenceMatchPercentage => _lowConfidenceMatchPercentage.Value;
     public double ManyMatchPercentage => _manyMatchPercentage.Value;
     public double NoMatchPercentage => _noMatchPercentage.Value;
+
     public void ResetStats()
     {
         Count = 0;

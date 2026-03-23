@@ -21,7 +21,10 @@ public class ApplicationEnricher(IHttpContextAccessor httpContextAccessor) : ILo
             collector.Add("AlgorithmVersion", algorithmVersion);
         }
 
-        if (Activity.Current?.GetBaggageItem(SharedConstants.SearchStrategy.LogName) is { } searchStrategy)
+        if (
+            Activity.Current?.GetBaggageItem(SharedConstants.SearchStrategy.LogName) is
+            { } searchStrategy
+        )
         {
             collector.Add(SharedConstants.SearchStrategy.LogName, searchStrategy);
         }
