@@ -323,7 +323,7 @@ public class ReconciliationProcessStats : IStats
         }
     }
 
-    private record UpdateStatsInput(
+    private sealed record UpdateStatsInput(
         string[] Differences,
         string[] MissingLocal,
         string[] MissingNhs
