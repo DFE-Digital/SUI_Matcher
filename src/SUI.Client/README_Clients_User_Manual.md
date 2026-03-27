@@ -74,7 +74,7 @@ dotnet tool uninstall --global DFE.SUI.DBS.Response.Logger.Watcher
 ```bash
 Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';
 
-./dotnet-install.ps1 -Version 9.0.300 -InstallDir 'C:\Program Files\dotnet\'
+./dotnet-install.ps1 -Version 10.0.103 -InstallDir 'C:\Program Files\dotnet\'
 
 dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org"
 
@@ -94,4 +94,3 @@ In the CSV there is a differences column. This is what those differences mean...
 - fieldname - this means that the data is present in both sides but the data is different
 
 if a field name does not appear in this list then the data was the same on both sides
-

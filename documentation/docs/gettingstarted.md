@@ -6,15 +6,19 @@
 2. Add a new application by going to environment access. Use the 'Integration test' and set yourself as the owner.
 3. Create a new API, linked to `Personal Demographics Service - Application-Restricted (Integration Testing)`. You will need to give this a globally unique name.
 4. Generate a keypair, by running these commands (from [the NHS documentation](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication))
+
     1. ```
        KID=test-1
        ```
+
     2. ```
        openssl genrsa -out $KID.pem 4096
        ```
+
     3. ```
        openssl rsa -in $KID.pem -pubout -outform PEM -out $KID.pem.pub
        ```
+
     4. <pre>```
        MODULUS=$(
        openssl rsa -pubin -in $KID.pem.pub -noout -modulus `# Print modulus of public key` \
@@ -51,14 +55,15 @@ If you're using an IDE (such as Jetbrains Rider), you can add these environment 
 
 ## Pre-requisites
 
-You must install the .net CLI and v9 SDK. For macOS, run:
+You must install the .net CLI and SDK. For macOS, run:
 
 ```bash
-curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --version 9.0.102 --install-dir "$HOME/.dotnet"
+curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --version 10.0.103 --install-dir "$HOME/.dotnet"
 echo 'export PATH="$HOME/.dotnet:$PATH"' >> ~/.zshrc && source ~/.zshrc && echo $PATH
 ```
 
 You should then be able to build the solution, using
+
 ```bash
 dotnet build sui-matching.sln
 ```
@@ -82,22 +87,26 @@ dotnet test <path>/<to>/<test-class>
 
 ## Running locally
 
-
 To build and run the project:
+
 ```bash
 dotnet build sui-matching.sln
 dotnet run --project src/app-host/AppHost.csproj
 ```
+
 Run simple test:
+
 ```bash
 curl -H 'Content-Type: application/json' \
       -d '{ "given":"octavia","family":"chislett", "birthdate": "2008-09-20"}' \
       -X POST \
       http://localhost:5000/matching/api/v1/matchperson
 ```
+
 You should see a `matchStatus` of 0 if this has been successful. A `matchStatus` of 4 indicates that there has been an error connecting to the PDS API.
 
 If you have errors connecting to the aspire host page you may need to run the below commands:
+
 ```bash
 dotnet dev-certs https --clean
 dotnet dev-certs https --trust
