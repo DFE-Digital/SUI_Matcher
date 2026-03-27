@@ -62,6 +62,7 @@ public class AuditLogBackgroundServiceTests
         // Act
         await _channel.Writer.WriteAsync(entry);
         await service.StartAsync(CancellationToken.None);
+        await Task.Delay(100); // Give background service time to process
 
         // Assert
         mockTableClient.Verify(
@@ -128,6 +129,7 @@ public class AuditLogBackgroundServiceTests
         // Act
         await _channel.Writer.WriteAsync(entry);
         await service.StartAsync(CancellationToken.None);
+        await Task.Delay(100); // Give background service time to process
 
         // Assert
         _logger.Verify(
