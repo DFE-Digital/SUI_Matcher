@@ -50,11 +50,11 @@ To update the tools, you can use the following command:
 Add a `--version <version>` parameter to the command to install a specific version. Without version is will install the latest version.
 
 ```bash
-dotnet tool update --global DFE.SUI.Client.Watcher
+dotnet tool update --global SUI.Client.Watcher
 ```
 
 ```bash
-dotnet tool update --global DFE.SUI.DBS.Response.Logger.Watcher
+dotnet tool update --global SUI.DBS.Response.Logger.Watcher
 ```
 
 ## Uninstall the tools
@@ -62,11 +62,11 @@ dotnet tool update --global DFE.SUI.DBS.Response.Logger.Watcher
 To uninstall the tools, you can use the following command:
 
 ```bash
-dotnet tool uninstall --global DFE.SUI.Client.Watcher
+dotnet tool uninstall --global SUI.Client.Watcher
 ```
 
 ```bash
-dotnet tool uninstall --global DFE.SUI.DBS.Response.Logger.Watcher
+dotnet tool uninstall --global SUI.DBS.Response.Logger.Watcher
 ```
 
 ## Installing Windows 2022 server
