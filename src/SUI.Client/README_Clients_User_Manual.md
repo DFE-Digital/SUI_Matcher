@@ -71,6 +71,8 @@ dotnet tool uninstall --global DFE.SUI.DBS.Response.Logger.Watcher
 
 ## Installing Windows 2022 server
 
+The SUI.Client.Watcher from version 0.0.48 uses dotnet 10 as shown below. Previous versions used the latest dotnet 9
+
 ```bash
 Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1';
 
