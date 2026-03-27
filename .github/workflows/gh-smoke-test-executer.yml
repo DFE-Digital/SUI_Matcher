@@ -139,7 +139,7 @@ jobs:
             if (-not $hasDotNet10) {
                 Write-Output ".NET 10 SDK not found. Installing..."
                 Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1'
-                ./dotnet-install.ps1 -Channel 10.0 -InstallDir 'C:\Program Files\dotnet'
+                ./dotnet-install.ps1 -Version 10.0.103 -InstallDir 'C:\Program Files\dotnet'
                 $env:Path = "C:\Program Files\dotnet;$env:Path"
                 
                 # Ensure nuget.org is available as a source
@@ -236,7 +236,7 @@ jobs:
             }
             Start-Sleep -Seconds 2
           }
-          
+
           # Give time for the app to finish processing anything else before stopping it
           Start-Sleep -Seconds 30
 
