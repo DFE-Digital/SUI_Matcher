@@ -126,6 +126,39 @@ jobs:
           $basePath = "C:\Users\SmokeTests"
           $serverUrl = "${{ env.SUI_SERVER_URL }}"
           $installPath = "C:\Program Files\dotnet\tools"
+          $dotnetDir = "C:\Program Files\dotnet"
+          $dotnetExe = "$dotnetDir\dotnet.exe"
+
+          function Ensure-DotNet10 {
+            Write-Output "Checking for .NET 10 SDK..."
+            if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+                if (dotnet --list-sdks | Select-String -Pattern "10\.0\.") {
+                    Write-Output ".NET 10 SDK is already installed."
+                    return
+                }
+            }
+
+            Write-Output ".NET 10 SDK not found. Installing to $dotnetDir..."
+            Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
+            & .\dotnet-install.ps1 -Version 10.0.103 -InstallDir $dotnetDir
+            
+            if (-not (Test-Path $dotnetExe)) {
+                Write-Error "Failed to install .NET 10 SDK to $dotnetDir"
+                exit 1
+            }
+
+            # Ensure the current session path is updated
+            $env:Path = "$dotnetDir;$env:Path"
+            Write-Output "Installed .NET version: $(dotnet --version)"
+            
+            # Ensure nuget.org is available as a source
+            if (-not (dotnet nuget list source | Select-String -Pattern "api.nuget.org")) {
+               dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org"
+            }
+          }
+
+          Ensure-DotNet10
+
           $basePathUnprocessed = "$basePath\unprocessed"
           $basePathProcessed = "$basePath\processed"
           $packageName="${{ env.packagename }}"
@@ -148,9 +181,19 @@ jobs:
           Cleanup-SmokeTestEnvironment -PackageName $packageName -SmokeTestsPath $basePath
 
           dotnet tool install $packageName --tool-path $installPath
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "Failed to install $packageName tool"
+              exit 1
+          }
 
           if ($env:Path -notlike "*$installPath*") {
             $env:Path = "$installPath;$env:Path"
+          }
+
+          $exePath = Join-Path $installPath "${{ env.executable }}"
+          if (-not (Test-Path $exePath)) {
+              Write-Error "Tool executable not found at $exePath after installation"
+              exit 1
           }
 
           New-Item -ItemType Directory -Path $basePath -Force
@@ -168,6 +211,11 @@ jobs:
                   -ArgumentList "$basePathUnprocessed", "$basePathProcessed" `
                   -WorkingDirectory $basePath `
                   -PassThru
+          }
+
+          if (-not $process -or $process.HasExited) {
+              Write-Error "Failed to start ${{ env.executable }} process"
+              exit 1
           }
 
           # Give time for the job to start before writing the file
@@ -194,7 +242,7 @@ jobs:
             }
             Start-Sleep -Seconds 2
           }
-          
+
           # Give time for the app to finish processing anything else before stopping it
           Start-Sleep -Seconds 30
 

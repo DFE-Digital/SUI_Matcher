@@ -4,33 +4,33 @@ on:
     branches:
       - main
     paths:
-      - 'src/SUI.Client/**'
-      - 'src/tools/dbs-response-logger/**'
-      - 'src/Shared/**'
+      - "src/SUI.Client/**"
+      - "src/tools/dbs-response-logger/**"
+      - "src/Shared/**"
   workflow_dispatch:
     inputs:
       publish-client:
-        description: 'Publish the client watcher to NuGet (Uses github latest tag)'
+        description: "Publish the client watcher to NuGet (Uses github latest tag)"
         required: true
         default: false
         type: boolean
       version-client:
-        description: 'Version of the client watcher to publish (if none select, auto increment patch version)'
+        description: "Version of the client watcher to publish (if none select, auto increment patch version)"
         required: false
         type: string
       publish-response-logger:
-        description: 'Publish the response logger to NuGet (Uses github latest tag)'
+        description: "Publish the response logger to NuGet (Uses github latest tag)"
         required: true
         default: false
         type: boolean
       version-response-logger:
-        description: 'Version of the response logger to publish (if none select, auto increment patch version)'
+        description: "Version of the response logger to publish (if none select, auto increment patch version)"
         required: false
         type: string
-        
+
 env:
-  client_name: 'SUI.Client.Watcher'
-  response_logger_name: 'SUI.DBS.Response.Logger.Watcher'
+  client_name: "SUI.Client.Watcher"
+  response_logger_name: "SUI.DBS.Response.Logger.Watcher"
 
 jobs:
   publish:
@@ -40,11 +40,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          
+
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: 'Get Client Nuget version'
+      - name: "Get Client Nuget version"
         id: current_nuget_client_version
         run: |
           if [[ -n "${{ github.event.inputs.version-client }}" ]]; then
@@ -55,7 +55,7 @@ jobs:
            API_URL="https://api.nuget.org/v3-flatcontainer/${LOWERCASE_NAME}/index.json"
            RESPONSE=$(curl -s -w "%{http_code}" -o response.json "$API_URL")
            HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
-          
+
            if [[ "$HTTP_STATUS" == "404" ]]; then
              VERSION="0.0.1"
            else
@@ -67,8 +67,8 @@ jobs:
           fi
 
           echo "CLIENT_VERSION=$VERSION" >> $GITHUB_ENV
-          
-      - name: 'Get Dbs logger nuget version'
+
+      - name: "Get Dbs logger nuget version"
         id: current_nuget_dbs_version
         run: |
           if [[ -n "${{ github.event.inputs.version-response-logger }}" ]]; then
@@ -79,7 +79,7 @@ jobs:
            API_URL="https://api.nuget.org/v3-flatcontainer/${LOWERCASE_NAME}/index.json"
            RESPONSE=$(curl -s -w "%{http_code}" -o response.json "$API_URL")
            HTTP_STATUS=$(tail -n1 <<< "$RESPONSE")
-          
+
            if [[ "$HTTP_STATUS" == "404" ]]; then
              VERSION="0.0.1"
            else
@@ -91,16 +91,16 @@ jobs:
           fi
 
           echo "DBS_VERSION=$VERSION" >> $GITHUB_ENV
-      
+
       - name: Print Package Version
         run: |
           echo "next client nuget version: ${{ env.CLIENT_VERSION }}"
           echo "next dbs nuget version: ${{ env.DBS_VERSION }}"
-          
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "10.0.x"
 
       - name: Check changed files to set publish flags
         id: check-changed-files
@@ -139,7 +139,7 @@ jobs:
           dotnet nuget push ./nukpg/${{env.client_name}}.${{ env.CLIENT_VERSION }}.nupkg \
             --source https://api.nuget.org/v3/index.json \
             --api-key ${{ secrets.NUGET_API_KEY }}
-          
+
       - name: Package Response Logger
         if: ${{ github.event.inputs.publish-response-logger == 'true' || env.auto_publish_response_logger == 'true' }}
         run: |
@@ -148,12 +148,10 @@ jobs:
             --output ./nukpg \
             /p:Version=${{ env.DBS_VERSION }} \
             /p:PackAsTool=true
-          
+
       - name: Publish Response Logger
         if: ${{ github.event.inputs.publish-response-logger == 'true' || env.auto_publish_response_logger == 'true' }}
         run: |
           dotnet nuget push ./nukpg/${{env.response_logger_name}}.${{ env.DBS_VERSION }}.nupkg \
             --source https://api.nuget.org/v3/index.json \
             --api-key ${{ secrets.NUGET_API_KEY }}
-      
-          
