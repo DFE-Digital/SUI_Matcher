@@ -126,37 +126,34 @@ jobs:
           $basePath = "C:\Users\SmokeTests"
           $serverUrl = "${{ env.SUI_SERVER_URL }}"
           $installPath = "C:\Program Files\dotnet\tools"
-          $dotnetDir = "C:\dotnet"
+          $dotnetDir = "C:\Program Files\dotnet"
           $dotnetExe = "$dotnetDir\dotnet.exe"
 
           function Ensure-DotNet10 {
             Write-Output "Checking for .NET 10 SDK..."
-            if (Test-Path $dotnetExe) {
-                $sdks = & $dotnetExe --list-sdks
-                if ($sdks -like "10.0.*") {
-                    Write-Output ".NET 10 SDK is already installed in $dotnetDir."
-                    $env:Path = "$dotnetDir;$env:Path"
+            if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+                if (dotnet --list-sdks | Select-String -Pattern "10\.0\.") {
+                    Write-Output ".NET 10 SDK is already installed."
                     return
                 }
             }
 
             Write-Output ".NET 10 SDK not found. Installing to $dotnetDir..."
-            if (-not (Test-Path $dotnetDir)) { New-Item -ItemType Directory -Path $dotnetDir -Force }
-            
-            Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile 'dotnet-install.ps1'
-            ./dotnet-install.ps1 -Version 10.0.103 -InstallDir $dotnetDir -DoNotModifyPath
+            Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
+            & .\dotnet-install.ps1 -Version 10.0.103 -InstallDir $dotnetDir
             
             if (-not (Test-Path $dotnetExe)) {
                 Write-Error "Failed to install .NET 10 SDK to $dotnetDir"
                 exit 1
             }
 
+            # Ensure the current session path is updated
             $env:Path = "$dotnetDir;$env:Path"
-            Write-Output "Installed .NET version: $(& $dotnetExe --version)"
+            Write-Output "Installed .NET version: $(dotnet --version)"
             
             # Ensure nuget.org is available as a source
-            if (-not (& $dotnetExe nuget list source | Select-String -Pattern "api.nuget.org")) {
-               & $dotnetExe nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org"
+            if (-not (dotnet nuget list source | Select-String -Pattern "api.nuget.org")) {
+               dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org"
             }
           }
 
@@ -174,16 +171,16 @@ jobs:
 
           function Cleanup-SmokeTestEnvironment {
             param([string]$PackageName, [string]$SmokeTestsPath)
-            if (& $dotnetExe tool list --tool-path $installPath | Select-String -Pattern $PackageName) {
+            if (dotnet tool list --tool-path $installPath | Select-String -Pattern $PackageName) {
                 Write-Output "Uninstalling existing $PackageName tool..."
-                & $dotnetExe tool uninstall $PackageName --tool-path $installPath
+                dotnet tool uninstall $PackageName --tool-path $installPath
             }
             if (Test-Path $SmokeTestsPath) { Remove-Item -Path $SmokeTestsPath -Recurse -Force }
           }
 
           Cleanup-SmokeTestEnvironment -PackageName $packageName -SmokeTestsPath $basePath
 
-          & $dotnetExe tool install $packageName --tool-path $installPath
+          dotnet tool install $packageName --tool-path $installPath
           if ($LASTEXITCODE -ne 0) {
               Write-Error "Failed to install $packageName tool"
               exit 1
