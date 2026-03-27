@@ -16,6 +16,10 @@ on:
         description: The version of the infrastructure to deploy (if empty the latest version is use)
         type: string
         required: false
+      use_current_branch:
+        description: Override version selection and use the current branch code
+        default: false
+        type: boolean
       environment_prefix:
         description: The prefix for the environment
         default: 's215d01'
@@ -51,6 +55,7 @@ jobs:
         uses: actions/checkout@v6
         
       - name: Use version inputted or find latest tag
+        if: ${{ !inputs.use_current_branch }}
         id: check-version
         run: |
           if [ -z "${{ github.event.inputs.version }}" ]; then
@@ -65,6 +70,7 @@ jobs:
           fi
 
       - name: Checkout
+        if: ${{ !inputs.use_current_branch }}
         uses: actions/checkout@v6
         with:
           ref: ${{ env.APPLICATION_VERSION }}
