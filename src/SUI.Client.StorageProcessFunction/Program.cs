@@ -18,16 +18,9 @@ var host = new HostBuilder()
             services.AddSingleton(serviceProvider =>
             {
                 var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-                var connectionString =
-                    configuration[
-                        $"{StorageProcessFunctionOptions.SectionName}:StorageConnectionString"
-                    ]
-                    ?? configuration[
-                        $"{StorageProcessFunctionOptions.SectionName}__StorageConnectionString"
-                    ]
-                    ?? configuration["AzureWebJobsStorage"]
+                var connectionString = configuration["AzureWebJobsStorage"]
                     ?? throw new InvalidOperationException(
-                        "Storage connection string configuration is missing."
+                        "AzureWebJobsStorage configuration is missing."
                     );
 
                 return new BlobServiceClient(connectionString);

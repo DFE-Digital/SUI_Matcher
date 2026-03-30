@@ -38,6 +38,9 @@ var matchingApi = builder.AddProject<Projects.Matching>("matching-api");
 
 // Feature flag setup
 var auditLoggingFlag = builder.Configuration.GetValue<string>("FeatureToggles:EnableAuditLogging");
+var storageProcessFunctionFlag = builder.Configuration.GetValue<bool>(
+    "FeatureToggles:EnableStorageProcessFunction"
+);
 matchingApi.WithEnvironment("FeatureManagement__EnableAuditLogging", auditLoggingFlag);
 
 // Wrap in feature management to allow for feature toggling
@@ -75,5 +78,24 @@ builder
     .WithExternalHttpEndpoints()
     .WithReference(matchingApi)
     .WaitFor(matchingApi);
+
+if (storageProcessFunctionFlag)
+{
+    var storageConnectionString = builder.Environment.IsDevelopment()
+        ? "UseDevelopmentStorage=true"
+        : builder.Configuration.GetConnectionString("AzureWebJobsStorage")
+            ?? throw new InvalidOperationException(
+                "ConnectionStrings:AzureWebJobsStorage must be configured when EnableStorageProcessFunction is true outside development."
+            );
+
+    builder
+        .AddProject<Projects.SUI_Client_StorageProcessFunction>("storage-process-function")
+        .WithEnvironment(ctx =>
+        {
+            ctx.EnvironmentVariables["AzureWebJobsStorage"] = storageConnectionString;
+            ctx.EnvironmentVariables["FUNCTIONS_WORKER_RUNTIME"] = "dotnet-isolated";
+            ctx.EnvironmentVariables["QueueName"] = "storage-process-job";
+        });
+}
 
 await builder.Build().RunAsync();

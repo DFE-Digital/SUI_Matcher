@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <RootNamespace>SUI.StorageProcessFunction</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
