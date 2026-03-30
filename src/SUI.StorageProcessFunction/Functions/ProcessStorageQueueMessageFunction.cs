@@ -11,7 +11,7 @@ public sealed class ProcessStorageQueueMessageFunction(
 {
     [Function(nameof(ProcessStorageQueueMessageFunction))]
     public async Task RunAsync(
-        [QueueTrigger("%StorageProcessFunction__QueueName%", Connection = "AzureWebJobsStorage")]
+        [QueueTrigger("%QueueName%", Connection = "AzureWebJobsStorage")]
             StorageBlobMessage queueMessage,
         CancellationToken cancellationToken
     )
