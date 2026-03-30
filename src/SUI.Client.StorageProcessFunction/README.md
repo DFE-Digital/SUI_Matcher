@@ -8,7 +8,8 @@ This function currently:
 - expects a typed message body with `containerName` and `blobName`
 - downloads the referenced blob
 - passes the blob content to a placeholder processor
-- throws `NotSupportedException` because real file processing is not implemented yet
+- treats the placeholder processing step as successful
+- moves the blob into the `processed` container using the path format `ddMMyyHHmmss_filename/filename`
 
 Azure Functions handles:
 
@@ -104,5 +105,6 @@ For the current scaffold:
 
 - the function should trigger from the queue message
 - the blob should be downloaded successfully
-- the placeholder processor should throw `NotSupportedException`
-- Azure Functions should retry according to the queue trigger settings in `host.json`
+- the placeholder processor should complete successfully
+- the original blob should be removed from `incoming`
+- the file should be written to the `processed` container with a timestamped folder name

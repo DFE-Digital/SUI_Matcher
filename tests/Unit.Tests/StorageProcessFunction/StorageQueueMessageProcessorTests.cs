@@ -26,7 +26,7 @@ public class StorageQueueMessageProcessorTests
         Assert.True(blobPayloadProcessor.ProcessCalled);
         Assert.True(blobFileReader.ArchiveProcessedCalled);
         Assert.Equal("processed", blobFileReader.ArchivedContainerName);
-        Assert.Matches(@"^\d{10}_test-file\.csv/test-file\.csv$", blobFileReader.ArchivedBlobName);
+        Assert.Matches(@"^\d{12}_test-file\.csv/test-file\.csv$", blobFileReader.ArchivedBlobName);
     }
 
     [Fact]

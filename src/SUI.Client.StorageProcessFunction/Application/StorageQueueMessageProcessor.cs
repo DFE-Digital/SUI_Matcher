@@ -59,7 +59,7 @@ public sealed class StorageQueueMessageProcessor(
             );
         }
 
-        var timestamp = DateTime.UtcNow.ToString("ddMMyyHHmm", CultureInfo.InvariantCulture);
+        var timestamp = DateTime.UtcNow.ToString("ddMMyyHHmmss", CultureInfo.InvariantCulture);
         return $"{timestamp}_{fileName}/{fileName}";
     }
 }
