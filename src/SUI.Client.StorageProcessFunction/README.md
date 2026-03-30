@@ -17,6 +17,30 @@ Azure Functions handles:
 - retry behavior
 - poison queue behavior based on `host.json`
 
+## Test Script
+
+Use the cross-platform PowerShell script at `scripts/test-storage-process-function.ps1`.
+
+It will:
+
+- create a test CSV file
+- create the blob container if needed
+- create the queue if needed
+- upload the CSV to Azurite blob storage
+- add the queue message for the function
+
+Run it with:
+
+```powershell
+pwsh ./scripts/test-storage-process-function.ps1
+```
+
+Requirements:
+
+- Azurite running
+- Azure CLI (`az`) installed
+- the function app running locally
+
 ## Queue Message Contract
 
 The queue message body must be JSON with this shape:
@@ -30,7 +54,7 @@ The queue message body must be JSON with this shape:
 
 ## Example Test CSV File
 
-Create a file called `test-file.csv` with this content:
+The script creates a file called `test-file.csv` with this content:
 
 ```csv
 Given,Family,BirthDate,Gender,AddressPostalCode
@@ -50,7 +74,7 @@ For Azurite, that means:
 
 ## Example Queue Message
 
-Add this message body to the queue:
+The script adds this message body to the queue:
 
 ```json
 {
