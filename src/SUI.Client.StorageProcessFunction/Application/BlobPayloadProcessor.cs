@@ -2,11 +2,12 @@ using Microsoft.Extensions.Logging;
 
 namespace SUI.StorageProcessFunction.Application;
 
-public sealed class PlaceholderBlobPayloadProcessor(ILogger<PlaceholderBlobPayloadProcessor> logger)
+public sealed class BlobPayloadProcessor(ILogger<BlobPayloadProcessor> logger)
     : IBlobPayloadProcessor
 {
     public Task ProcessAsync(BlobFileContent blobFile, CancellationToken cancellationToken)
     {
+        // placeholder logger to show it's reaching this stage
         logger.LogInformation(
             "Downloaded blob {BlobName} from container {ContainerName} with {ByteCount} bytes.",
             blobFile.Blob.BlobName,
@@ -14,8 +15,7 @@ public sealed class PlaceholderBlobPayloadProcessor(ILogger<PlaceholderBlobPaylo
             blobFile.Content.ToMemory().Length
         );
 
-        throw new NotSupportedException(
-            "Blob processing has not been implemented yet. Add a format-specific processor here and reuse SUI.Client.Core where it fits."
-        );
+        // Next: reading and processing file contents.
+        return Task.CompletedTask;
     }
 }

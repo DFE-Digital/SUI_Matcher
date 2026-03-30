@@ -24,6 +24,9 @@ public class StorageQueueMessageProcessorTests
 
         Assert.True(blobFileReader.ReadCalled);
         Assert.True(blobPayloadProcessor.ProcessCalled);
+        Assert.True(blobFileReader.ArchiveProcessedCalled);
+        Assert.Equal("processed", blobFileReader.ArchivedContainerName);
+        Assert.Matches(@"^\d{10}_test-file\.csv/test-file\.csv$", blobFileReader.ArchivedBlobName);
     }
 
     [Fact]
@@ -46,6 +49,7 @@ public class StorageQueueMessageProcessorTests
 
         Assert.False(blobFileReader.ReadCalled);
         Assert.False(blobPayloadProcessor.ProcessCalled);
+        Assert.False(blobFileReader.ArchiveProcessedCalled);
     }
 
     [Fact]
@@ -68,5 +72,6 @@ public class StorageQueueMessageProcessorTests
 
         Assert.False(blobFileReader.ReadCalled);
         Assert.False(blobPayloadProcessor.ProcessCalled);
+        Assert.False(blobFileReader.ArchiveProcessedCalled);
     }
 }

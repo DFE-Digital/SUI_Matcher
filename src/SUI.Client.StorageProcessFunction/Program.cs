@@ -18,7 +18,8 @@ var host = new HostBuilder()
             services.AddSingleton(serviceProvider =>
             {
                 var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-                var connectionString = configuration["AzureWebJobsStorage"]
+                var connectionString =
+                    configuration["AzureWebJobsStorage"]
                     ?? throw new InvalidOperationException(
                         "AzureWebJobsStorage configuration is missing."
                     );
@@ -27,7 +28,7 @@ var host = new HostBuilder()
             });
 
             services.AddSingleton<IBlobFileReader, AzureBlobFileReader>();
-            services.AddSingleton<IBlobPayloadProcessor, PlaceholderBlobPayloadProcessor>();
+            services.AddSingleton<IBlobPayloadProcessor, BlobPayloadProcessor>();
             services.AddSingleton<StorageQueueMessageProcessor>();
         }
     )

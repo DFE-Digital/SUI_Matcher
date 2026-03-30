@@ -6,4 +6,11 @@ public interface IBlobFileReader
         StorageBlobMessage blobMessage,
         CancellationToken cancellationToken
     );
+
+    Task ArchiveProcessedAsync(
+        BlobFileContent blobFile,
+        string destinationContainerName,
+        string destinationBlobName,
+        CancellationToken cancellationToken
+    );
 }
