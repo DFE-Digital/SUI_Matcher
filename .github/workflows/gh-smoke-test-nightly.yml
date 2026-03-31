@@ -2,7 +2,7 @@ name: Smoke Test Deployed Apps - nightly
 
 on:
   schedule:
-    - cron: "0 3 * * *" # Runs daily at 3:00 AM UTC
+    - cron: "0 3 * * 1" # Runs weekly on Monday at 3:00 AM UTC
 
 permissions:
   id-token: write
