@@ -5,6 +5,7 @@ namespace SUI.StorageProcessFunction.Application;
 
 public sealed class StorageQueueMessageProcessor(
     ILogger<StorageQueueMessageProcessor> logger,
+    TimeProvider timeProvider,
     IBlobFileReader blobFileReader,
     IBlobPayloadProcessor blobPayloadProcessor
 )
@@ -48,9 +49,10 @@ public sealed class StorageQueueMessageProcessor(
         }
     }
 
-    private static string BuildProcessedBlobName(string blobName)
+    private string BuildProcessedBlobName(string blobName)
     {
         var fileName = Path.GetFileName(blobName);
+        var fileNameNoExt = Path.GetFileNameWithoutExtension(blobName);
 
         if (string.IsNullOrWhiteSpace(fileName))
         {
@@ -59,7 +61,9 @@ public sealed class StorageQueueMessageProcessor(
             );
         }
 
-        var timestamp = DateTime.UtcNow.ToString("ddMMyyHHmmss", CultureInfo.InvariantCulture);
-        return $"{timestamp}_{fileName}/{fileName}";
+        var timestamp = timeProvider
+            .GetUtcNow()
+            .ToString("yyyyMMddHHss", CultureInfo.InvariantCulture);
+        return $"{timestamp}_{fileNameNoExt}/{fileName}";
     }
 }
