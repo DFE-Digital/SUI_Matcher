@@ -15,6 +15,8 @@ var host = new HostBuilder()
                 context.Configuration.GetSection(StorageProcessFunctionOptions.SectionName)
             );
 
+            services.AddSingleton(TimeProvider.System);
+
             services.AddSingleton(serviceProvider =>
             {
                 var configuration = serviceProvider.GetRequiredService<IConfiguration>();
