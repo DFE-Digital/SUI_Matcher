@@ -1,4 +1,4 @@
-name: Smoke Test Deployed Apps - nightly
+name: Smoke Test Deployed Apps - scheduled
 
 on:
   schedule:
