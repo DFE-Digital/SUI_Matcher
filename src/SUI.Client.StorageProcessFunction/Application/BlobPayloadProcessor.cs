@@ -1,7 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 
 namespace SUI.StorageProcessFunction.Application;
 
+[ExcludeFromCodeCoverage(Justification = "Function not implemented yet")]
 public sealed class BlobPayloadProcessor(ILogger<BlobPayloadProcessor> logger)
     : IBlobPayloadProcessor
 {
