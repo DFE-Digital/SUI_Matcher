@@ -5,7 +5,7 @@ using SUI.StorageProcessFunction.Application;
 namespace SUI.StorageProcessFunction.Functions;
 
 public sealed class ProcessStorageQueueMessageFunction(
-    StorageQueueMessageProcessor processor,
+    IStorageQueueMessageProcessor processor,
     ILogger<ProcessStorageQueueMessageFunction> logger
 )
 {

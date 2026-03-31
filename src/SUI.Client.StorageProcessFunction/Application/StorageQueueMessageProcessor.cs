@@ -8,7 +8,7 @@ public sealed class StorageQueueMessageProcessor(
     TimeProvider timeProvider,
     IBlobFileReader blobFileReader,
     IBlobPayloadProcessor blobPayloadProcessor
-)
+) : IStorageQueueMessageProcessor
 {
     private const string ProcessedContainerName = "processed";
 

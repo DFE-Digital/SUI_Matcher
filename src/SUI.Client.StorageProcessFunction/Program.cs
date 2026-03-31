@@ -29,7 +29,7 @@ var host = new HostBuilder()
 
             services.AddSingleton<IBlobFileReader, AzureBlobFileReader>();
             services.AddSingleton<IBlobPayloadProcessor, BlobPayloadProcessor>();
-            services.AddSingleton<StorageQueueMessageProcessor>();
+            services.AddSingleton<IStorageQueueMessageProcessor, StorageQueueMessageProcessor>();
         }
     )
     .Build();
