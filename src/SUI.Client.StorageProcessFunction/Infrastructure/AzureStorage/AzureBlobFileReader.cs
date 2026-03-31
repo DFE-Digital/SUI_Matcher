@@ -1,9 +1,13 @@
+using System.Diagnostics.CodeAnalysis;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using SUI.StorageProcessFunction.Application;
 
 namespace SUI.StorageProcessFunction.Infrastructure.AzureStorage;
 
+[ExcludeFromCodeCoverage(
+    Justification = "Unit testing would be all mocks. We could cover this with integration later"
+)]
 public sealed class AzureBlobFileReader(BlobServiceClient blobServiceClient) : IBlobFileReader
 {
     public async Task<BlobFileContent> ReadAsync(
