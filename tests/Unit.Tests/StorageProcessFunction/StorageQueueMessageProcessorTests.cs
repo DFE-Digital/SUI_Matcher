@@ -53,7 +53,7 @@ public class StorageQueueMessageProcessorTests
             x => x.ProcessAsync(blobFile, CancellationToken.None),
             Times.Once
         );
-        var utcNow = $"{_timeProvider.GetUtcNow():yyyyMMddHHss}_test-file/test-file.csv";
+        var utcNow = $"{_timeProvider.GetUtcNow():yyyyMMddHHmmss}_test-file/test-file.csv";
         _blobFileReader.Verify(
             x =>
                 x.ArchiveProcessedAsync(
