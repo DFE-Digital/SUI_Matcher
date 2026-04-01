@@ -22,70 +22,20 @@ Azure Functions handles:
 ## Test Script
 
 Use the cross-platform PowerShell script at `scripts/test-storage-process-function.ps1`.
+Prerequisites:
 
-It will:
-
-- create a test CSV file
-- create the blob container if needed
-- create the queue if needed
-- upload the CSV to Azurite blob storage
-- add the queue message for the function
-
-Run it with:
-
-```powershell
-pwsh ./scripts/test-storage-process-function.ps1
-```
-
-Requirements:
-
-- Azurite running
 - Azure CLI (`az`) installed
-- the function app running locally
+- the target storage account or Azurite running and reachable
+- the storage-process function running locally if you want to observe end-to-end processing
+
+The script includes PowerShell comment-based help, so use `Get-Help ./scripts/test-storage-process-function.ps1 -Detailed`
+or `Get-Help ./scripts/test-storage-process-function.ps1 -Examples` for usage and examples.
+
+Note: for Mac users, enter powershell mode with `pwsh` first before running the Get-Help command.
 
 ## Queue Message Contract
 
 The queue message body must be of EventGrid schema - See https://learn.microsoft.com/en-us/azure/event-grid/event-schema
-
-## Example Test CSV File
-
-The script creates a file called `test-file.csv` with this content:
-
-```csv
-Given,Family,BirthDate,Gender,AddressPostalCode
-Jane,Doe,2012-05-10,Female,SW1A1AA
-```
-
-Upload it to this blob path:
-
-```text
-incoming/test-file.csv
-```
-
-For Azurite, that means:
-
-- container: `incoming`
-- blob name: `test-file.csv`
-
-## Example Queue Message
-
-The script adds this message body to the queue:
-
-```json
-[
-  {
-    "id": "11111111-1111-1111-1111-111111111111",
-    "subject": "/blobServices/default/containers/incoming/blobs/test-file.csv",
-    "eventType": "Microsoft.Storage.BlobCreated",
-    "eventTime": "2026-04-01T12:00:00Z",
-    "data": {
-      "url": "https://<storage-account>.blob.core.windows.net/incoming/test-file.csv"
-    },
-    "dataVersion": "1",
-    "metadataVersion": "1"
-  }
-]
-```
 
 ## Local Settings
 
