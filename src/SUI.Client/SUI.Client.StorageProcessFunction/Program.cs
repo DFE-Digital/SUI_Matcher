@@ -31,6 +31,7 @@ var host = new HostBuilder()
 
             services.AddSingleton<IBlobFileReader, AzureBlobFileReader>();
             services.AddSingleton<IBlobPayloadProcessor, BlobPayloadProcessor>();
+            services.AddSingleton<IStorageQueueMessageParser, EventGridStorageQueueMessageParser>();
             services.AddSingleton<IStorageQueueMessageProcessor, StorageQueueMessageProcessor>();
         }
     )

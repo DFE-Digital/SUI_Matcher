@@ -10,19 +10,44 @@ public class ProcessStorageQueueMessageFunctionTests
     [Fact]
     public async Task Should_CallProcessAsync_When_RunAsyncIsInvoked()
     {
+        var queueMessageParser = new Mock<IStorageQueueMessageParser>();
         var processor = new Mock<IStorageQueueMessageProcessor>();
-        var queueMessage = new StorageBlobMessage
+        var rawQueueMessage = BuildQueueMessage(
+            "/blobServices/default/containers/incoming/blobs/test-file.csv"
+        );
+        var parsedQueueMessage = new StorageBlobMessage
         {
             ContainerName = "incoming",
             BlobName = "test-file.csv",
         };
+        queueMessageParser.Setup(x => x.Parse(rawQueueMessage)).Returns(parsedQueueMessage);
         var sut = new ProcessStorageQueueMessageFunction(
+            queueMessageParser.Object,
             processor.Object,
             NullLogger<ProcessStorageQueueMessageFunction>.Instance
         );
 
-        await sut.RunAsync(queueMessage, CancellationToken.None);
+        await sut.RunAsync(rawQueueMessage, CancellationToken.None);
 
-        processor.Verify(x => x.ProcessAsync(queueMessage, CancellationToken.None), Times.Once);
+        queueMessageParser.Verify(x => x.Parse(rawQueueMessage), Times.Once);
+        processor.Verify(
+            x => x.ProcessAsync(parsedQueueMessage, CancellationToken.None),
+            Times.Once
+        );
     }
+
+    private static string BuildQueueMessage(string subject) =>
+        $$"""
+            [
+              {
+                "id": "11111111-1111-1111-1111-111111111111",
+                "subject": "{{subject}}",
+                "eventType": "Microsoft.Storage.BlobCreated",
+                "eventTime": "2026-04-01T12:00:00Z",
+                "data": {},
+                "dataVersion": "1",
+                "metadataVersion": "1"
+              }
+            ]
+            """;
 }

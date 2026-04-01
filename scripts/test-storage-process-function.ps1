@@ -50,10 +50,21 @@ az storage blob upload `
     --connection-string $ConnectionString `
     --only-show-errors | Out-Null
 
-$message = @{
-    containerName = $ContainerName
-    blobName = $BlobName
-} | ConvertTo-Json -Compress
+$eventTime = [DateTimeOffset]::UtcNow.ToString("o")
+$blobUrl = "https://127.0.0.1:10000/devstoreaccount1/$ContainerName/$BlobName"
+$message = @(
+    @{
+        id = [guid]::NewGuid().ToString()
+        subject = "/blobServices/default/containers/$ContainerName/blobs/$BlobName"
+        eventType = "Microsoft.Storage.BlobCreated"
+        eventTime = $eventTime
+        data = @{
+            url = $blobUrl
+        }
+        dataVersion = "1"
+        metadataVersion = "1"
+    }
+) | ConvertTo-Json -Compress -Depth 5
 
 az storage message put `
     --queue-name $QueueName `

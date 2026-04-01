@@ -5,7 +5,8 @@
 This function currently:
 
 - reads one Azure Storage Queue message
-- expects a typed message body with `containerName` and `blobName`
+- expects an Azure Event Grid schema message for a blob-created event
+- only processes files from the `incoming` container
 - downloads the referenced blob
 - passes the blob content to a placeholder processor
 - treats the placeholder processing step as successful
@@ -44,14 +45,7 @@ Requirements:
 
 ## Queue Message Contract
 
-The queue message body must be JSON with this shape:
-
-```json
-{
-  "containerName": "incoming",
-  "blobName": "test-file.csv"
-}
-```
+The queue message body must be of EventGrid schema - See https://learn.microsoft.com/en-us/azure/event-grid/event-schema
 
 ## Example Test CSV File
 
@@ -78,10 +72,19 @@ For Azurite, that means:
 The script adds this message body to the queue:
 
 ```json
-{
-  "containerName": "incoming",
-  "blobName": "test-file.csv"
-}
+[
+  {
+    "id": "11111111-1111-1111-1111-111111111111",
+    "subject": "/blobServices/default/containers/incoming/blobs/test-file.csv",
+    "eventType": "Microsoft.Storage.BlobCreated",
+    "eventTime": "2026-04-01T12:00:00Z",
+    "data": {
+      "url": "https://<storage-account>.blob.core.windows.net/incoming/test-file.csv"
+    },
+    "dataVersion": "1",
+    "metadataVersion": "1"
+  }
+]
 ```
 
 ## Local Settings
