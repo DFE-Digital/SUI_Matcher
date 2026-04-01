@@ -5,7 +5,8 @@
     "queues": {
       "visibilityTimeout": "00:01:00",
       "maxDequeueCount": 5,
-      "messageEncoding": "none"
+      "messageEncoding": "none",
+      "batchSize": 1
     }
   }
 }
