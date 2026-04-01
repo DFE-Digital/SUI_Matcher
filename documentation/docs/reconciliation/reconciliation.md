@@ -1,9 +1,5 @@
 # Reconciliation
 
-## Links
-
-[Address Parsing](./address_parsing.md)
-
 ## Overview
 Reconciliation is a core feature of the SUI Matcher system that enables users to validate their local patient records against the national Personal Demographics Service (PDS). By uploading a set of records (typically via CSV), the system performs a multi-stage comparison to ensure data accuracy, identify discrepancies, and provide actionable insights for data cleansing.
 
@@ -33,6 +29,8 @@ To help identify discrepancies in address data, several specific fields are incl
 - **Address Histories Intersect:** A boolean check  if there is any historical overlap between the addresses known to the local system and those recorded in PDS.
 - **Primary CMS Address in PDS History:** A boolean check to determines if the address the user currently considers "Primary" was previously known to PDS.
 - **Primary PDS Address in CMS History:** A boolean check to determines if the address PDS considers "Primary" exists anywhere in the local system's historical records.
+
+The definition of a 'same' address is set out in [Address Parsing](./address_parsing.md).
 
 ### 4. Processing Metadata
 - **Status (`SUI_Status`):** The final reconciliation state for the record. Possible values include:
