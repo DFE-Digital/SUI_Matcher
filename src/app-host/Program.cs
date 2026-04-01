@@ -105,7 +105,15 @@ if (storageProcessFunctionFlag)
         .WaitFor(queue)
         .WithEnvironment("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated")
         .WithEnvironment("QueueName", "storage-process-job")
-        .WithEnvironment("StorageProcessFunction:ProcessedContainerName", "processed");
+        .WithEnvironment("StorageProcessFunction:ProcessedContainerName", "processed")
+        .WithEnvironment(ctx =>
+        {
+            ctx.EnvironmentVariables["StorageProcessFunction__MatchApiBaseAddress"] = matchingApi
+                .GetEndpoint("http")
+                .Url;
+            ctx.EnvironmentVariables["StorageProcessFunction__SearchStrategy"] = "strategy4";
+            ctx.EnvironmentVariables["StorageProcessFunction__StrategyVersion"] = "2";
+        });
 
     if (builder.Environment.IsDevelopment())
     {

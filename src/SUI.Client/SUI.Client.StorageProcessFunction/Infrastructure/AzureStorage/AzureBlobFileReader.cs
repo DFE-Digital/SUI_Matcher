@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using SUI.StorageProcessFunction.Application;
+using SUI.StorageProcessFunction.Infrastructure.Interfaces;
 
 namespace SUI.StorageProcessFunction.Infrastructure.AzureStorage;
 

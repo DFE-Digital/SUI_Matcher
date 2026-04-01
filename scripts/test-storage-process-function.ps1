@@ -74,8 +74,8 @@ if (-not [string]::IsNullOrWhiteSpace($directory)) {
 }
 
 $csvContent = @"
-Given,Family,BirthDate,Gender,AddressPostalCode
-Jane,Doe,2012-05-10,Female,SW1A1AA
+GivenName,FamilyName,DOB,Postcode
+octavia,chislett,2008-09-20,
 "@
 
 Set-Content -Path $LocalFilePath -Value $csvContent -Encoding utf8NoBOM

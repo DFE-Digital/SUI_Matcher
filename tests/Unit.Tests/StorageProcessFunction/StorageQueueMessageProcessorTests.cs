@@ -4,6 +4,7 @@ using Microsoft.Extensions.Time.Testing;
 using Moq;
 using SUI.StorageProcessFunction;
 using SUI.StorageProcessFunction.Application;
+using SUI.StorageProcessFunction.Infrastructure.Interfaces;
 
 namespace Unit.Tests.StorageProcessFunction;
 

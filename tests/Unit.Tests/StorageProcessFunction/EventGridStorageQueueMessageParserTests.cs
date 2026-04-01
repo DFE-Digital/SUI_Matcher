@@ -91,13 +91,24 @@ public class EventGridStorageQueueMessageParserTests
     }
 
     [Theory]
-    [InlineData(true, null)]
-    [InlineData(false, "")]
-    [InlineData(false, " ")]
-    public void Should_Throw_When_SubjectIsNullOrEmpty(bool omitSubject, string? subject)
+    [InlineData("")]
+    [InlineData(" ")]
+    public void Should_Throw_When_SubjectIsEmptyOrWhitespace(string? subject)
+    {
+        var queueMessage = BuildQueueMessage(BuildEvent(subject), asArray: false);
+
+        var exception = Assert.Throws<InvalidStorageQueueMessageException>(() =>
+            _sut.Parse(queueMessage)
+        );
+
+        Assert.Equal("Queue message did not contain subject.", exception.Message);
+    }
+
+    [Fact]
+    public void Should_Throw_When_SubjectIsMissing()
     {
         var queueMessage = BuildQueueMessage(
-            BuildEvent(subject, omitSubject: omitSubject),
+            BuildEvent(subject: null, omitSubject: true),
             asArray: false
         );
 
@@ -105,7 +116,8 @@ public class EventGridStorageQueueMessageParserTests
             _sut.Parse(queueMessage)
         );
 
-        Assert.Equal("Queue message did not contain subject.", exception.Message);
+        Assert.Equal("Queue message was not valid Event Grid JSON.", exception.Message);
+        Assert.NotNull(exception.InnerException);
     }
 
     [Fact]

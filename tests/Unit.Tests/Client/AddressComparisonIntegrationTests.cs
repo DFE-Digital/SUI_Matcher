@@ -195,7 +195,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
 
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.LastResult().OutputCsvFile
         );
         Assert.NotNull(records);
@@ -287,7 +287,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
 
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.LastResult().OutputCsvFile
         );
         Assert.NotNull(records);
@@ -412,7 +412,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
 
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.LastResult().OutputCsvFile
         );
         Assert.NotNull(records);
@@ -536,7 +536,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         Assert.Equal(1, monitor.ProcessedCount);
         Assert.True(File.Exists(monitor.LastResult().OutputCsvFile));
 
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.LastResult().OutputCsvFile
         );
         Assert.NotNull(records);

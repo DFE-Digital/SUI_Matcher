@@ -96,7 +96,7 @@ public class CsvProcessorMissingFieldsTests(ITestOutputHelper testOutputHelper)
             Times.Once,
             "The PerformSearchByNhsId method should have been invoked once"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -177,7 +177,7 @@ public class CsvProcessorMissingFieldsTests(ITestOutputHelper testOutputHelper)
         // ASSERTS
         AssertCsvFileRunSuccessfully(monitor);
 
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -267,7 +267,7 @@ public class CsvProcessorMissingFieldsTests(ITestOutputHelper testOutputHelper)
             Times.Once,
             "The PerformSearchByNhsId method should have been invoked once"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 

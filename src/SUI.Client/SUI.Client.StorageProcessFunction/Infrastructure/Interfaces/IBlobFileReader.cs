@@ -1,4 +1,6 @@
-namespace SUI.StorageProcessFunction.Application;
+using SUI.StorageProcessFunction.Application;
+
+namespace SUI.StorageProcessFunction.Infrastructure.Interfaces;
 
 public interface IBlobFileReader
 {

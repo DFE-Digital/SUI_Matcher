@@ -28,7 +28,7 @@ public class MatchingCsvFileProcessor(
     public const string HeaderScore = "SUI_Score";
     public const string HeaderNhsNo = "SUI_NHSNo";
 
-    private async Task ProcessRecord(Dictionary<string, string> record, IStats stats)
+    private async Task ProcessRecord(Dictionary<string, string> record, MatchingProcessStats stats)
     {
         string gender = record
             .GetFirstValueOrDefault(mapping.ColumnMappings[nameof(MatchPersonPayload.Gender)])
@@ -71,7 +71,7 @@ public class MatchingCsvFileProcessor(
         record[HeaderScore] = response?.Result?.Score.ToString() ?? "-";
         record[HeaderNhsNo] = response?.Result?.NhsNumber ?? "-";
 
-        RecordStats((MatchingProcessStats)stats, response);
+        stats.RecordStats(response);
     }
 
     private void AddExtraCsvHeaders(HashSet<string> headers)
@@ -182,35 +182,6 @@ public class MatchingCsvFileProcessor(
         return optionalFields;
     }
 
-    private static void RecordStats(MatchingProcessStats stats, PersonMatchResponse? response)
-    {
-        stats.Count++;
-        switch (response?.Result?.MatchStatus)
-        {
-            case MatchStatus.Match:
-                stats.CountMatched++;
-                break;
-
-            case MatchStatus.ManyMatch:
-                stats.CountManyMatch++;
-                break;
-
-            case MatchStatus.NoMatch:
-                stats.CountNoMatch++;
-                break;
-
-            case MatchStatus.PotentialMatch:
-                stats.CountPotentialMatch++;
-                break;
-            case MatchStatus.LowConfidenceMatch:
-                stats.CountLowConfidenceMatch++;
-                break;
-            case MatchStatus.Error:
-                stats.ErroredCount++;
-                break;
-        }
-    }
-
     public async Task<ProcessCsvFileResult> ProcessCsvFileAsync(string filePath, string outputPath)
     {
         if (!File.Exists(filePath))
@@ -226,13 +197,11 @@ public class MatchingCsvFileProcessor(
         );
         Directory.CreateDirectory(outputDirectory);
 
-        (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(
-            filePath
-        );
+        var csvData = await CsvRecordReader.ReadCsvFileAsync(filePath);
 
-        AddExtraCsvHeaders(headers);
+        AddExtraCsvHeaders(csvData.Headers);
 
-        int totalRecords = records.Count;
+        int totalRecords = csvData.Records.Count;
         int currentRecord = 0;
         var progressStopwatch = new Stopwatch();
         progressStopwatch.Start();
@@ -243,7 +212,7 @@ public class MatchingCsvFileProcessor(
             filePath
         );
 
-        foreach (var record in records)
+        foreach (var record in csvData.Records)
         {
             currentRecord++;
             // Log progress at least every 5 seconds so we can see how many records are being processed over time.
@@ -264,11 +233,11 @@ public class MatchingCsvFileProcessor(
 
         progressStopwatch.Stop();
 
-        await CreateMatchedCsvIfEnabled(filePath, ts, records, headers);
+        await CreateMatchedCsvIfEnabled(filePath, ts, csvData.Records, csvData.Headers);
 
         var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
-        await WriteCsvAsync(outputFilePath, headers, records);
+        await WriteCsvAsync(outputFilePath, csvData.Headers, csvData.Records);
 
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, _stats);
         var csvResult = new ProcessCsvFileResult(
@@ -279,55 +248,6 @@ public class MatchingCsvFileProcessor(
         );
         _stats.ResetStats();
         return csvResult;
-    }
-
-    private static async Task<(
-        HashSet<string> Headers,
-        List<Dictionary<string, string>> Records
-    )> ReadCsvAsync(string filePath)
-    {
-        var headers = new HashSet<string>();
-        var records = new List<Dictionary<string, string>>();
-
-        if (!await IsFileReadyAsync(filePath))
-        {
-            throw new IOException($"File {filePath} is not ready for reading.");
-        }
-
-        using (var reader = new StreamReader(filePath))
-        using (
-            var csv = new CsvReader(
-                reader,
-                new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    IgnoreBlankLines = true,
-                    MissingFieldFound = null,
-                    HeaderValidated = null,
-                }
-            )
-        )
-        {
-            await csv.ReadAsync();
-            csv.ReadHeader();
-
-            if (csv.HeaderRecord is not null)
-            {
-                headers.UnionWith(csv.HeaderRecord);
-            }
-
-            while (await csv.ReadAsync())
-            {
-                var row = new Dictionary<string, string>();
-                foreach (var header in headers)
-                {
-                    row[header] = csv.GetField(header) ?? string.Empty;
-                }
-
-                records.Add(row);
-            }
-        }
-
-        return (headers, records);
     }
 
     /// <summary>
@@ -388,33 +308,6 @@ public class MatchingCsvFileProcessor(
             outputDirectory,
             $"{filenameWithoutExt}_{fileSuffix}_output_{timestamp}{extension}"
         );
-    }
-
-    private static async Task<bool> IsFileReadyAsync(
-        string filePath,
-        int maxAttempts = 5,
-        int delayMs = 1000
-    )
-    {
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            try
-            {
-                await using var stream = new FileStream(
-                    filePath,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.None
-                );
-                return true;
-            }
-            catch (IOException)
-            {
-                await Task.Delay(delayMs);
-            }
-        }
-
-        return false;
     }
 
     private static string WriteStatsJsonFile(string outputDirectory, string ts, object stats)

@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SUI.StorageProcessFunction.Infrastructure.Interfaces;
 
 namespace SUI.StorageProcessFunction.Application;
 

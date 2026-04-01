@@ -1,3 +1,4 @@
+using Shared.Models;
 using SUI.Client.Core.Application.Interfaces;
 
 namespace SUI.Client.Core.Application.UseCases.MatchPeople;
@@ -40,6 +41,46 @@ public class MatchingProcessStats : IStats
     public double LowConfidenceMatchPercentage => _lowConfidenceMatchPercentage.Value;
     public double ManyMatchPercentage => _manyMatchPercentage.Value;
     public double NoMatchPercentage => _noMatchPercentage.Value;
+
+    public void RecordStats(PersonMatchResponse? response)
+    {
+        Count++;
+
+        var matchStatus = response?.Result?.MatchStatus;
+        if (matchStatus is null)
+        {
+            ErroredCount++;
+            return;
+        }
+
+        switch (matchStatus)
+        {
+            case MatchStatus.Match:
+                CountMatched++;
+                break;
+            case MatchStatus.ManyMatch:
+                CountManyMatch++;
+                break;
+            case MatchStatus.NoMatch:
+                CountNoMatch++;
+                break;
+            case MatchStatus.PotentialMatch:
+                CountPotentialMatch++;
+                break;
+            case MatchStatus.LowConfidenceMatch:
+                CountLowConfidenceMatch++;
+                break;
+            case MatchStatus.Error:
+                ErroredCount++;
+                break;
+        }
+    }
+
+    public void RecordError()
+    {
+        Count++;
+        ErroredCount++;
+    }
 
     public void ResetStats()
     {
