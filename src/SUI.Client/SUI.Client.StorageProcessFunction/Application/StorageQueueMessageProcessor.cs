@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace SUI.StorageProcessFunction.Application;
 
@@ -7,11 +8,10 @@ public sealed class StorageQueueMessageProcessor(
     ILogger<StorageQueueMessageProcessor> logger,
     TimeProvider timeProvider,
     IBlobFileReader blobFileReader,
-    IBlobPayloadProcessor blobPayloadProcessor
+    IBlobPayloadProcessor blobPayloadProcessor,
+    IOptions<StorageProcessFunctionOptions> options
 ) : IStorageQueueMessageProcessor
 {
-    private const string ProcessedContainerName = "processed";
-
     public async Task ProcessAsync(
         StorageBlobMessage queueMessage,
         CancellationToken cancellationToken
@@ -30,7 +30,7 @@ public sealed class StorageQueueMessageProcessor(
         var processedBlobName = BuildProcessedBlobName(queueMessage.BlobName!);
         await blobFileReader.ArchiveProcessedAsync(
             blobFile,
-            ProcessedContainerName,
+            options.Value.ProcessedContainerName,
             processedBlobName,
             cancellationToken
         );

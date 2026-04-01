@@ -3,6 +3,7 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "QueueName": "storage-process-job"
+    "QueueName": "storage-process-job",
+    "StorageProcessFunction:ProcessedContainerName": "processed"
   }
 }

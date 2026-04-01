@@ -104,7 +104,8 @@ if (storageProcessFunctionFlag)
         .WithReference(queue)
         .WaitFor(queue)
         .WithEnvironment("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated")
-        .WithEnvironment("QueueName", "storage-process-job");
+        .WithEnvironment("QueueName", "storage-process-job")
+        .WithEnvironment("StorageProcessFunction:ProcessedContainerName", "processed");
 
     if (builder.Environment.IsDevelopment())
     {

@@ -1,7 +1,8 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
+using SUI.StorageProcessFunction;
 using SUI.StorageProcessFunction.Application;
 
 namespace Unit.Tests.StorageProcessFunction;
@@ -12,6 +13,9 @@ public class StorageQueueMessageProcessorTests
     private readonly Mock<IBlobPayloadProcessor> _blobPayloadProcessor;
     private readonly StorageQueueMessageProcessor _sut;
     private readonly FakeTimeProvider _timeProvider;
+    private readonly IOptions<StorageProcessFunctionOptions> _options = Options.Create(
+        new StorageProcessFunctionOptions { ProcessedContainerName = "processed" }
+    );
 
     public StorageQueueMessageProcessorTests()
     {
@@ -24,7 +28,8 @@ public class StorageQueueMessageProcessorTests
             NullLogger<StorageQueueMessageProcessor>.Instance,
             _timeProvider,
             _blobFileReader.Object,
-            _blobPayloadProcessor.Object
+            _blobPayloadProcessor.Object,
+            _options
         );
     }
 
