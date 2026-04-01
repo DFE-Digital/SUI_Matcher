@@ -20,7 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\matching-api\Matching.csproj" />
     <ProjectReference Include="..\external-api\External.csproj" />
-    <ProjectReference Include="..\SUI.Client.StorageProcessFunction\SUI.Client.StorageProcessFunction.csproj" />
+    <ProjectReference Include="..\SUI.Client\SUI.Client.StorageProcessFunction\SUI.Client.StorageProcessFunction.csproj" />
     <ProjectReference Include="..\SUI.Client\SUI.Client.Watcher\SUI.Client.Watcher.csproj" />
     <ProjectReference Include="..\Yarp\Yarp.csproj" />
   </ItemGroup>

@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Shared.csproj" />
-    <ProjectReference Include="..\SUI.Client\SUI.Client.Core\SUI.Client.Core.csproj" />
+    <ProjectReference Include="..\..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\SUI.Client.Core\SUI.Client.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
