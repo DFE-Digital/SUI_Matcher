@@ -36,6 +36,36 @@ public class ProcessStorageQueueMessageFunctionTests
         );
     }
 
+    [Fact]
+    public async Task Should_RethrowException_When_QueueMessageIsInvalid()
+    {
+        var queueMessageParser = new Mock<IStorageQueueMessageParser>();
+        var processor = new Mock<IStorageQueueMessageProcessor>();
+        var rawQueueMessage = BuildQueueMessage(
+            "/blobServices/default/containers/incoming/blobs/test-file.csv"
+        );
+        var expectedException = new InvalidStorageQueueMessageException(
+            "Queue message was invalid."
+        );
+        queueMessageParser.Setup(x => x.Parse(rawQueueMessage)).Throws(expectedException);
+        var sut = new ProcessStorageQueueMessageFunction(
+            queueMessageParser.Object,
+            processor.Object,
+            NullLogger<ProcessStorageQueueMessageFunction>.Instance
+        );
+
+        var actualException = await Assert.ThrowsAsync<InvalidStorageQueueMessageException>(() =>
+            sut.RunAsync(rawQueueMessage, CancellationToken.None)
+        );
+
+        Assert.Same(expectedException, actualException);
+        queueMessageParser.Verify(x => x.Parse(rawQueueMessage), Times.Once);
+        processor.Verify(
+            x => x.ProcessAsync(It.IsAny<StorageBlobMessage>(), It.IsAny<CancellationToken>()),
+            Times.Never
+        );
+    }
+
     private static string BuildQueueMessage(string subject) =>
         $$"""
             [
