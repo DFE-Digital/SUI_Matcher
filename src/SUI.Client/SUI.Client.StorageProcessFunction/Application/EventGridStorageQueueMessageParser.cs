@@ -1,4 +1,4 @@
-using Azure.Messaging.EventGrid;
+using System.Text.Json;
 
 namespace SUI.StorageProcessFunction.Application;
 
@@ -8,6 +8,8 @@ public sealed class EventGridStorageQueueMessageParser : IStorageQueueMessagePar
     private const string IncomingContainerName = "incoming";
     private const string ContainerMarker = "/containers/";
     private const string BlobMarker = "/blobs/";
+
+    private sealed record QueueEventPayload(string? EventType, string? Subject);
 
     public StorageBlobMessage Parse(string queueMessage)
     {
@@ -35,13 +37,22 @@ public sealed class EventGridStorageQueueMessageParser : IStorageQueueMessagePar
         return ParseSubject(eventGridEvent.Subject);
     }
 
-    private static EventGridEvent Deserialize(string queueMessage)
+    private static QueueEventPayload Deserialize(string queueMessage)
     {
         try
         {
-            var events = EventGridEvent.ParseMany(BinaryData.FromString(queueMessage));
+            using var document = JsonDocument.Parse(queueMessage);
+            var root = document.RootElement;
+            var events = root.ValueKind switch
+            {
+                JsonValueKind.Array => root,
+                JsonValueKind.Object => BuildSingleEventArray(root),
+                _ => throw new InvalidStorageQueueMessageException(
+                    "Queue message was not valid Event Grid JSON."
+                ),
+            };
 
-            return events.Length switch
+            return events.GetArrayLength() switch
             {
                 0 => throw new InvalidStorageQueueMessageException(
                     "Queue message did not contain any events."
@@ -49,16 +60,43 @@ public sealed class EventGridStorageQueueMessageParser : IStorageQueueMessagePar
                 > 1 => throw new InvalidStorageQueueMessageException(
                     "Queue message contained multiple events. Exactly one event is expected."
                 ),
-                _ => events[0],
+                _ => ReadEvent(events[0]),
             };
         }
-        catch (Exception ex) when (ex is FormatException or ArgumentException)
+        catch (InvalidStorageQueueMessageException)
+        {
+            throw;
+        }
+        catch (Exception ex)
         {
             throw new InvalidStorageQueueMessageException(
                 "Queue message was not valid Event Grid JSON.",
                 ex
             );
         }
+    }
+
+    private static JsonElement BuildSingleEventArray(JsonElement element)
+    {
+        using var document = JsonDocument.Parse($"[{element.GetRawText()}]");
+        return document.RootElement.Clone();
+    }
+
+    private static QueueEventPayload ReadEvent(JsonElement element)
+    {
+        var eventType =
+            element.TryGetProperty("eventType", out var eventTypeProperty)
+            && eventTypeProperty.ValueKind == JsonValueKind.String
+                ? eventTypeProperty.GetString()
+                : null;
+
+        var subject =
+            element.TryGetProperty("subject", out var subjectProperty)
+            && subjectProperty.ValueKind == JsonValueKind.String
+                ? subjectProperty.GetString()
+                : null;
+
+        return new QueueEventPayload(eventType, subject);
     }
 
     private static StorageBlobMessage ParseSubject(string subject)

@@ -6,6 +6,19 @@ public class EventGridStorageQueueMessageParserTests
 {
     private readonly EventGridStorageQueueMessageParser _sut = new();
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void Should_Throw_When_QueueMessageIsNullOrEmpty(string? queueMessage)
+    {
+        var exception = Assert.Throws<InvalidStorageQueueMessageException>(() =>
+            _sut.Parse(queueMessage!)
+        );
+
+        Assert.Equal("Queue message was empty.", exception.Message);
+    }
+
     [Fact]
     public void Should_ParseBlobMessage_When_QueueMessageContainsSingleEventArray()
     {
@@ -77,6 +90,37 @@ public class EventGridStorageQueueMessageParserTests
         );
     }
 
+    [Theory]
+    [InlineData(true, null)]
+    [InlineData(false, "")]
+    [InlineData(false, " ")]
+    public void Should_Throw_When_SubjectIsNullOrEmpty(bool omitSubject, string? subject)
+    {
+        var queueMessage = BuildQueueMessage(
+            BuildEvent(subject, omitSubject: omitSubject),
+            asArray: false
+        );
+
+        var exception = Assert.Throws<InvalidStorageQueueMessageException>(() =>
+            _sut.Parse(queueMessage)
+        );
+
+        Assert.Equal("Queue message did not contain subject.", exception.Message);
+    }
+
+    [Fact]
+    public void Should_Throw_When_QueueMessageDeserializationThrowsUnexpectedException()
+    {
+        const string queueMessage = "{";
+
+        var exception = Assert.Throws<InvalidStorageQueueMessageException>(() =>
+            _sut.Parse(queueMessage)
+        );
+
+        Assert.Equal("Queue message was not valid Event Grid JSON.", exception.Message);
+        Assert.NotNull(exception.InnerException);
+    }
+
     private static string BuildQueueMessage(
         string subject,
         string eventType = "Microsoft.Storage.BlobCreated",
@@ -90,15 +134,16 @@ public class EventGridStorageQueueMessageParserTests
         asArray ? BuildQueueMessage([eventPayload]) : eventPayload;
 
     private static string BuildEvent(
-        string subject,
+        string? subject,
         string eventType = "Microsoft.Storage.BlobCreated",
         string id = "11111111-1111-1111-1111-111111111111",
-        string eventTime = "2026-04-01T12:00:00Z"
+        string eventTime = "2026-04-01T12:00:00Z",
+        bool omitSubject = false
     ) =>
         $$"""
             {
               "id": "{{id}}",
-              "subject": "{{subject}}",
+            {{FormatSubjectProperty(subject, omitSubject)}}
               "eventType": "{{eventType}}",
               "eventTime": "{{eventTime}}",
               "data": {},
@@ -106,4 +151,7 @@ public class EventGridStorageQueueMessageParserTests
               "metadataVersion": "1"
             }
             """;
+
+    private static string FormatSubjectProperty(string? value, bool omitSubject) =>
+        omitSubject ? string.Empty : $"  \"subject\": \"{value}\",";
 }
