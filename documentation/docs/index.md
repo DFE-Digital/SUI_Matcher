@@ -16,3 +16,7 @@ The key goals of this project are:
 * Improve matching processes for NHS numbers
 * Evaluate how good the match rate is
 * Understand any IG challenges
+
+## Technical Notes
+
+* [Deployment IaC stack strategy](design/infra-stack-segregation.md)
