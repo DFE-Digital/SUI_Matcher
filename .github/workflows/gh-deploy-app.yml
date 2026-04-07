@@ -49,6 +49,7 @@ jobs:
       AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
       AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
       AZURE_ENABLE_AUDIT_LOGGING: ${{ inputs.enable_audit_logging || 'false' }}
+      FeatureToggles__EnableStorageProcessFunction: 'false'
 
     steps:
       - name: Checkout
@@ -104,6 +105,6 @@ jobs:
           echo "FeatureToggles__EnableStorageProcessFunction=${FeatureToggles__EnableStorageProcessFunction}"
         shell: bash
 
-#      - name: Deploy Application
-#        run: azd deploy --no-prompt
-#        working-directory: src/app-host
+      - name: Deploy Application
+        run: azd deploy --no-prompt
+        working-directory: src/app-host
