@@ -1,8 +1,19 @@
 namespace SUI.StorageProcessFunction.Application;
 
-public sealed class StorageBlobMessage
+public record StorageBlobMessage(string? ContainerName, string? BlobName)
 {
-    public string? ContainerName { get; set; }
+    public (bool IsValid, string? ValidationMessage) Validate()
+    {
+        if (string.IsNullOrWhiteSpace(ContainerName))
+        {
+            return (false, $"Queue message did not contain {ContainerName}.");
+        }
 
-    public string? BlobName { get; set; }
+        if (string.IsNullOrWhiteSpace(BlobName))
+        {
+            return (false, $"Queue message did not contain {BlobName}.");
+        }
+
+        return (true, null);
+    }
 }

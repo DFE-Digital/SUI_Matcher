@@ -1,27 +1,38 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Shared.Models;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.StorageProcessFunction.Application.Interfaces;
 
-namespace SUI.Client.Core.Application.UseCases.MatchPeople;
+namespace SUI.StorageProcessFunction.Application;
 
-public sealed class MatchPeopleBatchProcessor(
-    ILogger<MatchPeopleBatchProcessor> logger,
-    IMatchingApiClient matchingApiClient
-) : IMatchPeopleBatchProcessor
+public sealed class PersonSpecificationFileOrchestrator(
+    ILogger<PersonSpecificationFileOrchestrator> logger,
+    IPersonSpecificationCsvParser personSpecificationCsvParser,
+    IMatchingApiClient matchingApiClient,
+    IOptions<StorageProcessFunctionOptions> options
+) : IPersonSpecificationFileProcessor
 {
-    public async Task<MatchingProcessStats> ProcessAsync(
-        ProcessPersonBatchRequest request,
+    public async Task ProcessAsync(
+        Stream content,
+        string fileName,
         CancellationToken cancellationToken
     )
     {
-        // Guard check as it's part of a core lib
-        ArgumentNullException.ThrowIfNull(request);
-
         var stats = new MatchingProcessStats();
+        var rowNumber = 0;
 
-        for (var index = 0; index < request.People.Count; index++)
+        await foreach (
+            var person in personSpecificationCsvParser.ParseAsync(
+                content,
+                fileName,
+                cancellationToken
+            )
+        )
         {
-            var person = request.People[index];
+            rowNumber++;
+
             try
             {
                 var payload = new SearchSpecification
@@ -35,8 +46,8 @@ public sealed class MatchPeopleBatchProcessor(
                     Email = person.Email,
                     AddressPostalCode = person.AddressPostalCode,
                     OptionalProperties = person.OptionalProperties,
-                    SearchStrategy = request.SearchStrategy,
-                    StrategyVersion = request.StrategyVersion,
+                    SearchStrategy = options.Value.SearchStrategy,
+                    StrategyVersion = options.Value.StrategyVersion,
                 };
 
                 var response = await matchingApiClient.MatchPersonAsync(payload, cancellationToken);
@@ -51,14 +62,11 @@ public sealed class MatchPeopleBatchProcessor(
                 stats.RecordError();
                 logger.LogError(
                     ex,
-                    "Failed to process row {RowNumber} in batch {BatchIdentifier}. Postcode={Postcode}",
-                    index + 1,
-                    request.BatchIdentifier ?? "unknown",
-                    person.AddressPostalCode
+                    "Failed to process row {RowNumber} in file {FileName}.",
+                    rowNumber,
+                    fileName
                 );
             }
         }
-
-        return stats;
     }
 }

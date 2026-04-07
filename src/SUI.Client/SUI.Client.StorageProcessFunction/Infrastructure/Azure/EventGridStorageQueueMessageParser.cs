@@ -1,6 +1,9 @@
 using Azure.Messaging.EventGrid;
+using SUI.StorageProcessFunction.Application;
+using SUI.StorageProcessFunction.Application.Interfaces;
+using SUI.StorageProcessFunction.Exceptions;
 
-namespace SUI.StorageProcessFunction.Application;
+namespace SUI.StorageProcessFunction.Infrastructure.Azure;
 
 public sealed class EventGridStorageQueueMessageParser : IStorageQueueMessageParser
 {
@@ -111,10 +114,6 @@ public sealed class EventGridStorageQueueMessageParser : IStorageQueueMessagePar
             );
         }
 
-        return new StorageBlobMessage
-        {
-            ContainerName = decodedContainerName,
-            BlobName = Uri.UnescapeDataString(blobName),
-        };
+        return new StorageBlobMessage(decodedContainerName, Uri.UnescapeDataString(blobName));
     }
 }

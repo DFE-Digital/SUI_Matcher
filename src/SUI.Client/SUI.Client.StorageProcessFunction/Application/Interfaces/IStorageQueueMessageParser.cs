@@ -1,4 +1,4 @@
-namespace SUI.StorageProcessFunction.Application;
+namespace SUI.StorageProcessFunction.Application.Interfaces;
 
 public interface IStorageQueueMessageParser
 {

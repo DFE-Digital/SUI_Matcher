@@ -1,14 +1,13 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shared.Models;
+using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
-using SUI.Client.Core.Infrastructure.Http;
 
 namespace Unit.Tests.Client;
 
 public class MatchPeopleBatchProcessorTests
 {
-    private readonly Mock<IMatchingApiRateLimiter> _rateLimiter = new();
     private readonly Mock<IMatchingApiClient> _matchingApiClient = new();
 
     [Fact]

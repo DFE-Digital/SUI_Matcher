@@ -1,24 +1,29 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SUI.StorageProcessFunction.Infrastructure.Interfaces;
+using SUI.StorageProcessFunction.Application.Interfaces;
 
 namespace SUI.StorageProcessFunction.Application;
 
-public sealed class StorageQueueMessageProcessor(
-    ILogger<StorageQueueMessageProcessor> logger,
+public sealed class BlobFileOrchestrator(
+    ILogger<BlobFileOrchestrator> logger,
     TimeProvider timeProvider,
-    IBlobFileReader blobFileReader,
-    IBlobPayloadProcessor blobPayloadProcessor,
+    IBlobStorageClient blobStorageClient,
+    IPersonSpecificationFileProcessor personSpecificationFileProcessor,
     IOptions<StorageProcessFunctionOptions> options
-) : IStorageQueueMessageProcessor
+) : IBlobFileOrchestrator
 {
     public async Task ProcessAsync(
         StorageBlobMessage queueMessage,
         CancellationToken cancellationToken
     )
     {
-        Validate(queueMessage);
+        var messageValidation = queueMessage.Validate();
+
+        if (!messageValidation.IsValid)
+        {
+            throw new InvalidOperationException(messageValidation.ValidationMessage);
+        }
 
         logger.LogInformation(
             "Processing blob {BlobName} from container {ContainerName}.",
@@ -26,28 +31,22 @@ public sealed class StorageQueueMessageProcessor(
             queueMessage.ContainerName
         );
 
-        var blobFile = await blobFileReader.ReadAsync(queueMessage, cancellationToken);
-        await blobPayloadProcessor.ProcessAsync(blobFile, cancellationToken);
+        await using var blobStream = await blobStorageClient.OpenReadAsync(
+            queueMessage,
+            cancellationToken
+        );
+        await personSpecificationFileProcessor.ProcessAsync(
+            blobStream,
+            queueMessage.BlobName!,
+            cancellationToken
+        );
         var processedBlobName = BuildProcessedBlobName(queueMessage.BlobName!);
-        await blobFileReader.ArchiveProcessedAsync(
-            blobFile,
+        await blobStorageClient.ArchiveProcessedAsync(
+            queueMessage,
             options.Value.ProcessedContainerName,
             processedBlobName,
             cancellationToken
         );
-    }
-
-    private static void Validate(StorageBlobMessage queueMessage)
-    {
-        if (string.IsNullOrWhiteSpace(queueMessage.ContainerName))
-        {
-            throw new InvalidOperationException("Queue message did not contain containerName.");
-        }
-
-        if (string.IsNullOrWhiteSpace(queueMessage.BlobName))
-        {
-            throw new InvalidOperationException("Queue message did not contain blobName.");
-        }
     }
 
     private string BuildProcessedBlobName(string blobName)

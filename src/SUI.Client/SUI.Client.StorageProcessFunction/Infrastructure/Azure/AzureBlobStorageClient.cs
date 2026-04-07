@@ -2,16 +2,16 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using SUI.StorageProcessFunction.Application;
-using SUI.StorageProcessFunction.Infrastructure.Interfaces;
+using SUI.StorageProcessFunction.Application.Interfaces;
 
-namespace SUI.StorageProcessFunction.Infrastructure.AzureStorage;
+namespace SUI.StorageProcessFunction.Infrastructure.Azure;
 
 [ExcludeFromCodeCoverage(
     Justification = "Unit testing would be all mocks. We could cover this with integration later"
 )]
-public sealed class AzureBlobFileReader(BlobServiceClient blobServiceClient) : IBlobFileReader
+public sealed class AzureBlobStorageClient(BlobServiceClient blobServiceClient) : IBlobStorageClient
 {
-    public async Task<BlobFileContent> ReadAsync(
+    public async Task<Stream> OpenReadAsync(
         StorageBlobMessage blobMessage,
         CancellationToken cancellationToken
     )
@@ -20,24 +20,18 @@ public sealed class AzureBlobFileReader(BlobServiceClient blobServiceClient) : I
             .GetBlobContainerClient(blobMessage.ContainerName!)
             .GetBlobClient(blobMessage.BlobName!);
 
-        var download = await blobClient.DownloadContentAsync(cancellationToken);
-
-        return new BlobFileContent(
-            blobMessage,
-            download.Value.Content,
-            download.Value.Details.ContentType
-        );
+        return await blobClient.OpenReadAsync(cancellationToken: cancellationToken);
     }
 
     public async Task ArchiveProcessedAsync(
-        BlobFileContent blobFile,
+        StorageBlobMessage blobMessage,
         string destinationContainerName,
         string destinationBlobName,
         CancellationToken cancellationToken
     )
     {
         var sourceContainerClient = blobServiceClient.GetBlobContainerClient(
-            blobFile.Blob.ContainerName!
+            blobMessage.ContainerName!
         );
         var destinationContainerClient = blobServiceClient.GetBlobContainerClient(
             destinationContainerName
@@ -46,14 +40,23 @@ public sealed class AzureBlobFileReader(BlobServiceClient blobServiceClient) : I
             cancellationToken: cancellationToken
         );
 
-        var sourceBlobClient = sourceContainerClient.GetBlobClient(blobFile.Blob.BlobName!);
+        var sourceBlobClient = sourceContainerClient.GetBlobClient(blobMessage.BlobName!);
         var destinationBlobClient = destinationContainerClient.GetBlobClient(destinationBlobName);
+        var sourceBlobProperties = await sourceBlobClient.GetPropertiesAsync(
+            cancellationToken: cancellationToken
+        );
+        await using var sourceStream = await sourceBlobClient.OpenReadAsync(
+            cancellationToken: cancellationToken
+        );
 
         await destinationBlobClient.UploadAsync(
-            blobFile.Content,
+            sourceStream,
             new BlobUploadOptions
             {
-                HttpHeaders = new BlobHttpHeaders { ContentType = blobFile.ContentType },
+                HttpHeaders = new BlobHttpHeaders
+                {
+                    ContentType = sourceBlobProperties.Value.ContentType,
+                },
             },
             cancellationToken
         );

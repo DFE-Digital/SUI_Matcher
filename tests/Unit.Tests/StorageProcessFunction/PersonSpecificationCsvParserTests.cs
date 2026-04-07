@@ -1,23 +1,23 @@
-using Shared.Models;
-using SUI.StorageProcessFunction.Application;
+using System.Text;
+using SUI.StorageProcessFunction.Infrastructure.Csv;
 
 namespace Unit.Tests.StorageProcessFunction;
 
-public class BlobPersonSpecificationCsvParserTests
+public class PersonSpecificationCsvParserTests
 {
-    private readonly BlobPersonSpecificationCsvParser _sut = new();
+    private readonly PersonSpecificationCsvParser _sut = new();
 
     [Fact]
     public async Task Should_MapSingleCsvRowToPersonSpecification_When_HeadersMatch()
     {
-        var blobFile = CreateBlobFile(
+        await using var content = CreateContentStream(
             """
             GivenName,FamilyName,DOB,Postcode
             Jane,Doe,2012-05-10,SW1A 1AA
             """
         );
 
-        var result = await _sut.ParseAsync(blobFile, CancellationToken.None);
+        var result = await ParseAllAsync(content);
 
         var person = Assert.Single(result);
         Assert.Equal("Jane", person.Given);
@@ -31,7 +31,7 @@ public class BlobPersonSpecificationCsvParserTests
     [Fact]
     public async Task Should_MapMultipleRows_When_CsvContainsMultipleRecords()
     {
-        var blobFile = CreateBlobFile(
+        await using var content = CreateContentStream(
             """
             GivenName,FamilyName,DOB,Postcode
             Jane,Doe,2012-05-10,SW1A 1AA
@@ -39,7 +39,7 @@ public class BlobPersonSpecificationCsvParserTests
             """
         );
 
-        var result = await _sut.ParseAsync(blobFile, CancellationToken.None);
+        var result = await ParseAllAsync(content);
 
         Assert.Equal(2, result.Count);
         Assert.Equal("Jane", result[0].Given);
@@ -50,14 +50,14 @@ public class BlobPersonSpecificationCsvParserTests
     [Fact]
     public async Task Should_AcceptMixedCaseHeaders_When_HeaderCasingVaries()
     {
-        var blobFile = CreateBlobFile(
+        await using var content = CreateContentStream(
             """
             givenname,FAMILYNAME,dOb,POSTCODE
             Jane,Doe,20120510,SW1A 1AA
             """
         );
 
-        var result = await _sut.ParseAsync(blobFile, CancellationToken.None);
+        var result = await ParseAllAsync(content);
 
         Assert.Single(result);
         Assert.Equal("Jane", result[0].Given);
@@ -67,7 +67,7 @@ public class BlobPersonSpecificationCsvParserTests
     [Fact]
     public async Task Should_Throw_When_RequiredHeadersAreMissing()
     {
-        var blobFile = CreateBlobFile(
+        await using var content = CreateContentStream(
             """
             GivenName,FamilyName,DOB
             Jane,Doe,2012-05-10
@@ -75,7 +75,7 @@ public class BlobPersonSpecificationCsvParserTests
         );
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _sut.ParseAsync(blobFile, CancellationToken.None)
+            ParseAllAsync(content)
         );
 
         Assert.Contains("Postcode", exception.Message);
@@ -84,36 +84,40 @@ public class BlobPersonSpecificationCsvParserTests
     [Fact]
     public async Task Should_Throw_When_DobCannotBeParsed()
     {
-        var blobFile = CreateBlobFile(
+        await using var content = CreateContentStream(
             """
             GivenName,FamilyName,DOB,Postcode
             Jane,Doe,not-a-date,SW1A 1AA
             """
         );
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _sut.ParseAsync(blobFile, CancellationToken.None)
-        );
+        await Assert.ThrowsAsync<InvalidOperationException>(() => ParseAllAsync(content));
     }
 
     [Fact]
     public async Task Should_Throw_When_CsvDoesNotContainAnyRecords()
     {
-        var blobFile = CreateBlobFile(
+        await using var content = CreateContentStream(
             """
             GivenName,FamilyName,DOB,Postcode
             """
         );
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _sut.ParseAsync(blobFile, CancellationToken.None)
-        );
+        await Assert.ThrowsAsync<InvalidOperationException>(() => ParseAllAsync(content));
     }
 
-    private static BlobFileContent CreateBlobFile(string csv) =>
-        new(
-            new StorageBlobMessage { ContainerName = "incoming", BlobName = "test-file.csv" },
-            BinaryData.FromString(csv),
-            "text/csv"
-        );
+    private static MemoryStream CreateContentStream(string csv) => new(Encoding.UTF8.GetBytes(csv));
+
+    private async Task<List<Shared.Models.PersonSpecification>> ParseAllAsync(Stream content)
+    {
+        var results = new List<Shared.Models.PersonSpecification>();
+        await foreach (
+            var person in _sut.ParseAsync(content, "test-file.csv", CancellationToken.None)
+        )
+        {
+            results.Add(person);
+        }
+
+        return results;
+    }
 }

@@ -1,5 +1,3 @@
-using Shared.Models;
-
 namespace SUI.Client.Core.Application.UseCases.MatchPeople;
 
 public interface IMatchPeopleBatchProcessor

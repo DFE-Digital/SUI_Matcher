@@ -1,6 +1,6 @@
 using Shared.Models;
 
-namespace SUI.Client.Core.Infrastructure.Http;
+namespace SUI.Client.Core.Application.Interfaces;
 
 public interface IMatchingApiClient
 {

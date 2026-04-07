@@ -2,16 +2,17 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Shared.Models;
+using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Infrastructure.Http;
 using SUI.StorageProcessFunction;
 using SUI.StorageProcessFunction.Application;
+using SUI.StorageProcessFunction.Application.Interfaces;
 
 namespace Unit.Tests.StorageProcessFunction;
 
-public class BlobPayloadProcessorTests
+public class PersonSpecificationFileOrchestratorTests
 {
-    private readonly Mock<IBlobPersonSpecificationCsvParser> _parser = new();
-    private readonly Mock<IMatchingApiRateLimiter> _rateLimiter = new();
+    private readonly Mock<IPersonSpecificationCsvParser> _parser = new();
     private readonly Mock<IMatchingApiClient> _matchingApiClient = new();
     private readonly StorageProcessFunctionOptions _options = new()
     {
@@ -23,10 +24,18 @@ public class BlobPayloadProcessorTests
     public async Task Should_SendParsedRecordToMatchingApi_When_RecordIsValid()
     {
         SearchSpecification? sentPayload = null;
-        var blobFile = CreateBlobFile();
+        string? parsedFileName = null;
+        await using var content = CreateContentStream();
         _parser
-            .Setup(x => x.ParseAsync(blobFile, CancellationToken.None))
-            .ReturnsAsync([CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA")]);
+            .Setup(x => x.ParseAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None))
+            .Callback<Stream, string, CancellationToken>(
+                (_, fileName, _) => parsedFileName = fileName
+            )
+            .Returns(
+                CreatePeopleAsync([
+                    CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
+                ])
+            );
         _matchingApiClient
             .Setup(x => x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None))
             .Callback<SearchSpecification, CancellationToken>((payload, _) => sentPayload = payload)
@@ -38,13 +47,17 @@ public class BlobPayloadProcessorTests
             );
         var sut = CreateSut();
 
-        await sut.ProcessAsync(blobFile, CancellationToken.None);
+        await sut.ProcessAsync(content, "test-file.csv", CancellationToken.None);
 
-        _parser.Verify(x => x.ParseAsync(blobFile, CancellationToken.None), Times.Once);
+        _parser.Verify(
+            x => x.ParseAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None),
+            Times.Once
+        );
         _matchingApiClient.Verify(
             x => x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None),
             Times.Once
         );
+        Assert.Equal("test-file.csv", parsedFileName);
         Assert.NotNull(sentPayload);
         Assert.Equal("Jane", sentPayload!.Given);
         Assert.Equal("Doe", sentPayload.Family);
@@ -55,10 +68,14 @@ public class BlobPayloadProcessorTests
     public async Task Should_UseStrategy4Version2_When_SendingRecord()
     {
         SearchSpecification? sentPayload = null;
-        var blobFile = CreateBlobFile();
+        await using var content = CreateContentStream();
         _parser
-            .Setup(x => x.ParseAsync(blobFile, CancellationToken.None))
-            .ReturnsAsync([CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA")]);
+            .Setup(x => x.ParseAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None))
+            .Returns(
+                CreatePeopleAsync([
+                    CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
+                ])
+            );
         _matchingApiClient
             .Setup(x => x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None))
             .Callback<SearchSpecification, CancellationToken>((payload, _) => sentPayload = payload)
@@ -69,7 +86,7 @@ public class BlobPayloadProcessorTests
                 }
             );
 
-        await CreateSut().ProcessAsync(blobFile, CancellationToken.None);
+        await CreateSut().ProcessAsync(content, "test-file.csv", CancellationToken.None);
 
         Assert.NotNull(sentPayload);
         Assert.Equal(
@@ -80,15 +97,17 @@ public class BlobPayloadProcessorTests
     }
 
     [Fact]
-    public async Task Should_ContinueToNextRecord_When_PreviousSendFails()
+    public async Task Should_ContinueToNextRecord_When_PreviousMatchFails()
     {
-        var blobFile = CreateBlobFile();
+        await using var content = CreateContentStream();
         _parser
-            .Setup(x => x.ParseAsync(blobFile, CancellationToken.None))
-            .ReturnsAsync([
-                CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
-                CreatePerson("John", "Smith", new DateOnly(2011, 4, 9), "AB1 2CD"),
-            ]);
+            .Setup(x => x.ParseAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None))
+            .Returns(
+                CreatePeopleAsync([
+                    CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
+                    CreatePerson("John", "Smith", new DateOnly(2011, 4, 9), "AB1 2CD"),
+                ])
+            );
         _matchingApiClient
             .SetupSequence(x =>
                 x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None)
@@ -102,7 +121,7 @@ public class BlobPayloadProcessorTests
             );
         var sut = CreateSut();
 
-        await sut.ProcessAsync(blobFile, CancellationToken.None);
+        await sut.ProcessAsync(content, "test-file.csv", CancellationToken.None);
 
         _matchingApiClient.Verify(
             x => x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None),
@@ -110,20 +129,27 @@ public class BlobPayloadProcessorTests
         );
     }
 
-    private BlobPayloadProcessor CreateSut() =>
+    private PersonSpecificationFileOrchestrator CreateSut() =>
         new(
-            NullLogger<BlobPayloadProcessor>.Instance,
+            NullLogger<PersonSpecificationFileOrchestrator>.Instance,
             _parser.Object,
             _matchingApiClient.Object,
             Options.Create(_options)
         );
 
-    private static BlobFileContent CreateBlobFile() =>
-        new(
-            new StorageBlobMessage { ContainerName = "incoming", BlobName = "test-file.csv" },
-            BinaryData.FromString("ignored"),
-            "text/csv"
-        );
+    private static MemoryStream CreateContentStream() =>
+        new(BinaryData.FromString("ignored").ToArray());
+
+    private static async IAsyncEnumerable<PersonSpecification> CreatePeopleAsync(
+        IEnumerable<PersonSpecification> people
+    )
+    {
+        foreach (var person in people)
+        {
+            yield return person;
+            await Task.Yield();
+        }
+    }
 
     private static PersonSpecification CreatePerson(
         string given,

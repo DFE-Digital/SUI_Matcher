@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
 using Shared;
 using Shared.Models;
+using SUI.Client.Core.Application.Interfaces;
 
 namespace SUI.Client.Core.Infrastructure.Http;
 

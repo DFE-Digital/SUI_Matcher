@@ -1,4 +1,6 @@
 using SUI.StorageProcessFunction.Application;
+using SUI.StorageProcessFunction.Exceptions;
+using SUI.StorageProcessFunction.Infrastructure.Azure;
 
 namespace Unit.Tests.StorageProcessFunction;
 
