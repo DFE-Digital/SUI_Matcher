@@ -104,6 +104,6 @@ jobs:
           echo "FeatureToggles__EnableStorageProcessFunction=${FeatureToggles__EnableStorageProcessFunction}"
         shell: bash
 
-      - name: Deploy Application
-        run: azd deploy --no-prompt
-        working-directory: src/app-host
+#      - name: Deploy Application
+#        run: azd deploy --no-prompt
+#        working-directory: src/app-host
