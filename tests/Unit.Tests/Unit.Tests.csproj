@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
@@ -29,6 +30,7 @@
     <ProjectReference Include="..\..\src\matching-api\Matching.csproj" />
     <ProjectReference Include="..\..\src\Shared\Shared.csproj" />
     <ProjectReference Include="..\..\src\SUI.Client\SUI.Client.Core\SUI.Client.Core.csproj" />
+    <ProjectReference Include="..\..\src\SUI.Client\SUI.Client.StorageProcessFunction\SUI.Client.StorageProcessFunction.csproj" />
     <ProjectReference Include="..\..\src\tools\dbs-response-logger\SUI.DBS.Response.Logger.Core\SUI.DBS.Response.Logger.Core.csproj" />
   </ItemGroup>
 

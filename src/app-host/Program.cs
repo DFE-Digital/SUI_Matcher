@@ -38,21 +38,35 @@ var matchingApi = builder.AddProject<Projects.Matching>("matching-api");
 
 // Feature flag setup
 var auditLoggingFlag = builder.Configuration.GetValue<string>("FeatureToggles:EnableAuditLogging");
+var auditLoggingEnabled = bool.Parse(auditLoggingFlag!);
+var storageProcessFunctionFlag = builder.Configuration.GetValue<bool>(
+    "FeatureToggles:EnableStorageProcessFunction"
+);
 matchingApi.WithEnvironment("FeatureManagement__EnableAuditLogging", auditLoggingFlag);
 
-// Wrap in feature management to allow for feature toggling
-if (bool.Parse(auditLoggingFlag!))
-{
-    var storage = builder.AddAzureStorage("az-storage");
+var storage =
+    auditLoggingEnabled || storageProcessFunctionFlag
+        ? builder.AddAzureStorage("sui-az-storage")
+        : null;
 
+if (storage is not null && builder.Environment.IsDevelopment())
+{
+    storage.RunAsEmulator(cfg =>
+    {
+        cfg.WithImageTag("3.35.0");
+        cfg.WithBlobPort(10000);
+        cfg.WithQueuePort(10001);
+        cfg.WithTablePort(10002);
+        cfg.WithLifetime(ContainerLifetime.Persistent);
+    });
+}
+
+// Wrap in feature management to allow for feature toggling
+if (auditLoggingEnabled)
+{
     if (builder.Environment.IsDevelopment())
     {
-        storage.RunAsEmulator(cfg =>
-        {
-            cfg.WithImageTag("3.35.0");
-            cfg.WithLifetime(ContainerLifetime.Persistent);
-        });
-        var table = storage.AddTables("tables");
+        var table = storage!.AddTables("tables");
         matchingApi.WithReference(table).WaitFor(table);
     }
     else
@@ -75,5 +89,35 @@ builder
     .WithExternalHttpEndpoints()
     .WithReference(matchingApi)
     .WaitFor(matchingApi);
+
+if (storageProcessFunctionFlag)
+{
+    var incomingContainer = storage!.AddBlobContainer("storage-process-incoming", "incoming");
+    var processedContainer = storage!.AddBlobContainer("storage-process-processed", "processed");
+    var queue = storage!.AddQueue("storage-process-job-queue", "storage-process-job");
+    var storageProcessFunction = builder
+        .AddProject<Projects.SUI_Client_StorageProcessFunction>("storage-process-function")
+        .WithReference(incomingContainer)
+        .WaitFor(incomingContainer)
+        .WithReference(processedContainer)
+        .WaitFor(processedContainer)
+        .WithReference(queue)
+        .WaitFor(queue)
+        .WithEnvironment("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated")
+        .WithEnvironment("QueueName", "storage-process-job")
+        .WithEnvironment("StorageProcessFunction:ProcessedContainerName", "processed");
+
+    if (builder.Environment.IsDevelopment())
+    {
+        storageProcessFunction.WithEnvironment("AzureWebJobsStorage", "UseDevelopmentStorage=true");
+    }
+    else
+    {
+        storageProcessFunction.WithEnvironment(
+            "AzureWebJobsStorage",
+            builder.AddConnectionString("AzureWebJobsStorage")
+        );
+    }
+}
 
 await builder.Build().RunAsync();
