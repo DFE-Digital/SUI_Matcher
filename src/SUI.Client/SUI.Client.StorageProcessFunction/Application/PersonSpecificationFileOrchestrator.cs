@@ -60,7 +60,7 @@ public sealed class PersonSpecificationFileOrchestrator(
             catch (Exception ex)
             {
                 stats.RecordError();
-                logger.LogError(
+                logger.LogWarning(
                     ex,
                     "Failed to process row {RowNumber} in file {FileName}.",
                     rowNumber,
