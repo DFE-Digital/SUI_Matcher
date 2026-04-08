@@ -1,16 +1,16 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Shared.Models;
-using SUI.Client.Core.Application.Interfaces;
-using SUI.Client.Core.Application.UseCases.MatchPeople;
-using SUI.StorageProcessFunction.Application.Interfaces;
 
-namespace SUI.StorageProcessFunction.Application;
+using Shared.Models;
+
+using SUI.Client.Core.Application.Interfaces;
+
+namespace SUI.Client.Core.Application.UseCases.MatchPeople;
 
 public sealed class PersonRecordOrchestrator(
     ILogger<PersonRecordOrchestrator> logger,
     IMatchingApiClient matchingApiClient,
-    IOptions<StorageProcessFunctionOptions> options
+    IOptions<PersonMatchingOptions> options
 ) : IPersonRecordOrchestrator
 {
     public async Task ProcessAsync(
@@ -52,7 +52,7 @@ public sealed class PersonRecordOrchestrator(
                 stats.RecordError();
                 logger.LogWarning(
                     ex,
-                    "Failed to process row {RowNumber} in file {FileName}.",
+                    "Failed to process record in file {FileName}.",
                     fileName
                 );
             }

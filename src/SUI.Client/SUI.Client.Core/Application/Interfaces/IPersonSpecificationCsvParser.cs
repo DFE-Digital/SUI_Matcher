@@ -1,6 +1,6 @@
 using Shared.Models;
 
-namespace SUI.StorageProcessFunction.Application.Interfaces;
+namespace SUI.Client.Core.Application.Interfaces;
 
 public interface IPersonSpecificationCsvParser
 {

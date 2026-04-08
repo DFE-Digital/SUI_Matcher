@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Shared.Models;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.UseCases.MatchPeople;
 using SUI.StorageProcessFunction;
 using SUI.StorageProcessFunction.Application;
 
@@ -11,11 +12,10 @@ namespace Unit.Tests.StorageProcessFunction;
 public class PersonRecordOrchestratorTests
 {
     private readonly Mock<IMatchingApiClient> _matchingApiClient = new();
-    private readonly StorageProcessFunctionOptions _options = new()
+    private readonly PersonMatchingOptions _options = new()
     {
         SearchStrategy = Shared.SharedConstants.SearchStrategy.Strategies.Strategy4,
         StrategyVersion = 2,
-        CsvParserName = StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne,
     };
 
     [Fact]

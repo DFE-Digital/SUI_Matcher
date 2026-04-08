@@ -1,4 +1,4 @@
-namespace SUI.StorageProcessFunction.Application.Interfaces;
+namespace SUI.Client.Core.Application.Interfaces;
 
 public interface IPersonRecordCsvParserFactory
 {

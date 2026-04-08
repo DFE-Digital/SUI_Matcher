@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.Core.Infrastructure.Http;
 using SUI.StorageProcessFunction;
 using SUI.StorageProcessFunction.Application;
@@ -17,6 +19,9 @@ var host = new HostBuilder()
         {
             services.Configure<StorageProcessFunctionOptions>(
                 context.Configuration.GetSection(StorageProcessFunctionOptions.SectionName)
+            );
+            services.Configure<PersonMatchingOptions>(
+                context.Configuration.GetSection(PersonMatchingOptions.SectionName)
             );
 
             services.AddSingleton(TimeProvider.System);

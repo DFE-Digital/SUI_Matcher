@@ -1,7 +1,6 @@
-using SUI.StorageProcessFunction.Application.Interfaces;
-using SUI.StorageProcessFunction.Infrastructure.Csv;
+using SUI.Client.Core.Application.Interfaces;
 
-namespace SUI.StorageProcessFunction.Application;
+namespace SUI.Client.Core.Infrastructure.CsvParsers;
 
 public class PersonRecordCsvParserFactory : IPersonRecordCsvParserFactory
 {
@@ -9,7 +8,8 @@ public class PersonRecordCsvParserFactory : IPersonRecordCsvParserFactory
     {
         return parserToUse switch
         {
-            StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne =>
+            // Hard coded for now
+            "TypeOne" =>
                 new PersonSpecificationCsvParser(),
             _ => throw new InvalidOperationException("Unknown parser type."),
         };

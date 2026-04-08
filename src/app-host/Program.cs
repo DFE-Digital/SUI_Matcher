@@ -111,8 +111,8 @@ if (storageProcessFunctionFlag)
             ctx.EnvironmentVariables["StorageProcessFunction__MatchApiBaseAddress"] = yarpApi
                 .GetEndpoint("http")
                 .Url;
-            ctx.EnvironmentVariables["StorageProcessFunction__SearchStrategy"] = "strategy4";
-            ctx.EnvironmentVariables["StorageProcessFunction__StrategyVersion"] = "2";
+            ctx.EnvironmentVariables["PersonMatching__SearchStrategy"] = "strategy4";
+            ctx.EnvironmentVariables["PersonMatching__StrategyVersion"] = "2";
             ctx.EnvironmentVariables["StorageProcessFunction__CsvParserName"] = "TypeOne";
         });
 

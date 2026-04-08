@@ -28,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Infrastructure\Csv\" />
     <Folder Include="Infrastructure\Interfaces\" />
   </ItemGroup>
 </Project>

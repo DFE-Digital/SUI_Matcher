@@ -1,10 +1,12 @@
 using System.Globalization;
+
 using CsvHelper;
 using CsvHelper.Configuration;
+
 using Shared.Models;
 using Shared.Util;
 
-namespace SUI.StorageProcessFunction.Infrastructure.Csv;
+namespace SUI.Client.Core.Infrastructure.CsvParsers;
 
 internal static class PersonSpecificationCsvParserHelpers
 {

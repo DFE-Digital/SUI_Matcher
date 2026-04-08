@@ -1,7 +1,8 @@
 using Shared.Models;
-using SUI.StorageProcessFunction.Application.Interfaces;
 
-namespace SUI.StorageProcessFunction.Infrastructure.Csv;
+using SUI.Client.Core.Application.Interfaces;
+
+namespace SUI.Client.Core.Infrastructure.CsvParsers;
 
 public sealed class PersonSpecificationCsvParser : IPersonSpecificationCsvParser
 {
