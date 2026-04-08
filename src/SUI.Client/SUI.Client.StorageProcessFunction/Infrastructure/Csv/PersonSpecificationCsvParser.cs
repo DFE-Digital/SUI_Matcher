@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Shared.Models;
@@ -10,7 +9,6 @@ namespace SUI.StorageProcessFunction.Infrastructure.Csv;
 
 public sealed class PersonSpecificationCsvParser : IPersonSpecificationCsvParser
 {
-    private static readonly string[] AcceptedDateFormats = ["yyyy-MM-dd", "yyyyMMdd", "yyyy/MM/dd"];
     private static readonly string[] RequiredHeaders =
     [
         "GivenName",
@@ -25,9 +23,38 @@ public sealed class PersonSpecificationCsvParser : IPersonSpecificationCsvParser
         CancellationToken cancellationToken
     )
     {
-        var persons = new List<PersonSpecification>();
-        using var reader = new StreamReader(content.ToStream(), leaveOpen: true);
-        using var csv = new CsvReader(
+        using var csv = PersonSpecificationCsvParserHelpers.CreateCsvReader(content);
+        PersonSpecificationCsvParserHelpers.ValidateHeaders(csv, fileName, RequiredHeaders);
+
+        return PersonSpecificationCsvParserHelpers.ReadPeople(
+            csv,
+            fileName,
+            cancellationToken,
+            dobFieldName: "DOB",
+            createPerson: (row, dob) =>
+                new PersonSpecification
+                {
+                    Given = (row.GetField("GivenName") ?? string.Empty).Trim(),
+                    Family = (row.GetField("FamilyName") ?? string.Empty).Trim(),
+                    BirthDate = dob,
+                    Email = (row.GetField("Email") ?? string.Empty).Trim(),
+                    Phone = (row.GetField("Phone") ?? string.Empty).Trim(),
+                    RawBirthDate = [(row.GetField("DOB") ?? string.Empty).Trim()],
+                    Gender = (row.GetField("Gender") ?? string.Empty).Trim(),
+                    AddressPostalCode = (row.GetField("Postcode") ?? string.Empty).Trim(),
+                }
+        );
+    }
+}
+
+file static class PersonSpecificationCsvParserHelpers
+{
+    private static readonly string[] AcceptedDateFormats = ["yyyy-MM-dd", "yyyyMMdd", "yyyy/MM/dd"];
+
+    public static CsvReader CreateCsvReader(BinaryData content)
+    {
+        var reader = new StreamReader(content.ToStream(), leaveOpen: true);
+        return new CsvReader(
             reader,
             new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -37,7 +64,10 @@ public sealed class PersonSpecificationCsvParser : IPersonSpecificationCsvParser
                 PrepareHeaderForMatch = args => args.Header.Trim().ToLowerInvariant(),
             }
         );
+    }
 
+    public static void ValidateHeaders(CsvReader csv, string fileName, string[] requiredHeaders)
+    {
         if (!csv.Read())
         {
             throw new InvalidOperationException(
@@ -50,21 +80,31 @@ public sealed class PersonSpecificationCsvParser : IPersonSpecificationCsvParser
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var missingHeaders = RequiredHeaders.Where(x => !headers.Contains(x)).ToArray();
+        var missingHeaders = requiredHeaders.Where(x => !headers.Contains(x)).ToArray();
         if (missingHeaders.Length > 0)
         {
             throw new InvalidOperationException(
                 $"File '{fileName}' is missing required headers: {string.Join(", ", missingHeaders)}."
             );
         }
+    }
 
+    public static List<PersonSpecification> ReadPeople(
+        CsvReader csv,
+        string fileName,
+        CancellationToken cancellationToken,
+        string dobFieldName,
+        Func<CsvReader, DateOnly, PersonSpecification> createPerson
+    )
+    {
+        var persons = new List<PersonSpecification>();
         var hasRows = false;
         while (csv.Read())
         {
             cancellationToken.ThrowIfCancellationRequested();
             hasRows = true;
 
-            var dob = (csv.GetField("DOB") ?? string.Empty).Trim();
+            var dob = (csv.GetField(dobFieldName) ?? string.Empty).Trim();
             var birthDate = dob.ToDateOnly(AcceptedDateFormats);
 
             if (birthDate is null)
@@ -74,19 +114,7 @@ public sealed class PersonSpecificationCsvParser : IPersonSpecificationCsvParser
                 );
             }
 
-            persons.Add(
-                new PersonSpecification
-                {
-                    Given = (csv.GetField("GivenName") ?? string.Empty).Trim(),
-                    Family = (csv.GetField("FamilyName") ?? string.Empty).Trim(),
-                    BirthDate = birthDate.Value,
-                    Email = (csv.GetField("Email") ?? string.Empty).Trim(),
-                    Phone = (csv.GetField("Phone") ?? string.Empty).Trim(),
-                    RawBirthDate = [dob],
-                    Gender = (csv.GetField("Gender") ?? string.Empty).Trim(),
-                    AddressPostalCode = (csv.GetField("Postcode") ?? string.Empty).Trim(),
-                }
-            );
+            persons.Add(createPerson(csv, birthDate.Value));
         }
 
         if (!hasRows)

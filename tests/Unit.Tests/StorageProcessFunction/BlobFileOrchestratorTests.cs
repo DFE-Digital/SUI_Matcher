@@ -12,6 +12,7 @@ namespace Unit.Tests.StorageProcessFunction;
 public class BlobFileOrchestratorTests
 {
     private readonly Mock<IBlobStorageClient> _blobFileReader;
+    private readonly Mock<IPersonRecordCsvParserFactory> _personSpecificationCsvParserFactory;
     private readonly Mock<IPersonSpecificationCsvParser> _personSpecificationCsvParser;
     private readonly Mock<IPersonRecordOrchestrator> _blobPayloadProcessor;
     private readonly BlobFileOrchestrator _sut;
@@ -23,6 +24,7 @@ public class BlobFileOrchestratorTests
     public BlobFileOrchestratorTests()
     {
         _blobFileReader = new Mock<IBlobStorageClient>();
+        _personSpecificationCsvParserFactory = new Mock<IPersonRecordCsvParserFactory>();
         _personSpecificationCsvParser = new Mock<IPersonSpecificationCsvParser>();
         _blobPayloadProcessor = new Mock<IPersonRecordOrchestrator>();
         _timeProvider = new FakeTimeProvider(
@@ -32,7 +34,7 @@ public class BlobFileOrchestratorTests
             NullLogger<BlobFileOrchestrator>.Instance,
             _timeProvider,
             _blobFileReader.Object,
-            _personSpecificationCsvParser.Object,
+            _personSpecificationCsvParserFactory.Object,
             _blobPayloadProcessor.Object,
             _options
         );
@@ -56,6 +58,9 @@ public class BlobFileOrchestratorTests
         _blobFileReader
             .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
             .ReturnsAsync(blobContent);
+        _personSpecificationCsvParserFactory
+            .Setup(x => x.Create("TypeOne"))
+            .Returns(_personSpecificationCsvParser.Object);
         _personSpecificationCsvParser
             .Setup(x => x.ParseListAsync(blobContent, "test-file.csv", CancellationToken.None))
             .Returns(personSpecifications);
@@ -75,6 +80,7 @@ public class BlobFileOrchestratorTests
             x => x.GetBlobContents(queueMessage, CancellationToken.None),
             Times.Once
         );
+        _personSpecificationCsvParserFactory.Verify(x => x.Create("TypeOne"), Times.Once);
         _personSpecificationCsvParser.Verify(
             x => x.ParseListAsync(blobContent, "test-file.csv", CancellationToken.None),
             Times.Once

@@ -9,7 +9,7 @@ public sealed class BlobFileOrchestrator(
     ILogger<BlobFileOrchestrator> logger,
     TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
-    IPersonSpecificationCsvParser personSpecificationCsvParser,
+    IPersonRecordCsvParserFactory personSpecificationCsvParserFactory,
     IPersonRecordOrchestrator personRecordOrchestrator,
     IOptions<StorageProcessFunctionOptions> options
 ) : IBlobFileOrchestrator
@@ -33,6 +33,7 @@ public sealed class BlobFileOrchestrator(
         );
 
         var blobContent = await blobStorageClient.GetBlobContents(queueMessage, cancellationToken);
+        var personSpecificationCsvParser = personSpecificationCsvParserFactory.Create("TypeOne");
         var personRecords = personSpecificationCsvParser.ParseListAsync(
             blobContent,
             queueMessage.BlobName!,
