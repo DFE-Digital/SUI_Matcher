@@ -113,6 +113,7 @@ if (storageProcessFunctionFlag)
                 .Url;
             ctx.EnvironmentVariables["StorageProcessFunction__SearchStrategy"] = "strategy4";
             ctx.EnvironmentVariables["StorageProcessFunction__StrategyVersion"] = "2";
+            ctx.EnvironmentVariables["StorageProcessFunction__CsvParserName"] = "TypeOne";
         });
 
     if (builder.Environment.IsDevelopment())

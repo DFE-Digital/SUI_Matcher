@@ -33,7 +33,9 @@ public sealed class BlobFileOrchestrator(
         );
 
         var blobContent = await blobStorageClient.GetBlobContents(queueMessage, cancellationToken);
-        var personSpecificationCsvParser = personSpecificationCsvParserFactory.Create("TypeOne");
+        var personSpecificationCsvParser = personSpecificationCsvParserFactory.Create(
+            options.Value.CsvParserName
+        );
         var personRecords = personSpecificationCsvParser.ParseListAsync(
             blobContent,
             queueMessage.BlobName!,

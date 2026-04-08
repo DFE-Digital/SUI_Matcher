@@ -9,7 +9,6 @@ using SUI.StorageProcessFunction;
 using SUI.StorageProcessFunction.Application;
 using SUI.StorageProcessFunction.Application.Interfaces;
 using SUI.StorageProcessFunction.Infrastructure.Azure;
-using SUI.StorageProcessFunction.Infrastructure.Csv;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()

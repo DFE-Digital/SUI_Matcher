@@ -18,7 +18,11 @@ public class BlobFileOrchestratorTests
     private readonly BlobFileOrchestrator _sut;
     private readonly FakeTimeProvider _timeProvider;
     private readonly IOptions<StorageProcessFunctionOptions> _options = Options.Create(
-        new StorageProcessFunctionOptions { ProcessedContainerName = "processed" }
+        new StorageProcessFunctionOptions
+        {
+            ProcessedContainerName = "processed",
+            CsvParserName = StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne,
+        }
     );
 
     public BlobFileOrchestratorTests()
@@ -59,7 +63,7 @@ public class BlobFileOrchestratorTests
             .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
             .ReturnsAsync(blobContent);
         _personSpecificationCsvParserFactory
-            .Setup(x => x.Create("TypeOne"))
+            .Setup(x => x.Create(StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne))
             .Returns(_personSpecificationCsvParser.Object);
         _personSpecificationCsvParser
             .Setup(x => x.ParseListAsync(blobContent, "test-file.csv", CancellationToken.None))
@@ -80,7 +84,10 @@ public class BlobFileOrchestratorTests
             x => x.GetBlobContents(queueMessage, CancellationToken.None),
             Times.Once
         );
-        _personSpecificationCsvParserFactory.Verify(x => x.Create("TypeOne"), Times.Once);
+        _personSpecificationCsvParserFactory.Verify(
+            x => x.Create(StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne),
+            Times.Once
+        );
         _personSpecificationCsvParser.Verify(
             x => x.ParseListAsync(blobContent, "test-file.csv", CancellationToken.None),
             Times.Once
@@ -152,6 +159,56 @@ public class BlobFileOrchestratorTests
             x => x.GetBlobContents(It.IsAny<StorageBlobMessage>(), It.IsAny<CancellationToken>()),
             Times.Never
         );
+        _blobPayloadProcessor.Verify(
+            x =>
+                x.ProcessAsync(
+                    It.IsAny<List<PersonSpecification>>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+        _blobFileReader.Verify(
+            x =>
+                x.ArchiveProcessedAsync(
+                    It.IsAny<StorageBlobMessage>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task Should_Throw_When_CsvParserNameIsInvalid()
+    {
+        var queueMessage = new StorageBlobMessage("incoming", "test-file.csv");
+        var blobContent = BinaryData.FromString("test");
+        var sut = new BlobFileOrchestrator(
+            NullLogger<BlobFileOrchestrator>.Instance,
+            _timeProvider,
+            _blobFileReader.Object,
+            new PersonRecordCsvParserFactory(),
+            _blobPayloadProcessor.Object,
+            Options.Create(
+                new StorageProcessFunctionOptions
+                {
+                    ProcessedContainerName = "processed",
+                    CsvParserName = "InvalidParser",
+                }
+            )
+        );
+
+        _blobFileReader
+            .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
+            .ReturnsAsync(blobContent);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.ProcessAsync(queueMessage, CancellationToken.None)
+        );
+
+        Assert.Equal("Unknown parser type.", exception.Message);
         _blobPayloadProcessor.Verify(
             x =>
                 x.ProcessAsync(

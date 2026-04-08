@@ -9,7 +9,8 @@ public class PersonRecordCsvParserFactory : IPersonRecordCsvParserFactory
     {
         return parserToUse switch
         {
-            "TypeOne" => new PersonSpecificationCsvParser(),
+            StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne =>
+                new PersonSpecificationCsvParser(),
             _ => throw new InvalidOperationException("Unknown parser type."),
         };
     }

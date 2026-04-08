@@ -13,4 +13,10 @@ public sealed class StorageProcessFunctionOptions
     public string SearchStrategy { get; init; } =
         SharedConstants.SearchStrategy.Strategies.Strategy4;
     public int? StrategyVersion { get; init; } = 2;
+    public required string CsvParserName { get; init; }
+
+    public static class CsvParserNameConstants
+    {
+        public const string TypeOne = "TypeOne";
+    }
 }

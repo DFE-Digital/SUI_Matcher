@@ -15,6 +15,7 @@ public class PersonRecordOrchestratorTests
     {
         SearchStrategy = Shared.SharedConstants.SearchStrategy.Strategies.Strategy4,
         StrategyVersion = 2,
+        CsvParserName = StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne,
     };
 
     [Fact]
