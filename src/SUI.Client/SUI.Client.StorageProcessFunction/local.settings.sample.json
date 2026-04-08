@@ -7,7 +7,6 @@
     "StorageProcessFunction:ProcessedContainerName": "processed",
     "StorageProcessFunction:MatchApiBaseAddress": "http://localhost:5000",
     "StorageProcessFunction:SearchStrategy": "strategy4",
-    "StorageProcessFunction:StrategyVersion": "2",
-    "StorageProcessFunction:MaxRequestsPerSecond": "4"
+    "StorageProcessFunction:StrategyVersion": "2"
   }
 }
