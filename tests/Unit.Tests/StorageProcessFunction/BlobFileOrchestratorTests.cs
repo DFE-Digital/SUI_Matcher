@@ -12,6 +12,7 @@ namespace Unit.Tests.StorageProcessFunction;
 public class BlobFileOrchestratorTests
 {
     private readonly Mock<IBlobStorageClient> _blobFileReader;
+    private readonly Mock<IPersonSpecificationCsvParser> _personSpecificationCsvParser;
     private readonly Mock<IPersonSpecificationFileOrchestrator> _blobPayloadProcessor;
     private readonly BlobFileOrchestrator _sut;
     private readonly FakeTimeProvider _timeProvider;
@@ -22,6 +23,7 @@ public class BlobFileOrchestratorTests
     public BlobFileOrchestratorTests()
     {
         _blobFileReader = new Mock<IBlobStorageClient>();
+        _personSpecificationCsvParser = new Mock<IPersonSpecificationCsvParser>();
         _blobPayloadProcessor = new Mock<IPersonSpecificationFileOrchestrator>();
         _timeProvider = new FakeTimeProvider(
             new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
@@ -30,6 +32,7 @@ public class BlobFileOrchestratorTests
             NullLogger<BlobFileOrchestrator>.Instance,
             _timeProvider,
             _blobFileReader.Object,
+            _personSpecificationCsvParser.Object,
             _blobPayloadProcessor.Object,
             _options
         );
@@ -45,6 +48,9 @@ public class BlobFileOrchestratorTests
         _blobFileReader
             .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
             .ReturnsAsync(blobContent);
+        _personSpecificationCsvParser
+            .Setup(x => x.ParseListAsync(blobContent, "test-file.csv", CancellationToken.None))
+            .Returns([]);
         _blobPayloadProcessor
             .Setup(x => x.ProcessAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None))
             .Callback<Stream, string, CancellationToken>(
@@ -60,6 +66,10 @@ public class BlobFileOrchestratorTests
 
         _blobFileReader.Verify(
             x => x.GetBlobContents(queueMessage, CancellationToken.None),
+            Times.Once
+        );
+        _personSpecificationCsvParser.Verify(
+            x => x.ParseListAsync(blobContent, "test-file.csv", CancellationToken.None),
             Times.Once
         );
         _blobPayloadProcessor.Verify(
