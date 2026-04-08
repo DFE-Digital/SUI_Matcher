@@ -9,4 +9,10 @@ public interface IPersonSpecificationCsvParser
         string fileName,
         CancellationToken cancellationToken
     );
+
+    List<PersonSpecification> ParseListAsync(
+        BinaryData content,
+        string fileName,
+        CancellationToken cancellationToken
+    );
 }

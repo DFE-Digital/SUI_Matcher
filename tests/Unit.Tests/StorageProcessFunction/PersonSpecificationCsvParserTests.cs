@@ -1,4 +1,3 @@
-using System.Text;
 using SUI.StorageProcessFunction.Infrastructure.Csv;
 
 namespace Unit.Tests.StorageProcessFunction;
@@ -10,14 +9,14 @@ public class PersonSpecificationCsvParserTests
     [Fact]
     public async Task Should_MapSingleCsvRowToPersonSpecification_When_HeadersMatch()
     {
-        await using var content = CreateContentStream(
+        var content = CreateContent(
             """
             GivenName,FamilyName,DOB,Postcode
             Jane,Doe,2012-05-10,SW1A 1AA
             """
         );
 
-        var result = await ParseAllAsync(content);
+        var result = ParseAll(content);
 
         var person = Assert.Single(result);
         Assert.Equal("Jane", person.Given);
@@ -31,7 +30,7 @@ public class PersonSpecificationCsvParserTests
     [Fact]
     public async Task Should_MapMultipleRows_When_CsvContainsMultipleRecords()
     {
-        await using var content = CreateContentStream(
+        var content = CreateContent(
             """
             GivenName,FamilyName,DOB,Postcode
             Jane,Doe,2012-05-10,SW1A 1AA
@@ -39,7 +38,7 @@ public class PersonSpecificationCsvParserTests
             """
         );
 
-        var result = await ParseAllAsync(content);
+        var result = ParseAll(content);
 
         Assert.Equal(2, result.Count);
         Assert.Equal("Jane", result[0].Given);
@@ -50,14 +49,14 @@ public class PersonSpecificationCsvParserTests
     [Fact]
     public async Task Should_AcceptMixedCaseHeaders_When_HeaderCasingVaries()
     {
-        await using var content = CreateContentStream(
+        var content = CreateContent(
             """
             givenname,FAMILYNAME,dOb,POSTCODE
             Jane,Doe,20120510,SW1A 1AA
             """
         );
 
-        var result = await ParseAllAsync(content);
+        var result = ParseAll(content);
 
         Assert.Single(result);
         Assert.Equal("Jane", result[0].Given);
@@ -67,16 +66,14 @@ public class PersonSpecificationCsvParserTests
     [Fact]
     public async Task Should_Throw_When_RequiredHeadersAreMissing()
     {
-        await using var content = CreateContentStream(
+        var content = CreateContent(
             """
             GivenName,FamilyName,DOB
             Jane,Doe,2012-05-10
             """
         );
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            ParseAllAsync(content)
-        );
+        var exception = Assert.Throws<InvalidOperationException>(() => ParseAll(content));
 
         Assert.Contains("Postcode", exception.Message);
     }
@@ -84,40 +81,30 @@ public class PersonSpecificationCsvParserTests
     [Fact]
     public async Task Should_Throw_When_DobCannotBeParsed()
     {
-        await using var content = CreateContentStream(
+        var content = CreateContent(
             """
             GivenName,FamilyName,DOB,Postcode
             Jane,Doe,not-a-date,SW1A 1AA
             """
         );
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => ParseAllAsync(content));
+        Assert.Throws<InvalidOperationException>(() => ParseAll(content));
     }
 
     [Fact]
     public async Task Should_Throw_When_CsvDoesNotContainAnyRecords()
     {
-        await using var content = CreateContentStream(
+        var content = CreateContent(
             """
             GivenName,FamilyName,DOB,Postcode
             """
         );
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => ParseAllAsync(content));
+        Assert.Throws<InvalidOperationException>(() => ParseAll(content));
     }
 
-    private static MemoryStream CreateContentStream(string csv) => new(Encoding.UTF8.GetBytes(csv));
+    private static BinaryData CreateContent(string csv) => BinaryData.FromString(csv);
 
-    private async Task<List<Shared.Models.PersonSpecification>> ParseAllAsync(Stream content)
-    {
-        var results = new List<Shared.Models.PersonSpecification>();
-        await foreach (
-            var person in _sut.ParseAsync(content, "test-file.csv", CancellationToken.None)
-        )
-        {
-            results.Add(person);
-        }
-
-        return results;
-    }
+    private List<Shared.Models.PersonSpecification> ParseAll(BinaryData content) =>
+        _sut.ParseListAsync(content, "test-file.csv", CancellationToken.None);
 }
