@@ -11,7 +11,7 @@ namespace SUI.StorageProcessFunction.Infrastructure.Azure;
 )]
 public sealed class AzureBlobStorageClient(BlobServiceClient blobServiceClient) : IBlobStorageClient
 {
-    public async Task<Stream> OpenReadAsync(
+    public async Task<BinaryData> GetBlobContents(
         StorageBlobMessage blobMessage,
         CancellationToken cancellationToken
     )
@@ -20,7 +20,8 @@ public sealed class AzureBlobStorageClient(BlobServiceClient blobServiceClient) 
             .GetBlobContainerClient(blobMessage.ContainerName!)
             .GetBlobClient(blobMessage.BlobName!);
 
-        return await blobClient.OpenReadAsync(cancellationToken: cancellationToken);
+        var response = await blobClient.DownloadContentAsync(cancellationToken: cancellationToken);
+        return response.Value.Content;
     }
 
     public async Task ArchiveProcessedAsync(

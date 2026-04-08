@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
@@ -38,22 +39,34 @@ public class BlobFileOrchestratorTests
     public async Task Should_ProcessBlob_When_QueueMessageIsValid()
     {
         var queueMessage = new StorageBlobMessage("incoming", "test-file.csv");
-        var blobStream = new MemoryStream(BinaryData.FromString("test").ToArray());
+        var blobContent = BinaryData.FromString("test");
+        string? processedText = null;
 
         _blobFileReader
-            .Setup(x => x.OpenReadAsync(queueMessage, CancellationToken.None))
-            .ReturnsAsync(blobStream);
+            .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
+            .ReturnsAsync(blobContent);
+        _blobPayloadProcessor
+            .Setup(x => x.ProcessAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None))
+            .Callback<Stream, string, CancellationToken>(
+                (stream, _, _) =>
+                {
+                    using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
+                    processedText = reader.ReadToEnd();
+                }
+            )
+            .Returns(Task.CompletedTask);
 
         await _sut.ProcessAsync(queueMessage, CancellationToken.None);
 
         _blobFileReader.Verify(
-            x => x.OpenReadAsync(queueMessage, CancellationToken.None),
+            x => x.GetBlobContents(queueMessage, CancellationToken.None),
             Times.Once
         );
         _blobPayloadProcessor.Verify(
             x => x.ProcessAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None),
             Times.Once
         );
+        Assert.Equal("test", processedText);
         var utcNow = $"{_timeProvider.GetUtcNow():yyyyMMddHHmmss}_test-file/test-file.csv";
         _blobFileReader.Verify(
             x =>
@@ -75,7 +88,7 @@ public class BlobFileOrchestratorTests
         );
 
         _blobFileReader.Verify(
-            x => x.OpenReadAsync(It.IsAny<StorageBlobMessage>(), It.IsAny<CancellationToken>()),
+            x => x.GetBlobContents(It.IsAny<StorageBlobMessage>(), It.IsAny<CancellationToken>()),
             Times.Never
         );
         _blobPayloadProcessor.Verify(
@@ -107,7 +120,7 @@ public class BlobFileOrchestratorTests
         );
 
         _blobFileReader.Verify(
-            x => x.OpenReadAsync(It.IsAny<StorageBlobMessage>(), It.IsAny<CancellationToken>()),
+            x => x.GetBlobContents(It.IsAny<StorageBlobMessage>(), It.IsAny<CancellationToken>()),
             Times.Never
         );
         _blobPayloadProcessor.Verify(

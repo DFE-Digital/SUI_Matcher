@@ -31,10 +31,8 @@ public sealed class BlobFileOrchestrator(
             queueMessage.ContainerName
         );
 
-        await using var blobStream = await blobStorageClient.OpenReadAsync(
-            queueMessage,
-            cancellationToken
-        );
+        var blobContent = await blobStorageClient.GetBlobContents(queueMessage, cancellationToken);
+        await using var blobStream = blobContent.ToStream();
         await personSpecificationFileOrchestrator.ProcessAsync(
             blobStream,
             queueMessage.BlobName!,
