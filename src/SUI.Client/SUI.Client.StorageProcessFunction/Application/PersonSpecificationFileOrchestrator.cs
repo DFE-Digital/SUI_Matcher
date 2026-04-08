@@ -12,7 +12,7 @@ public sealed class PersonSpecificationFileOrchestrator(
     IPersonSpecificationCsvParser personSpecificationCsvParser,
     IMatchingApiClient matchingApiClient,
     IOptions<StorageProcessFunctionOptions> options
-) : IPersonSpecificationFileProcessor
+) : IPersonSpecificationFileOrchestrator
 {
     public async Task ProcessAsync(
         Stream content,

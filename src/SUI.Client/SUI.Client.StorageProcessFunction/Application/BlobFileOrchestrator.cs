@@ -9,7 +9,7 @@ public sealed class BlobFileOrchestrator(
     ILogger<BlobFileOrchestrator> logger,
     TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
-    IPersonSpecificationFileProcessor personSpecificationFileProcessor,
+    IPersonSpecificationFileOrchestrator personSpecificationFileOrchestrator,
     IOptions<StorageProcessFunctionOptions> options
 ) : IBlobFileOrchestrator
 {
@@ -35,7 +35,7 @@ public sealed class BlobFileOrchestrator(
             queueMessage,
             cancellationToken
         );
-        await personSpecificationFileProcessor.ProcessAsync(
+        await personSpecificationFileOrchestrator.ProcessAsync(
             blobStream,
             queueMessage.BlobName!,
             cancellationToken

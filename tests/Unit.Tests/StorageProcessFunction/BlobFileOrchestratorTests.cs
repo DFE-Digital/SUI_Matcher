@@ -11,7 +11,7 @@ namespace Unit.Tests.StorageProcessFunction;
 public class BlobFileOrchestratorTests
 {
     private readonly Mock<IBlobStorageClient> _blobFileReader;
-    private readonly Mock<IPersonSpecificationFileProcessor> _blobPayloadProcessor;
+    private readonly Mock<IPersonSpecificationFileOrchestrator> _blobPayloadProcessor;
     private readonly BlobFileOrchestrator _sut;
     private readonly FakeTimeProvider _timeProvider;
     private readonly IOptions<StorageProcessFunctionOptions> _options = Options.Create(
@@ -21,7 +21,7 @@ public class BlobFileOrchestratorTests
     public BlobFileOrchestratorTests()
     {
         _blobFileReader = new Mock<IBlobStorageClient>();
-        _blobPayloadProcessor = new Mock<IPersonSpecificationFileProcessor>();
+        _blobPayloadProcessor = new Mock<IPersonSpecificationFileOrchestrator>();
         _timeProvider = new FakeTimeProvider(
             new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
         );

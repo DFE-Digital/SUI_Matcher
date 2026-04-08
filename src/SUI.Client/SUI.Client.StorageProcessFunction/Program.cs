@@ -57,7 +57,7 @@ var host = new HostBuilder()
                 }
             );
             services.AddSingleton<
-                IPersonSpecificationFileProcessor,
+                IPersonSpecificationFileOrchestrator,
                 PersonSpecificationFileOrchestrator
             >();
             services.AddSingleton<IStorageQueueMessageParser, EventGridStorageQueueMessageParser>();
