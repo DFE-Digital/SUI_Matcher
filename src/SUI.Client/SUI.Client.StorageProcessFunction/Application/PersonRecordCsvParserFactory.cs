@@ -3,7 +3,7 @@ using SUI.StorageProcessFunction.Infrastructure.Csv;
 
 namespace SUI.StorageProcessFunction.Application;
 
-public class PersonSpecificationCsvParserFactory : IPersonRecordCsvParserFactory
+public class PersonRecordCsvParserFactory : IPersonRecordCsvParserFactory
 {
     public IPersonSpecificationCsvParser Create(string parserToUse)
     {
