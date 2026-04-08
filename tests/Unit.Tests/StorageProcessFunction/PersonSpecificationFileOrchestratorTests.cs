@@ -3,16 +3,13 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Shared.Models;
 using SUI.Client.Core.Application.Interfaces;
-using SUI.Client.Core.Infrastructure.Http;
 using SUI.StorageProcessFunction;
 using SUI.StorageProcessFunction.Application;
-using SUI.StorageProcessFunction.Application.Interfaces;
 
 namespace Unit.Tests.StorageProcessFunction;
 
-public class PersonSpecificationFileOrchestratorTests
+public class PersonRecordOrchestratorTests
 {
-    private readonly Mock<IPersonSpecificationCsvParser> _parser = new();
     private readonly Mock<IMatchingApiClient> _matchingApiClient = new();
     private readonly StorageProcessFunctionOptions _options = new()
     {
@@ -24,18 +21,10 @@ public class PersonSpecificationFileOrchestratorTests
     public async Task Should_SendParsedRecordToMatchingApi_When_RecordIsValid()
     {
         SearchSpecification? sentPayload = null;
-        string? parsedFileName = null;
-        await using var content = CreateContentStream();
-        _parser
-            .Setup(x => x.ParseAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None))
-            .Callback<Stream, string, CancellationToken>(
-                (_, fileName, _) => parsedFileName = fileName
-            )
-            .Returns(
-                CreatePeopleAsync([
-                    CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
-                ])
-            );
+        var content = new List<PersonSpecification>
+        {
+            CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
+        };
         _matchingApiClient
             .Setup(x => x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None))
             .Callback<SearchSpecification, CancellationToken>((payload, _) => sentPayload = payload)
@@ -49,15 +38,10 @@ public class PersonSpecificationFileOrchestratorTests
 
         await sut.ProcessAsync(content, "test-file.csv", CancellationToken.None);
 
-        _parser.Verify(
-            x => x.ParseAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None),
-            Times.Once
-        );
         _matchingApiClient.Verify(
             x => x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None),
             Times.Once
         );
-        Assert.Equal("test-file.csv", parsedFileName);
         Assert.NotNull(sentPayload);
         Assert.Equal("Jane", sentPayload!.Given);
         Assert.Equal("Doe", sentPayload.Family);
@@ -68,14 +52,10 @@ public class PersonSpecificationFileOrchestratorTests
     public async Task Should_UseStrategy4Version2_When_SendingRecord()
     {
         SearchSpecification? sentPayload = null;
-        await using var content = CreateContentStream();
-        _parser
-            .Setup(x => x.ParseAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None))
-            .Returns(
-                CreatePeopleAsync([
-                    CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
-                ])
-            );
+        var content = new List<PersonSpecification>
+        {
+            CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
+        };
         _matchingApiClient
             .Setup(x => x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None))
             .Callback<SearchSpecification, CancellationToken>((payload, _) => sentPayload = payload)
@@ -99,15 +79,11 @@ public class PersonSpecificationFileOrchestratorTests
     [Fact]
     public async Task Should_ContinueToNextRecord_When_PreviousMatchFails()
     {
-        await using var content = CreateContentStream();
-        _parser
-            .Setup(x => x.ParseAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None))
-            .Returns(
-                CreatePeopleAsync([
-                    CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
-                    CreatePerson("John", "Smith", new DateOnly(2011, 4, 9), "AB1 2CD"),
-                ])
-            );
+        var content = new List<PersonSpecification>
+        {
+            CreatePerson("Jane", "Doe", new DateOnly(2012, 5, 10), "SW1A 1AA"),
+            CreatePerson("John", "Smith", new DateOnly(2011, 4, 9), "AB1 2CD"),
+        };
         _matchingApiClient
             .SetupSequence(x =>
                 x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None)
@@ -129,27 +105,12 @@ public class PersonSpecificationFileOrchestratorTests
         );
     }
 
-    private PersonSpecificationFileOrchestrator CreateSut() =>
+    private PersonRecordOrchestrator CreateSut() =>
         new(
-            NullLogger<PersonSpecificationFileOrchestrator>.Instance,
-            _parser.Object,
+            NullLogger<PersonRecordOrchestrator>.Instance,
             _matchingApiClient.Object,
             Options.Create(_options)
         );
-
-    private static MemoryStream CreateContentStream() =>
-        new(BinaryData.FromString("ignored").ToArray());
-
-    private static async IAsyncEnumerable<PersonSpecification> CreatePeopleAsync(
-        IEnumerable<PersonSpecification> people
-    )
-    {
-        foreach (var person in people)
-        {
-            yield return person;
-            await Task.Yield();
-        }
-    }
 
     private static PersonSpecification CreatePerson(
         string given,

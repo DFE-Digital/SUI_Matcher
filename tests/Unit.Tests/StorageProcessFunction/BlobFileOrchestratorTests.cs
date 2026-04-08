@@ -1,8 +1,8 @@
-using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
+using Shared.Models;
 using SUI.StorageProcessFunction;
 using SUI.StorageProcessFunction.Application;
 using SUI.StorageProcessFunction.Application.Interfaces;
@@ -13,7 +13,7 @@ public class BlobFileOrchestratorTests
 {
     private readonly Mock<IBlobStorageClient> _blobFileReader;
     private readonly Mock<IPersonSpecificationCsvParser> _personSpecificationCsvParser;
-    private readonly Mock<IPersonSpecificationFileOrchestrator> _blobPayloadProcessor;
+    private readonly Mock<IPersonRecordOrchestrator> _blobPayloadProcessor;
     private readonly BlobFileOrchestrator _sut;
     private readonly FakeTimeProvider _timeProvider;
     private readonly IOptions<StorageProcessFunctionOptions> _options = Options.Create(
@@ -24,7 +24,7 @@ public class BlobFileOrchestratorTests
     {
         _blobFileReader = new Mock<IBlobStorageClient>();
         _personSpecificationCsvParser = new Mock<IPersonSpecificationCsvParser>();
-        _blobPayloadProcessor = new Mock<IPersonSpecificationFileOrchestrator>();
+        _blobPayloadProcessor = new Mock<IPersonRecordOrchestrator>();
         _timeProvider = new FakeTimeProvider(
             new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
         );
@@ -43,22 +43,29 @@ public class BlobFileOrchestratorTests
     {
         var queueMessage = new StorageBlobMessage("incoming", "test-file.csv");
         var blobContent = BinaryData.FromString("test");
-        string? processedText = null;
+        var personSpecifications = new List<PersonSpecification>
+        {
+            new()
+            {
+                Given = "Jane",
+                Family = "Doe",
+                BirthDate = new DateOnly(2012, 5, 10),
+            },
+        };
 
         _blobFileReader
             .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
             .ReturnsAsync(blobContent);
         _personSpecificationCsvParser
             .Setup(x => x.ParseListAsync(blobContent, "test-file.csv", CancellationToken.None))
-            .Returns([]);
+            .Returns(personSpecifications);
         _blobPayloadProcessor
-            .Setup(x => x.ProcessAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None))
-            .Callback<Stream, string, CancellationToken>(
-                (stream, _, _) =>
-                {
-                    using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
-                    processedText = reader.ReadToEnd();
-                }
+            .Setup(x =>
+                x.ProcessAsync(
+                    It.IsAny<List<PersonSpecification>>(),
+                    "test-file.csv",
+                    CancellationToken.None
+                )
             )
             .Returns(Task.CompletedTask);
 
@@ -73,10 +80,16 @@ public class BlobFileOrchestratorTests
             Times.Once
         );
         _blobPayloadProcessor.Verify(
-            x => x.ProcessAsync(It.IsAny<Stream>(), "test-file.csv", CancellationToken.None),
+            x =>
+                x.ProcessAsync(
+                    It.Is<List<PersonSpecification>>(people =>
+                        ReferenceEquals(people, personSpecifications)
+                    ),
+                    "test-file.csv",
+                    CancellationToken.None
+                ),
             Times.Once
         );
-        Assert.Equal("test", processedText);
         var utcNow = $"{_timeProvider.GetUtcNow():yyyyMMddHHmmss}_test-file/test-file.csv";
         _blobFileReader.Verify(
             x =>
@@ -104,7 +117,7 @@ public class BlobFileOrchestratorTests
         _blobPayloadProcessor.Verify(
             x =>
                 x.ProcessAsync(
-                    It.IsAny<Stream>(),
+                    It.IsAny<List<PersonSpecification>>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 ),
@@ -136,7 +149,7 @@ public class BlobFileOrchestratorTests
         _blobPayloadProcessor.Verify(
             x =>
                 x.ProcessAsync(
-                    It.IsAny<Stream>(),
+                    It.IsAny<List<PersonSpecification>>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 ),

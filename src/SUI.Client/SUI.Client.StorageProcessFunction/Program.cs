@@ -56,10 +56,7 @@ var host = new HostBuilder()
                     client.BaseAddress = new Uri(options.MatchApiBaseAddress);
                 }
             );
-            services.AddSingleton<
-                IPersonSpecificationFileOrchestrator,
-                PersonSpecificationFileOrchestrator
-            >();
+            services.AddSingleton<IPersonRecordOrchestrator, PersonRecordOrchestrator>();
             services.AddSingleton<IStorageQueueMessageParser, EventGridStorageQueueMessageParser>();
             services.AddSingleton<IBlobFileOrchestrator, BlobFileOrchestrator>();
         }

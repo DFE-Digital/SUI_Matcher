@@ -7,32 +7,22 @@ using SUI.StorageProcessFunction.Application.Interfaces;
 
 namespace SUI.StorageProcessFunction.Application;
 
-public sealed class PersonSpecificationFileOrchestrator(
-    ILogger<PersonSpecificationFileOrchestrator> logger,
-    IPersonSpecificationCsvParser personSpecificationCsvParser,
+public sealed class PersonRecordOrchestrator(
+    ILogger<PersonRecordOrchestrator> logger,
     IMatchingApiClient matchingApiClient,
     IOptions<StorageProcessFunctionOptions> options
-) : IPersonSpecificationFileOrchestrator
+) : IPersonRecordOrchestrator
 {
     public async Task ProcessAsync(
-        Stream content,
+        List<PersonSpecification> content,
         string fileName,
         CancellationToken cancellationToken
     )
     {
         var stats = new MatchingProcessStats();
-        var rowNumber = 0;
 
-        await foreach (
-            var person in personSpecificationCsvParser.ParseAsync(
-                content,
-                fileName,
-                cancellationToken
-            )
-        )
+        foreach (var person in content)
         {
-            rowNumber++;
-
             try
             {
                 var payload = new SearchSpecification
@@ -63,7 +53,6 @@ public sealed class PersonSpecificationFileOrchestrator(
                 logger.LogWarning(
                     ex,
                     "Failed to process row {RowNumber} in file {FileName}.",
-                    rowNumber,
                     fileName
                 );
             }

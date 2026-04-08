@@ -1,6 +1,12 @@
+using Shared.Models;
+
 namespace SUI.StorageProcessFunction.Application.Interfaces;
 
-public interface IPersonSpecificationFileOrchestrator
+public interface IPersonRecordOrchestrator
 {
-    Task ProcessAsync(Stream content, string fileName, CancellationToken cancellationToken);
+    Task ProcessAsync(
+        List<PersonSpecification> content,
+        string fileName,
+        CancellationToken cancellationToken
+    );
 }
