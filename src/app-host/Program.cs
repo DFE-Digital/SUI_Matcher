@@ -84,7 +84,7 @@ matchingApi
         ep => new ResourceUrlAnnotation { Url = "/swagger", DisplayText = "Swagger UI" }
     );
 
-builder
+var yarpApi = builder
     .AddProject<Projects.Yarp>("yarp")
     .WithExternalHttpEndpoints()
     .WithReference(matchingApi)
@@ -108,7 +108,7 @@ if (storageProcessFunctionFlag)
         .WithEnvironment("StorageProcessFunction:ProcessedContainerName", "processed")
         .WithEnvironment(ctx =>
         {
-            ctx.EnvironmentVariables["StorageProcessFunction__MatchApiBaseAddress"] = matchingApi
+            ctx.EnvironmentVariables["StorageProcessFunction__MatchApiBaseAddress"] = yarpApi
                 .GetEndpoint("http")
                 .Url;
             ctx.EnvironmentVariables["StorageProcessFunction__SearchStrategy"] = "strategy4";
