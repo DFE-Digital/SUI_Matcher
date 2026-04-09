@@ -5,7 +5,7 @@ using SUI.StorageProcessFunction.Exceptions;
 
 namespace SUI.StorageProcessFunction.Infrastructure.Azure;
 
-public sealed class EventGridStorageQueueMessageParser : IStorageQueueMessageParser
+public sealed class EventGridMessageParser : IStorageQueueMessageParser
 {
     private const string BlobCreatedEventType = "Microsoft.Storage.BlobCreated";
     private const string IncomingContainerName = "incoming";

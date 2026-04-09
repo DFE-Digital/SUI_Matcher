@@ -70,13 +70,6 @@ public sealed class BlobFileOrchestrator(
         var fileName = Path.GetFileName(blobName);
         var fileNameNoExt = Path.GetFileNameWithoutExtension(blobName);
 
-        if (string.IsNullOrWhiteSpace(fileName))
-        {
-            throw new InvalidOperationException(
-                "Queue message blobName did not contain a file name."
-            );
-        }
-
         var timestamp = timeProvider
             .GetUtcNow()
             .ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);

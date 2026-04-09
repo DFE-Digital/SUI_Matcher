@@ -40,7 +40,7 @@ var host = new HostBuilder()
             });
 
             services.AddSingleton<IBlobStorageClient, AzureBlobStorageClient>();
-            services.AddSingleton<IStorageQueueMessageParser, EventGridStorageQueueMessageParser>();
+            services.AddSingleton<IStorageQueueMessageParser, EventGridMessageParser>();
             services.AddSingleton<IBlobFileOrchestrator, BlobFileOrchestrator>();
             services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
                 (serviceProvider, client) =>
