@@ -5,34 +5,21 @@ using SUI.Client.Core.Application.Interfaces;
 
 namespace SUI.Client.Core.Application.UseCases.MatchPeople;
 
-public class ProcessedRecord<TSource>
-{
-    // The untouched original record (Dictionary or GraphType)
-    public TSource OriginalData { get; set; } = default!;
-
-    // The result from the API
-    public PersonMatchResponse? ApiResult { get; set; }
-
-    // Metadata for the edges to know how to handle this row
-    public bool IsSuccess { get; set; }
-    public string ErrorMessage { get; set; } = string.Empty;
-}
-
-public sealed class PersonRecordOrchestrator<TSource>(
-    ILogger<PersonRecordOrchestrator<TSource>> logger,
+public sealed class MatchPersonRecordOrchestrator<TSource>(
+    ILogger<MatchPersonRecordOrchestrator<TSource>> logger,
     IMatchingApiClient matchingApiClient,
     IPersonSpecParser<TSource> personSpecParser,
     IOptions<PersonMatchingOptions> options
-) : IPersonRecordOrchestrator<TSource>
+) : IMatchPersonRecordOrchestrator<TSource>
 {
-    public async Task<List<ProcessedRecord<TSource>>> ProcessAsync(
+    public async Task<List<ProcessedMatchRecord<TSource>>> ProcessAsync(
         IEnumerable<TSource> content,
         string fileName,
         CancellationToken cancellationToken
     )
     {
         var stats = new MatchingProcessStats();
-        var processedBatch = new List<ProcessedRecord<TSource>>();
+        var processedBatch = new List<ProcessedMatchRecord<TSource>>();
         foreach (var record in content)
         {
             try
@@ -57,7 +44,7 @@ public sealed class PersonRecordOrchestrator<TSource>(
                 var response = await matchingApiClient.MatchPersonAsync(payload, cancellationToken);
                 stats.RecordStats(response);
                 processedBatch.Add(
-                    new ProcessedRecord<TSource>
+                    new ProcessedMatchRecord<TSource>
                     {
                         OriginalData = record,
                         ApiResult = response,
@@ -74,7 +61,7 @@ public sealed class PersonRecordOrchestrator<TSource>(
             {
                 stats.RecordError();
                 processedBatch.Add(
-                    new ProcessedRecord<TSource>
+                    new ProcessedMatchRecord<TSource>
                     {
                         OriginalData = record,
                         ApiResult = null,

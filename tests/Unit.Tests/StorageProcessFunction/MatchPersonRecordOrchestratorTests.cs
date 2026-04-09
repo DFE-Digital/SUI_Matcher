@@ -7,7 +7,7 @@ using SUI.Client.Core.Application.UseCases.MatchPeople;
 
 namespace Unit.Tests.StorageProcessFunction;
 
-public class PersonRecordOrchestratorTests
+public class MatchPersonRecordOrchestratorTests
 {
     private readonly Mock<IMatchingApiClient> _matchingApiClient = new();
     private readonly Mock<IPersonSpecParser<PersonSpecification>> _personSpecParser = new();
@@ -127,9 +127,9 @@ public class PersonRecordOrchestratorTests
         Assert.Equal(string.Empty, successfulRecord.ErrorMessage);
     }
 
-    private PersonRecordOrchestrator<PersonSpecification> CreateSut() =>
+    private MatchPersonRecordOrchestrator<PersonSpecification> CreateSut() =>
         new(
-            NullLogger<PersonRecordOrchestrator<PersonSpecification>>.Instance,
+            NullLogger<MatchPersonRecordOrchestrator<PersonSpecification>>.Instance,
             _matchingApiClient.Object,
             _personSpecParser.Object,
             Options.Create(_options)

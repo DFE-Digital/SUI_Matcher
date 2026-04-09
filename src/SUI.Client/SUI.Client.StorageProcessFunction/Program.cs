@@ -63,8 +63,8 @@ var host = new HostBuilder()
             );
 
             services.AddSingleton(
-                typeof(IPersonRecordOrchestrator<>),
-                typeof(PersonRecordOrchestrator<>)
+                typeof(IMatchPersonRecordOrchestrator<>),
+                typeof(MatchPersonRecordOrchestrator<>)
             );
             services.AddSingleton<IPersonSpecParser<Dictionary<string, string>>>(serviceProvider =>
             {

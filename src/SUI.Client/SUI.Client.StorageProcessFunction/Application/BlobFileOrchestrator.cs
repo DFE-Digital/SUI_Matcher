@@ -11,7 +11,7 @@ public sealed class BlobFileOrchestrator(
     ILogger<BlobFileOrchestrator> logger,
     TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
-    IPersonRecordOrchestrator<Dictionary<string, string>> personRecordOrchestrator,
+    IMatchPersonRecordOrchestrator<Dictionary<string, string>> matchPersonRecordOrchestrator,
     IOptions<StorageProcessFunctionOptions> options
 ) : IBlobFileOrchestrator
 {
@@ -38,7 +38,7 @@ public sealed class BlobFileOrchestrator(
         var blobStream = new StreamReader(blobContent.ToStream());
         var listOfRecords = await CsvRecordReader.ReadCsvTextAsync(blobStream, cancellationToken);
 
-        await personRecordOrchestrator.ProcessAsync(
+        await matchPersonRecordOrchestrator.ProcessAsync(
             listOfRecords.Records,
             queueMessage.BlobName!,
             cancellationToken

@@ -14,7 +14,7 @@ public class BlobFileOrchestratorTests
 {
     private readonly Mock<IBlobStorageClient> _blobFileReader;
     private readonly Mock<
-        IPersonRecordOrchestrator<Dictionary<string, string>>
+        IMatchPersonRecordOrchestrator<Dictionary<string, string>>
     > _blobPayloadProcessor;
     private readonly BlobFileOrchestrator _sut;
     private readonly FakeTimeProvider _timeProvider;
@@ -29,7 +29,8 @@ public class BlobFileOrchestratorTests
     public BlobFileOrchestratorTests()
     {
         _blobFileReader = new Mock<IBlobStorageClient>();
-        _blobPayloadProcessor = new Mock<IPersonRecordOrchestrator<Dictionary<string, string>>>();
+        _blobPayloadProcessor =
+            new Mock<IMatchPersonRecordOrchestrator<Dictionary<string, string>>>();
         _timeProvider = new FakeTimeProvider(
             new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
         );
@@ -173,7 +174,8 @@ public class BlobFileOrchestratorTests
             Jane,Doe,2012-05-10,SW1A 1AA
             """
         );
-        var failingOrchestrator = new Mock<IPersonRecordOrchestrator<Dictionary<string, string>>>();
+        var failingOrchestrator =
+            new Mock<IMatchPersonRecordOrchestrator<Dictionary<string, string>>>();
         var sut = new BlobFileOrchestrator(
             NullLogger<BlobFileOrchestrator>.Instance,
             _timeProvider,
