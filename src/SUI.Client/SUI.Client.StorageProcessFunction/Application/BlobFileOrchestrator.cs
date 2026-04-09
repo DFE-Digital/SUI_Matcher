@@ -2,6 +2,8 @@ using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.Models;
+using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.Core.Infrastructure.FileSystem;
 using SUI.StorageProcessFunction.Application.Interfaces;
 
@@ -11,7 +13,7 @@ public sealed class BlobFileOrchestrator(
     ILogger<BlobFileOrchestrator> logger,
     TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
-    IMatchPersonRecordOrchestrator<Dictionary<string, string>> matchPersonRecordOrchestrator,
+    IMatchPersonRecordOrchestrator<CsvRecordDto> matchPersonRecordOrchestrator,
     IOptions<StorageProcessFunctionOptions> options
 ) : IBlobFileOrchestrator
 {
@@ -37,11 +39,21 @@ public sealed class BlobFileOrchestrator(
 
         var blobStream = new StreamReader(blobContent.ToStream());
         var listOfRecords = await CsvRecordReader.ReadCsvTextAsync(blobStream, cancellationToken);
+        CsvHeaderValidator.Validate(listOfRecords.Headers, options.Value.CsvParserName);
+        var csvRecords = listOfRecords.Records.Select(record => new CsvRecordDto(record)).ToList();
 
-        await matchPersonRecordOrchestrator.ProcessAsync(
-            listOfRecords.Records,
+        var matchedResults = await matchPersonRecordOrchestrator.ProcessAsync(
+            csvRecords,
             queueMessage.BlobName!,
             cancellationToken
+        );
+
+        // Just logging for now. Next: Process results
+        logger.LogInformation(
+            "Completed processing blob {BlobName}. Total records: {TotalRecords}, Successful matches: {SuccessfulMatches}.",
+            queueMessage.BlobName,
+            matchedResults.Count,
+            matchedResults.Count(r => r.IsSuccess)
         );
 
         var processedBlobName = BuildProcessedBlobName(queueMessage.BlobName!);

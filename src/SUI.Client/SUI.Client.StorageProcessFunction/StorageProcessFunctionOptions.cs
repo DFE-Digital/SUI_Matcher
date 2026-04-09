@@ -9,9 +9,4 @@ public sealed class StorageProcessFunctionOptions
     public string ProcessedContainerName { get; init; } = "processed";
     public string? MatchApiBaseAddress { get; init; }
     public required string CsvParserName { get; init; }
-
-    public static class CsvParserNameConstants
-    {
-        public const string TypeOne = "TypeOne";
-    }
 }

@@ -1,24 +1,26 @@
 using Shared.Models;
 using Shared.Util;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Infrastructure.FileSystem;
 
 namespace SUI.Client.Core.Infrastructure.CsvParsers;
 
-public class CsvPersonSpecParser(string parserToUse) : IPersonSpecParser<Dictionary<string, string>>
+public class CsvPersonSpecParser(string parserToUse) : IPersonSpecParser<CsvRecordDto>
 {
-    public PersonSpecification Parse(Dictionary<string, string> record)
+    public PersonSpecification Parse(CsvRecordDto record)
     {
         return parserToUse switch
         {
-            "TypeOne" => ParseTypeOne(record),
+            CsvParserNameConstants.TypeOne => ParseTypeOne(record),
             _ => throw new InvalidOperationException($"Unknown parser type: {parserToUse}."),
         };
     }
 
-    private static PersonSpecification ParseTypeOne(Dictionary<string, string> record)
+    private static PersonSpecification ParseTypeOne(CsvRecordDto csvRecord)
     {
         string[] acceptedDateFormats = ["yyyy-MM-dd", "yyyyMMdd", "yyyy/MM/dd"];
+        var record = csvRecord.Record;
 
         var dob = (record.GetFirstValueOrDefault(["DOB"])).Trim();
         var birthDate = dob.ToDateOnly(acceptedDateFormats);

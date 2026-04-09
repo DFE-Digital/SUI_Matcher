@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
 using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.Core.Infrastructure.Http;
@@ -66,7 +67,7 @@ var host = new HostBuilder()
                 typeof(IMatchPersonRecordOrchestrator<>),
                 typeof(MatchPersonRecordOrchestrator<>)
             );
-            services.AddSingleton<IPersonSpecParser<Dictionary<string, string>>>(serviceProvider =>
+            services.AddSingleton<IPersonSpecParser<CsvRecordDto>>(serviceProvider =>
             {
                 var options = serviceProvider
                     .GetRequiredService<IOptions<StorageProcessFunctionOptions>>()
