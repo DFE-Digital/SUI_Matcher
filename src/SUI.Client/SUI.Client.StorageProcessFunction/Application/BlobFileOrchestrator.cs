@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Infrastructure.FileSystem;
 using SUI.StorageProcessFunction.Application.Interfaces;
 
 namespace SUI.StorageProcessFunction.Application;
@@ -10,8 +11,8 @@ public sealed class BlobFileOrchestrator(
     ILogger<BlobFileOrchestrator> logger,
     TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
-    IPersonRecordCsvParserFactory personSpecificationCsvParserFactory,
     IPersonRecordOrchestrator personRecordOrchestrator,
+    IPersonSpecParser<Dictionary<string, string>> personSpecParser,
     IOptions<StorageProcessFunctionOptions> options
 ) : IBlobFileOrchestrator
 {
@@ -34,13 +35,14 @@ public sealed class BlobFileOrchestrator(
         );
 
         var blobContent = await blobStorageClient.GetBlobContents(queueMessage, cancellationToken);
-        var personSpecificationCsvParser = personSpecificationCsvParserFactory.Create(
-            options.Value.CsvParserName
-        );
-        var personRecords = personSpecificationCsvParser.ParseListAsync(
-            blobContent,
-            queueMessage.BlobName!,
-            cancellationToken
+
+        var blobStream = new StreamReader(blobContent.ToStream());
+        var listOfRecords = await CsvRecordReader.ReadCsvTextAsync(blobStream, cancellationToken);
+        var personRecords = personSpecParser.Parse(listOfRecords.Records, listOfRecords.Headers);
+        logger.LogInformation(
+            "Parsed {RecordCount} records from blob {BlobName}.",
+            personRecords.Count,
+            queueMessage.BlobName
         );
 
         await personRecordOrchestrator.ProcessAsync(

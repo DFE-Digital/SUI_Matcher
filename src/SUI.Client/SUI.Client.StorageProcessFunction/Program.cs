@@ -39,7 +39,13 @@ var host = new HostBuilder()
             });
 
             services.AddSingleton<IBlobStorageClient, AzureBlobStorageClient>();
-            services.AddSingleton<IPersonRecordCsvParserFactory, PersonRecordCsvParserFactory>();
+            services.AddSingleton<IPersonSpecParser<Dictionary<string, string>>>(serviceProvider =>
+            {
+                var options = serviceProvider
+                    .GetRequiredService<IOptions<StorageProcessFunctionOptions>>()
+                    .Value;
+                return new CsvPersonSpecParser(options.CsvParserName);
+            });
             services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
                 (serviceProvider, client) =>
                 {

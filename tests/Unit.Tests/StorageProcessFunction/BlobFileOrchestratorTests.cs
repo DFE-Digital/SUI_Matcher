@@ -4,7 +4,6 @@ using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Shared.Models;
 using SUI.Client.Core.Application.Interfaces;
-using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.StorageProcessFunction;
 using SUI.StorageProcessFunction.Application;
 using SUI.StorageProcessFunction.Application.Interfaces;
@@ -14,9 +13,8 @@ namespace Unit.Tests.StorageProcessFunction;
 public class BlobFileOrchestratorTests
 {
     private readonly Mock<IBlobStorageClient> _blobFileReader;
-    private readonly Mock<IPersonRecordCsvParserFactory> _personSpecificationCsvParserFactory;
-    private readonly Mock<IPersonSpecificationCsvParser> _personSpecificationCsvParser;
     private readonly Mock<IPersonRecordOrchestrator> _blobPayloadProcessor;
+    private readonly Mock<IPersonSpecParser<Dictionary<string, string>>> _personSpecParser;
     private readonly BlobFileOrchestrator _sut;
     private readonly FakeTimeProvider _timeProvider;
     private readonly IOptions<StorageProcessFunctionOptions> _options = Options.Create(
@@ -30,9 +28,8 @@ public class BlobFileOrchestratorTests
     public BlobFileOrchestratorTests()
     {
         _blobFileReader = new Mock<IBlobStorageClient>();
-        _personSpecificationCsvParserFactory = new Mock<IPersonRecordCsvParserFactory>();
-        _personSpecificationCsvParser = new Mock<IPersonSpecificationCsvParser>();
         _blobPayloadProcessor = new Mock<IPersonRecordOrchestrator>();
+        _personSpecParser = new Mock<IPersonSpecParser<Dictionary<string, string>>>();
         _timeProvider = new FakeTimeProvider(
             new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
         );
@@ -40,8 +37,8 @@ public class BlobFileOrchestratorTests
             NullLogger<BlobFileOrchestrator>.Instance,
             _timeProvider,
             _blobFileReader.Object,
-            _personSpecificationCsvParserFactory.Object,
             _blobPayloadProcessor.Object,
+            _personSpecParser.Object,
             _options
         );
     }
@@ -50,7 +47,12 @@ public class BlobFileOrchestratorTests
     public async Task Should_ProcessBlob_When_QueueMessageIsValid()
     {
         var queueMessage = new StorageBlobMessage("incoming", "test-file.csv");
-        var blobContent = BinaryData.FromString("test");
+        var blobContent = BinaryData.FromString(
+            """
+            GivenName,FamilyName,DOB,Postcode
+            Jane,Doe,2012-05-10,SW1A 1AA
+            """
+        );
         var personSpecifications = new List<PersonSpecification>
         {
             new()
@@ -64,11 +66,25 @@ public class BlobFileOrchestratorTests
         _blobFileReader
             .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
             .ReturnsAsync(blobContent);
-        _personSpecificationCsvParserFactory
-            .Setup(x => x.Create(StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne))
-            .Returns(_personSpecificationCsvParser.Object);
-        _personSpecificationCsvParser
-            .Setup(x => x.ParseListAsync(blobContent, "test-file.csv", CancellationToken.None))
+        _personSpecParser
+            .Setup(x =>
+                x.Parse(
+                    It.Is<List<Dictionary<string, string>>>(records =>
+                        records.Count == 1
+                        && records[0]["GivenName"] == "Jane"
+                        && records[0]["FamilyName"] == "Doe"
+                        && records[0]["DOB"] == "2012-05-10"
+                        && records[0]["Postcode"] == "SW1A 1AA"
+                    ),
+                    It.Is<HashSet<string>>(headers =>
+                        headers.Count == 4
+                        && headers.Contains("GivenName")
+                        && headers.Contains("FamilyName")
+                        && headers.Contains("DOB")
+                        && headers.Contains("Postcode")
+                    )
+                )
+            )
             .Returns(personSpecifications);
         _blobPayloadProcessor
             .Setup(x =>
@@ -86,12 +102,8 @@ public class BlobFileOrchestratorTests
             x => x.GetBlobContents(queueMessage, CancellationToken.None),
             Times.Once
         );
-        _personSpecificationCsvParserFactory.Verify(
-            x => x.Create(StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne),
-            Times.Once
-        );
-        _personSpecificationCsvParser.Verify(
-            x => x.ParseListAsync(blobContent, "test-file.csv", CancellationToken.None),
+        _personSpecParser.Verify(
+            x => x.Parse(It.IsAny<List<Dictionary<string, string>>>(), It.IsAny<HashSet<string>>()),
             Times.Once
         );
         _blobPayloadProcessor.Verify(
@@ -183,21 +195,27 @@ public class BlobFileOrchestratorTests
     }
 
     [Fact]
-    public async Task Should_Throw_When_CsvParserNameIsInvalid()
+    public async Task Should_Throw_When_PersonSpecParserThrows()
     {
         var queueMessage = new StorageBlobMessage("incoming", "test-file.csv");
-        var blobContent = BinaryData.FromString("test");
+        var blobContent = BinaryData.FromString(
+            """
+            GivenName,FamilyName,DOB,Postcode
+            Jane,Doe,2012-05-10,SW1A 1AA
+            """
+        );
+        var invalidParser = new Mock<IPersonSpecParser<Dictionary<string, string>>>();
         var sut = new BlobFileOrchestrator(
             NullLogger<BlobFileOrchestrator>.Instance,
             _timeProvider,
             _blobFileReader.Object,
-            new PersonRecordCsvParserFactory(),
             _blobPayloadProcessor.Object,
+            invalidParser.Object,
             Options.Create(
                 new StorageProcessFunctionOptions
                 {
                     ProcessedContainerName = "processed",
-                    CsvParserName = "InvalidParser",
+                    CsvParserName = StorageProcessFunctionOptions.CsvParserNameConstants.TypeOne,
                 }
             )
         );
@@ -205,12 +223,17 @@ public class BlobFileOrchestratorTests
         _blobFileReader
             .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
             .ReturnsAsync(blobContent);
+        invalidParser
+            .Setup(x =>
+                x.Parse(It.IsAny<List<Dictionary<string, string>>>(), It.IsAny<HashSet<string>>())
+            )
+            .Throws(new InvalidOperationException("Unknown parser type: InvalidParser."));
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             sut.ProcessAsync(queueMessage, CancellationToken.None)
         );
 
-        Assert.Equal("Unknown parser type.", exception.Message);
+        Assert.Equal("Unknown parser type: InvalidParser.", exception.Message);
         _blobPayloadProcessor.Verify(
             x =>
                 x.ProcessAsync(
