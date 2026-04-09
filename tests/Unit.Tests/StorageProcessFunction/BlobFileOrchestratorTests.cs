@@ -53,14 +53,11 @@ public class BlobFileOrchestratorTests
             Jane,Doe,2012-05-10,SW1A 1AA
             """
         );
-        var personSpecifications = new List<PersonSpecification>
+        var personSpecification = new PersonSpecification
         {
-            new()
-            {
-                Given = "Jane",
-                Family = "Doe",
-                BirthDate = new DateOnly(2012, 5, 10),
-            },
+            Given = "Jane",
+            Family = "Doe",
+            BirthDate = new DateOnly(2012, 5, 10),
         };
 
         _blobFileReader
@@ -69,12 +66,11 @@ public class BlobFileOrchestratorTests
         _personSpecParser
             .Setup(x =>
                 x.Parse(
-                    It.Is<List<Dictionary<string, string>>>(records =>
-                        records.Count == 1
-                        && records[0]["GivenName"] == "Jane"
-                        && records[0]["FamilyName"] == "Doe"
-                        && records[0]["DOB"] == "2012-05-10"
-                        && records[0]["Postcode"] == "SW1A 1AA"
+                    It.Is<Dictionary<string, string>>(record =>
+                        record["GivenName"] == "Jane"
+                        && record["FamilyName"] == "Doe"
+                        && record["DOB"] == "2012-05-10"
+                        && record["Postcode"] == "SW1A 1AA"
                     ),
                     It.Is<HashSet<string>>(headers =>
                         headers.Count == 4
@@ -85,7 +81,7 @@ public class BlobFileOrchestratorTests
                     )
                 )
             )
-            .Returns(personSpecifications);
+            .Returns(personSpecification);
         _blobPayloadProcessor
             .Setup(x =>
                 x.ProcessAsync(
@@ -103,14 +99,14 @@ public class BlobFileOrchestratorTests
             Times.Once
         );
         _personSpecParser.Verify(
-            x => x.Parse(It.IsAny<List<Dictionary<string, string>>>(), It.IsAny<HashSet<string>>()),
+            x => x.Parse(It.IsAny<Dictionary<string, string>>(), It.IsAny<HashSet<string>>()),
             Times.Once
         );
         _blobPayloadProcessor.Verify(
             x =>
                 x.ProcessAsync(
                     It.Is<List<PersonSpecification>>(people =>
-                        ReferenceEquals(people, personSpecifications)
+                        people.Count == 1 && ReferenceEquals(people[0], personSpecification)
                     ),
                     "test-file.csv",
                     CancellationToken.None
@@ -225,7 +221,7 @@ public class BlobFileOrchestratorTests
             .ReturnsAsync(blobContent);
         invalidParser
             .Setup(x =>
-                x.Parse(It.IsAny<List<Dictionary<string, string>>>(), It.IsAny<HashSet<string>>())
+                x.Parse(It.IsAny<Dictionary<string, string>>(), It.IsAny<HashSet<string>>())
             )
             .Throws(new InvalidOperationException("Unknown parser type: InvalidParser."));
 
