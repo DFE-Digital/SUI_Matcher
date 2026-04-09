@@ -9,7 +9,6 @@ public class CsvPersonSpecParserTests
     public void Should_MapPersonSpecification_When_TypeOneRecordIsValid()
     {
         var sut = new CsvPersonSpecParser("TypeOne");
-        var headers = CreateHeaders("GivenName", "FamilyName", "DOB", "Postcode");
         var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["GivenName"] = "Jane",
@@ -18,7 +17,7 @@ public class CsvPersonSpecParserTests
             ["Postcode"] = "SW1A 1AA",
         };
 
-        var result = sut.Parse(record, headers);
+        var result = sut.Parse(record);
 
         Assert.Equal("Jane", result.Given);
         Assert.Equal("Doe", result.Family);
@@ -32,15 +31,6 @@ public class CsvPersonSpecParserTests
     public void Should_MapOptionalFields_When_OptionalValuesArePresent()
     {
         var sut = new CsvPersonSpecParser("TypeOne");
-        var headers = CreateHeaders(
-            "GivenName",
-            "FamilyName",
-            "DOB",
-            "Postcode",
-            "Email",
-            "Gender",
-            "Phone"
-        );
         var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["GivenName"] = "Jane",
@@ -52,7 +42,7 @@ public class CsvPersonSpecParserTests
             ["Phone"] = "07123456789",
         };
 
-        var result = sut.Parse(record, headers);
+        var result = sut.Parse(record);
 
         Assert.Equal(new DateOnly(2012, 5, 10), result.BirthDate);
         Assert.NotNull(result.RawBirthDate);
@@ -63,10 +53,9 @@ public class CsvPersonSpecParserTests
     }
 
     [Fact]
-    public void Should_Throw_When_RequiredHeadersAreMissing()
+    public void Should_ReturnEmptyValues_When_OptionalFieldsAreMissing()
     {
         var sut = new CsvPersonSpecParser("TypeOne");
-        var headers = CreateHeaders("GivenName", "FamilyName", "DOB");
         var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["GivenName"] = "Jane",
@@ -74,16 +63,18 @@ public class CsvPersonSpecParserTests
             ["DOB"] = "2012-05-10",
         };
 
-        var exception = Assert.Throws<InvalidOperationException>(() => sut.Parse(record, headers));
+        var result = sut.Parse(record);
 
-        Assert.Contains("Postcode", exception.Message);
+        Assert.Equal("Jane", result.Given);
+        Assert.Equal("Doe", result.Family);
+        Assert.Equal(new DateOnly(2012, 5, 10), result.BirthDate);
+        Assert.Equal(string.Empty, result.AddressPostalCode);
     }
 
     [Fact]
     public void Should_SetBirthDateToNull_When_DobCannotBeParsed()
     {
         var sut = new CsvPersonSpecParser("TypeOne");
-        var headers = CreateHeaders("GivenName", "FamilyName", "DOB", "Postcode");
         var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["GivenName"] = "Jane",
@@ -92,7 +83,7 @@ public class CsvPersonSpecParserTests
             ["Postcode"] = "SW1A 1AA",
         };
 
-        var result = sut.Parse(record, headers);
+        var result = sut.Parse(record);
 
         Assert.Null(result.BirthDate);
         Assert.NotNull(result.RawBirthDate);
@@ -105,13 +96,8 @@ public class CsvPersonSpecParserTests
         var sut = new CsvPersonSpecParser("InvalidParser");
         var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            sut.Parse(record, CreateHeaders("GivenName", "FamilyName", "DOB", "Postcode"))
-        );
+        var exception = Assert.Throws<InvalidOperationException>(() => sut.Parse(record));
 
         Assert.Equal("Unknown parser type: InvalidParser.", exception.Message);
     }
-
-    private static HashSet<string> CreateHeaders(params string[] headers) =>
-        headers.ToHashSet(StringComparer.OrdinalIgnoreCase);
 }

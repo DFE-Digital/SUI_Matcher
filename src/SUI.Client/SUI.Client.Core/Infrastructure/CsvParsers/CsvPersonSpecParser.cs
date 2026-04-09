@@ -5,42 +5,20 @@ using SUI.Client.Core.Infrastructure.FileSystem;
 
 namespace SUI.Client.Core.Infrastructure.CsvParsers;
 
-public class CsvPersonSpecParser : IPersonSpecParser<Dictionary<string, string>>
+public class CsvPersonSpecParser(string parserToUse) : IPersonSpecParser<Dictionary<string, string>>
 {
-    private readonly string _parserToUse;
-
-    public CsvPersonSpecParser(string parserToUse)
+    public PersonSpecification Parse(Dictionary<string, string> record)
     {
-        _parserToUse = parserToUse;
-    }
-
-    public PersonSpecification Parse(
-        Dictionary<string, string> record,
-        HashSet<string> requiredHeaders
-    )
-    {
-        return _parserToUse switch
+        return parserToUse switch
         {
-            "TypeOne" => ParseTypeOne(record, requiredHeaders),
-            _ => throw new InvalidOperationException($"Unknown parser type: {_parserToUse}."),
+            "TypeOne" => ParseTypeOne(record),
+            _ => throw new InvalidOperationException($"Unknown parser type: {parserToUse}."),
         };
     }
 
-    private static PersonSpecification ParseTypeOne(
-        Dictionary<string, string> record,
-        HashSet<string> headers
-    )
+    private static PersonSpecification ParseTypeOne(Dictionary<string, string> record)
     {
         string[] acceptedDateFormats = ["yyyy-MM-dd", "yyyyMMdd", "yyyy/MM/dd"];
-        string[] requiredHeaders = ["GivenName", "FamilyName", "DOB", "Postcode"];
-
-        var missingHeaders = requiredHeaders.Where(x => !headers.Contains(x)).ToArray();
-        if (missingHeaders.Length > 0)
-        {
-            throw new InvalidOperationException(
-                $"CSV is missing required headers: {string.Join(", ", missingHeaders)}."
-            );
-        }
 
         var dob = (record.GetFirstValueOrDefault(["DOB"])).Trim();
         var birthDate = dob.ToDateOnly(acceptedDateFormats);

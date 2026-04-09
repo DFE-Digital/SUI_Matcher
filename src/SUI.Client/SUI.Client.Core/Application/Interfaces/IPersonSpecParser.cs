@@ -4,5 +4,5 @@ namespace SUI.Client.Core.Application.Interfaces;
 
 public interface IPersonSpecParser<TSource>
 {
-    PersonSpecification Parse(TSource record, HashSet<string> requiredHeaders);
+    PersonSpecification Parse(TSource record);
 }

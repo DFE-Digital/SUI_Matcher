@@ -39,13 +39,8 @@ var host = new HostBuilder()
             });
 
             services.AddSingleton<IBlobStorageClient, AzureBlobStorageClient>();
-            services.AddSingleton<IPersonSpecParser<Dictionary<string, string>>>(serviceProvider =>
-            {
-                var options = serviceProvider
-                    .GetRequiredService<IOptions<StorageProcessFunctionOptions>>()
-                    .Value;
-                return new CsvPersonSpecParser(options.CsvParserName);
-            });
+            services.AddSingleton<IStorageQueueMessageParser, EventGridStorageQueueMessageParser>();
+            services.AddSingleton<IBlobFileOrchestrator, BlobFileOrchestrator>();
             services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
                 (serviceProvider, client) =>
                 {
@@ -66,9 +61,18 @@ var host = new HostBuilder()
                     client.BaseAddress = new Uri(options.MatchApiBaseAddress);
                 }
             );
-            services.AddSingleton<IPersonRecordOrchestrator, PersonRecordOrchestrator>();
-            services.AddSingleton<IStorageQueueMessageParser, EventGridStorageQueueMessageParser>();
-            services.AddSingleton<IBlobFileOrchestrator, BlobFileOrchestrator>();
+
+            services.AddSingleton(
+                typeof(IPersonRecordOrchestrator<>),
+                typeof(PersonRecordOrchestrator<>)
+            );
+            services.AddSingleton<IPersonSpecParser<Dictionary<string, string>>>(serviceProvider =>
+            {
+                var options = serviceProvider
+                    .GetRequiredService<IOptions<StorageProcessFunctionOptions>>()
+                    .Value;
+                return new CsvPersonSpecParser(options.CsvParserName);
+            });
         }
     )
     .Build();

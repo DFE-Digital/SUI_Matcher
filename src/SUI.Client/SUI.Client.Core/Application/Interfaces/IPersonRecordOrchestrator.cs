@@ -2,10 +2,12 @@ using Shared.Models;
 
 namespace SUI.Client.Core.Application.Interfaces;
 
-public interface IPersonRecordOrchestrator
+public interface IPersonRecordOrchestrator<TSource>
 {
-    Task ProcessAsync(
-        List<PersonSpecification> content,
+    Task<
+        List<SUI.Client.Core.Application.UseCases.MatchPeople.ProcessedRecord<TSource>>
+    > ProcessAsync(
+        IEnumerable<TSource> content,
         string fileName,
         CancellationToken cancellationToken
     );

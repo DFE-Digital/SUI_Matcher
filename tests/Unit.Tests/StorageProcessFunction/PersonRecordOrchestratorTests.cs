@@ -4,14 +4,13 @@ using Moq;
 using Shared.Models;
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
-using SUI.StorageProcessFunction;
-using SUI.StorageProcessFunction.Application;
 
 namespace Unit.Tests.StorageProcessFunction;
 
 public class PersonRecordOrchestratorTests
 {
     private readonly Mock<IMatchingApiClient> _matchingApiClient = new();
+    private readonly Mock<IPersonSpecParser<PersonSpecification>> _personSpecParser = new();
     private readonly PersonMatchingOptions _options = new()
     {
         SearchStrategy = Shared.SharedConstants.SearchStrategy.Strategies.Strategy4,
@@ -35,9 +34,10 @@ public class PersonRecordOrchestratorTests
                     Result = new MatchResult { MatchStatus = MatchStatus.Match },
                 }
             );
+        _personSpecParser.Setup(x => x.Parse(It.IsAny<PersonSpecification>())).Returns<PersonSpecification>(x => x);
         var sut = CreateSut();
 
-        await sut.ProcessAsync(content, "test-file.csv", CancellationToken.None);
+        var result = await sut.ProcessAsync(content, "test-file.csv", CancellationToken.None);
 
         _matchingApiClient.Verify(
             x => x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None),
@@ -47,6 +47,11 @@ public class PersonRecordOrchestratorTests
         Assert.Equal("Jane", sentPayload!.Given);
         Assert.Equal("Doe", sentPayload.Family);
         Assert.Equal(new DateOnly(2012, 5, 10), sentPayload.BirthDate);
+        var processedRecord = Assert.Single(result);
+        Assert.Same(content[0], processedRecord.OriginalData);
+        Assert.NotNull(processedRecord.ApiResult);
+        Assert.True(processedRecord.IsSuccess);
+        Assert.Equal(string.Empty, processedRecord.ErrorMessage);
     }
 
     [Fact]
@@ -66,8 +71,9 @@ public class PersonRecordOrchestratorTests
                     Result = new MatchResult { MatchStatus = MatchStatus.Match },
                 }
             );
+        _personSpecParser.Setup(x => x.Parse(It.IsAny<PersonSpecification>())).Returns<PersonSpecification>(x => x);
 
-        await CreateSut().ProcessAsync(content, "test-file.csv", CancellationToken.None);
+        var result = await CreateSut().ProcessAsync(content, "test-file.csv", CancellationToken.None);
 
         Assert.NotNull(sentPayload);
         Assert.Equal(
@@ -75,10 +81,11 @@ public class PersonRecordOrchestratorTests
             sentPayload!.SearchStrategy
         );
         Assert.Equal(2, sentPayload.StrategyVersion);
+        Assert.Single(result);
     }
 
     [Fact]
-    public async Task Should_ContinueToNextRecord_When_PreviousMatchFails()
+    public async Task Should_ReturnProcessedRecordWithError_When_RecordFails()
     {
         var content = new List<PersonSpecification>
         {
@@ -89,27 +96,42 @@ public class PersonRecordOrchestratorTests
             .SetupSequence(x =>
                 x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None)
             )
-            .ThrowsAsync(new HttpRequestException("boom"))
+            .ThrowsAsync(new HttpRequestException("failure"))
             .ReturnsAsync(
                 new PersonMatchResponse
                 {
                     Result = new MatchResult { MatchStatus = MatchStatus.Match },
                 }
             );
+        _personSpecParser.Setup(x => x.Parse(It.IsAny<PersonSpecification>())).Returns<PersonSpecification>(x => x);
         var sut = CreateSut();
 
-        await sut.ProcessAsync(content, "test-file.csv", CancellationToken.None);
+        var result = await sut.ProcessAsync(content, "test-file.csv", CancellationToken.None);
 
         _matchingApiClient.Verify(
             x => x.MatchPersonAsync(It.IsAny<SearchSpecification>(), CancellationToken.None),
             Times.Exactly(2)
         );
+        Assert.Equal(2, result.Count);
+
+        var failedRecord = result[0];
+        Assert.Same(content[0], failedRecord.OriginalData);
+        Assert.Null(failedRecord.ApiResult);
+        Assert.False(failedRecord.IsSuccess);
+        Assert.Equal("failure", failedRecord.ErrorMessage);
+
+        var successfulRecord = result[1];
+        Assert.Same(content[1], successfulRecord.OriginalData);
+        Assert.NotNull(successfulRecord.ApiResult);
+        Assert.True(successfulRecord.IsSuccess);
+        Assert.Equal(string.Empty, successfulRecord.ErrorMessage);
     }
 
-    private PersonRecordOrchestrator CreateSut() =>
+    private PersonRecordOrchestrator<PersonSpecification> CreateSut() =>
         new(
-            NullLogger<PersonRecordOrchestrator>.Instance,
+            NullLogger<PersonRecordOrchestrator<PersonSpecification>>.Instance,
             _matchingApiClient.Object,
+            _personSpecParser.Object,
             Options.Create(_options)
         );
 
