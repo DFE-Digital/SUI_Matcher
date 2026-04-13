@@ -33,6 +33,8 @@ param monitoringActionGroupEmail string
 param turnOnAlerts bool = false
 
 @description('Enable Audit Logging feature for Aspire application')
+// Preserved for compatibility with the existing audit deployment docs and parameter surface.
+#disable-next-line no-unused-params
 param enableAuditLogging bool = false
 
 var tags = {
@@ -53,7 +55,6 @@ module resources 'resources.bicep' = {
     containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
     containerAppVnet: containerAppVnet
     containerAppEnvSubnet: containerAppEnvSubnet
-    enableAuditLogging: enableAuditLogging
   }
 }
 
