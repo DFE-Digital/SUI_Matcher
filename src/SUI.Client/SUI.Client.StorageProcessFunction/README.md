@@ -8,9 +8,9 @@ This function currently:
 - expects an Azure Event Grid schema message for a blob-created event
 - only processes files from the `incoming` container
 - downloads the referenced blob
-- passes the blob content to a placeholder processor
+- passes the blob content to a csv processor
 - treats the placeholder processing step as successful
-- moves the blob into the `processed` container using the path format `ddMMyyHHmmss_filename/filename`
+- moves the input blob into the `processed` container using the path format `ddMMyyHHmmss_filename/filename`
 
 Azure Functions handles:
 
@@ -39,6 +39,9 @@ The queue message body must be of EventGrid schema - See https://learn.microsoft
 
 ## Local Settings
 
+! **Only use this if you are not running it through Aspire.**
+Aspire will set the necessary environment variables for you when you run the function through it, so you don't need to worry about this if you're using Aspire.
+
 Your `local.settings.json` should contain at least:
 
 ```json
@@ -47,7 +50,12 @@ Your `local.settings.json` should contain at least:
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "QueueName": "storage-process-job"
+    "QueueName": "storage-process-job",
+    "PersonMatching:SearchStrategy": "strategy4",
+    "PersonMatching:StrategyVersion": "2",
+    "StorageProcessFunction:ProcessedContainerName": "processed",
+    "StorageProcessFunction:MatchApiBaseAddress": "http://localhost:5000",
+    "StorageProcessFunction:CsvParserName": "TypeOne"
   }
 }
 ```

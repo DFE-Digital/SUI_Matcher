@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Shared.Models;
-using SUI.Client.Core;
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Infrastructure.FileSystem;
 

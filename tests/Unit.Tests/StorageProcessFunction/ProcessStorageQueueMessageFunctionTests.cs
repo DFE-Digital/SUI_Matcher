@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using SUI.StorageProcessFunction.Application;
+using SUI.StorageProcessFunction.Application.Interfaces;
+using SUI.StorageProcessFunction.Exceptions;
 using SUI.StorageProcessFunction.Functions;
 
 namespace Unit.Tests.StorageProcessFunction;
@@ -11,15 +13,11 @@ public class ProcessStorageQueueMessageFunctionTests
     public async Task Should_CallProcessAsync_When_RunAsyncIsInvoked()
     {
         var queueMessageParser = new Mock<IStorageQueueMessageParser>();
-        var processor = new Mock<IStorageQueueMessageProcessor>();
+        var processor = new Mock<IBlobFileOrchestrator>();
         var rawQueueMessage = BuildQueueMessage(
             "/blobServices/default/containers/incoming/blobs/test-file.csv"
         );
-        var parsedQueueMessage = new StorageBlobMessage
-        {
-            ContainerName = "incoming",
-            BlobName = "test-file.csv",
-        };
+        var parsedQueueMessage = new StorageBlobMessage("incoming", "test-file.csv");
         queueMessageParser.Setup(x => x.Parse(rawQueueMessage)).Returns(parsedQueueMessage);
         var sut = new ProcessStorageQueueMessageFunction(
             queueMessageParser.Object,
@@ -40,7 +38,7 @@ public class ProcessStorageQueueMessageFunctionTests
     public async Task Should_RethrowException_When_QueueMessageIsInvalid()
     {
         var queueMessageParser = new Mock<IStorageQueueMessageParser>();
-        var processor = new Mock<IStorageQueueMessageProcessor>();
+        var processor = new Mock<IBlobFileOrchestrator>();
         var rawQueueMessage = BuildQueueMessage(
             "/blobServices/default/containers/incoming/blobs/test-file.csv"
         );

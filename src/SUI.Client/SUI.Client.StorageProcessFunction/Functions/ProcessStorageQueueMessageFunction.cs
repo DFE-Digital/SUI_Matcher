@@ -1,12 +1,13 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using SUI.StorageProcessFunction.Application;
+using SUI.StorageProcessFunction.Application.Interfaces;
+using SUI.StorageProcessFunction.Exceptions;
 
 namespace SUI.StorageProcessFunction.Functions;
 
 public sealed class ProcessStorageQueueMessageFunction(
     IStorageQueueMessageParser queueMessageParser,
-    IStorageQueueMessageProcessor processor,
+    IBlobFileOrchestrator blobFileOrchestrator,
     ILogger<ProcessStorageQueueMessageFunction> logger
 )
 {
@@ -20,7 +21,10 @@ public sealed class ProcessStorageQueueMessageFunction(
 
         try
         {
-            await processor.ProcessAsync(queueMessageParser.Parse(queueMessage), cancellationToken);
+            await blobFileOrchestrator.ProcessAsync(
+                queueMessageParser.Parse(queueMessage),
+                cancellationToken
+            );
         }
         catch (InvalidStorageQueueMessageException ex)
         {

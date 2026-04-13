@@ -1,13 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using Moq;
 using Moq.Protected;
 using Shared;
 using Shared.Models;
-using SUI.Client.Core;
 using SUI.Client.Core.Application.Interfaces;
-using SUI.Client.Core.Infrastructure.FileSystem;
 using SUI.Client.Core.Infrastructure.Http;
 
 namespace Unit.Tests.Client;

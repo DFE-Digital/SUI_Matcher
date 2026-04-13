@@ -84,7 +84,7 @@ matchingApi
         ep => new ResourceUrlAnnotation { Url = "/swagger", DisplayText = "Swagger UI" }
     );
 
-builder
+var yarpApi = builder
     .AddProject<Projects.Yarp>("yarp")
     .WithExternalHttpEndpoints()
     .WithReference(matchingApi)
@@ -105,7 +105,16 @@ if (storageProcessFunctionFlag)
         .WaitFor(queue)
         .WithEnvironment("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated")
         .WithEnvironment("QueueName", "storage-process-job")
-        .WithEnvironment("StorageProcessFunction:ProcessedContainerName", "processed");
+        .WithEnvironment("StorageProcessFunction:ProcessedContainerName", "processed")
+        .WithEnvironment(ctx =>
+        {
+            ctx.EnvironmentVariables["StorageProcessFunction__MatchApiBaseAddress"] = yarpApi
+                .GetEndpoint("http")
+                .Url;
+            ctx.EnvironmentVariables["PersonMatching__SearchStrategy"] = "strategy4";
+            ctx.EnvironmentVariables["PersonMatching__StrategyVersion"] = "2";
+            ctx.EnvironmentVariables["StorageProcessFunction__CsvParserName"] = "TypeOne";
+        });
 
     if (builder.Environment.IsDevelopment())
     {

@@ -205,13 +205,11 @@ public class ReconciliationCsvFileProcessor(
         );
         Directory.CreateDirectory(outputDirectory);
 
-        (HashSet<string> headers, List<Dictionary<string, string>> records) = await ReadCsvAsync(
-            filePath
-        );
+        var csvData = await CsvRecordReader.ReadCsvFileAsync(filePath);
 
-        AddExtraCsvHeaders(headers);
+        AddExtraCsvHeaders(csvData.Headers);
 
-        int totalRecords = records.Count;
+        int totalRecords = csvData.Records.Count;
         int currentRecord = 0;
         var progressStopwatch = new Stopwatch();
         progressStopwatch.Start();
@@ -222,7 +220,7 @@ public class ReconciliationCsvFileProcessor(
             filePath
         );
 
-        foreach (var record in records)
+        foreach (var record in csvData.Records)
         {
             currentRecord++;
             // Log progress at least every 5 seconds so we can see how many records are being processed over time.
@@ -245,7 +243,7 @@ public class ReconciliationCsvFileProcessor(
 
         var outputFilePath = GetOutputFileName(ts, outputDirectory, filePath);
         logger.LogInformation("Writing output CSV file to: {OutputFilePath}", outputFilePath);
-        await WriteCsvAsync(outputFilePath, headers, records);
+        await WriteCsvAsync(outputFilePath, csvData.Headers, csvData.Records);
 
         var statsJsonFileName = WriteStatsJsonFile(outputDirectory, ts, _stats);
         var csvResult = new ProcessCsvFileResult(
@@ -256,55 +254,6 @@ public class ReconciliationCsvFileProcessor(
         );
         _stats.ResetStats();
         return csvResult;
-    }
-
-    public static async Task<(
-        HashSet<string> Headers,
-        List<Dictionary<string, string>> Records
-    )> ReadCsvAsync(string filePath)
-    {
-        var headers = new HashSet<string>();
-        var records = new List<Dictionary<string, string>>();
-
-        if (!await IsFileReadyAsync(filePath))
-        {
-            throw new IOException($"File {filePath} is not ready for reading.");
-        }
-
-        using (var reader = new StreamReader(filePath))
-        using (
-            var csv = new CsvReader(
-                reader,
-                new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    IgnoreBlankLines = true,
-                    MissingFieldFound = null,
-                    HeaderValidated = null,
-                }
-            )
-        )
-        {
-            await csv.ReadAsync();
-            csv.ReadHeader();
-
-            if (csv.HeaderRecord is not null)
-            {
-                headers.UnionWith(csv.HeaderRecord);
-            }
-
-            while (await csv.ReadAsync())
-            {
-                var row = new Dictionary<string, string>();
-                foreach (var header in headers)
-                {
-                    row[header] = csv.GetField(header) ?? string.Empty;
-                }
-
-                records.Add(row);
-            }
-        }
-
-        return (headers, records);
     }
 
     /// <summary>
@@ -352,33 +301,6 @@ public class ReconciliationCsvFileProcessor(
         var filenameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
         var extension = Path.GetExtension(fileName);
         return Path.Combine(outputDirectory, $"{filenameWithoutExt}_output_{timestamp}{extension}");
-    }
-
-    private static async Task<bool> IsFileReadyAsync(
-        string filePath,
-        int maxAttempts = 5,
-        int delayMs = 1000
-    )
-    {
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            try
-            {
-                await using var stream = new FileStream(
-                    filePath,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.None
-                );
-                return true;
-            }
-            catch (IOException)
-            {
-                await Task.Delay(delayMs);
-            }
-        }
-
-        return false;
     }
 
     private static string WriteStatsJsonFile(string outputDirectory, string ts, object stats)

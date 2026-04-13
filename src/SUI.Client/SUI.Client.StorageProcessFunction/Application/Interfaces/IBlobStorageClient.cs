@@ -1,14 +1,14 @@
-namespace SUI.StorageProcessFunction.Application;
+namespace SUI.StorageProcessFunction.Application.Interfaces;
 
-public interface IBlobFileReader
+public interface IBlobStorageClient
 {
-    Task<BlobFileContent> ReadAsync(
+    Task<BinaryData> GetBlobContents(
         StorageBlobMessage blobMessage,
         CancellationToken cancellationToken
     );
 
     Task ArchiveProcessedAsync(
-        BlobFileContent blobFile,
+        StorageBlobMessage blobMessage,
         string destinationContainerName,
         string destinationBlobName,
         CancellationToken cancellationToken

@@ -163,7 +163,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        var (_, records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        var (_, records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -240,7 +240,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
         Assert.Equal(searchResult.NhsNumber, records[0][MatchingCsvFileProcessor.HeaderNhsNo]);
@@ -317,7 +317,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             Times.AtLeast(1),
             "The PerformSearch method should be called multiple times"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
         Assert.Equal(searchResult.NhsNumber, records[0][MatchingCsvFileProcessor.HeaderNhsNo]);
@@ -477,7 +477,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         Assert.True(File.Exists(monitor.LastResult().StatsJsonFile));
         Assert.NotNull(monitor.LastResult().Stats);
 
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
         Assert.Equal("male", records[0]["Gender"]);
@@ -794,7 +794,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             Times.Once,
             "The PerformSearchByNhsId method should have invoked once"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -940,7 +940,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             Times.Once,
             "The PerformSearchByNhsId method should have invoked once"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -1041,7 +1041,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             Times.Once,
             "The PerformSearchByNhsId method should have invoked once"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -1175,7 +1175,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             Times.Once,
             "The PerformSearchByNhsId method should have been invoked once"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -1281,7 +1281,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             Times.AtLeastOnce,
             "The PerformSearchByNhsId method should have been invoked once"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -1378,7 +1378,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             Times.Never(),
             "The PerformSearchByNhsId method should have been invoked once"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -1481,7 +1481,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             Times.Once,
             "The PerformSearchByNhsId method should have been invoked once"
         );
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(
             monitor.GetLastOperation().AssertSuccess().OutputCsvFile
         );
 
@@ -1532,9 +1532,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
         // Assert
 
         // Read Csv file and get values of all columns after
-        (_, List<D> records) = await ReconciliationCsvFileProcessor.ReadCsvAsync(
-            result.OutputCsvFile
-        );
+        (_, List<D> records) = await CsvRecordReader.ReadCsvFileAsync(result.OutputCsvFile);
 
         var fieldValuesAddedFromProcessing = records[0]
             .Where(k =>

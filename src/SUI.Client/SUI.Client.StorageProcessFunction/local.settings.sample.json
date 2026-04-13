@@ -4,6 +4,10 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "QueueName": "storage-process-job",
-    "StorageProcessFunction:ProcessedContainerName": "processed"
+    "PersonMatching:SearchStrategy": "strategy4",
+    "PersonMatching:StrategyVersion": "2",
+    "StorageProcessFunction:ProcessedContainerName": "processed",
+    "StorageProcessFunction:MatchApiBaseAddress": "http://localhost:5000",
+    "StorageProcessFunction:CsvParserName": "TypeOne"
   }
 }

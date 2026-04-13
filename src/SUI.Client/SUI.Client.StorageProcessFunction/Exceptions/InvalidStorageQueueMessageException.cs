@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace SUI.StorageProcessFunction.Application;
+namespace SUI.StorageProcessFunction.Exceptions;
 
 [ExcludeFromCodeCoverage(Justification = "Simple exceptions")]
 public sealed class InvalidStorageQueueMessageException : Exception

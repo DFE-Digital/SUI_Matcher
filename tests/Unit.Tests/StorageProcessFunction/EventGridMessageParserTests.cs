@@ -1,10 +1,11 @@
-using SUI.StorageProcessFunction.Application;
+using SUI.StorageProcessFunction.Exceptions;
+using SUI.StorageProcessFunction.Infrastructure.Azure;
 
 namespace Unit.Tests.StorageProcessFunction;
 
-public class EventGridStorageQueueMessageParserTests
+public class EventGridMessageParserTests
 {
-    private readonly EventGridStorageQueueMessageParser _sut = new();
+    private readonly EventGridMessageParser _sut = new();
 
     [Theory]
     [InlineData(null)]
@@ -91,13 +92,24 @@ public class EventGridStorageQueueMessageParserTests
     }
 
     [Theory]
-    [InlineData(true, null)]
-    [InlineData(false, "")]
-    [InlineData(false, " ")]
-    public void Should_Throw_When_SubjectIsNullOrEmpty(bool omitSubject, string? subject)
+    [InlineData("")]
+    [InlineData(" ")]
+    public void Should_Throw_When_SubjectIsEmptyOrWhitespace(string? subject)
+    {
+        var queueMessage = BuildQueueMessage(BuildEvent(subject), asArray: false);
+
+        var exception = Assert.Throws<InvalidStorageQueueMessageException>(() =>
+            _sut.Parse(queueMessage)
+        );
+
+        Assert.Equal("Queue message did not contain subject.", exception.Message);
+    }
+
+    [Fact]
+    public void Should_Throw_When_SubjectDoesNotContainContainerMarker()
     {
         var queueMessage = BuildQueueMessage(
-            BuildEvent(subject, omitSubject: omitSubject),
+            subject: "/blobServices/default/blobs/test-file.csv",
             asArray: false
         );
 
@@ -105,7 +117,56 @@ public class EventGridStorageQueueMessageParserTests
             _sut.Parse(queueMessage)
         );
 
-        Assert.Equal("Queue message did not contain subject.", exception.Message);
+        Assert.Equal("Queue message subject did not contain a container.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("/blobServices/default/containers/incoming")]
+    [InlineData("/blobServices/default/containers//blobs/test-file.csv")]
+    public void Should_Throw_When_SubjectDoesNotContainValidContainerAndBlobPath(string subject)
+    {
+        var queueMessage = BuildQueueMessage(subject);
+
+        var exception = Assert.Throws<InvalidStorageQueueMessageException>(() =>
+            _sut.Parse(queueMessage)
+        );
+
+        var expectedMessage =
+            subject == "/blobServices/default/containers/incoming"
+                ? "Queue message subject did not contain a blob path."
+                : "Queue message subject did not contain a blob path.";
+        Assert.Equal(expectedMessage, exception.Message);
+    }
+
+    [Fact]
+    public void Should_Throw_When_SubjectContainsBlankBlobName()
+    {
+        var queueMessage = BuildQueueMessage(
+            subject: "/blobServices/default/containers/incoming/blobs/ ",
+            asArray: false
+        );
+
+        var exception = Assert.Throws<InvalidStorageQueueMessageException>(() =>
+            _sut.Parse(queueMessage)
+        );
+
+        Assert.Equal("Queue message subject did not contain a blob path.", exception.Message);
+    }
+
+    [Fact]
+    public void Should_Throw_When_SubjectIsMissing()
+    {
+        var queueMessage = BuildQueueMessage(
+            BuildEvent(subject: null, omitSubject: true),
+            asArray: false
+        );
+
+        var exception = Assert.Throws<InvalidStorageQueueMessageException>(() =>
+            _sut.Parse(queueMessage)
+        );
+
+        Assert.Equal("Queue message was not valid Event Grid JSON.", exception.Message);
+        Assert.NotNull(exception.InnerException);
     }
 
     [Fact]
