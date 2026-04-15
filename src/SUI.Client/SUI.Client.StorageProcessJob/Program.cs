@@ -20,9 +20,18 @@ using SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.Configure<StorageProcessJobOptions>(
-    builder.Configuration.GetSection(StorageProcessJobOptions.SectionName)
-);
+builder
+    .Services.AddOptions<StorageProcessJobOptions>()
+    .Bind(builder.Configuration.GetSection(StorageProcessJobOptions.SectionName))
+    .Validate(
+        options =>
+            options.MessageVisibilityTimeoutMinutes > 0
+            && options.MessageVisibilityRenewalIntervalMinutes > 0
+            && options.MessageVisibilityRenewalIntervalMinutes
+                < options.MessageVisibilityTimeoutMinutes,
+        "Message visibility renewal interval must be positive and less than the visibility timeout."
+    )
+    .ValidateOnStart();
 
 builder.Services.Configure<PersonMatchingOptions>(
     builder.Configuration.GetSection(PersonMatchingOptions.SectionName)

@@ -60,6 +60,18 @@ public class AzureStorageQueueClientTests
     }
 
     [Fact]
+    public async Task Should_UseConfiguredVisibilityTimeout_When_FetchingMessage()
+    {
+        var queueClient = new TestQueueClient(null);
+        var queueServiceClient = new TestQueueServiceClient(queueClient);
+        var sut = BuildSut(queueServiceClient, visibilityTimeoutMinutes: 10);
+
+        await sut.FetchMessageAsync(CancellationToken.None);
+
+        Assert.Equal(TimeSpan.FromMinutes(10), queueClient.ReceivedVisibilityTimeout);
+    }
+
+    [Fact]
     public async Task Should_DeleteMessage_When_MessageHasBeenProcessed()
     {
         var queueClient = new TestQueueClient(null);
@@ -143,11 +155,17 @@ public class AzureStorageQueueClientTests
 
     private static AzureStorageQueueClient BuildSut(
         QueueServiceClient queueServiceClient,
-        string queueName = "storage-process-job"
+        string queueName = "storage-process-job",
+        int visibilityTimeoutMinutes = 10
     )
     {
         var options = Options.Create(
-            new StorageProcessJobOptions { QueueName = queueName, CsvParserName = "TypeOne" }
+            new StorageProcessJobOptions
+            {
+                QueueName = queueName,
+                MessageVisibilityTimeoutMinutes = visibilityTimeoutMinutes,
+                CsvParserName = "TypeOne",
+            }
         );
 
         return new AzureStorageQueueClient(queueServiceClient, options);
@@ -174,12 +192,15 @@ public class AzureStorageQueueClientTests
         public string? UpdatedMessageId { get; private set; }
         public string? UpdatedPopReceipt { get; private set; }
         public TimeSpan? UpdatedVisibilityTimeout { get; private set; }
+        public TimeSpan? ReceivedVisibilityTimeout { get; private set; }
 
         public override Task<Response<QueueMessage>> ReceiveMessageAsync(
             TimeSpan? visibilityTimeout = null,
             CancellationToken cancellationToken = default
         )
         {
+            ReceivedVisibilityTimeout = visibilityTimeout;
+
             return Task.FromResult(Response.FromValue(message!, Mock.Of<Response>()));
         }
 

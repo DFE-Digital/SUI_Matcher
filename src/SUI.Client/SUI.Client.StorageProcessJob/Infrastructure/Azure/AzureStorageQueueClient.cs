@@ -17,7 +17,10 @@ public sealed class AzureStorageQueueClient(
     public async Task<StorageQueueMessage?> FetchMessageAsync(CancellationToken cancellationToken)
     {
         var queueClient = queueServiceClient.GetQueueClient(options.Value.QueueName);
-        var response = await queueClient.ReceiveMessageAsync(cancellationToken: cancellationToken);
+        var response = await queueClient.ReceiveMessageAsync(
+            visibilityTimeout: TimeSpan.FromMinutes(options.Value.MessageVisibilityTimeoutMinutes),
+            cancellationToken: cancellationToken
+        );
         var message = response?.Value;
 
         return message is null
