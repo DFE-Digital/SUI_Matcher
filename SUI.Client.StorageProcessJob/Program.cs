@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
 using SUI.Client.StorageProcessJob;
 
@@ -35,4 +36,6 @@ builder.Services.AddHttpClient();
 using var host = builder.Build();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
+var options = host.Services.GetRequiredService<IOptions<StorageProcessJobOptions>>();
 logger.LogInformation("ACA Job started. Beginning CSV processing...");
+logger.LogInformation("Storage process opt: {Val}", options.Value.MatchApiBaseAddress);
