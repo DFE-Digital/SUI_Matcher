@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace SUI.Client.StorageProcessJob;
 
+[ExcludeFromCodeCoverage(Justification = "Still developing the use of this class")]
 public sealed class StorageProcessJobOptions
 {
     public const string SectionName = "StorageProcessJob";
