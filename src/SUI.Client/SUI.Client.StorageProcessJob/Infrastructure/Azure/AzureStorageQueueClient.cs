@@ -6,9 +6,6 @@ using SUI.Client.StorageProcessJob.Application.Interfaces;
 
 namespace SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
-[ExcludeFromCodeCoverage(
-    Justification = "Unit testing would be all mocks. We could cover this with integration later"
-)]
 public sealed class AzureStorageQueueClient(
     QueueServiceClient queueServiceClient,
     IOptions<StorageProcessJobOptions> options
