@@ -102,7 +102,6 @@ using var host = builder.Build();
 await host.StartAsync();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
-var options = host.Services.GetRequiredService<IOptions<StorageProcessJobOptions>>();
 var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
 logger.LogInformation("ACA Job started. Beginning CSV processing...");
 
