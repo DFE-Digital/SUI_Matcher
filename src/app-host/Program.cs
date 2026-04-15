@@ -39,15 +39,10 @@ var matchingApi = builder.AddProject<Projects.Matching>("matching-api");
 // Feature flag setup
 var auditLoggingFlag = builder.Configuration.GetValue<string>("FeatureToggles:EnableAuditLogging");
 var auditLoggingEnabled = bool.Parse(auditLoggingFlag!);
-var storageProcessFunctionFlag = builder.Configuration.GetValue<bool>(
-    "FeatureToggles:EnableStorageProcessFunction"
-);
+
 matchingApi.WithEnvironment("FeatureManagement__EnableAuditLogging", auditLoggingFlag);
 
-var storage =
-    auditLoggingEnabled || storageProcessFunctionFlag
-        ? builder.AddAzureStorage("sui-az-storage")
-        : null;
+var storage = auditLoggingEnabled ? builder.AddAzureStorage("sui-az-storage") : null;
 
 if (storage is not null && builder.Environment.IsDevelopment())
 {
@@ -84,49 +79,10 @@ matchingApi
         ep => new ResourceUrlAnnotation { Url = "/swagger", DisplayText = "Swagger UI" }
     );
 
-var yarpApi = builder
+builder
     .AddProject<Projects.Yarp>("yarp")
     .WithExternalHttpEndpoints()
     .WithReference(matchingApi)
     .WaitFor(matchingApi);
-
-if (storageProcessFunctionFlag)
-{
-    var incomingContainer = storage!.AddBlobContainer("storage-process-incoming", "incoming");
-    var processedContainer = storage!.AddBlobContainer("storage-process-processed", "processed");
-    var queue = storage!.AddQueue("storage-process-job-queue", "storage-process-job");
-    var storageProcessFunction = builder
-        .AddProject<Projects.SUI_Client_StorageProcessFunction>("storage-process-function")
-        .WithReference(incomingContainer)
-        .WaitFor(incomingContainer)
-        .WithReference(processedContainer)
-        .WaitFor(processedContainer)
-        .WithReference(queue)
-        .WaitFor(queue)
-        .WithEnvironment("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated")
-        .WithEnvironment("QueueName", "storage-process-job")
-        .WithEnvironment("StorageProcessFunction:ProcessedContainerName", "processed")
-        .WithEnvironment(ctx =>
-        {
-            ctx.EnvironmentVariables["StorageProcessFunction__MatchApiBaseAddress"] = yarpApi
-                .GetEndpoint("http")
-                .Url;
-            ctx.EnvironmentVariables["PersonMatching__SearchStrategy"] = "strategy4";
-            ctx.EnvironmentVariables["PersonMatching__StrategyVersion"] = "2";
-            ctx.EnvironmentVariables["StorageProcessFunction__CsvParserName"] = "TypeOne";
-        });
-
-    if (builder.Environment.IsDevelopment())
-    {
-        storageProcessFunction.WithEnvironment("AzureWebJobsStorage", "UseDevelopmentStorage=true");
-    }
-    else
-    {
-        storageProcessFunction.WithEnvironment(
-            "AzureWebJobsStorage",
-            builder.AddConnectionString("AzureWebJobsStorage")
-        );
-    }
-}
 
 await builder.Build().RunAsync();
