@@ -1,10 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using SUI.StorageProcessFunction.Application;
-using SUI.StorageProcessFunction.Application.Interfaces;
+using SUI.Client.StorageProcessJob.Application;
+using SUI.Client.StorageProcessJob.Application.Interfaces;
 
-namespace SUI.StorageProcessFunction.Infrastructure.Azure;
+namespace SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
 [ExcludeFromCodeCoverage(
     Justification = "Unit testing would be all mocks. We could cover this with integration later"

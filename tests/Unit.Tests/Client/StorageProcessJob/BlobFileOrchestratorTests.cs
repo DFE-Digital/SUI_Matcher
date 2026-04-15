@@ -1,16 +1,17 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
+
 using Moq;
+
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.Models;
-using SUI.Client.Core.Application.UseCases.MatchPeople;
 using SUI.Client.Core.Infrastructure.CsvParsers;
-using SUI.StorageProcessFunction;
-using SUI.StorageProcessFunction.Application;
-using SUI.StorageProcessFunction.Application.Interfaces;
+using SUI.Client.StorageProcessJob;
+using SUI.Client.StorageProcessJob.Application;
+using SUI.Client.StorageProcessJob.Application.Interfaces;
 
-namespace Unit.Tests.StorageProcessFunction;
+namespace Unit.Tests.Client.StorageProcessJob;
 
 public class BlobFileOrchestratorTests
 {
@@ -18,8 +19,8 @@ public class BlobFileOrchestratorTests
     private readonly Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>> _blobPayloadProcessor;
     private readonly BlobFileOrchestrator _sut;
     private readonly FakeTimeProvider _timeProvider;
-    private readonly IOptions<StorageProcessFunctionOptions> _options = Options.Create(
-        new StorageProcessFunctionOptions
+    private readonly IOptions<StorageProcessJobOptions> _options = Options.Create(
+        new StorageProcessJobOptions
         {
             ProcessedContainerName = "processed",
             CsvParserName = CsvParserNameConstants.TypeOne,
@@ -180,7 +181,7 @@ public class BlobFileOrchestratorTests
             _blobFileReader.Object,
             failingOrchestrator.Object,
             Options.Create(
-                new StorageProcessFunctionOptions
+                new StorageProcessJobOptions
                 {
                     ProcessedContainerName = "processed",
                     CsvParserName = CsvParserNameConstants.TypeOne,

@@ -5,16 +5,16 @@ using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.Core.Infrastructure.FileSystem;
-using SUI.StorageProcessFunction.Application.Interfaces;
+using SUI.Client.StorageProcessJob.Application.Interfaces;
 
-namespace SUI.StorageProcessFunction.Application;
+namespace SUI.Client.StorageProcessJob.Application;
 
 public sealed class BlobFileOrchestrator(
     ILogger<BlobFileOrchestrator> logger,
     TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
     IMatchPersonRecordOrchestrator<CsvRecordDto> matchPersonRecordOrchestrator,
-    IOptions<StorageProcessFunctionOptions> options
+    IOptions<StorageProcessJobOptions> options
 ) : IBlobFileOrchestrator
 {
     public async Task ProcessAsync(

@@ -1,4 +1,4 @@
-namespace SUI.StorageProcessFunction.Application.Interfaces;
+namespace SUI.Client.StorageProcessJob.Application.Interfaces;
 
 public interface IBlobFileOrchestrator
 {

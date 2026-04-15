@@ -1,9 +1,9 @@
 using Azure.Messaging.EventGrid;
-using SUI.StorageProcessFunction.Application;
-using SUI.StorageProcessFunction.Application.Interfaces;
-using SUI.StorageProcessFunction.Exceptions;
+using SUI.Client.StorageProcessJob.Application;
+using SUI.Client.StorageProcessJob.Application.Interfaces;
+using SUI.Client.StorageProcessJob.Exceptions;
 
-namespace SUI.StorageProcessFunction.Infrastructure.Azure;
+namespace SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
 public sealed class EventGridMessageParser : IStorageQueueMessageParser
 {

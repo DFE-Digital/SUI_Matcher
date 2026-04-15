@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "SUI.Client.StorageProcessJob": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

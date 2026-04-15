@@ -1,4 +1,4 @@
-namespace SUI.StorageProcessFunction.Application;
+namespace SUI.Client.StorageProcessJob.Application;
 
 public record StorageBlobMessage(string? ContainerName, string? BlobName)
 {
