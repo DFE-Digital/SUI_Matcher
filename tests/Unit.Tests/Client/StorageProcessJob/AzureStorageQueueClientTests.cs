@@ -4,6 +4,7 @@ using Azure.Storage.Queues.Models;
 using Microsoft.Extensions.Options;
 using Moq;
 using SUI.Client.StorageProcessJob;
+using SUI.Client.StorageProcessJob.Application;
 using SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
 namespace Unit.Tests.Client.StorageProcessJob;
@@ -58,6 +59,33 @@ public class AzureStorageQueueClientTests
         Assert.Equal("configured-queue", queueServiceClient.QueueName);
     }
 
+    [Fact]
+    public async Task Should_DeleteMessage_When_MessageHasBeenProcessed()
+    {
+        var queueClient = new TestQueueClient(null);
+        var queueServiceClient = new TestQueueServiceClient(queueClient);
+        var sut = BuildSut(queueServiceClient);
+        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+
+        await sut.DeleteMessageAsync(message, CancellationToken.None);
+
+        Assert.Equal("message-id", queueClient.DeletedMessageId);
+        Assert.Equal("pop-receipt", queueClient.DeletedPopReceipt);
+    }
+
+    [Fact]
+    public async Task Should_UseConfiguredQueueName_When_DeletingMessage()
+    {
+        var queueClient = new TestQueueClient(null);
+        var queueServiceClient = new TestQueueServiceClient(queueClient);
+        var sut = BuildSut(queueServiceClient, queueName: "configured-queue");
+        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+
+        await sut.DeleteMessageAsync(message, CancellationToken.None);
+
+        Assert.Equal("configured-queue", queueServiceClient.QueueName);
+    }
+
     private static AzureStorageQueueClient BuildSut(
         QueueServiceClient queueServiceClient,
         string queueName = "storage-process-job"
@@ -83,12 +111,27 @@ public class AzureStorageQueueClientTests
 
     private sealed class TestQueueClient(QueueMessage? message) : QueueClient
     {
+        public string? DeletedMessageId { get; private set; }
+        public string? DeletedPopReceipt { get; private set; }
+
         public override Task<Response<QueueMessage>> ReceiveMessageAsync(
             TimeSpan? visibilityTimeout = null,
             CancellationToken cancellationToken = default
         )
         {
             return Task.FromResult(Response.FromValue(message!, Mock.Of<Response>()));
+        }
+
+        public override Task<Response> DeleteMessageAsync(
+            string messageId,
+            string popReceipt,
+            CancellationToken cancellationToken = default
+        )
+        {
+            DeletedMessageId = messageId;
+            DeletedPopReceipt = popReceipt;
+
+            return Task.FromResult(Mock.Of<Response>());
         }
     }
 }

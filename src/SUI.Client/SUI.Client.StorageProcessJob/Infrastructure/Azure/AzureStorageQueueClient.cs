@@ -24,4 +24,18 @@ public sealed class AzureStorageQueueClient(
             ? null
             : new StorageQueueMessage(message.MessageText, message.MessageId, message.PopReceipt);
     }
+
+    public async Task DeleteMessageAsync(
+        StorageQueueMessage message,
+        CancellationToken cancellationToken
+    )
+    {
+        var queueClient = queueServiceClient.GetQueueClient(options.Value.QueueName);
+
+        await queueClient.DeleteMessageAsync(
+            message.MessageId,
+            message.PopReceipt,
+            cancellationToken
+        );
+    }
 }
