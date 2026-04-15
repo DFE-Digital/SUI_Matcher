@@ -110,13 +110,13 @@ try
     var processor = host.Services.GetRequiredService<QueueFileProcessor>();
     await processor.RunAsync(lifetime.ApplicationStopping);
 }
-catch (OperationCanceledException) when (lifetime.ApplicationStopping.IsCancellationRequested)
+catch (OperationCanceledException e) when (lifetime.ApplicationStopping.IsCancellationRequested)
 {
-    logger.LogInformation("Storage process job cancelled.");
+    logger.LogInformation(e, "Storage process job cancelled.");
 }
-catch
+catch (Exception e)
 {
-    logger.LogError("Storage process job failed.");
+    logger.LogError(e, "Storage process job failed.");
     throw;
 }
 finally
