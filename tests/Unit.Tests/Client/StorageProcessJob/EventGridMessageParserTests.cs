@@ -1,7 +1,7 @@
-using SUI.StorageProcessFunction.Exceptions;
-using SUI.StorageProcessFunction.Infrastructure.Azure;
+using SUI.Client.StorageProcessJob.Exceptions;
+using SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
-namespace Unit.Tests.StorageProcessFunction;
+namespace Unit.Tests.Client.StorageProcessJob;
 
 public class EventGridMessageParserTests
 {
