@@ -14,6 +14,7 @@ using SUI.Client.Core.Infrastructure.Http;
 using SUI.Client.StorageProcessJob;
 using SUI.Client.StorageProcessJob.Application;
 using SUI.Client.StorageProcessJob.Application.Interfaces;
+using SUI.Client.StorageProcessJob.Infrastructure;
 using SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -74,9 +75,22 @@ builder.Services.AddSingleton<IPersonSpecParser<CsvRecordDto>>(serviceProvider =
 
 builder.Services.AddHttpClient();
 
+builder.Services.AddSingleton<QueueFileProcessor>();
+
 using var host = builder.Build();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 var options = host.Services.GetRequiredService<IOptions<StorageProcessJobOptions>>();
 logger.LogInformation("ACA Job started. Beginning CSV processing...");
 logger.LogInformation("Storage process opt: {Val}", options.Value.MatchApiBaseAddress);
+
+try
+{
+    var processor = host.Services.GetRequiredService<QueueFileProcessor>();
+    await processor.RunAsync();
+}
+catch
+{
+    logger.LogError("Storage process job failed.");
+    throw;
+}
