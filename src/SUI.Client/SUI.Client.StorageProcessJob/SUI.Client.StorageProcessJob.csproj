@@ -11,7 +11,8 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\SUI.Client\SUI.Client.Core\SUI.Client.Core.csproj" />
+    <ProjectReference Include="..\..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\SUI.Client.Core\SUI.Client.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings*.json">
