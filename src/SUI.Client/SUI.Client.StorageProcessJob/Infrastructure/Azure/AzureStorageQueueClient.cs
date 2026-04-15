@@ -38,4 +38,32 @@ public sealed class AzureStorageQueueClient(
             cancellationToken
         );
     }
+
+    public async Task<StorageQueueMessage> RenewMessageVisibilityAsync(
+        StorageQueueMessage message,
+        TimeSpan visibilityTimeout,
+        CancellationToken cancellationToken
+    )
+    {
+        var queueClient = queueServiceClient.GetQueueClient(options.Value.QueueName);
+
+        var response = await queueClient.UpdateMessageAsync(
+            message.MessageId,
+            message.PopReceipt,
+            visibilityTimeout: visibilityTimeout,
+            cancellationToken: cancellationToken
+        );
+
+        var updatedMessage = response?.Value;
+
+        if (updatedMessage is null)
+        {
+            throw new InvalidOperationException("Failed to renew message visibility.");
+        }
+
+        return message with
+        {
+            PopReceipt = updatedMessage.PopReceipt,
+        };
+    }
 }

@@ -86,6 +86,61 @@ public class AzureStorageQueueClientTests
         Assert.Equal("configured-queue", queueServiceClient.QueueName);
     }
 
+    [Fact]
+    public async Task Should_ReturnMessageWithUpdatedPopReceipt_When_RenewingMessageVisibility()
+    {
+        var queueClient = new TestQueueClient(null, updatedPopReceipt: "updated-pop-receipt");
+        var queueServiceClient = new TestQueueServiceClient(queueClient);
+        var sut = BuildSut(queueServiceClient);
+        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+
+        var result = await sut.RenewMessageVisibilityAsync(
+            message,
+            TimeSpan.FromMinutes(10),
+            CancellationToken.None
+        );
+
+        Assert.Equal("event-grid-message", result.MessageText);
+        Assert.Equal("message-id", result.MessageId);
+        Assert.Equal("updated-pop-receipt", result.PopReceipt);
+    }
+
+    [Fact]
+    public async Task Should_UseCurrentReceiptAndVisibilityTimeout_When_RenewingMessageVisibility()
+    {
+        var queueClient = new TestQueueClient(null, updatedPopReceipt: "updated-pop-receipt");
+        var queueServiceClient = new TestQueueServiceClient(queueClient);
+        var sut = BuildSut(queueServiceClient);
+        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+
+        await sut.RenewMessageVisibilityAsync(
+            message,
+            TimeSpan.FromMinutes(5),
+            CancellationToken.None
+        );
+
+        Assert.Equal("message-id", queueClient.UpdatedMessageId);
+        Assert.Equal("pop-receipt", queueClient.UpdatedPopReceipt);
+        Assert.Equal(TimeSpan.FromMinutes(5), queueClient.UpdatedVisibilityTimeout);
+    }
+
+    [Fact]
+    public async Task Should_UseConfiguredQueueName_When_RenewingMessageVisibility()
+    {
+        var queueClient = new TestQueueClient(null, updatedPopReceipt: "updated-pop-receipt");
+        var queueServiceClient = new TestQueueServiceClient(queueClient);
+        var sut = BuildSut(queueServiceClient, queueName: "configured-queue");
+        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+
+        await sut.RenewMessageVisibilityAsync(
+            message,
+            TimeSpan.FromMinutes(10),
+            CancellationToken.None
+        );
+
+        Assert.Equal("configured-queue", queueServiceClient.QueueName);
+    }
+
     private static AzureStorageQueueClient BuildSut(
         QueueServiceClient queueServiceClient,
         string queueName = "storage-process-job"
@@ -109,10 +164,16 @@ public class AzureStorageQueueClientTests
         }
     }
 
-    private sealed class TestQueueClient(QueueMessage? message) : QueueClient
+    private sealed class TestQueueClient(
+        QueueMessage? message,
+        string updatedPopReceipt = "updated-pop-receipt"
+    ) : QueueClient
     {
         public string? DeletedMessageId { get; private set; }
         public string? DeletedPopReceipt { get; private set; }
+        public string? UpdatedMessageId { get; private set; }
+        public string? UpdatedPopReceipt { get; private set; }
+        public TimeSpan? UpdatedVisibilityTimeout { get; private set; }
 
         public override Task<Response<QueueMessage>> ReceiveMessageAsync(
             TimeSpan? visibilityTimeout = null,
@@ -132,6 +193,26 @@ public class AzureStorageQueueClientTests
             DeletedPopReceipt = popReceipt;
 
             return Task.FromResult(Mock.Of<Response>());
+        }
+
+        public override Task<Response<UpdateReceipt>> UpdateMessageAsync(
+            string messageId,
+            string popReceipt,
+            string messageText = null!,
+            TimeSpan visibilityTimeout = default,
+            CancellationToken cancellationToken = default
+        )
+        {
+            UpdatedMessageId = messageId;
+            UpdatedPopReceipt = popReceipt;
+            UpdatedVisibilityTimeout = visibilityTimeout;
+
+            var updateReceipt = QueuesModelFactory.UpdateReceipt(
+                popReceipt: updatedPopReceipt,
+                nextVisibleOn: DateTimeOffset.UtcNow.Add(visibilityTimeout)
+            );
+
+            return Task.FromResult(Response.FromValue(updateReceipt, Mock.Of<Response>()));
         }
     }
 }
