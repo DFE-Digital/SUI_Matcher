@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Azure.Storage.Blobs;
+using Azure.Storage.Queues;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,7 +40,18 @@ builder.Services.AddSingleton(serviceProvider =>
     return new BlobServiceClient(connectionString);
 });
 
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var connectionString =
+        configuration["AzureWebJobsStorage"]
+        ?? throw new InvalidOperationException("AzureWebJobsStorage configuration is missing.");
+
+    return new QueueServiceClient(connectionString);
+});
+
 builder.Services.AddSingleton<IBlobStorageClient, AzureBlobStorageClient>();
+builder.Services.AddSingleton<IStorageQueueClient, AzureStorageQueueClient>();
 builder.Services.AddSingleton<IStorageQueueMessageParser, EventGridMessageParser>();
 builder.Services.AddSingleton<IBlobFileOrchestrator, BlobFileOrchestrator>();
 builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
@@ -78,19 +90,28 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<QueueFileProcessor>();
 
 using var host = builder.Build();
+await host.StartAsync();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 var options = host.Services.GetRequiredService<IOptions<StorageProcessJobOptions>>();
+var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
 logger.LogInformation("ACA Job started. Beginning CSV processing...");
-logger.LogInformation("Storage process opt: {Val}", options.Value.MatchApiBaseAddress);
 
 try
 {
     var processor = host.Services.GetRequiredService<QueueFileProcessor>();
-    await processor.RunAsync();
+    await processor.RunAsync(lifetime.ApplicationStopping);
+}
+catch (OperationCanceledException) when (lifetime.ApplicationStopping.IsCancellationRequested)
+{
+    logger.LogInformation("Storage process job cancelled.");
 }
 catch
 {
     logger.LogError("Storage process job failed.");
     throw;
+}
+finally
+{
+    await host.StopAsync();
 }
