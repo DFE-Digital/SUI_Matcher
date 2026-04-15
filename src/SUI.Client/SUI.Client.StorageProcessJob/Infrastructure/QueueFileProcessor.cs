@@ -17,5 +17,9 @@ public class QueueFileProcessor(ILogger<QueueFileProcessor> logger, IStorageQueu
         }
 
         logger.LogInformation("Found messages in queue.");
+
+        logger.LogInformation("Finished processing Storage file {File}.", message.MessageId);
+        logger.LogInformation("Pop receipt {File}.", message.PopReceipt);
+        await queueClient.DeleteMessageAsync(message, cancellationToken);
     }
 }
