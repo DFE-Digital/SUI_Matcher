@@ -14,6 +14,7 @@ public sealed class BlobFileOrchestrator(
     TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
     IMatchPersonRecordOrchestrator<CsvRecordDto> matchPersonRecordOrchestrator,
+    ISuccessMatchFileWriter successMatchFileWriter,
     IOptions<StorageProcessJobOptions> options
 ) : IBlobFileOrchestrator
 {
@@ -54,6 +55,12 @@ public sealed class BlobFileOrchestrator(
             queueMessage.BlobName,
             matchedResults.Count,
             matchedResults.Count(r => r.IsSuccess)
+        );
+
+        await successMatchFileWriter.WriteAsync(
+            queueMessage.BlobName!,
+            matchedResults,
+            cancellationToken
         );
 
         var processedBlobName = BuildProcessedBlobName(queueMessage.BlobName!);
