@@ -1,0 +1,173 @@
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
+using Moq;
+using Shared.Models;
+using SUI.Client.Core.Application.Models;
+using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.StorageProcessJob;
+using SUI.Client.StorageProcessJob.Application;
+using SUI.Client.StorageProcessJob.Application.Interfaces;
+
+namespace Unit.Tests.Client.StorageProcessJob;
+
+public class SuccessMatchFileWriterTests
+{
+    private static readonly string HeaderOnlyCsv = $"LLId,Type,NhsNumber{Environment.NewLine}";
+    private static readonly string SingleRowCsv =
+        $"LLId,Type,NhsNumber{Environment.NewLine}1111,NHSNo,92938475748{Environment.NewLine}";
+
+    private readonly Mock<IBlobStorageClient> _blobStorageClient = new();
+    private readonly FakeTimeProvider _timeProvider = new(
+        new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
+    );
+    private readonly ISuccessMatchFileWriter _sut;
+
+    public SuccessMatchFileWriterTests()
+    {
+        _sut = new SuccessMatchFileWriter(
+            _timeProvider,
+            _blobStorageClient.Object,
+            Options.Create(
+                new StorageProcessJobOptions
+                {
+                    CsvParserName = "TypeOne",
+                    SuccessContainerName = "success",
+                }
+            )
+        );
+    }
+
+    [Fact]
+    public async Task Should_WriteOneRow_When_RecordIsHighConfidenceMatch()
+    {
+        var matchedResults = new[]
+        {
+            CreateMatchedRecord("1111", true, MatchStatus.Match, 0.96m, "92938475748"),
+        };
+
+        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+
+        _blobStorageClient.Verify(
+            x =>
+                x.UploadBlobAsync(
+                    "success",
+                    "20260120120000_test-file/test-file_success.csv",
+                    It.Is<BinaryData>(data => data.ToString() == SingleRowCsv),
+                    "text/csv",
+                    CancellationToken.None
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Should_ExcludeRecord_When_IsSuccessIsFalse()
+    {
+        var matchedResults = new[]
+        {
+            CreateMatchedRecord("1111", false, MatchStatus.Match, 0.99m, "92938475748"),
+        };
+
+        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+
+        _blobStorageClient.Verify(
+            x =>
+                x.UploadBlobAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.Is<BinaryData>(data => data.ToString() == HeaderOnlyCsv),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Should_ExcludeRecord_When_MatchIsNotHighConfidence()
+    {
+        var matchedResults = new[]
+        {
+            CreateMatchedRecord("1111", true, MatchStatus.Match, 0.95m, "92938475748"),
+            CreateMatchedRecord("2222", true, MatchStatus.PotentialMatch, 0.99m, "92938475749"),
+        };
+
+        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+
+        _blobStorageClient.Verify(
+            x =>
+                x.UploadBlobAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.Is<BinaryData>(data => data.ToString() == HeaderOnlyCsv),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Should_Throw_When_EligibleRecordIsMissingId()
+    {
+        var matchedResults = new[]
+        {
+            CreateMatchedRecord(null, true, MatchStatus.Match, 0.96m, "92938475748"),
+        };
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None)
+        );
+
+        Assert.Equal("Successful match record is missing required 'Id' field.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Should_Throw_When_EligibleRecordIsMissingNhsNumber()
+    {
+        var matchedResults = new[]
+        {
+            CreateMatchedRecord("1111", true, MatchStatus.Match, 0.96m, null),
+        };
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None)
+        );
+
+        Assert.Equal(
+            "Successful match record for '1111' is missing NHS number.",
+            exception.Message
+        );
+    }
+
+    private static ProcessedMatchRecord<CsvRecordDto> CreateMatchedRecord(
+        string? id,
+        bool isSuccess,
+        MatchStatus matchStatus,
+        decimal? score,
+        string? nhsNumber
+    )
+    {
+        var record = new Dictionary<string, string>();
+
+        if (id is not null)
+        {
+            record["Id"] = id;
+        }
+
+        return new ProcessedMatchRecord<CsvRecordDto>
+        {
+            OriginalData = new CsvRecordDto(record),
+            IsSuccess = isSuccess,
+            ApiResult = new PersonMatchResponse
+            {
+                Result = new MatchResult
+                {
+                    MatchStatus = matchStatus,
+                    Score = score,
+                    NhsNumber = nhsNumber,
+                },
+            },
+        };
+    }
+}

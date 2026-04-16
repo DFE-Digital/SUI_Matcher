@@ -7,6 +7,14 @@ public interface IBlobStorageClient
         CancellationToken cancellationToken
     );
 
+    Task UploadBlobAsync(
+        string destinationContainerName,
+        string destinationBlobName,
+        BinaryData content,
+        string contentType,
+        CancellationToken cancellationToken
+    );
+
     Task ArchiveProcessedAsync(
         StorageBlobMessage blobMessage,
         string destinationContainerName,
