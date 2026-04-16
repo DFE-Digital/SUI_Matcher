@@ -24,6 +24,32 @@ public sealed class AzureBlobStorageClient(BlobServiceClient blobServiceClient) 
         return response.Value.Content;
     }
 
+    public async Task UploadBlobAsync(
+        string destinationContainerName,
+        string destinationBlobName,
+        BinaryData content,
+        string contentType,
+        CancellationToken cancellationToken
+    )
+    {
+        var destinationContainerClient = blobServiceClient.GetBlobContainerClient(
+            destinationContainerName
+        );
+        await destinationContainerClient.CreateIfNotExistsAsync(
+            cancellationToken: cancellationToken
+        );
+
+        var destinationBlobClient = destinationContainerClient.GetBlobClient(destinationBlobName);
+        await destinationBlobClient.UploadAsync(
+            content,
+            new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders { ContentType = contentType },
+            },
+            cancellationToken
+        );
+    }
+
     public async Task ArchiveProcessedAsync(
         StorageBlobMessage blobMessage,
         string destinationContainerName,

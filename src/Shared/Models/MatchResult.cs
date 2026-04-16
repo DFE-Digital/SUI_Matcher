@@ -13,4 +13,7 @@ public class MatchResult
 
     [JsonPropertyName("score")]
     public decimal? Score { get; set; }
+
+    [JsonIgnore]
+    public bool IsHighConfidenceMatch => MatchStatus == MatchStatus.Match && Score is > 0.95m;
 }
