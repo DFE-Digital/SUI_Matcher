@@ -7,6 +7,13 @@ using SUI.Client.StorageProcessJob.Application.Interfaces;
 
 namespace SUI.Client.StorageProcessJob.Application;
 
+/// <summary>
+/// Writer to filter out and write successful matches with a confident score
+/// to a new CSV file in blob storage.
+/// </summary>
+/// <param name="timeProvider"></param>
+/// <param name="blobStorageClient"></param>
+/// <param name="options"></param>
 public sealed class SuccessMatchFileWriter(
     TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
