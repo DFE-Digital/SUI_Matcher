@@ -1,4 +1,6 @@
-﻿namespace Shared.Models;
+﻿using Shared.Constants;
+
+namespace Shared.Models;
 
 public class MatchResult
 {
@@ -15,5 +17,6 @@ public class MatchResult
     public decimal? Score { get; set; }
 
     [JsonIgnore]
-    public bool IsHighConfidenceMatch => MatchStatus == MatchStatus.Match && Score is > 0.95m;
+    public bool IsHighConfidenceMatch =>
+        MatchStatus == MatchStatus.Match && Score is > MatchScoreConstants.MatchSuccessThreshold;
 }
