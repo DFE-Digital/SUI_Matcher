@@ -18,5 +18,5 @@ public class MatchResult
 
     [JsonIgnore]
     public bool IsHighConfidenceMatch =>
-        MatchStatus == MatchStatus.Match && Score is > MatchScoreConstants.MatchSuccessThreshold;
+        MatchStatus == MatchStatus.Match && Score is >= MatchScoreConstants.MatchSuccessThreshold;
 }

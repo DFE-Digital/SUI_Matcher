@@ -13,11 +13,11 @@ public class MatchResultTests
     }
 
     [Fact]
-    public void Should_ReturnFalse_When_ScoreIsExactlyThreshold()
+    public void Should_ReturnTrue_When_ScoreIsExactlyThreshold()
     {
         var sut = new MatchResult { MatchStatus = MatchStatus.Match, Score = 0.95m };
 
-        Assert.False(sut.IsHighConfidenceMatch);
+        Assert.True(sut.IsHighConfidenceMatch);
     }
 
     [Fact]
