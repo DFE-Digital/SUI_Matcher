@@ -1,6 +1,6 @@
 using Shared.Models;
 
-namespace Unit.Tests.Shared.Models;
+namespace Unit.Tests.SharedTests.ModelTests;
 
 public class MatchResultTests
 {
