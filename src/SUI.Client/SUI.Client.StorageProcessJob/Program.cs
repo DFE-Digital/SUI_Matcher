@@ -117,7 +117,7 @@ catch (OperationCanceledException e) when (lifetime.ApplicationStopping.IsCancel
 catch (Exception e)
 {
     logger.LogError(e, "Storage process job failed.");
-    throw;
+    Environment.ExitCode = 1;
 }
 finally
 {
