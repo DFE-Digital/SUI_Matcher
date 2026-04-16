@@ -88,7 +88,7 @@ public class SuccessMatchFileWriterTests
     {
         var matchedResults = new[]
         {
-            CreateMatchedRecord("1111", true, MatchStatus.Match, 0.95m, "92938475748"),
+            CreateMatchedRecord("1111", true, MatchStatus.Match, 0.949m, "92938475748"),
             CreateMatchedRecord("2222", true, MatchStatus.PotentialMatch, 0.99m, "92938475749"),
         };
 
