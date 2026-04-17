@@ -1,6 +1,7 @@
 using Azure;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using SUI.Client.StorageProcessJob;
@@ -11,38 +12,32 @@ namespace Unit.Tests.Client.StorageProcessJob;
 
 public class AzureStorageQueueClientTests
 {
+    private const string DefaultQueueName = "storage-process-job";
+    private const string ConfiguredQueueName = "configured-queue";
+    private const string MessageId = "message-id";
+    private const string PopReceipt = "pop-receipt";
+    private const string MessageText = "event-grid-message";
+    private const string UpdatedPopReceipt = "updated-pop-receipt";
+
     [Fact]
     public async Task Should_ReturnMessage_When_QueueContainsMessage()
     {
-        var queueMessage = QueuesModelFactory.QueueMessage(
-            messageId: "message-id",
-            popReceipt: "pop-receipt",
-            body: BinaryData.FromString("event-grid-message"),
-            dequeueCount: 1,
-            insertedOn: null,
-            expiresOn: null,
-            nextVisibleOn: null
-        );
-        var queueClient = new TestQueueClient(queueMessage);
-        var queueServiceClient = new TestQueueServiceClient(queueClient);
-        var sut = BuildSut(queueServiceClient);
+        var harness = new TestHarness(receivedMessage: CreateQueueMessage(dequeueCount: 1));
 
-        var result = await sut.FetchMessageAsync(CancellationToken.None);
+        var result = await harness.Sut.FetchMessageAsync(CancellationToken.None);
 
         Assert.NotNull(result);
-        Assert.Equal("event-grid-message", result.MessageText);
-        Assert.Equal("message-id", result.MessageId);
-        Assert.Equal("pop-receipt", result.PopReceipt);
+        Assert.Equal(MessageText, result.MessageText);
+        Assert.Equal(MessageId, result.MessageId);
+        Assert.Equal(PopReceipt, result.PopReceipt);
     }
 
     [Fact]
     public async Task Should_ReturnNull_When_QueueIsEmpty()
     {
-        var queueClient = new TestQueueClient(null);
-        var queueServiceClient = new TestQueueServiceClient(queueClient);
-        var sut = BuildSut(queueServiceClient);
+        var harness = new TestHarness();
 
-        var result = await sut.FetchMessageAsync(CancellationToken.None);
+        var result = await harness.Sut.FetchMessageAsync(CancellationToken.None);
 
         Assert.Null(result);
     }
@@ -50,141 +45,200 @@ public class AzureStorageQueueClientTests
     [Fact]
     public async Task Should_UseConfiguredQueueName_When_FetchingMessage()
     {
-        var queueClient = new TestQueueClient(null);
-        var queueServiceClient = new TestQueueServiceClient(queueClient);
-        var sut = BuildSut(queueServiceClient, queueName: "configured-queue");
+        var harness = new TestHarness(queueName: ConfiguredQueueName);
 
-        await sut.FetchMessageAsync(CancellationToken.None);
+        await harness.Sut.FetchMessageAsync(CancellationToken.None);
 
-        Assert.Equal("configured-queue", queueServiceClient.QueueName);
+        Assert.Equal(ConfiguredQueueName, harness.QueueService.MainQueueName);
     }
 
     [Fact]
     public async Task Should_UseConfiguredVisibilityTimeout_When_FetchingMessage()
     {
-        var queueClient = new TestQueueClient(null);
-        var queueServiceClient = new TestQueueServiceClient(queueClient);
-        var sut = BuildSut(queueServiceClient, visibilityTimeoutMinutes: 10);
+        var harness = new TestHarness(visibilityTimeoutMinutes: 10);
 
-        await sut.FetchMessageAsync(CancellationToken.None);
+        await harness.Sut.FetchMessageAsync(CancellationToken.None);
 
-        Assert.Equal(TimeSpan.FromMinutes(10), queueClient.ReceivedVisibilityTimeout);
+        Assert.Equal(TimeSpan.FromMinutes(10), harness.MainQueue.ReceivedVisibilityTimeout);
+    }
+
+    [Fact]
+    public async Task Should_ReturnMessage_When_DequeueCountMatchesConfiguredMaximum()
+    {
+        var harness = new TestHarness(
+            receivedMessage: CreateQueueMessage(dequeueCount: 1),
+            maxDequeueCount: 1
+        );
+
+        var result = await harness.Sut.FetchMessageAsync(CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(MessageId, result.MessageId);
+        Assert.Null(harness.QueueService.PoisonQueueName);
+        Assert.Null(harness.MainQueue.DeletedMessageId);
+    }
+
+    [Fact]
+    public async Task Should_MoveMessageToPoisonQueue_When_DequeueCountExceedsConfiguredMaximum()
+    {
+        var harness = new TestHarness(
+            receivedMessage: CreateQueueMessage(dequeueCount: 2),
+            maxDequeueCount: 1
+        );
+
+        var result = await harness.Sut.FetchMessageAsync(CancellationToken.None);
+
+        Assert.Null(result);
+        Assert.Equal($"{DefaultQueueName}-poison", harness.QueueService.PoisonQueueName);
+        Assert.Equal(MessageText, harness.PoisonQueue.SentMessageText);
+        Assert.Equal(MessageId, harness.MainQueue.DeletedMessageId);
+        Assert.Equal(PopReceipt, harness.MainQueue.DeletedPopReceipt);
     }
 
     [Fact]
     public async Task Should_DeleteMessage_When_MessageHasBeenProcessed()
     {
-        var queueClient = new TestQueueClient(null);
-        var queueServiceClient = new TestQueueServiceClient(queueClient);
-        var sut = BuildSut(queueServiceClient);
-        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+        var harness = new TestHarness();
+        var message = CreateStorageQueueMessage();
 
-        await sut.DeleteMessageAsync(message, CancellationToken.None);
+        await harness.Sut.DeleteMessageAsync(message, CancellationToken.None);
 
-        Assert.Equal("message-id", queueClient.DeletedMessageId);
-        Assert.Equal("pop-receipt", queueClient.DeletedPopReceipt);
+        Assert.Equal(MessageId, harness.MainQueue.DeletedMessageId);
+        Assert.Equal(PopReceipt, harness.MainQueue.DeletedPopReceipt);
     }
 
     [Fact]
     public async Task Should_UseConfiguredQueueName_When_DeletingMessage()
     {
-        var queueClient = new TestQueueClient(null);
-        var queueServiceClient = new TestQueueServiceClient(queueClient);
-        var sut = BuildSut(queueServiceClient, queueName: "configured-queue");
-        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+        var harness = new TestHarness(queueName: ConfiguredQueueName);
+        var message = CreateStorageQueueMessage();
 
-        await sut.DeleteMessageAsync(message, CancellationToken.None);
+        await harness.Sut.DeleteMessageAsync(message, CancellationToken.None);
 
-        Assert.Equal("configured-queue", queueServiceClient.QueueName);
+        Assert.Equal(ConfiguredQueueName, harness.QueueService.MainQueueName);
     }
 
     [Fact]
     public async Task Should_ReturnMessageWithUpdatedPopReceipt_When_RenewingMessageVisibility()
     {
-        var queueClient = new TestQueueClient(null, updatedPopReceipt: "updated-pop-receipt");
-        var queueServiceClient = new TestQueueServiceClient(queueClient);
-        var sut = BuildSut(queueServiceClient);
-        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+        var harness = new TestHarness();
+        var message = CreateStorageQueueMessage();
 
-        var result = await sut.RenewMessageVisibilityAsync(
+        var result = await harness.Sut.RenewMessageVisibilityAsync(
             message,
             TimeSpan.FromMinutes(10),
             CancellationToken.None
         );
 
-        Assert.Equal("event-grid-message", result.MessageText);
-        Assert.Equal("message-id", result.MessageId);
-        Assert.Equal("updated-pop-receipt", result.PopReceipt);
+        Assert.Equal(MessageText, result.MessageText);
+        Assert.Equal(MessageId, result.MessageId);
+        Assert.Equal(UpdatedPopReceipt, result.PopReceipt);
     }
 
     [Fact]
     public async Task Should_UseCurrentReceiptAndVisibilityTimeout_When_RenewingMessageVisibility()
     {
-        var queueClient = new TestQueueClient(null, updatedPopReceipt: "updated-pop-receipt");
-        var queueServiceClient = new TestQueueServiceClient(queueClient);
-        var sut = BuildSut(queueServiceClient);
-        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+        var harness = new TestHarness();
+        var message = CreateStorageQueueMessage();
 
-        await sut.RenewMessageVisibilityAsync(
+        await harness.Sut.RenewMessageVisibilityAsync(
             message,
             TimeSpan.FromMinutes(5),
             CancellationToken.None
         );
 
-        Assert.Equal("message-id", queueClient.UpdatedMessageId);
-        Assert.Equal("pop-receipt", queueClient.UpdatedPopReceipt);
-        Assert.Equal(TimeSpan.FromMinutes(5), queueClient.UpdatedVisibilityTimeout);
+        Assert.Equal(MessageId, harness.MainQueue.UpdatedMessageId);
+        Assert.Equal(PopReceipt, harness.MainQueue.UpdatedPopReceipt);
+        Assert.Equal(TimeSpan.FromMinutes(5), harness.MainQueue.UpdatedVisibilityTimeout);
     }
 
     [Fact]
     public async Task Should_UseConfiguredQueueName_When_RenewingMessageVisibility()
     {
-        var queueClient = new TestQueueClient(null, updatedPopReceipt: "updated-pop-receipt");
-        var queueServiceClient = new TestQueueServiceClient(queueClient);
-        var sut = BuildSut(queueServiceClient, queueName: "configured-queue");
-        var message = new StorageQueueMessage("event-grid-message", "message-id", "pop-receipt");
+        var harness = new TestHarness(queueName: ConfiguredQueueName);
+        var message = CreateStorageQueueMessage();
 
-        await sut.RenewMessageVisibilityAsync(
+        await harness.Sut.RenewMessageVisibilityAsync(
             message,
             TimeSpan.FromMinutes(10),
             CancellationToken.None
         );
 
-        Assert.Equal("configured-queue", queueServiceClient.QueueName);
+        Assert.Equal(ConfiguredQueueName, harness.QueueService.MainQueueName);
     }
 
-    private static AzureStorageQueueClient BuildSut(
-        QueueServiceClient queueServiceClient,
-        string queueName = "storage-process-job",
-        int visibilityTimeoutMinutes = 10
-    )
-    {
-        var options = Options.Create(
-            new StorageProcessJobOptions
-            {
-                QueueName = queueName,
-                MessageVisibilityTimeoutMinutes = visibilityTimeoutMinutes,
-                CsvParserName = "TypeOne",
-            }
+    private static StorageQueueMessage CreateStorageQueueMessage() =>
+        new(MessageText, MessageId, PopReceipt);
+
+    private static QueueMessage CreateQueueMessage(int dequeueCount) =>
+        QueuesModelFactory.QueueMessage(
+            messageId: MessageId,
+            popReceipt: PopReceipt,
+            body: BinaryData.FromString(MessageText),
+            dequeueCount: dequeueCount,
+            insertedOn: null,
+            expiresOn: null,
+            nextVisibleOn: null
         );
 
-        return new AzureStorageQueueClient(queueServiceClient, options);
-    }
-
-    private sealed class TestQueueServiceClient(QueueClient queueClient) : QueueServiceClient
+    private sealed class TestHarness
     {
-        public string? QueueName { get; private set; }
+        public QueueClientSpy MainQueue { get; }
+        public QueueClientSpy PoisonQueue { get; }
+        public QueueServiceClientSpy QueueService { get; }
+        public AzureStorageQueueClient Sut { get; }
 
-        public override QueueClient GetQueueClient(string queueName)
+        public TestHarness(
+            QueueMessage? receivedMessage = null,
+            string queueName = DefaultQueueName,
+            int visibilityTimeoutMinutes = 10,
+            int maxDequeueCount = 1
+        )
         {
-            QueueName = queueName;
-            return queueClient;
+            MainQueue = new QueueClientSpy(receivedMessage);
+            PoisonQueue = new QueueClientSpy(null);
+            QueueService = new QueueServiceClientSpy(MainQueue, PoisonQueue);
+
+            var options = Options.Create(
+                new StorageProcessJobOptions
+                {
+                    QueueName = queueName,
+                    MaxDequeueCount = maxDequeueCount,
+                    MessageVisibilityTimeoutMinutes = visibilityTimeoutMinutes,
+                    CsvParserName = "TypeOne",
+                }
+            );
+
+            Sut = new AzureStorageQueueClient(
+                NullLogger<AzureStorageQueueClient>.Instance,
+                QueueService,
+                options
+            );
         }
     }
 
-    private sealed class TestQueueClient(
+    private sealed class QueueServiceClientSpy(QueueClientSpy mainQueue, QueueClientSpy poisonQueue)
+        : QueueServiceClient
+    {
+        public string? MainQueueName { get; private set; }
+        public string? PoisonQueueName { get; private set; }
+
+        public override QueueClient GetQueueClient(string queueName)
+        {
+            if (queueName.EndsWith("-poison", StringComparison.Ordinal))
+            {
+                PoisonQueueName = queueName;
+                return poisonQueue;
+            }
+
+            MainQueueName = queueName;
+            return mainQueue;
+        }
+    }
+
+    private sealed class QueueClientSpy(
         QueueMessage? message,
-        string updatedPopReceipt = "updated-pop-receipt"
+        string updatedPopReceipt = UpdatedPopReceipt
     ) : QueueClient
     {
         public string? DeletedMessageId { get; private set; }
@@ -193,6 +247,7 @@ public class AzureStorageQueueClientTests
         public string? UpdatedPopReceipt { get; private set; }
         public TimeSpan? UpdatedVisibilityTimeout { get; private set; }
         public TimeSpan? ReceivedVisibilityTimeout { get; private set; }
+        public string? SentMessageText { get; private set; }
 
         public override Task<Response<QueueMessage>> ReceiveMessageAsync(
             TimeSpan? visibilityTimeout = null,
@@ -214,6 +269,26 @@ public class AzureStorageQueueClientTests
             DeletedPopReceipt = popReceipt;
 
             return Task.FromResult(Mock.Of<Response>());
+        }
+
+        public override Task<Response<SendReceipt>> SendMessageAsync(
+            string messageText,
+            TimeSpan? visibilityTimeout = null,
+            TimeSpan? timeToLive = null,
+            CancellationToken cancellationToken = default
+        )
+        {
+            SentMessageText = messageText;
+
+            var sendReceipt = QueuesModelFactory.SendReceipt(
+                "poison-message-id",
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(7),
+                "poison-pop-receipt",
+                DateTimeOffset.UtcNow
+            );
+
+            return Task.FromResult(Response.FromValue(sendReceipt, Mock.Of<Response>()));
         }
 
         public override Task<Response<UpdateReceipt>> UpdateMessageAsync(

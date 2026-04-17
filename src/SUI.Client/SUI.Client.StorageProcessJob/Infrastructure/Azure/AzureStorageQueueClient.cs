@@ -1,5 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
 using Azure.Storage.Queues;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SUI.Client.StorageProcessJob.Application;
 using SUI.Client.StorageProcessJob.Application.Interfaces;
@@ -7,6 +7,7 @@ using SUI.Client.StorageProcessJob.Application.Interfaces;
 namespace SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
 public sealed class AzureStorageQueueClient(
+    ILogger<AzureStorageQueueClient> logger,
     QueueServiceClient queueServiceClient,
     IOptions<StorageProcessJobOptions> options
 ) : IStorageQueueClient
@@ -20,9 +21,37 @@ public sealed class AzureStorageQueueClient(
         );
         var message = response?.Value;
 
-        return message is null
-            ? null
-            : new StorageQueueMessage(message.MessageText, message.MessageId, message.PopReceipt);
+        if (message is null)
+        {
+            return null;
+        }
+
+        if (message.DequeueCount > options.Value.MaxDequeueCount)
+        {
+            var poisonQueueName = $"{options.Value.QueueName}-poison";
+            logger.LogWarning(
+                "Moving queue message {MessageId} to poison queue {PoisonQueueName} after {DequeueCount} delivery attempts.",
+                message.MessageId,
+                poisonQueueName,
+                message.DequeueCount
+            );
+
+            var poisonQueueClient = queueServiceClient.GetQueueClient(poisonQueueName);
+            await poisonQueueClient.SendMessageAsync(
+                message.MessageText,
+                cancellationToken: cancellationToken
+            );
+
+            await queueClient.DeleteMessageAsync(
+                message.MessageId,
+                message.PopReceipt,
+                cancellationToken
+            );
+
+            return null;
+        }
+
+        return new StorageQueueMessage(message.MessageText, message.MessageId, message.PopReceipt);
     }
 
     public async Task DeleteMessageAsync(

@@ -25,11 +25,12 @@ builder
     .Bind(builder.Configuration.GetSection(StorageProcessJobOptions.SectionName))
     .Validate(
         options =>
-            options.MessageVisibilityTimeoutMinutes > 0
+            options.MaxDequeueCount > 0
+            && options.MessageVisibilityTimeoutMinutes > 0
             && options.MessageVisibilityRenewalIntervalMinutes > 0
             && options.MessageVisibilityRenewalIntervalMinutes
                 < options.MessageVisibilityTimeoutMinutes,
-        "Message visibility renewal interval must be positive and less than the visibility timeout."
+        "MaxDequeueCount must be positive, and the message visibility renewal interval must be positive and less than the visibility timeout."
     )
     .ValidateOnStart();
 
