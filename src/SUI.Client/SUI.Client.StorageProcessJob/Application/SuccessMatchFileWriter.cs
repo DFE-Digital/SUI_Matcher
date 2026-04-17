@@ -13,7 +13,7 @@ public sealed class SuccessMatchFileWriter(
     IOptions<StorageProcessJobOptions> options
 ) : ISuccessMatchFileWriter
 {
-    private const string IdHeader = "LLId";
+    private const string IdHeader = "LL ID";
     private const string TypeHeader = "Type";
     private const string NhsNumberHeader = "NhsNumber";
     private const string InputIdHeader = "Id";
