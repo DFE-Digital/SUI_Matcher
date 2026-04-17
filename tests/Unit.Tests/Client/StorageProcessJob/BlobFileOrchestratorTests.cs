@@ -56,6 +56,8 @@ public class BlobFileOrchestratorTests
     public async Task Should_ProcessBlob_When_QueueMessageIsValid()
     {
         var queueMessage = new StorageBlobMessage("incoming", "test-file.csv");
+        IEnumerable<CsvRecordDto>? capturedRecords = null;
+
         _blobFileReader
             .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
             .ReturnsAsync(BinaryData.FromString(ValidBlobContent));
@@ -67,6 +69,9 @@ public class BlobFileOrchestratorTests
                     CancellationToken.None
                 )
             )
+            .Callback<IEnumerable<CsvRecordDto>, string, CancellationToken>(
+                (records, _, _) => capturedRecords = records.ToList()
+            )
             .ReturnsAsync(CreateMatchedResults());
 
         await _sut.ProcessAsync(queueMessage, CancellationToken.None);
@@ -75,17 +80,20 @@ public class BlobFileOrchestratorTests
             x => x.GetBlobContents(queueMessage, CancellationToken.None),
             Times.Once
         );
+
+        Assert.NotNull(capturedRecords);
+        var recordsList = capturedRecords.ToList();
+        var record = Assert.Single(recordsList);
+        Assert.Equal("1111", record.Record["Id"]);
+        Assert.Equal("Jane", record.Record["GivenName"]);
+        Assert.Equal("Doe", record.Record["FamilyName"]);
+        Assert.Equal("2012-05-10", record.Record["DOB"]);
+        Assert.Equal("SW1A 1AA", record.Record["Postcode"]);
+
         _blobPayloadProcessor.Verify(
             x =>
                 x.ProcessAsync(
-                    It.Is<IEnumerable<CsvRecordDto>>(records =>
-                        records.Count() == 1
-                        && records.First().Record["Id"] == "1111"
-                        && records.First().Record["GivenName"] == "Jane"
-                        && records.First().Record["FamilyName"] == "Doe"
-                        && records.First().Record["DOB"] == "2012-05-10"
-                        && records.First().Record["Postcode"] == "SW1A 1AA"
-                    ),
+                    It.IsAny<IEnumerable<CsvRecordDto>>(),
                     "test-file.csv",
                     CancellationToken.None
                 ),
