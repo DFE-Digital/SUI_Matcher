@@ -47,7 +47,9 @@ public class QueueFileProcessor(
         }
 
         logger.LogInformation("Finished processing queue message {MessageId}.", message.MessageId);
-        await queueClient.DeleteMessageAsync(currentMessage, cancellationToken);
+
+        // At this point we don't want to stop the message being deleted as it's been processed successfully.
+        await queueClient.DeleteMessageAsync(currentMessage, CancellationToken.None);
     }
 
     private async Task RenewVisibilityUntilCancelledAsync(
