@@ -38,6 +38,8 @@ public class QueueFileProcessor(
 
         try
         {
+            // Do we want to delete the message if there is an exception thrown from this?
+            // I would say yes, then it can be dealt with manually by checking the logs to see what happened.
             await blobFileOrchestrator.ProcessAsync(blobMessage, cancellationToken);
         }
         finally
