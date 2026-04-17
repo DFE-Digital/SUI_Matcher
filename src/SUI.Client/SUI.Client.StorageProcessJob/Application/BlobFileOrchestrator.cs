@@ -49,7 +49,6 @@ public sealed class BlobFileOrchestrator(
             cancellationToken
         );
 
-        // Just logging for now. Next: Process results
         logger.LogInformation(
             "Completed processing blob {BlobName}. Total records: {TotalRecords}, Successful matches: {SuccessfulMatches}.",
             queueMessage.BlobName,
