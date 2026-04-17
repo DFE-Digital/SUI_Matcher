@@ -1,6 +1,6 @@
 using SUI.Client.Core.Infrastructure.CsvParsers;
 
-namespace Unit.Tests.StorageProcessFunction;
+namespace Unit.Tests.Client.CoreTests.InfrastructureTests;
 
 public class CsvHeaderValidatorTests
 {
@@ -8,7 +8,7 @@ public class CsvHeaderValidatorTests
     public void Should_NotThrow_When_HeadersArePresent()
     {
         var headers = new HashSet<string>(
-            ["GivenName", "FamilyName", "DOB", "Postcode"],
+            ["Id", "GivenName", "FamilyName", "DOB", "Postcode"],
             StringComparer.OrdinalIgnoreCase
         );
 
@@ -27,6 +27,7 @@ public class CsvHeaderValidatorTests
             CsvHeaderValidator.Validate(headers, CsvParserNameConstants.TypeOne)
         );
 
+        Assert.Contains("Id", exception.Message);
         Assert.Contains("Postcode", exception.Message);
     }
 

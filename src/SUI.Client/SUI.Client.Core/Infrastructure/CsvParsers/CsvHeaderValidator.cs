@@ -8,6 +8,7 @@ public static class CsvHeaderValidator
         {
             CsvParserNameConstants.TypeOne => new[]
             {
+                "Id",
                 "GivenName",
                 "FamilyName",
                 "DOB",

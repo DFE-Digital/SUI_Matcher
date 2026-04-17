@@ -240,7 +240,7 @@ public class BlobFileOrchestratorTests
             _sut.ProcessAsync(queueMessage, CancellationToken.None)
         );
 
-        Assert.Equal("CSV is missing required headers: Postcode.", exception.Message);
+        Assert.Equal("CSV is missing required headers: Id, Postcode.", exception.Message);
         _blobPayloadProcessor.Verify(
             x =>
                 x.ProcessAsync(
