@@ -12,9 +12,9 @@ namespace Unit.Tests.Client.StorageProcessJob;
 
 public class SuccessMatchFileWriterTests
 {
-    private static readonly string HeaderOnlyCsv = $"LLId,Type,NhsNumber{Environment.NewLine}";
+    private static readonly string HeaderOnlyCsv = $"LL ID,Type,NhsNumber{Environment.NewLine}";
     private static readonly string SingleRowCsv =
-        $"LLId,Type,NhsNumber{Environment.NewLine}1111,NHSNo,92938475748{Environment.NewLine}";
+        $"LL ID,Type,NhsNumber{Environment.NewLine}1111,NHSNo,92938475748{Environment.NewLine}";
 
     private readonly Mock<IBlobStorageClient> _blobStorageClient = new();
     private readonly FakeTimeProvider _timeProvider = new(
