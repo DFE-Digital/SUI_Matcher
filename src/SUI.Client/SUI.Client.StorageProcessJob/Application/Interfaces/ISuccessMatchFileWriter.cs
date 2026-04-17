@@ -5,6 +5,10 @@ namespace SUI.Client.StorageProcessJob.Application.Interfaces;
 
 public interface ISuccessMatchFileWriter
 {
+    /// <summary>
+    /// Writer to filter out and write successful matches with a confident score
+    /// to a new CSV file in blob storage.
+    /// </summary>
     Task WriteAsync(
         string sourceBlobName,
         IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
