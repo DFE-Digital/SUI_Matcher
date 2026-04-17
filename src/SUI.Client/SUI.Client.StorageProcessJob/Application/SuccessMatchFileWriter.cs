@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
@@ -9,6 +10,7 @@ namespace SUI.Client.StorageProcessJob.Application;
 
 public sealed class SuccessMatchFileWriter(
     TimeProvider timeProvider,
+    ILogger<SuccessMatchFileWriter> logger,
     IBlobStorageClient blobStorageClient,
     IOptions<StorageProcessJobOptions> options
 ) : ISuccessMatchFileWriter
@@ -27,12 +29,21 @@ public sealed class SuccessMatchFileWriter(
         CancellationToken cancellationToken
     )
     {
-        var successfulMatches = matchedResults
-            .Where(record =>
-                record is { IsSuccess: true, ApiResult.Result.IsHighConfidenceMatch: true }
-            )
-            .Select(MapSuccessfulMatchRecord)
-            .ToList();
+        var successfulMatches = new List<SuccessfulMatchRecord>();
+
+        var areMatchedSuccess = matchedResults.Where(record =>
+            record is { IsSuccess: true, ApiResult.Result.IsHighConfidenceMatch: true }
+        );
+
+        foreach (var matchedResult in areMatchedSuccess)
+        {
+            var successfulMatch = TryMapSuccessfulMatchRecord(sourceBlobName, matchedResult);
+
+            if (successfulMatch is not null)
+            {
+                successfulMatches.Add(successfulMatch);
+            }
+        }
 
         var csvContent = BuildCsv(successfulMatches);
         var destinationBlobName = BuildSuccessBlobName(sourceBlobName);
@@ -46,7 +57,8 @@ public sealed class SuccessMatchFileWriter(
         );
     }
 
-    private static SuccessfulMatchRecord MapSuccessfulMatchRecord(
+    private SuccessfulMatchRecord? TryMapSuccessfulMatchRecord(
+        string sourceBlobName,
         ProcessedMatchRecord<CsvRecordDto> matchedRecord
     )
     {
@@ -55,18 +67,28 @@ public sealed class SuccessMatchFileWriter(
             || string.IsNullOrWhiteSpace(id)
         )
         {
-            throw new InvalidOperationException(
-                $"Successful match record is missing required '{InputIdHeader}' field."
+            logger.LogWarning(
+                "Skipping successful match record from blob {SourceBlobName} because required field {FieldName} is missing.",
+                sourceBlobName,
+                InputIdHeader
             );
+
+            return null;
         }
 
         var nhsNumber = matchedRecord.ApiResult?.Result?.NhsNumber;
 
         if (string.IsNullOrWhiteSpace(nhsNumber))
         {
-            throw new InvalidOperationException(
-                $"Successful match record for '{id}' is missing NHS number."
+            logger.LogWarning(
+                "Skipping successful match record from blob {SourceBlobName} for {InputIdHeader} {Id} because required field {FieldName} is missing.",
+                sourceBlobName,
+                InputIdHeader,
+                id,
+                NhsNumberHeader
             );
+
+            return null;
         }
 
         return new SuccessfulMatchRecord(id, NhsNoType, nhsNumber);
