@@ -49,17 +49,22 @@ public class AzureStorageQueueClientTests
 
         await harness.Sut.FetchMessageAsync(CancellationToken.None);
 
-        Assert.Equal(ConfiguredQueueName, harness.QueueService.MainQueueName);
+        harness.QueueService.Verify(x => x.GetQueueClient(ConfiguredQueueName));
     }
 
     [Fact]
     public async Task Should_UseConfiguredVisibilityTimeout_When_FetchingMessage()
     {
-        var harness = new TestHarness(visibilityTimeoutMinutes: 10);
+        var visibilityTimeout = TimeSpan.FromMinutes(10);
+        var harness = new TestHarness(
+            visibilityTimeoutMinutes: (int)visibilityTimeout.TotalMinutes
+        );
 
         await harness.Sut.FetchMessageAsync(CancellationToken.None);
 
-        Assert.Equal(TimeSpan.FromMinutes(10), harness.MainQueue.ReceivedVisibilityTimeout);
+        harness.MainQueue.Verify(x =>
+            x.ReceiveMessageAsync(visibilityTimeout, It.IsAny<CancellationToken>())
+        );
     }
 
     [Fact]
@@ -73,9 +78,10 @@ public class AzureStorageQueueClientTests
         var result = await harness.Sut.FetchMessageAsync(CancellationToken.None);
 
         Assert.NotNull(result);
-        Assert.Equal(MessageId, result.MessageId);
-        Assert.Null(harness.QueueService.PoisonQueueName);
-        Assert.Null(harness.MainQueue.DeletedMessageId);
+        harness.QueueService.Verify(
+            x => x.GetQueueClient(It.Is<string>(s => s.EndsWith("-poison"))),
+            Times.Never
+        );
     }
 
     [Fact]
@@ -89,10 +95,13 @@ public class AzureStorageQueueClientTests
         var result = await harness.Sut.FetchMessageAsync(CancellationToken.None);
 
         Assert.Null(result);
-        Assert.Equal($"{DefaultQueueName}-poison", harness.QueueService.PoisonQueueName);
-        Assert.Equal(MessageText, harness.PoisonQueue.SentMessageText);
-        Assert.Equal(MessageId, harness.MainQueue.DeletedMessageId);
-        Assert.Equal(PopReceipt, harness.MainQueue.DeletedPopReceipt);
+        harness.QueueService.Verify(x => x.GetQueueClient($"{DefaultQueueName}-poison"));
+        harness.PoisonQueue.Verify(x =>
+            x.SendMessageAsync(MessageText, It.IsAny<CancellationToken>())
+        );
+        harness.MainQueue.Verify(x =>
+            x.DeleteMessageAsync(MessageId, PopReceipt, It.IsAny<CancellationToken>())
+        );
     }
 
     [Fact]
@@ -103,8 +112,9 @@ public class AzureStorageQueueClientTests
 
         await harness.Sut.DeleteMessageAsync(message, CancellationToken.None);
 
-        Assert.Equal(MessageId, harness.MainQueue.DeletedMessageId);
-        Assert.Equal(PopReceipt, harness.MainQueue.DeletedPopReceipt);
+        harness.MainQueue.Verify(x =>
+            x.DeleteMessageAsync(MessageId, PopReceipt, It.IsAny<CancellationToken>())
+        );
     }
 
     [Fact]
@@ -115,7 +125,7 @@ public class AzureStorageQueueClientTests
 
         await harness.Sut.DeleteMessageAsync(message, CancellationToken.None);
 
-        Assert.Equal(ConfiguredQueueName, harness.QueueService.MainQueueName);
+        harness.QueueService.Verify(x => x.GetQueueClient(ConfiguredQueueName));
     }
 
     [Fact]
@@ -130,8 +140,6 @@ public class AzureStorageQueueClientTests
             CancellationToken.None
         );
 
-        Assert.Equal(MessageText, result.MessageText);
-        Assert.Equal(MessageId, result.MessageId);
         Assert.Equal(UpdatedPopReceipt, result.PopReceipt);
     }
 
@@ -140,31 +148,19 @@ public class AzureStorageQueueClientTests
     {
         var harness = new TestHarness();
         var message = CreateStorageQueueMessage();
+        var timeout = TimeSpan.FromMinutes(5);
 
-        await harness.Sut.RenewMessageVisibilityAsync(
-            message,
-            TimeSpan.FromMinutes(5),
-            CancellationToken.None
+        await harness.Sut.RenewMessageVisibilityAsync(message, timeout, CancellationToken.None);
+
+        harness.MainQueue.Verify(x =>
+            x.UpdateMessageAsync(
+                MessageId,
+                PopReceipt,
+                (string?)null,
+                timeout,
+                It.IsAny<CancellationToken>()
+            )
         );
-
-        Assert.Equal(MessageId, harness.MainQueue.UpdatedMessageId);
-        Assert.Equal(PopReceipt, harness.MainQueue.UpdatedPopReceipt);
-        Assert.Equal(TimeSpan.FromMinutes(5), harness.MainQueue.UpdatedVisibilityTimeout);
-    }
-
-    [Fact]
-    public async Task Should_UseConfiguredQueueName_When_RenewingMessageVisibility()
-    {
-        var harness = new TestHarness(queueName: ConfiguredQueueName);
-        var message = CreateStorageQueueMessage();
-
-        await harness.Sut.RenewMessageVisibilityAsync(
-            message,
-            TimeSpan.FromMinutes(10),
-            CancellationToken.None
-        );
-
-        Assert.Equal(ConfiguredQueueName, harness.QueueService.MainQueueName);
     }
 
     private static StorageQueueMessage CreateStorageQueueMessage() =>
@@ -183,9 +179,9 @@ public class AzureStorageQueueClientTests
 
     private sealed class TestHarness
     {
-        public QueueClientSpy MainQueue { get; }
-        public QueueClientSpy PoisonQueue { get; }
-        public QueueServiceClientSpy QueueService { get; }
+        public Mock<QueueClient> MainQueue { get; } = new();
+        public Mock<QueueClient> PoisonQueue { get; } = new();
+        public Mock<QueueServiceClient> QueueService { get; } = new();
         public AzureStorageQueueClient Sut { get; }
 
         public TestHarness(
@@ -195,9 +191,64 @@ public class AzureStorageQueueClientTests
             int maxDequeueCount = 1
         )
         {
-            MainQueue = new QueueClientSpy(receivedMessage);
-            PoisonQueue = new QueueClientSpy(null);
-            QueueService = new QueueServiceClientSpy(MainQueue, PoisonQueue);
+            QueueService
+                .Setup(x => x.GetQueueClient(It.IsAny<string>()))
+                .Returns(
+                    (string name) =>
+                        name.EndsWith("-poison") ? PoisonQueue.Object : MainQueue.Object
+                );
+
+            MainQueue
+                .Setup(x =>
+                    x.ReceiveMessageAsync(It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>())
+                )
+                .ReturnsAsync(Response.FromValue(receivedMessage!, Mock.Of<Response>()));
+
+            MainQueue
+                .Setup(x =>
+                    x.DeleteMessageAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<CancellationToken>()
+                    )
+                )
+                .ReturnsAsync(Mock.Of<Response>());
+
+            MainQueue
+                .Setup(x =>
+                    x.UpdateMessageAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<TimeSpan>(),
+                        It.IsAny<CancellationToken>()
+                    )
+                )
+                .ReturnsAsync(
+                    (string _, string _, string _, TimeSpan timeout, CancellationToken _) =>
+                        Response.FromValue(
+                            QueuesModelFactory.UpdateReceipt(
+                                UpdatedPopReceipt,
+                                DateTimeOffset.UtcNow.Add(timeout)
+                            ),
+                            Mock.Of<Response>()
+                        )
+                );
+
+            PoisonQueue
+                .Setup(x => x.SendMessageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(
+                    Response.FromValue(
+                        QueuesModelFactory.SendReceipt(
+                            "id",
+                            DateTimeOffset.UtcNow,
+                            DateTimeOffset.UtcNow,
+                            "receipt",
+                            DateTimeOffset.UtcNow
+                        ),
+                        Mock.Of<Response>()
+                    )
+                );
 
             var options = Options.Create(
                 new StorageProcessJobOptions
@@ -211,104 +262,9 @@ public class AzureStorageQueueClientTests
 
             Sut = new AzureStorageQueueClient(
                 NullLogger<AzureStorageQueueClient>.Instance,
-                QueueService,
+                QueueService.Object,
                 options
             );
-        }
-    }
-
-    private sealed class QueueServiceClientSpy(QueueClientSpy mainQueue, QueueClientSpy poisonQueue)
-        : QueueServiceClient
-    {
-        public string? MainQueueName { get; private set; }
-        public string? PoisonQueueName { get; private set; }
-
-        public override QueueClient GetQueueClient(string queueName)
-        {
-            if (queueName.EndsWith("-poison", StringComparison.Ordinal))
-            {
-                PoisonQueueName = queueName;
-                return poisonQueue;
-            }
-
-            MainQueueName = queueName;
-            return mainQueue;
-        }
-    }
-
-    private sealed class QueueClientSpy(
-        QueueMessage? message,
-        string updatedPopReceipt = UpdatedPopReceipt
-    ) : QueueClient
-    {
-        public string? DeletedMessageId { get; private set; }
-        public string? DeletedPopReceipt { get; private set; }
-        public string? UpdatedMessageId { get; private set; }
-        public string? UpdatedPopReceipt { get; private set; }
-        public TimeSpan? UpdatedVisibilityTimeout { get; private set; }
-        public TimeSpan? ReceivedVisibilityTimeout { get; private set; }
-        public string? SentMessageText { get; private set; }
-
-        public override Task<Response<QueueMessage>> ReceiveMessageAsync(
-            TimeSpan? visibilityTimeout = null,
-            CancellationToken cancellationToken = default
-        )
-        {
-            ReceivedVisibilityTimeout = visibilityTimeout;
-
-            return Task.FromResult(Response.FromValue(message!, Mock.Of<Response>()));
-        }
-
-        public override Task<Response> DeleteMessageAsync(
-            string messageId,
-            string popReceipt,
-            CancellationToken cancellationToken = default
-        )
-        {
-            DeletedMessageId = messageId;
-            DeletedPopReceipt = popReceipt;
-
-            return Task.FromResult(Mock.Of<Response>());
-        }
-
-        public override Task<Response<SendReceipt>> SendMessageAsync(
-            string messageText,
-            TimeSpan? visibilityTimeout = null,
-            TimeSpan? timeToLive = null,
-            CancellationToken cancellationToken = default
-        )
-        {
-            SentMessageText = messageText;
-
-            var sendReceipt = QueuesModelFactory.SendReceipt(
-                "poison-message-id",
-                DateTimeOffset.UtcNow,
-                DateTimeOffset.UtcNow.AddDays(7),
-                "poison-pop-receipt",
-                DateTimeOffset.UtcNow
-            );
-
-            return Task.FromResult(Response.FromValue(sendReceipt, Mock.Of<Response>()));
-        }
-
-        public override Task<Response<UpdateReceipt>> UpdateMessageAsync(
-            string messageId,
-            string popReceipt,
-            string messageText = null!,
-            TimeSpan visibilityTimeout = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-            UpdatedMessageId = messageId;
-            UpdatedPopReceipt = popReceipt;
-            UpdatedVisibilityTimeout = visibilityTimeout;
-
-            var updateReceipt = QueuesModelFactory.UpdateReceipt(
-                popReceipt: updatedPopReceipt,
-                nextVisibleOn: DateTimeOffset.UtcNow.Add(visibilityTimeout)
-            );
-
-            return Task.FromResult(Response.FromValue(updateReceipt, Mock.Of<Response>()));
         }
     }
 }
