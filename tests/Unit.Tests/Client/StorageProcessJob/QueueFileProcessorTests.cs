@@ -33,6 +33,18 @@ public class QueueFileProcessorTests
     }
 
     [Fact]
+    public async Task Should_DeleteMessage_When_RunCancellationIsRequestedAfterProcessingSucceeds()
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var harness = new TestHarness(cancellationTokenSource.Token);
+        harness.CancelRunTokenAfterProcessingCompletes(cancellationTokenSource);
+
+        await harness.Sut.RunAsync(cancellationTokenSource.Token);
+
+        harness.VerifyDeletedMessage("pop-receipt");
+    }
+
+    [Fact]
     public async Task Should_NotDeleteMessage_When_ParsingFails()
     {
         var harness = new TestHarness();
@@ -115,19 +127,21 @@ public class QueueFileProcessorTests
         public Mock<IStorageQueueClient> QueueClient { get; } = new();
         public Mock<IStorageQueueMessageParser> MessageParser { get; } = new();
         public Mock<IBlobFileOrchestrator> BlobFileOrchestrator { get; } = new();
-        public FakeTimeProvider TimeProvider { get; } = new();
+        private FakeTimeProvider TimeProvider { get; } = new();
 
         public StorageQueueMessage QueueMessage { get; } =
             new("queue-message-body", "message-id", "pop-receipt");
 
         public StorageBlobMessage BlobMessage { get; } = new("incoming", "test-file.csv");
+        private CancellationToken RunCancellationToken { get; }
 
         public QueueFileProcessor Sut { get; }
 
-        public TestHarness()
+        public TestHarness(CancellationToken runCancellationToken = default)
         {
+            RunCancellationToken = runCancellationToken;
             QueueClient
-                .Setup(x => x.FetchMessageAsync(CancellationToken.None))
+                .Setup(x => x.FetchMessageAsync(RunCancellationToken))
                 .ReturnsAsync(QueueMessage);
             MessageParser.Setup(x => x.Parse(QueueMessage.MessageText)).Returns(BlobMessage);
             QueueClient
@@ -160,8 +174,26 @@ public class QueueFileProcessorTests
         public void ProcessBlobWhileRenewingVisibility()
         {
             BlobFileOrchestrator
-                .Setup(x => x.ProcessAsync(BlobMessage, CancellationToken.None))
+                .Setup(x => x.ProcessAsync(BlobMessage, RunCancellationToken))
                 .Returns(AdvanceToFirstRenewalAsync);
+        }
+
+        /// <summary>
+        /// Mimics the app shutting down immediately after processing finishes.
+        /// Unlikely this will happen but we should test just in case!
+        /// </summary>
+        /// <param name="cancellationTokenSource"></param>
+        public void CancelRunTokenAfterProcessingCompletes(
+            CancellationTokenSource cancellationTokenSource
+        )
+        {
+            BlobFileOrchestrator
+                .Setup(x => x.ProcessAsync(BlobMessage, RunCancellationToken))
+                .Returns(async () =>
+                {
+                    await Task.Yield();
+                    await cancellationTokenSource.CancelAsync();
+                });
         }
 
         public async Task AdvanceToFirstRenewalAsync()
@@ -194,13 +226,13 @@ public class QueueFileProcessorTests
 
         public void VerifyQueueMessageWasRead()
         {
-            QueueClient.Verify(x => x.FetchMessageAsync(CancellationToken.None), Times.Once);
+            QueueClient.Verify(x => x.FetchMessageAsync(RunCancellationToken), Times.Once);
         }
 
         public void VerifyBlobOrchestratorWasCalled()
         {
             BlobFileOrchestrator.Verify(
-                x => x.ProcessAsync(BlobMessage, CancellationToken.None),
+                x => x.ProcessAsync(BlobMessage, RunCancellationToken),
                 Times.Once
             );
         }
