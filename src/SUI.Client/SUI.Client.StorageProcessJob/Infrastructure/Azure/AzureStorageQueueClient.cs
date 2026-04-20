@@ -37,6 +37,8 @@ public sealed class AzureStorageQueueClient(
             );
 
             var poisonQueueClient = queueServiceClient.GetQueueClient(poisonQueueName);
+            await poisonQueueClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+
             await poisonQueueClient.SendMessageAsync(
                 message.MessageText,
                 cancellationToken: cancellationToken
