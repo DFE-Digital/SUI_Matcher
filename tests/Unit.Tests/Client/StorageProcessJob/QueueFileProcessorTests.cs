@@ -77,6 +77,30 @@ public class QueueFileProcessorTests
     }
 
     [Fact]
+    public async Task Should_NotDeleteMessage_When_VisibilityRenewalFailsBeforeProcessingCompletes()
+    {
+        var harness = new TestHarness();
+        harness.FailVisibilityRenewalWhileProcessingContinues();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            harness.Sut.RunAsync(CancellationToken.None)
+        );
+
+        harness.VerifyMessageWasNotDeleted();
+    }
+
+    [Fact]
+    public async Task Should_DeleteMessage_When_VisibilityRenewalFailsAfterProcessingCompletes()
+    {
+        var harness = new TestHarness();
+        harness.FailVisibilityRenewalAfterProcessingCompletes();
+
+        await harness.Sut.RunAsync(CancellationToken.None);
+
+        harness.VerifyDeletedMessage("pop-receipt");
+    }
+
+    [Fact]
     public async Task Should_StartProcessingBeforeDeletingMessage()
     {
         var harness = new TestHarness();
@@ -176,6 +200,71 @@ public class QueueFileProcessorTests
             BlobFileOrchestrator
                 .Setup(x => x.ProcessAsync(BlobMessage, RunCancellationToken))
                 .Returns(AdvanceToFirstRenewalAsync);
+        }
+
+        public void FailVisibilityRenewalWhileProcessingContinues()
+        {
+            var renewalAttempted = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously
+            );
+
+            QueueClient
+                .Setup(x =>
+                    x.RenewMessageVisibilityAsync(
+                        It.IsAny<StorageQueueMessage>(),
+                        It.IsAny<TimeSpan>(),
+                        It.IsAny<CancellationToken>()
+                    )
+                )
+                .Returns(async () =>
+                {
+                    renewalAttempted.SetResult();
+                    await Task.Yield();
+                    throw new InvalidOperationException("Renewal failed.");
+                });
+
+            BlobFileOrchestrator
+                .Setup(x => x.ProcessAsync(BlobMessage, RunCancellationToken))
+                .Returns(async () =>
+                {
+                    await AdvanceToFirstRenewalAsync();
+                    await renewalAttempted.Task;
+                    await Task.Delay(10);
+                });
+        }
+
+        public void FailVisibilityRenewalAfterProcessingCompletes()
+        {
+            var processingCompleted = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously
+            );
+            var renewalStarted = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously
+            );
+
+            BlobFileOrchestrator
+                .Setup(x => x.ProcessAsync(BlobMessage, RunCancellationToken))
+                .Returns(async () =>
+                {
+                    await AdvanceToFirstRenewalAsync();
+                    await renewalStarted.Task;
+                    processingCompleted.SetResult();
+                });
+
+            QueueClient
+                .Setup(x =>
+                    x.RenewMessageVisibilityAsync(
+                        It.IsAny<StorageQueueMessage>(),
+                        It.IsAny<TimeSpan>(),
+                        It.IsAny<CancellationToken>()
+                    )
+                )
+                .Returns(async () =>
+                {
+                    renewalStarted.SetResult();
+                    await processingCompleted.Task;
+                    throw new InvalidOperationException("Renewal failed.");
+                });
         }
 
         /// <summary>
