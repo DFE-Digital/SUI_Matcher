@@ -77,6 +77,20 @@ public class QueueFileProcessorTests
     }
 
     [Fact]
+    public async Task Should_StopRenewingVisibility_When_BlobProcessingThrowsSynchronously()
+    {
+        var harness = new TestHarness();
+        harness.ThrowSynchronouslyAfterStartingRenewal();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            harness.Sut.RunAsync(CancellationToken.None)
+        );
+
+        harness.VerifyMessageWasNotDeleted();
+        harness.VerifyVisibilityWasNotRenewedAfterRunCompleted();
+    }
+
+    [Fact]
     public async Task Should_NotDeleteMessage_When_VisibilityRenewalFailsBeforeProcessingCompletes()
     {
         var harness = new TestHarness();
@@ -265,6 +279,18 @@ public class QueueFileProcessorTests
                     await processingCompleted.Task;
                     throw new InvalidOperationException("Renewal failed.");
                 });
+        }
+
+        public void ThrowSynchronouslyAfterStartingRenewal()
+        {
+            BlobFileOrchestrator
+                .Setup(x => x.ProcessAsync(BlobMessage, RunCancellationToken))
+                .Callback(() =>
+                {
+                    TimeProvider.Advance(TimeSpan.FromMinutes(5));
+                    throw new InvalidOperationException("Processing failed synchronously.");
+                })
+                .Returns(Task.CompletedTask);
         }
 
         /// <summary>

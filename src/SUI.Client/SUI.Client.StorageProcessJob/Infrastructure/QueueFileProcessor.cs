@@ -29,21 +29,24 @@ public class QueueFileProcessor(
 
         var blobMessage = messageParser.Parse(message.MessageText);
         var currentMessage = message;
-        var processingCompletedSuccessfully = false;
+
         using var renewalCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+        var processingTask = Task.CompletedTask;
         var renewalTask = RenewVisibilityUntilCancelledAsync(
             () => currentMessage,
             renewedMessage => currentMessage = renewedMessage,
-            () => processingCompletedSuccessfully,
+            () => processingTask.IsCompletedSuccessfully,
             renewalCts.Token
         );
 
         try
         {
+            processingTask = blobFileOrchestrator.ProcessAsync(blobMessage, cancellationToken);
+
             // Do we want to delete the message if there is an exception thrown from this?
             // I would say yes, then it can be dealt with manually by checking the logs to see what happened.
-            await blobFileOrchestrator.ProcessAsync(blobMessage, cancellationToken);
-            processingCompletedSuccessfully = true;
+            await processingTask;
         }
         finally
         {
@@ -90,10 +93,7 @@ public class QueueFileProcessor(
                 );
             }
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
         catch (Exception ex)
         {
             if (hasProcessingCompletedSuccessfully())
