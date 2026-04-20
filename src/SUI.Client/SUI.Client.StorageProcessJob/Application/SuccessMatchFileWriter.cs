@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Text;
+using CsvHelper;
+using CsvHelper.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SUI.Client.Core.Application.Models;
@@ -107,35 +109,25 @@ public sealed class SuccessMatchFileWriter(
     private static string BuildCsv(IReadOnlyCollection<SuccessfulMatchRecord> records)
     {
         var builder = new StringBuilder();
-        builder.AppendLine($"{IdHeader},{TypeHeader},{NhsNumberHeader}");
+        using var textWriter = new StringWriter(builder, CultureInfo.InvariantCulture);
+        using var csvWriter = new CsvWriter(
+            textWriter,
+            new CsvConfiguration(CultureInfo.InvariantCulture) { NewLine = Environment.NewLine }
+        );
+
+        csvWriter.WriteField(IdHeader);
+        csvWriter.WriteField(TypeHeader);
+        csvWriter.WriteField(NhsNumberHeader);
+        csvWriter.NextRecord();
 
         foreach (var record in records)
         {
-            builder.AppendLine(
-                string.Join(
-                    ",",
-                    EscapeCsvValue(record.Id),
-                    EscapeCsvValue(record.Type),
-                    EscapeCsvValue(record.NhsNumber)
-                )
-            );
+            csvWriter.WriteField(record.Id);
+            csvWriter.WriteField(record.Type);
+            csvWriter.WriteField(record.NhsNumber);
+            csvWriter.NextRecord();
         }
 
         return builder.ToString();
-    }
-
-    private static string EscapeCsvValue(string value)
-    {
-        if (
-            value.Contains(',')
-            || value.Contains('"')
-            || value.Contains('\n')
-            || value.Contains('\r')
-        )
-        {
-            return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
-        }
-
-        return value;
     }
 }
