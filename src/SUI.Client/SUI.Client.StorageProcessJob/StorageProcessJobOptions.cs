@@ -10,6 +10,9 @@ public sealed class StorageProcessJobOptions
     public string QueueName { get; init; } = "storage-process-job";
 
     public string ProcessedContainerName { get; init; } = "processed";
+    public int MaxDequeueCount { get; init; } = 1;
+    public int MessageVisibilityTimeoutMinutes { get; init; } = 10;
+    public int MessageVisibilityRenewalIntervalMinutes { get; init; } = 5;
     public string? MatchApiBaseAddress { get; init; }
     public required string CsvParserName { get; init; }
 }

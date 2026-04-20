@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Azure.Storage.Blobs;
+using Azure.Storage.Queues;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,13 +15,24 @@ using SUI.Client.Core.Infrastructure.Http;
 using SUI.Client.StorageProcessJob;
 using SUI.Client.StorageProcessJob.Application;
 using SUI.Client.StorageProcessJob.Application.Interfaces;
+using SUI.Client.StorageProcessJob.Infrastructure;
 using SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.Configure<StorageProcessJobOptions>(
-    builder.Configuration.GetSection(StorageProcessJobOptions.SectionName)
-);
+builder
+    .Services.AddOptions<StorageProcessJobOptions>()
+    .Bind(builder.Configuration.GetSection(StorageProcessJobOptions.SectionName))
+    .Validate(
+        options =>
+            options.MaxDequeueCount > 0
+            && options.MessageVisibilityTimeoutMinutes > 0
+            && options.MessageVisibilityRenewalIntervalMinutes > 0
+            && options.MessageVisibilityRenewalIntervalMinutes
+                < options.MessageVisibilityTimeoutMinutes,
+        "MaxDequeueCount must be positive, and the message visibility renewal interval must be positive and less than the visibility timeout."
+    )
+    .ValidateOnStart();
 
 builder.Services.Configure<PersonMatchingOptions>(
     builder.Configuration.GetSection(PersonMatchingOptions.SectionName)
@@ -38,7 +50,18 @@ builder.Services.AddSingleton(serviceProvider =>
     return new BlobServiceClient(connectionString);
 });
 
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var connectionString =
+        configuration["AzureWebJobsStorage"]
+        ?? throw new InvalidOperationException("AzureWebJobsStorage configuration is missing.");
+
+    return new QueueServiceClient(connectionString);
+});
+
 builder.Services.AddSingleton<IBlobStorageClient, AzureBlobStorageClient>();
+builder.Services.AddSingleton<IStorageQueueClient, AzureStorageQueueClient>();
 builder.Services.AddSingleton<IStorageQueueMessageParser, EventGridMessageParser>();
 builder.Services.AddSingleton<IBlobFileOrchestrator, BlobFileOrchestrator>();
 builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
@@ -74,9 +97,30 @@ builder.Services.AddSingleton<IPersonSpecParser<CsvRecordDto>>(serviceProvider =
 
 builder.Services.AddHttpClient();
 
+builder.Services.AddSingleton<QueueFileProcessor>();
+
 using var host = builder.Build();
+await host.StartAsync();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
-var options = host.Services.GetRequiredService<IOptions<StorageProcessJobOptions>>();
+var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
 logger.LogInformation("ACA Job started. Beginning CSV processing...");
-logger.LogInformation("Storage process opt: {Val}", options.Value.MatchApiBaseAddress);
+
+try
+{
+    var processor = host.Services.GetRequiredService<QueueFileProcessor>();
+    await processor.RunAsync(lifetime.ApplicationStopping);
+}
+catch (OperationCanceledException e) when (lifetime.ApplicationStopping.IsCancellationRequested)
+{
+    logger.LogInformation(e, "Storage process job cancelled.");
+}
+catch (Exception e)
+{
+    logger.LogError(e, "Storage process job failed.");
+    Environment.ExitCode = 1;
+}
+finally
+{
+    await host.StopAsync();
+}
