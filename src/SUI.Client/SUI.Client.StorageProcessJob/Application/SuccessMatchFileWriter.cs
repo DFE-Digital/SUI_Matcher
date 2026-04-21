@@ -59,7 +59,7 @@ public sealed class SuccessMatchFileWriter(
         var destinationBlobName = BuildSuccessBlobName(sourceBlobName);
 
         // Upload a success file only if we have results
-        if (areMatchedSuccess.Count > 0)
+        if (successfulMatches.Count > 0)
         {
             await blobStorageClient.UploadBlobAsync(
                 options.Value.SuccessContainerName,
