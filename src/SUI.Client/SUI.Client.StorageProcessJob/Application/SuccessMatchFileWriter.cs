@@ -33,8 +33,16 @@ public sealed class SuccessMatchFileWriter(
     {
         var successfulMatches = new List<SuccessfulMatchRecord>();
 
-        var areMatchedSuccess = matchedResults.Where(record =>
-            record is { IsSuccess: true, ApiResult.Result.IsHighConfidenceMatch: true }
+        var areMatchedSuccess = matchedResults
+            .Where(record =>
+                record is { IsSuccess: true, ApiResult.Result.IsHighConfidenceMatch: true }
+            )
+            .ToList();
+
+        logger.LogInformation(
+            "Found {SuccessfulMatchesCount} successful matches with high confidence in blob {SourceBlobName}.",
+            areMatchedSuccess.Count,
+            sourceBlobName
         );
 
         foreach (var matchedResult in areMatchedSuccess)
@@ -50,13 +58,17 @@ public sealed class SuccessMatchFileWriter(
         var csvContent = BuildCsv(successfulMatches);
         var destinationBlobName = BuildSuccessBlobName(sourceBlobName);
 
-        await blobStorageClient.UploadBlobAsync(
-            options.Value.SuccessContainerName,
-            destinationBlobName,
-            BinaryData.FromString(csvContent),
-            CsvContentType,
-            cancellationToken
-        );
+        // Upload a success file only if we have results
+        if (areMatchedSuccess.Count > 0)
+        {
+            await blobStorageClient.UploadBlobAsync(
+                options.Value.SuccessContainerName,
+                destinationBlobName,
+                BinaryData.FromString(csvContent),
+                CsvContentType,
+                cancellationToken
+            );
+        }
     }
 
     private SuccessfulMatchRecord? TryMapSuccessfulMatchRecord(

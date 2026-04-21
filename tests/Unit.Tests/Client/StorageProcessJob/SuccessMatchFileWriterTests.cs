@@ -13,7 +13,6 @@ namespace Unit.Tests.Client.StorageProcessJob;
 
 public class SuccessMatchFileWriterTests
 {
-    private static readonly string HeaderOnlyCsv = $"LL ID,Type,NhsNumber{Environment.NewLine}";
     private static readonly string SingleRowCsv =
         $"LL ID,Type,NhsNumber{Environment.NewLine}1111,NHSNo,92938475748{Environment.NewLine}";
     private static readonly string SingleRowWithSkippedRowsCsv =
@@ -66,30 +65,7 @@ public class SuccessMatchFileWriterTests
     }
 
     [Fact]
-    public async Task Should_ExcludeRecord_When_IsSuccessIsFalse()
-    {
-        var matchedResults = new[]
-        {
-            CreateMatchedRecord("1111", false, MatchStatus.Match, 0.99m, "92938475748"),
-        };
-
-        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
-
-        _blobStorageClient.Verify(
-            x =>
-                x.UploadBlobAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.Is<BinaryData>(data => data.ToString() == HeaderOnlyCsv),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
-    }
-
-    [Fact]
-    public async Task Should_ExcludeRecord_When_MatchIsNotHighConfidence()
+    public async Task Should_NotUploadBlob_When_MatchIsNotHighConfidence()
     {
         var matchedResults = new[]
         {
@@ -104,16 +80,36 @@ public class SuccessMatchFileWriterTests
                 x.UploadBlobAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.Is<BinaryData>(data => data.ToString() == HeaderOnlyCsv),
+                    It.IsAny<BinaryData>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 ),
-            Times.Once
+            Times.Never
         );
     }
 
     [Fact]
-    public async Task Should_SkipRecordAndLogWarning_When_EligibleRecordIsMissingId()
+    public async Task Should_NotUploadBlob_When_NoRecordsProvided()
+    {
+        var matchedResults = Array.Empty<ProcessedMatchRecord<CsvRecordDto>>();
+
+        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+
+        _blobStorageClient.Verify(
+            x =>
+                x.UploadBlobAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<BinaryData>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task Should_NotUploadBlob_When_EligibleRecordIsMissingId()
     {
         var matchedResults = new[]
         {
@@ -127,18 +123,19 @@ public class SuccessMatchFileWriterTests
                 x.UploadBlobAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.Is<BinaryData>(data => data.ToString() == HeaderOnlyCsv),
+                    It.IsAny<BinaryData>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 ),
-            Times.Once
+            Times.Never
         );
 
         VerifyWarningLogged("test-file.csv", "Id");
     }
 
+    // Edge case
     [Fact]
-    public async Task Should_SkipRecordAndLogWarning_When_EligibleRecordIsMissingNhsNumber()
+    public async Task Should_NotUploadBlob_When_EligibleRecordIsMissingNhsNumber()
     {
         var matchedResults = new[]
         {
@@ -152,11 +149,11 @@ public class SuccessMatchFileWriterTests
                 x.UploadBlobAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.Is<BinaryData>(data => data.ToString() == HeaderOnlyCsv),
+                    It.IsAny<BinaryData>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 ),
-            Times.Once
+            Times.Never
         );
 
         VerifyWarningLogged("test-file.csv", "NhsNumber");
