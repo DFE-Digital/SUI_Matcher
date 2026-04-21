@@ -50,7 +50,7 @@ public sealed class BlobFileOrchestrator(
         );
 
         logger.LogInformation(
-            "Completed processing blob {BlobName}. Total records: {TotalRecords}, Successful matches: {SuccessfulMatches}.",
+            "Completed processing blob {BlobName}. Total records: {TotalRecords}, Successful requests: {SuccessfulRequests}.",
             queueMessage.BlobName,
             matchedResults.Count,
             matchedResults.Count(r => r.IsSuccess)
