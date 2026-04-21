@@ -1,16 +1,39 @@
+using Microsoft.Extensions.Options;
 using Shared.Models;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Infrastructure.CsvParsers;
 
-namespace Unit.Tests.StorageProcessFunction;
+namespace Unit.Tests.Client.ParserTests;
 
 public class CsvPersonSpecParserTests
 {
+    private static IOptions<CsvMatchDataOptions> CreateDefaultOptions()
+    {
+        return Options.Create(
+            new CsvMatchDataOptions
+            {
+                DateFormat = "yyyy-MM-dd",
+                ColumnMappings = new CsvMatchDataOptions.Headers
+                {
+                    Id = "Id",
+                    Given = "GivenName",
+                    Family = "FamilyName",
+                    BirthDate = "DOB",
+                    Email = "Email",
+                    Postcode = "Postcode",
+                    Gender = "Gender",
+                    Phone = "Phone",
+                    NhsNumber = "NhsNumber",
+                },
+            }
+        );
+    }
+
     [Fact]
     public void Should_MapPersonSpecification_When_TypeOneRecordIsValid()
     {
-        var sut = new CsvPersonSpecParser(CsvParserNameConstants.TypeOne);
-        ;
+        var options = CreateDefaultOptions();
+        var sut = new CsvPersonSpecParser(options);
         var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["GivenName"] = "Jane",
@@ -33,7 +56,8 @@ public class CsvPersonSpecParserTests
     [Fact]
     public void Should_MapOptionalFields_When_OptionalValuesArePresent()
     {
-        var sut = new CsvPersonSpecParser(CsvParserNameConstants.TypeOne);
+        var options = CreateDefaultOptions();
+        var sut = new CsvPersonSpecParser(options);
         var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["GivenName"] = "Jane",
@@ -59,7 +83,8 @@ public class CsvPersonSpecParserTests
     [Fact]
     public void Should_ReturnEmptyValues_When_OptionalFieldsAreMissing()
     {
-        var sut = new CsvPersonSpecParser(CsvParserNameConstants.TypeOne);
+        var options = CreateDefaultOptions();
+        var sut = new CsvPersonSpecParser(options);
         var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["GivenName"] = "Jane",
@@ -79,7 +104,8 @@ public class CsvPersonSpecParserTests
     [Fact]
     public void Should_SetBirthDateToNull_When_DobCannotBeParsed()
     {
-        var sut = new CsvPersonSpecParser(CsvParserNameConstants.TypeOne);
+        var options = CreateDefaultOptions();
+        var sut = new CsvPersonSpecParser(options);
         var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["GivenName"] = "Jane",
@@ -94,18 +120,5 @@ public class CsvPersonSpecParserTests
         Assert.Null(result.BirthDate);
         Assert.NotNull(result.RawBirthDate);
         Assert.Equal(["not-a-date"], result.RawBirthDate);
-    }
-
-    [Fact]
-    public void Should_Throw_When_ParserTypeIsUnknown()
-    {
-        var sut = new CsvPersonSpecParser("InvalidParser");
-        var csvRecord = new CsvRecordDto(
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        );
-
-        var exception = Assert.Throws<InvalidOperationException>(() => sut.Parse(csvRecord));
-
-        Assert.Equal("Unknown parser type: InvalidParser.", exception.Message);
     }
 }
