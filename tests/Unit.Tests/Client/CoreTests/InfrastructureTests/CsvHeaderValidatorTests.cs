@@ -44,4 +44,32 @@ public class CsvHeaderValidatorTests
 
         CsvHeaderValidator.Validate(headers, requiredHeaders);
     }
+
+    [Fact]
+    public void Should_ReturnEmpty_When_AllExpectedHeadersArePresent()
+    {
+        var headers = new HashSet<string>(
+            ["Id", "GivenName", "FamilyName", "DOB", "Postcode", "Email", "Gender", "Phone"],
+            StringComparer.OrdinalIgnoreCase
+        );
+        var expectedHeaders = new[] { "Email", "Gender", "Phone" };
+
+        var missingHeaders = CsvHeaderValidator.GetMissingHeaders(headers, expectedHeaders);
+
+        Assert.Empty(missingHeaders);
+    }
+
+    [Fact]
+    public void Should_ReturnMissingHeaders_When_ExpectedHeadersAreMissing()
+    {
+        var headers = new HashSet<string>(
+            ["Id", "GivenName", "FamilyName", "DOB", "Postcode", "Email"],
+            StringComparer.OrdinalIgnoreCase
+        );
+        var expectedHeaders = new[] { "Email", "Gender", "Phone" };
+
+        var missingHeaders = CsvHeaderValidator.GetMissingHeaders(headers, expectedHeaders);
+
+        Assert.Equal(["Gender", "Phone"], missingHeaders);
+    }
 }

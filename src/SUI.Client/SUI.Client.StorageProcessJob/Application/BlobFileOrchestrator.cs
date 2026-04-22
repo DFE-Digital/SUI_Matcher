@@ -42,6 +42,8 @@ public sealed class BlobFileOrchestrator(
         var blobStream = new StreamReader(blobContent.ToStream());
         var listOfRecords = await CsvRecordReader.ReadCsvTextAsync(blobStream, cancellationToken);
         CsvHeaderValidator.Validate(listOfRecords.Headers, csvHeadersProvider.GetRequiredHeaders());
+        CheckOptionalCsvHeaders(queueMessage, listOfRecords);
+
         var csvRecords = listOfRecords.Records.Select(record => new CsvRecordDto(record)).ToList();
 
         var matchedResults = await matchPersonRecordOrchestrator.ProcessAsync(
@@ -70,6 +72,31 @@ public sealed class BlobFileOrchestrator(
             processedBlobName,
             cancellationToken
         );
+    }
+
+    /// <summary>
+    /// Logs if any optional headers are missing.
+    /// </summary>
+    /// <param name="queueMessage"></param>
+    /// <param name="listOfRecords"></param>
+    private void CheckOptionalCsvHeaders(
+        StorageBlobMessage queueMessage,
+        (HashSet<string> Headers, List<Dictionary<string, string>> Records) listOfRecords
+    )
+    {
+        var missingOptionalHeaders = CsvHeaderValidator.GetMissingHeaders(
+            listOfRecords.Headers,
+            csvHeadersProvider.GetOptionalHeaders()
+        );
+
+        if (missingOptionalHeaders.Length > 0)
+        {
+            logger.LogInformation(
+                "Missing optional CSV headers: {MissingOptionalHeaders}. On {BlobName}",
+                string.Join(", ", missingOptionalHeaders),
+                queueMessage.BlobName
+            );
+        }
     }
 
     private string BuildProcessedBlobName(string blobName)

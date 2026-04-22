@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
@@ -19,8 +20,13 @@ public class BlobFileOrchestratorTests
         Id,GivenName,FamilyName,DOB,Postcode
         1111,Jane,Doe,2012-05-10,SW1A 1AA
         """;
+    private const string ValidBlobContentWithOptionalHeaders = """
+        Id,GivenName,FamilyName,DOB,Postcode,Email,Gender,Phone
+        1111,Jane,Doe,2012-05-10,SW1A 1AA,jane@example.com,F,07123456789
+        """;
     private readonly Mock<IBlobStorageClient> _blobFileReader;
     private readonly Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>> _blobPayloadProcessor;
+    private readonly Mock<ILogger<BlobFileOrchestrator>> _logger;
     private readonly Mock<ISuccessMatchFileWriter> _successMatchFileWriter;
     private readonly BlobFileOrchestrator _sut;
     private readonly CsvMatchingHeadersProvider _matchingHeadersProvider;
@@ -38,6 +44,7 @@ public class BlobFileOrchestratorTests
     {
         _blobFileReader = new Mock<IBlobStorageClient>();
         _blobPayloadProcessor = new Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>>();
+        _logger = new Mock<ILogger<BlobFileOrchestrator>>();
         _successMatchFileWriter = new Mock<ISuccessMatchFileWriter>();
         _matchingHeadersProvider = CreateRequiredHeadersProvider();
         _timeProvider = new FakeTimeProvider(
@@ -141,6 +148,62 @@ public class BlobFileOrchestratorTests
                     CancellationToken.None
                 ),
             Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Should_LogWarning_When_OptionalHeadersAreMissing()
+    {
+        var queueMessage = new StorageBlobMessage("incoming", "test-file.csv");
+        _blobFileReader
+            .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
+            .ReturnsAsync(BinaryData.FromString(ValidBlobContent));
+        _blobPayloadProcessor
+            .Setup(x =>
+                x.ProcessAsync(
+                    It.IsAny<IEnumerable<CsvRecordDto>>(),
+                    "test-file.csv",
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(CreateMatchedResults());
+
+        await _sut.ProcessAsync(queueMessage, CancellationToken.None);
+
+        VerifyWarningLogged("test-file.csv", "Email");
+        VerifyWarningLogged("test-file.csv", "Gender");
+        VerifyWarningLogged("test-file.csv", "Phone");
+    }
+
+    [Fact]
+    public async Task Should_NotLogWarning_When_OptionalHeadersArePresent()
+    {
+        var queueMessage = new StorageBlobMessage("incoming", "test-file.csv");
+        _blobFileReader
+            .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
+            .ReturnsAsync(BinaryData.FromString(ValidBlobContentWithOptionalHeaders));
+        _blobPayloadProcessor
+            .Setup(x =>
+                x.ProcessAsync(
+                    It.IsAny<IEnumerable<CsvRecordDto>>(),
+                    "test-file.csv",
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(CreateMatchedResults());
+
+        await _sut.ProcessAsync(queueMessage, CancellationToken.None);
+
+        _logger.Verify(
+            x =>
+                x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.Never
         );
     }
 
@@ -339,7 +402,7 @@ public class BlobFileOrchestratorTests
     private BlobFileOrchestrator CreateSut()
     {
         return new BlobFileOrchestrator(
-            NullLogger<BlobFileOrchestrator>.Instance,
+            _logger.Object,
             _timeProvider,
             _blobFileReader.Object,
             _blobPayloadProcessor.Object,
@@ -354,7 +417,10 @@ public class BlobFileOrchestratorTests
         string given = "GivenName",
         string family = "FamilyName",
         string birthDate = "DOB",
-        string postcode = "Postcode"
+        string postcode = "Postcode",
+        string email = "Email",
+        string gender = "Gender",
+        string phone = "Phone"
     )
     {
         return new CsvMatchingHeadersProvider(
@@ -369,6 +435,9 @@ public class BlobFileOrchestratorTests
                         Family = family,
                         BirthDate = birthDate,
                         Postcode = postcode,
+                        Email = email,
+                        Gender = gender,
+                        Phone = phone,
                     },
                 }
             )
@@ -404,6 +473,25 @@ public class BlobFileOrchestratorTests
                     It.IsAny<CancellationToken>()
                 ),
             Times.Never
+        );
+    }
+
+    private void VerifyWarningLogged(string sourceBlobName, string missingHeader)
+    {
+        _logger.Verify(
+            x =>
+                x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>(
+                        (state, _) =>
+                            state.ToString()!.Contains(sourceBlobName, StringComparison.Ordinal)
+                            && state.ToString()!.Contains(missingHeader, StringComparison.Ordinal)
+                    ),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.Once
         );
     }
 }
