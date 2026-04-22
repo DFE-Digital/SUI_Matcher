@@ -37,4 +37,38 @@ public class CsvMatchingHeadersProviderTests
         Assert.DoesNotContain("Telephone", result);
         Assert.DoesNotContain("NhsNumber", result);
     }
+
+    [Fact]
+    public void Should_ReturnOptionalHeaders_When_OptionsAreConfigured()
+    {
+        var sut = new CsvMatchingHeadersProvider(
+            Options.Create(
+                new CsvMatchDataOptions
+                {
+                    DateFormat = "yyyy-MM-dd",
+                    ColumnMappings = new CsvMatchDataOptions.Headers
+                    {
+                        Id = "PersonId",
+                        Given = "Forename",
+                        Family = "Surname",
+                        BirthDate = "DateOfBirth",
+                        Postcode = "PostCode",
+                        Email = "EmailAddress",
+                        Gender = "Gender",
+                        Phone = "Telephone",
+                        NhsNumber = "NhsNumber",
+                    },
+                }
+            )
+        );
+
+        var result = sut.GetOptionalHeaders();
+
+        Assert.Equal(["EmailAddress", "Gender", "Telephone"], result);
+        Assert.DoesNotContain("PersonId", result);
+        Assert.DoesNotContain("Forename", result);
+        Assert.DoesNotContain("Surname", result);
+        Assert.DoesNotContain("DateOfBirth", result);
+        Assert.DoesNotContain("PostCode", result);
+    }
 }

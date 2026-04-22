@@ -19,4 +19,11 @@ public sealed class CsvMatchingHeadersProvider(IOptions<CsvMatchDataOptions> csv
             columnMappings.Postcode,
         ];
     }
+
+    public IReadOnlyCollection<string> GetOptionalHeaders()
+    {
+        var columnMappings = csvMatchDataOptions.Value.ColumnMappings;
+
+        return [columnMappings.Email, columnMappings.Gender, columnMappings.Phone];
+    }
 }
