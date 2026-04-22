@@ -72,54 +72,41 @@ The stack names and resource naming should stay **generic** and avoid local-auth
 
 Examples of generic stack labels:
 
-- `shared-platform`
 - `client-agent`
 - `blob-event-processor`
 - `api-batch-processor`
 
 These map to the current known deployment shapes as follows.
 
-### 4.1 Shared platform stack
+Each stack root should deploy an isolated environment by composing the shared Bicep modules it needs directly. Shared resources are therefore a module concern, not a separately deployed stack that other stacks depend on.
 
-Shared Azure resources that are genuinely common across cloud-hosted variants:
-
-- container registry
-- managed identity
-- key vault
-- log analytics
-- application insights
-- container apps environment
-- shared networking/security primitives where they are truly reusable
-
-This stack should expose stable outputs for downstream application deployment.
-
-### 4.2 Client agent stack
+### 4.1 Client agent stack
 
 Represents the current client-agent deployment shape:
 
-- shared platform resources
+- any shared Azure resources required by this architecture
 - externally hosted client agent and related networking
 - firewall and routing components required for the current model
 - private connectivity needed by the client-agent path
 
 This stack exists to keep the current infrastructure deployable during and after the refactor.
 
-### 4.3 Blob event processor stack
+### 4.2 Blob event processor stack
 
 Represents the next blob-triggered event processing deployment shape:
 
-- shared platform resources
+- any shared Azure resources required by this architecture
 - blob storage and event-driven processing path
 - eventing and function-hosted processing resources as required by that model
 - network/security resources needed for that environment
 
 This stack must not depend on the client-agent infrastructure.
 
-### 4.4 API batch processor stack
+### 4.3 API batch processor stack
 
 Represents the current scheduled API batch baseline:
 
-- shared platform resources
+- any shared Azure resources required by this architecture
 - scheduled batch processing against an external API
 - API read/write integration concerns
 - identity, secret, and networking requirements for that model
@@ -134,8 +121,8 @@ The deployment stacks described above define environment topology and infrastruc
 
 The intended ownership model is:
 
-- `shared-platform` provisions common hosting primitives and shared outputs only
-- `client-agent`, `blob-event-processor`, and `api-batch-processor` provision only the infrastructure specific to those architecture shapes
+- `client-agent`, `blob-event-processor`, and `api-batch-processor` are the deployable infrastructure roots
+- each stack root composes the shared modules it needs directly, alongside any architecture-specific infrastructure
 - application deployment remains a separate layer that consumes outputs from the selected stack
 
 In practical terms, the current application deployment artefacts under `src/app-host/infra` should be treated as application-layer deployment inputs, not as the authoritative source of environment topology.
@@ -195,7 +182,7 @@ The recommended order of work is:
 
 1. extract shared modules from the current Bicep
 2. recreate the current deployment path behind an explicit `client-agent` stack root
-3. introduce the next `blob-event-processor` stack
+3. introduce the next `blob-event-processor` stack root and skeleton
 4. define the future `api-batch-processor` stack contract and skeleton
 5. update deployment documentation once the new structure is stable
 
@@ -210,7 +197,7 @@ The first restructure should be considered successful when all of the following 
 - the current deployment path can be represented by an explicit `client-agent` stack root without changing its intended infrastructure shape
 - the next `blob-event-processor` stack can be introduced without depending on `client-agent` resources
 - the future `api-batch-processor` stack has a documented contract and placeholder structure, even if it is not fully implemented in the first pass
-- shared modules expose the outputs needed by the application deployment layer
+- shared modules expose the outputs needed by individual stack roots and the application deployment layer
 - any current manual or externally owned deployment steps are either preserved and documented, or replaced with automated equivalents
 
 Preserving deployability in this note means keeping the deployment path usable after the refactor, with equivalent infrastructure intent and clearly documented dependencies.

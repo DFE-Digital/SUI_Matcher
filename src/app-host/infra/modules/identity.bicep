@@ -10,13 +10,17 @@ param lowercaseEnvironmentName string
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
-resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-mi-01'
-  location: location
-  tags: tags
+module identity '../../../../infra/modules/shared/identity.bicep' = {
+  name: 'identity'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    tags: tags
+  }
 }
 
-output clientId string = managedIdentity.properties.clientId
-output name string = managedIdentity.name
-output principalId string = managedIdentity.properties.principalId
-output id string = managedIdentity.id
+output clientId string = identity.outputs.clientId
+output name string = identity.outputs.name
+output principalId string = identity.outputs.principalId
+output id string = identity.outputs.id

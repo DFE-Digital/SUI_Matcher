@@ -5,23 +5,13 @@ param environmentName string
 
 param environmentPrefix string
 
-// 3 - 24 alphanumeric characters 
-resource secrets 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: '${environmentPrefix}-${toLower(substring(environmentName, 0, environmentName == 'Production' ? 4 : 3))}-kv01'
-  location: location
-  tags: {
-    'aspire-resource-name': 'secrets'
-  }
-  properties: {
-    tenantId: tenant().tenantId
-    sku: {
-      family: 'A'
-      name: 'standard'
-    }
-    enableRbacAuthorization: true
-    enableSoftDelete: true
-    enablePurgeProtection: true
+module secrets '../../../../infra/modules/shared/secrets.bicep' = {
+  name: 'secrets'
+  params: {
+    location: location
+    environmentName: environmentName
+    environmentPrefix: environmentPrefix
   }
 }
 
-output vaultUri string = secrets.properties.vaultUri
+output vaultUri string = secrets.outputs.vaultUri
