@@ -1,6 +1,6 @@
 namespace SUI.Client.Core.Application.Interfaces;
 
-public interface ICsvRequiredHeadersProvider
+public interface ICsvHeadersProvider
 {
     IReadOnlyCollection<string> GetRequiredHeaders();
 }

@@ -15,7 +15,7 @@ public sealed class BlobFileOrchestrator(
     IBlobStorageClient blobStorageClient,
     IMatchPersonRecordOrchestrator<CsvRecordDto> matchPersonRecordOrchestrator,
     ISuccessMatchFileWriter successMatchFileWriter,
-    ICsvRequiredHeadersProvider csvRequiredHeadersProvider,
+    ICsvHeadersProvider csvHeadersProvider,
     IOptions<StorageProcessJobOptions> options
 ) : IBlobFileOrchestrator
 {
@@ -41,10 +41,7 @@ public sealed class BlobFileOrchestrator(
 
         var blobStream = new StreamReader(blobContent.ToStream());
         var listOfRecords = await CsvRecordReader.ReadCsvTextAsync(blobStream, cancellationToken);
-        CsvHeaderValidator.Validate(
-            listOfRecords.Headers,
-            csvRequiredHeadersProvider.GetRequiredHeaders()
-        );
+        CsvHeaderValidator.Validate(listOfRecords.Headers, csvHeadersProvider.GetRequiredHeaders());
         var csvRecords = listOfRecords.Records.Select(record => new CsvRecordDto(record)).ToList();
 
         var matchedResults = await matchPersonRecordOrchestrator.ProcessAsync(

@@ -3,12 +3,12 @@ using SUI.Client.Core.Infrastructure.CsvParsers;
 
 namespace Unit.Tests.Client.CoreTests.InfrastructureTests;
 
-public class CsvMatchingRequiredHeadersProviderTests
+public class CsvMatchingHeadersProviderTests
 {
     [Fact]
     public void Should_ReturnRequiredHeaders_When_OptionsAreConfigured()
     {
-        var sut = new CsvMatchingRequiredHeadersProvider(
+        var sut = new CsvMatchingHeadersProvider(
             Options.Create(
                 new CsvMatchDataOptions
                 {

@@ -3,8 +3,8 @@ using SUI.Client.Core.Application.Interfaces;
 
 namespace SUI.Client.Core.Infrastructure.CsvParsers;
 
-public sealed class CsvMatchingRequiredHeadersProvider(IOptions<CsvMatchDataOptions> csvMatchDataOptions)
-    : ICsvRequiredHeadersProvider
+public sealed class CsvMatchingHeadersProvider(IOptions<CsvMatchDataOptions> csvMatchDataOptions)
+    : ICsvHeadersProvider
 {
     public IReadOnlyCollection<string> GetRequiredHeaders()
     {
