@@ -481,7 +481,7 @@ public class BlobFileOrchestratorTests
         _logger.Verify(
             x =>
                 x.Log(
-                    LogLevel.Information,
+                    LogLevel.Warning,
                     It.IsAny<EventId>(),
                     It.Is<It.IsAnyType>(
                         (state, _) =>

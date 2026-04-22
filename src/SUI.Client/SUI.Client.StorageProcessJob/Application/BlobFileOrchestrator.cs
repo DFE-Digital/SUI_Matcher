@@ -91,7 +91,7 @@ public sealed class BlobFileOrchestrator(
 
         if (missingOptionalHeaders.Length > 0)
         {
-            logger.LogInformation(
+            logger.LogWarning(
                 "Missing optional CSV headers: {MissingOptionalHeaders}. On {BlobName}",
                 string.Join(", ", missingOptionalHeaders),
                 queueMessage.BlobName
