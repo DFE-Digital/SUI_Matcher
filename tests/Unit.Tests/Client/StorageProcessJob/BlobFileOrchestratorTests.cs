@@ -23,7 +23,7 @@ public class BlobFileOrchestratorTests
     private readonly Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>> _blobPayloadProcessor;
     private readonly Mock<ISuccessMatchFileWriter> _successMatchFileWriter;
     private readonly BlobFileOrchestrator _sut;
-    private readonly CsvRequiredHeadersProvider _requiredHeadersProvider;
+    private readonly CsvMatchingRequiredHeadersProvider _matchingRequiredHeadersProvider;
     private readonly FakeTimeProvider _timeProvider;
     private readonly IOptions<StorageProcessJobOptions> _options = Options.Create(
         new StorageProcessJobOptions
@@ -39,7 +39,7 @@ public class BlobFileOrchestratorTests
         _blobFileReader = new Mock<IBlobStorageClient>();
         _blobPayloadProcessor = new Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>>();
         _successMatchFileWriter = new Mock<ISuccessMatchFileWriter>();
-        _requiredHeadersProvider = CreateRequiredHeadersProvider();
+        _matchingRequiredHeadersProvider = CreateRequiredHeadersProvider();
         _timeProvider = new FakeTimeProvider(
             new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
         );
@@ -183,7 +183,7 @@ public class BlobFileOrchestratorTests
             _blobFileReader.Object,
             failingOrchestrator.Object,
             _successMatchFileWriter.Object,
-            _requiredHeadersProvider,
+            _matchingRequiredHeadersProvider,
             Options.Create(
                 new StorageProcessJobOptions
                 {
@@ -344,12 +344,12 @@ public class BlobFileOrchestratorTests
             _blobFileReader.Object,
             _blobPayloadProcessor.Object,
             _successMatchFileWriter.Object,
-            _requiredHeadersProvider,
+            _matchingRequiredHeadersProvider,
             _options
         );
     }
 
-    private static CsvRequiredHeadersProvider CreateRequiredHeadersProvider(
+    private static CsvMatchingRequiredHeadersProvider CreateRequiredHeadersProvider(
         string id = "Id",
         string given = "GivenName",
         string family = "FamilyName",
@@ -357,7 +357,7 @@ public class BlobFileOrchestratorTests
         string postcode = "Postcode"
     )
     {
-        return new CsvRequiredHeadersProvider(
+        return new CsvMatchingRequiredHeadersProvider(
             Options.Create(
                 new CsvMatchDataOptions
                 {

@@ -3,12 +3,12 @@ using SUI.Client.Core.Infrastructure.CsvParsers;
 
 namespace Unit.Tests.Client.CoreTests.InfrastructureTests;
 
-public class CsvRequiredHeadersProviderTests
+public class CsvMatchingRequiredHeadersProviderTests
 {
     [Fact]
     public void Should_ReturnRequiredHeaders_When_OptionsAreConfigured()
     {
-        var sut = new CsvRequiredHeadersProvider(
+        var sut = new CsvMatchingRequiredHeadersProvider(
             Options.Create(
                 new CsvMatchDataOptions
                 {
@@ -21,7 +21,7 @@ public class CsvRequiredHeadersProviderTests
                         BirthDate = "DateOfBirth",
                         Postcode = "PostCode",
                         Email = "EmailAddress",
-                        Gender = "Sex",
+                        Gender = "Gender",
                         Phone = "Telephone",
                         NhsNumber = "NhsNumber",
                     },
@@ -33,7 +33,7 @@ public class CsvRequiredHeadersProviderTests
 
         Assert.Equal(["PersonId", "Forename", "Surname", "DateOfBirth", "PostCode"], result);
         Assert.DoesNotContain("EmailAddress", result);
-        Assert.DoesNotContain("Sex", result);
+        Assert.DoesNotContain("Gender", result);
         Assert.DoesNotContain("Telephone", result);
         Assert.DoesNotContain("NhsNumber", result);
     }
