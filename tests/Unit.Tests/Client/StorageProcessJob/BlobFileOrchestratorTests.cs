@@ -19,11 +19,11 @@ public class BlobFileOrchestratorTests
         Id,GivenName,FamilyName,DOB,Postcode
         1111,Jane,Doe,2012-05-10,SW1A 1AA
         """;
-
     private readonly Mock<IBlobStorageClient> _blobFileReader;
     private readonly Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>> _blobPayloadProcessor;
     private readonly Mock<ISuccessMatchFileWriter> _successMatchFileWriter;
     private readonly BlobFileOrchestrator _sut;
+    private readonly CsvRequiredHeadersProvider _requiredHeadersProvider;
     private readonly FakeTimeProvider _timeProvider;
     private readonly IOptions<StorageProcessJobOptions> _options = Options.Create(
         new StorageProcessJobOptions
@@ -39,17 +39,11 @@ public class BlobFileOrchestratorTests
         _blobFileReader = new Mock<IBlobStorageClient>();
         _blobPayloadProcessor = new Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>>();
         _successMatchFileWriter = new Mock<ISuccessMatchFileWriter>();
+        _requiredHeadersProvider = CreateRequiredHeadersProvider();
         _timeProvider = new FakeTimeProvider(
             new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
         );
-        _sut = new BlobFileOrchestrator(
-            NullLogger<BlobFileOrchestrator>.Instance,
-            _timeProvider,
-            _blobFileReader.Object,
-            _blobPayloadProcessor.Object,
-            _successMatchFileWriter.Object,
-            _options
-        );
+        _sut = CreateSut();
     }
 
     [Fact]
@@ -189,6 +183,7 @@ public class BlobFileOrchestratorTests
             _blobFileReader.Object,
             failingOrchestrator.Object,
             _successMatchFileWriter.Object,
+            _requiredHeadersProvider,
             Options.Create(
                 new StorageProcessJobOptions
                 {
@@ -339,6 +334,45 @@ public class BlobFileOrchestratorTests
                 },
             },
         ];
+    }
+
+    private BlobFileOrchestrator CreateSut()
+    {
+        return new BlobFileOrchestrator(
+            NullLogger<BlobFileOrchestrator>.Instance,
+            _timeProvider,
+            _blobFileReader.Object,
+            _blobPayloadProcessor.Object,
+            _successMatchFileWriter.Object,
+            _requiredHeadersProvider,
+            _options
+        );
+    }
+
+    private static CsvRequiredHeadersProvider CreateRequiredHeadersProvider(
+        string id = "Id",
+        string given = "GivenName",
+        string family = "FamilyName",
+        string birthDate = "DOB",
+        string postcode = "Postcode"
+    )
+    {
+        return new CsvRequiredHeadersProvider(
+            Options.Create(
+                new CsvMatchDataOptions
+                {
+                    DateFormat = "yyyy-MM-dd",
+                    ColumnMappings = new CsvMatchDataOptions.Headers
+                    {
+                        Id = id,
+                        Given = given,
+                        Family = family,
+                        BirthDate = birthDate,
+                        Postcode = postcode,
+                    },
+                }
+            )
+        );
     }
 
     private void VerifyNoProcessingSideEffects()

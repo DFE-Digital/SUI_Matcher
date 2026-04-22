@@ -96,6 +96,7 @@ builder.Services.AddSingleton(
     typeof(MatchPersonRecordOrchestrator<>)
 );
 builder.Services.AddSingleton<IPersonSpecParser<CsvRecordDto>, CsvPersonSpecParser>();
+builder.Services.AddSingleton<ICsvRequiredHeadersProvider, CsvRequiredHeadersProvider>();
 
 builder.Services.AddHttpClient();
 
