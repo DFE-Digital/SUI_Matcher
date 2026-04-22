@@ -14,6 +14,7 @@ public sealed class BlobFileOrchestrator(
     TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
     IMatchPersonRecordOrchestrator<CsvRecordDto> matchPersonRecordOrchestrator,
+    ISuccessMatchFileWriter successMatchFileWriter,
     IOptions<StorageProcessJobOptions> options
 ) : IBlobFileOrchestrator
 {
@@ -48,12 +49,17 @@ public sealed class BlobFileOrchestrator(
             cancellationToken
         );
 
-        // Just logging for now. Next: Process results
         logger.LogInformation(
-            "Completed processing blob {BlobName}. Total records: {TotalRecords}, Successful matches: {SuccessfulMatches}.",
+            "Completed processing blob {BlobName}. Total records: {TotalRecords}, Successful requests: {SuccessfulRequests}.",
             queueMessage.BlobName,
             matchedResults.Count,
             matchedResults.Count(r => r.IsSuccess)
+        );
+
+        await successMatchFileWriter.WriteAsync(
+            queueMessage.BlobName!,
+            matchedResults,
+            cancellationToken
         );
 
         var processedBlobName = BuildProcessedBlobName(queueMessage.BlobName!);

@@ -75,13 +75,13 @@ if (-not [string]::IsNullOrWhiteSpace($directory)) {
 
 # PDS test data https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir/pds-fhir-api-test-data#general-tests
 $csvContent = @"
-GivenName,FamilyName,DOB,Postcode
-octavia,chislett,2008-09-20,
-beryl,shipperbottom,2011-05-09,KT21 1LJ
-briar,anderton,2009-02-15,KT21 1JA
-percy,gilman,2011-01-28,KT21 1EJ
-red,flindall,2011-05-17,KT20 6XJ
-monte,fielding,2008-05-21,KT21 1DJ
+Id,GivenName,FamilyName,DOB,Postcode
+1001,octavia,chislett,2008-09-20,
+1002,beryl,shipperbottom,2011-05-09,KT21 1LJ
+1003,briar,anderton,2009-02-15,KT21 1JA
+1004,percy,gilman,2011-01-28,KT21 1EJ
+1005,red,flindall,2011-05-17,KT20 6XJ
+1006,monte,fielding,2008-05-21,KT21 1DJ
 "@
 
 Set-Content -Path $LocalFilePath -Value $csvContent -Encoding utf8NoBOM

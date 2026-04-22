@@ -10,6 +10,7 @@ public sealed class StorageProcessJobOptions
     public string QueueName { get; init; } = "storage-process-job";
 
     public string ProcessedContainerName { get; init; } = "processed";
+    public string SuccessContainerName { get; init; } = "success";
     public int MaxDequeueCount { get; init; } = 1;
     public int MessageVisibilityTimeoutMinutes { get; init; } = 10;
     public int MessageVisibilityRenewalIntervalMinutes { get; init; } = 5;
