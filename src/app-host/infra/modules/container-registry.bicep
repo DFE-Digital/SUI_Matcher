@@ -10,15 +10,15 @@ param lowercaseEnvironmentName string
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
-// The resource name can only contain alphanumeric characters.
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: '${environmentPrefix}${lowercaseEnvironmentName}acr01'
-  location: location
-  sku: {
-    name: 'Basic'
+module containerRegistry '../../../../infra/modules/shared/container-registry.bicep' = {
+  name: 'container-registry'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    tags: tags
   }
-  tags: tags
 }
 
-output endpoint string = containerRegistry.properties.loginServer
-output name string = containerRegistry.name
+output endpoint string = containerRegistry.outputs.endpoint
+output name string = containerRegistry.outputs.name

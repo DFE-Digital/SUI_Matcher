@@ -22,78 +22,20 @@ param tags object = {}
 @description('The Log Analytics workspace name used by the container app environment')
 param logAnalyticsWorkspaceName string
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
-  name: logAnalyticsWorkspaceName
-}
-
-resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-vnet-cae-01'
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        containerAppVnet
-      ]
-    }
-    subnets: [
-      {
-        name: '${environmentPrefix}-${lowercaseEnvironmentName}-subnet-cae-01'
-        properties: {
-          addressPrefix: containerAppEnvSubnet
-          delegations: [
-            {
-              name: 'Microsoft.App.environments'
-              properties: {
-                serviceName: 'Microsoft.App/environments'
-              }
-            }
-          ]
-        }
-      }
-    ]
+module containerAppEnvironment '../../../../infra/modules/shared/container-app-environment.bicep' = {
+  name: 'container-app-environment'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
+    containerAppVnet: containerAppVnet
+    containerAppEnvSubnet: containerAppEnvSubnet
+    tags: tags
+    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
   }
 }
 
-resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-preview' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-cae-${containerAppManagedEnvironmentNumber}'
-  location: location
-  tags: tags
-  properties: {
-    appLogsConfiguration: {
-      destination: 'log-analytics'
-      logAnalyticsConfiguration: {
-        customerId: logAnalyticsWorkspace.properties.customerId
-        sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
-      }
-    }
-    workloadProfiles: [
-      {
-        name: 'default'
-        workloadProfileType: 'D4'
-        minimumCount: 1
-        maximumCount: 1
-      }
-    ]
-    peerTrafficConfiguration: {
-      encryption: {
-        enabled: true
-      }
-    }
-    publicNetworkAccess: 'Disabled' // For Pen Test destroy cae and rebuild with that set to Enabled
-    vnetConfiguration: {
-      infrastructureSubnetId: '${caeVnet.id}/subnets/${environmentPrefix}-${lowercaseEnvironmentName}-subnet-cae-01'
-      internal: true // For Pen Test destroy cae and rebuild with this value removed
-    }
-  }
-
-  resource aspireDashboard 'dotNetComponents' = {
-    name: '${environmentPrefix}-${lowercaseEnvironmentName}-dashboard-01'
-    properties: {
-      componentType: 'AspireDashboard'
-    }
-  }
-}
-
-output name string = containerAppEnvironment.name
-output id string = containerAppEnvironment.id
-output defaultDomain string = containerAppEnvironment.properties.defaultDomain
+output name string = containerAppEnvironment.outputs.name
+output id string = containerAppEnvironment.outputs.id
+output defaultDomain string = containerAppEnvironment.outputs.defaultDomain

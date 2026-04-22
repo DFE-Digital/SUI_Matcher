@@ -2,6 +2,8 @@
 
 This guide explains how to deploy the app infra and app from your laptop.
 
+The authoritative IaC stack roots now live under [`infra/`](../../../infra/README.md). This guide remains relevant for the existing `app-host` application-layer deployment flow while CI/CD and deployment docs catch up with the new stack-root structure.
+
 ## Prerequisites
 * Access to Azure subscription: Ensure you have access to an Azure subscription where you can deploy resources.
 * Access to use CLI commands: Ensure you have the necessary permissions to run CLI commands to Azure.
