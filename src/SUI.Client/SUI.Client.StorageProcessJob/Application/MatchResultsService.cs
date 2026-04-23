@@ -205,8 +205,9 @@ public sealed class MatchResultsService(
             csvWriter.WriteField(MapStatus(matchedResult));
             csvWriter.WriteField(
                 matchedResult.ApiResult?.Result?.Score?.ToString(CultureInfo.InvariantCulture)
+                    ?? "-"
             );
-            csvWriter.WriteField(matchedResult.ApiResult?.Result?.NhsNumber);
+            csvWriter.WriteField(matchedResult.ApiResult?.Result?.NhsNumber ?? "-");
             csvWriter.NextRecord();
         }
 
@@ -220,6 +221,6 @@ public sealed class MatchResultsService(
             return matchedResult.ApiResult.Result.MatchStatus.ToString();
         }
 
-        return matchedResult.IsSuccess ? string.Empty : MatchStatus.Error.ToString();
+        return matchedResult.IsSuccess ? string.Empty : nameof(MatchStatus.Error);
     }
 }

@@ -21,7 +21,7 @@ public class ExportFullResultsAsyncTests
     private static readonly string FullResultsCsvWithErrorRow =
         $"Id,GivenName,FamilyName,SUI_Status,SUI_Score,SUI_NHSNo{Environment.NewLine}"
         + $"1111,Jane,Doe,Match,0.96,92938475748{Environment.NewLine}"
-        + $"2222,John,Smith,Error,,{Environment.NewLine}";
+        + $"2222,John,Smith,Error,-,-{Environment.NewLine}";
     private static readonly MatchResultsBlobNames BlobNames = new(
         "20260120120000_test-file/test-file.csv",
         "20260120120000_test-file/test-file_full-results.csv",
