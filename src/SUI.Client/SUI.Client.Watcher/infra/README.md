@@ -7,7 +7,7 @@
 
 ## Client Infra
 
-There is a job to build the client infra. It will build the infra within this directory which is meant to mimic a local authority server where this client will run.
+There is a job to build the client infra. It deploys the `client-agent` stack root, which is meant to mimic a local authority server where this client will run.
 There is also information in `README_Deployment.md` which requires extra manual steps to deploy.
 The authoritative stack root for this architecture now lives at [`infra/stacks/client-agent/main.bicep`](../../../../infra/stacks/client-agent/main.bicep), while the `client.bicep` entry point in this directory remains as a compatibility wrapper.
 

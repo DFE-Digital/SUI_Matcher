@@ -15,4 +15,9 @@ Transitional compatibility:
 - `src/app-host/infra` still contains the existing application-layer deployment assets and compatibility entry points
 - `src/SUI.Client/SUI.Client.Watcher/infra/client.bicep` remains as a compatibility root for the old client-only deployment path, but now delegates to the shared `client-agent` module
 
+CI/CD:
+
+- `.github/workflows/gh-client-infra-deploy.yml` deploys the `client-agent` stack root
+- The placeholder stacks do not have runnable deployment workflows yet; those should be added when their stack roots become deployable
+
 The intent is that stack roots define environment topology, while application deployment consumes outputs from the selected stack.
