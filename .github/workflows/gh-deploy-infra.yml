@@ -5,7 +5,9 @@ on:
     branches:
     - main
     paths:
+    - 'infra/**'
     - 'src/app-host/infra/**'
+    - 'src/SUI.Client/SUI.Client.Watcher/infra/**'
   workflow_dispatch:
     inputs:
       environment:
@@ -43,8 +45,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env: 
-      AZURE_ENV_NAME: ${{ inputs.environment }}
-      AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+      AZURE_ENV_NAME: ${{ inputs.environment || 'Integration' }}
+      AZURE_ENV_PREFIX: ${{ inputs.environment_prefix || 's215d01' }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -57,13 +59,15 @@ jobs:
       AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
       FeatureToggles__EnableAuditLogging: ${{ inputs.enable_audit_logging || 'false' }}
       AZURE_ENABLE_AUDIT_LOGGING: ${{ inputs.enable_audit_logging || 'false' }}
+      VM_USERNAME: ${{ secrets.VM_USERNAME }}
+      VM_PASSWORD: ${{ secrets.VM_PASSWORD }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: 'Get latest tag if no version provided'
-        if: ${{ !inputs.use_current_branch }}
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.use_current_branch }}
         id: get_latest_tag
         run: |
           if [[ -z "${{ env.INFRA_VERSION }}" ]]; then
@@ -77,37 +81,17 @@ jobs:
           fi
 
       - name: Checkout (version)
-        if: ${{ !inputs.use_current_branch }}
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.use_current_branch }}
         uses: actions/checkout@v6
         with:
           ref: ${{ env.infra_version }}
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Install azd
-        uses: Azure/setup-azd@v2
-
-      - name: Install .NET Aspire workload
-        run: dotnet workload install aspire
-        
       - name: Ensure Azure CLI is installed
         run: |
           if ! command -v az &> /dev/null; then
             curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
           fi
 
-      - name: Log in with Azure (Federated Credentials)
-        if: ${{ env.AZURE_CLIENT_ID != '' }}
-        run: |
-          azd auth login `
-            --client-id "$Env:AZURE_CLIENT_ID" `
-            --federated-credential-provider "github" `
-            --tenant-id "$Env:AZURE_TENANT_ID"
-        shell: pwsh
-        
       - name: Login to Azure
         uses: azure/login@v3
         with:
@@ -116,16 +100,28 @@ jobs:
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
         
       - name: Run Bicep What-If
-        if: ${{ inputs.what_if == true }}
+        if: ${{ github.event_name == 'push' || inputs.what_if == true }}
         uses: Azure/deployment-what-if-action@v1.0.0
         with:
           subscription: ${{ env.AZURE_SUBSCRIPTION_ID }}
           resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
-          templateFile: src/app-host/infra/main.bicep
-#          parametersFile: "app-host/infra/main.parameters.json"
-          additionalParameters: environmentName="${{ env.AZURE_ENV_NAME }}" environmentPrefix="${{ env.AZURE_ENV_PREFIX }}" location="${{ env.AZURE_LOCATION }}" monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}" containerAppManagedEnvironmentNumber="${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}" containerAppVnet="${{ env.AZURE_CONTAINER_APP_VNET }}" containerAppEnvSubnet="${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}" enableAuditLogging="${{ env.FeatureToggles__EnableAuditLogging }}" 
+          templateFile: infra/stacks/client-agent/main.bicep
+          additionalParameters: environmentName="${{ env.AZURE_ENV_NAME }}" environmentPrefix="${{ env.AZURE_ENV_PREFIX }}" location="${{ env.AZURE_LOCATION }}" monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}" containerAppManagedEnvironmentNumber="${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}" containerAppVnet="${{ env.AZURE_CONTAINER_APP_VNET }}" containerAppEnvSubnet="${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}" enableAuditLogging="${{ env.FeatureToggles__EnableAuditLogging }}" adminUsername="${{ env.VM_USERNAME }}" adminPassword="${{ env.VM_PASSWORD }}"
 
       - name: Provision Infrastructure
-        if: ${{ inputs.what_if == false }}
-        run: azd provision --no-prompt --environment ${{ env.AZURE_ENV_NAME }}
-        working-directory: src/app-host
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.what_if == false }}
+        run: |
+          az deployment group create \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --subscription "${{ env.AZURE_SUBSCRIPTION_ID }}" \
+            --template-file infra/stacks/client-agent/main.bicep \
+            --parameters environmentName="${{ env.AZURE_ENV_NAME }}" \
+              environmentPrefix="${{ env.AZURE_ENV_PREFIX }}" \
+              location="${{ env.AZURE_LOCATION }}" \
+              monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}" \
+              containerAppManagedEnvironmentNumber="${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}" \
+              containerAppVnet="${{ env.AZURE_CONTAINER_APP_VNET }}" \
+              containerAppEnvSubnet="${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}" \
+              enableAuditLogging="${{ env.FeatureToggles__EnableAuditLogging }}" \
+              adminUsername="${{ env.VM_USERNAME }}" \
+              adminPassword="${{ env.VM_PASSWORD }}"
