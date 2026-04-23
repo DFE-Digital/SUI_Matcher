@@ -24,6 +24,11 @@ public class BlobFileOrchestratorTests
         Id,GivenName,FamilyName,DOB,Postcode,Email,Gender,Phone
         1111,Jane,Doe,2012-05-10,SW1A 1AA,jane@example.com,F,07123456789
         """;
+    private static readonly MatchResultsBlobNames BlobNames = new(
+        "20260120120000_test-file/test-file.csv",
+        "20260120120000_test-file/test-file_full-results.csv",
+        "20260120120000_test-file/test-file_success.csv"
+    );
     private readonly Mock<IBlobStorageClient> _blobFileReader;
     private readonly Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>> _blobPayloadProcessor;
     private readonly Mock<ILogger<BlobFileOrchestrator>> _logger;
@@ -138,6 +143,7 @@ public class BlobFileOrchestratorTests
         _matchResultsService.Verify(
             x =>
                 x.ExportSuccessResultsAsync(
+                    It.Is<MatchResultsBlobNames>(names => names == BlobNames),
                     "test-file.csv",
                     It.Is<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(records =>
                         records.Count == 1
@@ -174,6 +180,7 @@ public class BlobFileOrchestratorTests
         _matchResultsService.Verify(
             x =>
                 x.ExportFullResultsAsync(
+                    It.Is<MatchResultsBlobNames>(names => names == BlobNames),
                     "test-file.csv",
                     It.Is<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(records =>
                         records.Count == 1 && records.Single().OriginalData.Record["Id"] == "1111"
@@ -352,6 +359,7 @@ public class BlobFileOrchestratorTests
         _matchResultsService.Verify(
             x =>
                 x.ExportSuccessResultsAsync(
+                    It.IsAny<MatchResultsBlobNames>(),
                     It.IsAny<string>(),
                     It.IsAny<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(),
                     It.IsAny<CancellationToken>()
@@ -361,6 +369,7 @@ public class BlobFileOrchestratorTests
         _matchResultsService.Verify(
             x =>
                 x.ExportFullResultsAsync(
+                    It.IsAny<MatchResultsBlobNames>(),
                     It.IsAny<string>(),
                     It.IsAny<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(),
                     It.IsAny<CancellationToken>()
@@ -399,7 +408,12 @@ public class BlobFileOrchestratorTests
             .ReturnsAsync(matchedResults);
         _matchResultsService
             .Setup(x =>
-                x.ExportSuccessResultsAsync("test-file.csv", matchedResults, CancellationToken.None)
+                x.ExportSuccessResultsAsync(
+                    It.IsAny<MatchResultsBlobNames>(),
+                    "test-file.csv",
+                    matchedResults,
+                    CancellationToken.None
+                )
             )
             .ThrowsAsync(new InvalidOperationException("Could not write success file."));
 
@@ -421,6 +435,7 @@ public class BlobFileOrchestratorTests
         _matchResultsService.Verify(
             x =>
                 x.ExportFullResultsAsync(
+                    It.IsAny<MatchResultsBlobNames>(),
                     It.IsAny<string>(),
                     It.IsAny<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(),
                     It.IsAny<CancellationToken>()
@@ -449,7 +464,12 @@ public class BlobFileOrchestratorTests
             .ReturnsAsync(matchedResults);
         _matchResultsService
             .Setup(x =>
-                x.ExportFullResultsAsync("test-file.csv", matchedResults, CancellationToken.None)
+                x.ExportFullResultsAsync(
+                    It.IsAny<MatchResultsBlobNames>(),
+                    "test-file.csv",
+                    matchedResults,
+                    CancellationToken.None
+                )
             )
             .ThrowsAsync(new InvalidOperationException("Could not write full match results file."));
 
@@ -552,6 +572,7 @@ public class BlobFileOrchestratorTests
         _matchResultsService.Verify(
             x =>
                 x.ExportSuccessResultsAsync(
+                    It.IsAny<MatchResultsBlobNames>(),
                     It.IsAny<string>(),
                     It.IsAny<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(),
                     It.IsAny<CancellationToken>()
@@ -561,6 +582,7 @@ public class BlobFileOrchestratorTests
         _matchResultsService.Verify(
             x =>
                 x.ExportFullResultsAsync(
+                    It.IsAny<MatchResultsBlobNames>(),
                     It.IsAny<string>(),
                     It.IsAny<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(),
                     It.IsAny<CancellationToken>()

@@ -14,13 +14,13 @@ namespace SUI.Client.StorageProcessJob.Application;
 public sealed class MatchResultsService(
     ILogger<MatchResultsService> logger,
     IBlobStorageClient blobStorageClient,
-    MatchResultsBlobNameBuilder matchResultsBlobNameBuilder,
     IOptions<StorageProcessJobOptions> options
 ) : IMatchResultsService
 {
     private const string CsvContentType = "text/csv";
 
     public async Task ExportSuccessResultsAsync(
+        MatchResultsBlobNames blobNames,
         string sourceBlobName,
         IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
         CancellationToken cancellationToken
@@ -61,33 +61,35 @@ public sealed class MatchResultsService(
         }
 
         var csvContent = BuildSuccessCsv(successfulMatches);
-        var destinationBlobName = matchResultsBlobNameBuilder.BuildSuccessResultsBlobName(
-            sourceBlobName
-        );
 
         await blobStorageClient.UploadBlobAsync(
             options.Value.SuccessContainerName,
-            destinationBlobName,
+            blobNames.SuccessResultsBlobName,
             BinaryData.FromString(csvContent),
             CsvContentType,
             cancellationToken
         );
     }
 
-    public Task ExportFullResultsAsync(
+    public async Task ExportFullResultsAsync(
+        MatchResultsBlobNames blobNames,
         string sourceBlobName,
         IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
         CancellationToken cancellationToken
     )
     {
-        var csvContent = BuildFullResultsCsv(matchedResults);
-        var destinationBlobName = matchResultsBlobNameBuilder.BuildFullResultsBlobName(
-            sourceBlobName
-        );
+        // Guard
+        if (matchedResults.Count == 0)
+        {
+            logger.LogWarning("MatchResults is empty");
+            return;
+        }
 
-        return blobStorageClient.UploadBlobAsync(
+        var csvContent = BuildFullResultsCsv(matchedResults);
+
+        await blobStorageClient.UploadBlobAsync(
             options.Value.ProcessedContainerName,
-            destinationBlobName,
+            blobNames.FullResultsBlobName,
             BinaryData.FromString(csvContent),
             CsvContentType,
             cancellationToken

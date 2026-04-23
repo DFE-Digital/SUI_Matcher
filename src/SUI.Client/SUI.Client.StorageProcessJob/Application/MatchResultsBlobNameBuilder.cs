@@ -4,33 +4,36 @@ namespace SUI.Client.StorageProcessJob.Application;
 
 public sealed class MatchResultsBlobNameBuilder(TimeProvider timeProvider)
 {
+    public MatchResultsBlobNames Build(string sourceBlobName)
+    {
+        var fileName = Path.GetFileName(sourceBlobName);
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceBlobName);
+        var baseDirectory = BuildBaseDirectory(fileNameWithoutExtension);
+
+        return new MatchResultsBlobNames(
+            $"{baseDirectory}/{fileName}",
+            $"{baseDirectory}/{fileNameWithoutExtension}_full-results.csv",
+            $"{baseDirectory}/{fileNameWithoutExtension}_success.csv"
+        );
+    }
+
     public string BuildArchivedOriginalBlobName(string sourceBlobName)
     {
-        var processedDirectory = BuildBaseDirectory(sourceBlobName);
-        var fileName = Path.GetFileName(sourceBlobName);
-
-        return $"{processedDirectory}/{fileName}";
+        return Build(sourceBlobName).OriginalBlobName;
     }
 
     public string BuildFullResultsBlobName(string sourceBlobName)
     {
-        var processedDirectory = BuildBaseDirectory(sourceBlobName);
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceBlobName);
-
-        return $"{processedDirectory}/{fileNameWithoutExtension}_full-results.csv";
+        return Build(sourceBlobName).FullResultsBlobName;
     }
 
     public string BuildSuccessResultsBlobName(string sourceBlobName)
     {
-        var processedDirectory = BuildBaseDirectory(sourceBlobName);
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceBlobName);
-
-        return $"{processedDirectory}/{fileNameWithoutExtension}_success.csv";
+        return Build(sourceBlobName).SuccessResultsBlobName;
     }
 
-    private string BuildBaseDirectory(string sourceBlobName)
+    private string BuildBaseDirectory(string fileNameWithoutExtension)
     {
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceBlobName);
         var timestamp = timeProvider
             .GetUtcNow()
             .ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);

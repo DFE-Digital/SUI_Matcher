@@ -11,6 +11,7 @@ public interface IMatchResultsService
     /// <para>Records that fail validation fail silently and are logged</para>
     /// </summary>
     Task ExportSuccessResultsAsync(
+        MatchResultsBlobNames blobNames,
         string sourceBlobName,
         IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
         CancellationToken cancellationToken
@@ -20,6 +21,7 @@ public interface IMatchResultsService
     /// Append result headers to the original data and export to blob storage.
     /// </summary>
     Task ExportFullResultsAsync(
+        MatchResultsBlobNames blobNames,
         string sourceBlobName,
         IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
         CancellationToken cancellationToken

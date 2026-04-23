@@ -55,4 +55,52 @@ public class MatchResultsBlobNameBuilderTests
         Assert.Equal("20260120120000_test-file/test-file_full-results.csv", fullResultsBlobName);
         Assert.Equal("20260120120000_test-file/test-file_success.csv", successResultsBlobName);
     }
+
+    [Fact]
+    public void Should_BuildAllBlobNames_When_SourceBlobNameIsProvided()
+    {
+        var result = _sut.Build("test-file.csv");
+
+        Assert.Equal("20260120120000_test-file/test-file.csv", result.OriginalBlobName);
+        Assert.Equal(
+            "20260120120000_test-file/test-file_full-results.csv",
+            result.FullResultsBlobName
+        );
+        Assert.Equal(
+            "20260120120000_test-file/test-file_success.csv",
+            result.SuccessResultsBlobName
+        );
+    }
+
+    [Fact]
+    public void Should_BuildAllBlobNamesUsingFilename_When_SourceBlobNameContainsNestedPath()
+    {
+        var result = _sut.Build("incoming/folder/test-file.csv");
+
+        Assert.Equal("20260120120000_test-file/test-file.csv", result.OriginalBlobName);
+        Assert.Equal(
+            "20260120120000_test-file/test-file_full-results.csv",
+            result.FullResultsBlobName
+        );
+        Assert.Equal(
+            "20260120120000_test-file/test-file_success.csv",
+            result.SuccessResultsBlobName
+        );
+    }
+
+    [Fact]
+    public void Should_KeepCompatibilityMethodsAlignedWithBuild_When_SourceBlobNameIsProvided()
+    {
+        var blobNames = _sut.Build("test-file.csv");
+
+        Assert.Equal(
+            blobNames.OriginalBlobName,
+            _sut.BuildArchivedOriginalBlobName("test-file.csv")
+        );
+        Assert.Equal(blobNames.FullResultsBlobName, _sut.BuildFullResultsBlobName("test-file.csv"));
+        Assert.Equal(
+            blobNames.SuccessResultsBlobName,
+            _sut.BuildSuccessResultsBlobName("test-file.csv")
+        );
+    }
 }

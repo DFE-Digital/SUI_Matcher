@@ -58,26 +58,27 @@ public sealed class BlobFileOrchestrator(
             matchedResults.Count(r => r.IsSuccess)
         );
 
+        // Ensures we have the same timestamp and structure on each output
+        var blobNames = matchResultsBlobNameBuilder.Build(queueMessage.BlobName!);
+
         await matchResultsService.ExportSuccessResultsAsync(
+            blobNames,
             queueMessage.BlobName!,
             matchedResults,
             cancellationToken
         );
 
         await matchResultsService.ExportFullResultsAsync(
+            blobNames,
             queueMessage.BlobName!,
             matchedResults,
             cancellationToken
         );
 
-        var archivedOriginalBlobName = matchResultsBlobNameBuilder.BuildArchivedOriginalBlobName(
-            queueMessage.BlobName!
-        );
-
         await blobStorageClient.ArchiveProcessedAsync(
             queueMessage,
             options.Value.ProcessedContainerName,
-            archivedOriginalBlobName,
+            blobNames.OriginalBlobName,
             cancellationToken
         );
     }

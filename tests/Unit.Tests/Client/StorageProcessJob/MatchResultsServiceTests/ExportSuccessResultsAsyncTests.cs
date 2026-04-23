@@ -18,22 +18,21 @@ public class ExportSuccessResultsAsyncTests
         $"LL ID,Type,NhsNumber{Environment.NewLine}1111,NHSNo,92938475748{Environment.NewLine}";
     private static readonly string SingleRowWithSkippedRowsCsv =
         $"LL ID,Type,NhsNumber{Environment.NewLine}1111,NHSNo,92938475748{Environment.NewLine}";
+    private static readonly MatchResultsBlobNames BlobNames = new(
+        "20260120120000_test-file/test-file.csv",
+        "20260120120000_test-file/test-file_full-results.csv",
+        "20260120120000_test-file/test-file_success.csv"
+    );
 
     private readonly Mock<IBlobStorageClient> _blobStorageClient = new();
     private readonly Mock<ILogger<MatchResultsService>> _logger = new();
-    private readonly MatchResultsBlobNameBuilder _blobNameBuilder;
     private readonly IMatchResultsService _sut;
 
     public ExportSuccessResultsAsyncTests()
     {
-        _blobNameBuilder = new MatchResultsBlobNameBuilder(
-            new FakeTimeProvider(new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero))
-        );
-
         _sut = new MatchResultsService(
             _logger.Object,
             _blobStorageClient.Object,
-            _blobNameBuilder,
             Options.Create(
                 new StorageProcessJobOptions
                 {
@@ -53,6 +52,7 @@ public class ExportSuccessResultsAsyncTests
         };
 
         await _sut.ExportSuccessResultsAsync(
+            BlobNames,
             "test-file.csv",
             matchedResults,
             CancellationToken.None
@@ -81,6 +81,7 @@ public class ExportSuccessResultsAsyncTests
         };
 
         await _sut.ExportSuccessResultsAsync(
+            BlobNames,
             "test-file.csv",
             matchedResults,
             CancellationToken.None
@@ -105,6 +106,7 @@ public class ExportSuccessResultsAsyncTests
         var matchedResults = Array.Empty<ProcessedMatchRecord<CsvRecordDto>>();
 
         await _sut.ExportSuccessResultsAsync(
+            BlobNames,
             "test-file.csv",
             matchedResults,
             CancellationToken.None
@@ -132,6 +134,7 @@ public class ExportSuccessResultsAsyncTests
         };
 
         await _sut.ExportSuccessResultsAsync(
+            BlobNames,
             "test-file.csv",
             matchedResults,
             CancellationToken.None
@@ -161,6 +164,7 @@ public class ExportSuccessResultsAsyncTests
         };
 
         await _sut.ExportSuccessResultsAsync(
+            BlobNames,
             "test-file.csv",
             matchedResults,
             CancellationToken.None
@@ -192,6 +196,7 @@ public class ExportSuccessResultsAsyncTests
         };
 
         await _sut.ExportSuccessResultsAsync(
+            BlobNames,
             "test-file.csv",
             matchedResults,
             CancellationToken.None
