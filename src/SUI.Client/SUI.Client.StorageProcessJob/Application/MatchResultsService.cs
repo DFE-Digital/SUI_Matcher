@@ -221,6 +221,7 @@ public sealed class MatchResultsService(
             return matchedResult.ApiResult.Result.MatchStatus.ToString();
         }
 
-        return matchedResult.IsSuccess ? string.Empty : nameof(MatchStatus.Error);
+        // Edge case: No Result means the API Match call returned null.
+        return nameof(MatchStatus.Error);
     }
 }
