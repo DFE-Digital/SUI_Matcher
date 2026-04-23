@@ -41,7 +41,6 @@ public class BlobFileOrchestratorTests
         {
             ProcessedContainerName = "processed",
             SuccessContainerName = "success",
-            CsvParserName = CsvParserNameConstants.TypeOne,
         }
     );
 
@@ -292,7 +291,6 @@ public class BlobFileOrchestratorTests
                 {
                     ProcessedContainerName = "processed",
                     SuccessContainerName = "success",
-                    CsvParserName = CsvParserNameConstants.TypeOne,
                 }
             )
         );

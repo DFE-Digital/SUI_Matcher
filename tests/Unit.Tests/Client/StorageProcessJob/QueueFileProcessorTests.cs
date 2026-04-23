@@ -201,7 +201,6 @@ public class QueueFileProcessorTests
                 Options.Create(
                     new StorageProcessJobOptions
                     {
-                        CsvParserName = "TypeOne",
                         MessageVisibilityTimeoutMinutes = 10,
                         MessageVisibilityRenewalIntervalMinutes = 5,
                     }

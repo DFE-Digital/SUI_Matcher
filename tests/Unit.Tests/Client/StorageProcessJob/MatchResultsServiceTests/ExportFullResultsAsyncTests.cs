@@ -37,13 +37,7 @@ public class ExportFullResultsAsyncTests
         _sut = new MatchResultsService(
             _logger.Object,
             _blobStorageClient.Object,
-            Options.Create(
-                new StorageProcessJobOptions
-                {
-                    CsvParserName = CsvParserNameConstants.TypeOne,
-                    ProcessedContainerName = "processed",
-                }
-            )
+            Options.Create(new StorageProcessJobOptions { ProcessedContainerName = "processed" })
         );
     }
 

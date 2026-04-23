@@ -30,7 +30,7 @@ public class CsvPersonSpecParserTests
     }
 
     [Fact]
-    public void Should_MapPersonSpecification_When_TypeOneRecordIsValid()
+    public void Should_MapPersonSpecification_When_RecordIsValid()
     {
         var options = CreateDefaultOptions();
         var sut = new CsvPersonSpecParser(options);

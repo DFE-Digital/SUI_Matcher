@@ -256,7 +256,6 @@ public class AzureStorageQueueClientTests
                     QueueName = queueName,
                     MaxDequeueCount = maxDequeueCount,
                     MessageVisibilityTimeoutMinutes = visibilityTimeoutMinutes,
-                    CsvParserName = "TypeOne",
                 }
             );
 
