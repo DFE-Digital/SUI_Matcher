@@ -58,7 +58,6 @@ var tags = {
   Environment: environmentName
   EnvironmentPrefix: environmentPrefix
   'Service Offering': 'SUI'
-  Stack: 'client-agent'
 }
 
 module identity '../../modules/shared/identity.bicep' = {
