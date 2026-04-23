@@ -1,15 +1,18 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Shared.Models;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.StorageProcessJob;
 using SUI.Client.StorageProcessJob.Application;
 using SUI.Client.StorageProcessJob.Application.Interfaces;
 
-namespace Unit.Tests.Client.StorageProcessJob;
+namespace Unit.Tests.Client.StorageProcessJob.MatchResultsServiceTests;
 
-public class FullMatchResultsServiceTests
+public class ExportFullResultsAsyncTests
 {
     private static readonly string FullResultsCsv =
         $"Id,GivenName,FamilyName,SUI_Status,SUI_Score,SUI_NHSNo{Environment.NewLine}"
@@ -21,13 +24,21 @@ public class FullMatchResultsServiceTests
         + $"2222,John,Smith,Error,,{Environment.NewLine}";
 
     private readonly Mock<IBlobStorageClient> _blobStorageClient = new();
-    private readonly IFullMatchResultsService _sut;
+    private readonly IMatchResultsService _sut;
 
-    public FullMatchResultsServiceTests()
+    public ExportFullResultsAsyncTests()
     {
-        _sut = new FullMatchResultsService(
+        _sut = new MatchResultsService(
+            new FakeTimeProvider(),
+            Mock.Of<ILogger<MatchResultsService>>(),
             _blobStorageClient.Object,
-            Options.Create(new StorageProcessJobOptions { ProcessedContainerName = "processed" })
+            Options.Create(
+                new StorageProcessJobOptions
+                {
+                    CsvParserName = CsvParserNameConstants.TypeOne,
+                    ProcessedContainerName = "processed",
+                }
+            )
         );
     }
 
@@ -150,9 +161,9 @@ public class FullMatchResultsServiceTests
             OriginalData = new CsvRecordDto(new Dictionary<string, string>(originalFields)),
             IsSuccess = false,
             ErrorMessage = "Matching failed.",
-            ApiResult = new PersonMatchResponse()
+            ApiResult = new PersonMatchResponse
             {
-                Result = new MatchResult()
+                Result = new MatchResult
                 {
                     MatchStatus = MatchStatus.Error,
                     Score = null,

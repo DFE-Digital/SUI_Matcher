@@ -3,14 +3,24 @@ using SUI.Client.Core.Application.UseCases.MatchPeople;
 
 namespace SUI.Client.StorageProcessJob.Application.Interfaces;
 
-public interface ISuccessMatchFileWriter
+public interface IMatchResultsService
 {
     /// <summary>
     /// Filter on successful matches with a confident score
-    /// and write to a new CSV file in blob storage.
+    /// and export a new CSV file in blob storage.
     /// <para>Records that fail validation fail silently and are logged</para>
     /// </summary>
-    Task WriteAsync(
+    Task ExportSuccessResultsAsync(
+        string sourceBlobName,
+        IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
+        CancellationToken cancellationToken
+    );
+
+    /// <summary>
+    /// Append result headers to the original data and export to blob storage.
+    /// </summary>
+    Task ExportFullResultsAsync(
+        string destinationBlobName,
         string sourceBlobName,
         IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
         CancellationToken cancellationToken

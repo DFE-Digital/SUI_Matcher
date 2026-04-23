@@ -5,13 +5,14 @@ using Moq;
 using Shared.Models;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.StorageProcessJob;
 using SUI.Client.StorageProcessJob.Application;
 using SUI.Client.StorageProcessJob.Application.Interfaces;
 
-namespace Unit.Tests.Client.StorageProcessJob;
+namespace Unit.Tests.Client.StorageProcessJob.MatchResultsServiceTests;
 
-public class SuccessMatchFileWriterTests
+public class ExportSuccessResultsAsyncTests
 {
     private static readonly string SingleRowCsv =
         $"LL ID,Type,NhsNumber{Environment.NewLine}1111,NHSNo,92938475748{Environment.NewLine}";
@@ -19,22 +20,22 @@ public class SuccessMatchFileWriterTests
         $"LL ID,Type,NhsNumber{Environment.NewLine}1111,NHSNo,92938475748{Environment.NewLine}";
 
     private readonly Mock<IBlobStorageClient> _blobStorageClient = new();
-    private readonly Mock<ILogger<SuccessMatchFileWriter>> _logger = new();
+    private readonly Mock<ILogger<MatchResultsService>> _logger = new();
     private readonly FakeTimeProvider _timeProvider = new(
         new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
     );
-    private readonly ISuccessMatchFileWriter _sut;
+    private readonly IMatchResultsService _sut;
 
-    public SuccessMatchFileWriterTests()
+    public ExportSuccessResultsAsyncTests()
     {
-        _sut = new SuccessMatchFileWriter(
+        _sut = new MatchResultsService(
             _timeProvider,
             _logger.Object,
             _blobStorageClient.Object,
             Options.Create(
                 new StorageProcessJobOptions
                 {
-                    CsvParserName = "TypeOne",
+                    CsvParserName = CsvParserNameConstants.TypeOne,
                     SuccessContainerName = "success",
                 }
             )
@@ -49,7 +50,11 @@ public class SuccessMatchFileWriterTests
             CreateMatchedRecord("1111", true, MatchStatus.Match, 0.96m, "92938475748"),
         };
 
-        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+        await _sut.ExportSuccessResultsAsync(
+            "test-file.csv",
+            matchedResults,
+            CancellationToken.None
+        );
 
         _blobStorageClient.Verify(
             x =>
@@ -73,7 +78,11 @@ public class SuccessMatchFileWriterTests
             CreateMatchedRecord("2222", true, MatchStatus.PotentialMatch, 0.99m, "92938475749"),
         };
 
-        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+        await _sut.ExportSuccessResultsAsync(
+            "test-file.csv",
+            matchedResults,
+            CancellationToken.None
+        );
 
         _blobStorageClient.Verify(
             x =>
@@ -93,7 +102,11 @@ public class SuccessMatchFileWriterTests
     {
         var matchedResults = Array.Empty<ProcessedMatchRecord<CsvRecordDto>>();
 
-        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+        await _sut.ExportSuccessResultsAsync(
+            "test-file.csv",
+            matchedResults,
+            CancellationToken.None
+        );
 
         _blobStorageClient.Verify(
             x =>
@@ -116,7 +129,11 @@ public class SuccessMatchFileWriterTests
             CreateMatchedRecord(null, true, MatchStatus.Match, 0.96m, "92938475748"),
         };
 
-        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+        await _sut.ExportSuccessResultsAsync(
+            "test-file.csv",
+            matchedResults,
+            CancellationToken.None
+        );
 
         _blobStorageClient.Verify(
             x =>
@@ -133,7 +150,6 @@ public class SuccessMatchFileWriterTests
         VerifyWarningLogged("test-file.csv", "Id");
     }
 
-    // Edge case
     [Fact]
     public async Task Should_NotUploadBlob_When_EligibleRecordIsMissingNhsNumber()
     {
@@ -142,7 +158,11 @@ public class SuccessMatchFileWriterTests
             CreateMatchedRecord("1111", true, MatchStatus.Match, 0.96m, null),
         };
 
-        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+        await _sut.ExportSuccessResultsAsync(
+            "test-file.csv",
+            matchedResults,
+            CancellationToken.None
+        );
 
         _blobStorageClient.Verify(
             x =>
@@ -169,7 +189,11 @@ public class SuccessMatchFileWriterTests
             CreateMatchedRecord("3333", true, MatchStatus.Match, 0.96m, null),
         };
 
-        await _sut.WriteAsync("test-file.csv", matchedResults, CancellationToken.None);
+        await _sut.ExportSuccessResultsAsync(
+            "test-file.csv",
+            matchedResults,
+            CancellationToken.None
+        );
 
         _blobStorageClient.Verify(
             x =>

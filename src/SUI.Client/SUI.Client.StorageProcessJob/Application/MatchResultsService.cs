@@ -1,0 +1,229 @@
+using System.Globalization;
+using System.Text;
+using CsvHelper;
+using CsvHelper.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Shared.Models;
+using SUI.Client.Core.Application.Models;
+using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.StorageProcessJob.Application.Interfaces;
+
+namespace SUI.Client.StorageProcessJob.Application;
+
+public sealed class MatchResultsService(
+    TimeProvider timeProvider,
+    ILogger<MatchResultsService> logger,
+    IBlobStorageClient blobStorageClient,
+    IOptions<StorageProcessJobOptions> options
+) : IMatchResultsService
+{
+    private const string CsvContentType = "text/csv";
+
+    public async Task ExportSuccessResultsAsync(
+        string sourceBlobName,
+        IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
+        CancellationToken cancellationToken
+    )
+    {
+        const string inputIdHeader = "Id";
+        var successfulMatches = new List<SuccessfulMatchRecord>();
+
+        var highConfidenceMatches = matchedResults
+            .Where(record =>
+                record is { IsSuccess: true, ApiResult.Result.IsHighConfidenceMatch: true }
+            )
+            .ToList();
+
+        logger.LogInformation(
+            "Found {SuccessfulMatchesCount} successful matches with high confidence in blob {SourceBlobName}.",
+            highConfidenceMatches.Count,
+            sourceBlobName
+        );
+
+        foreach (var matchedResult in highConfidenceMatches)
+        {
+            var successfulMatch = TryMapSuccessfulMatchRecord(
+                sourceBlobName,
+                matchedResult,
+                inputIdHeader
+            );
+
+            if (successfulMatch is not null)
+            {
+                successfulMatches.Add(successfulMatch);
+            }
+        }
+
+        if (successfulMatches.Count == 0)
+        {
+            return;
+        }
+
+        var csvContent = BuildSuccessCsv(successfulMatches);
+        var destinationBlobName = BuildSuccessBlobName(sourceBlobName);
+
+        await blobStorageClient.UploadBlobAsync(
+            options.Value.SuccessContainerName,
+            destinationBlobName,
+            BinaryData.FromString(csvContent),
+            CsvContentType,
+            cancellationToken
+        );
+    }
+
+    public Task ExportFullResultsAsync(
+        string destinationBlobName,
+        string sourceBlobName,
+        IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
+        CancellationToken cancellationToken
+    )
+    {
+        var csvContent = BuildFullResultsCsv(matchedResults);
+
+        return blobStorageClient.UploadBlobAsync(
+            options.Value.ProcessedContainerName,
+            destinationBlobName,
+            BinaryData.FromString(csvContent),
+            CsvContentType,
+            cancellationToken
+        );
+    }
+
+    private SuccessfulMatchRecord? TryMapSuccessfulMatchRecord(
+        string sourceBlobName,
+        ProcessedMatchRecord<CsvRecordDto> matchedRecord,
+        string inputIdHeader
+    )
+    {
+        const string successNhsNumberHeader = "NhsNumber";
+        const string nhsNoType = "NHSNo";
+
+        if (
+            !matchedRecord.OriginalData.Record.TryGetValue(inputIdHeader, out var id)
+            || string.IsNullOrWhiteSpace(id)
+        )
+        {
+            logger.LogWarning(
+                "Skipping successful match record from blob {SourceBlobName} because required field {FieldName} is missing.",
+                sourceBlobName,
+                inputIdHeader
+            );
+
+            return null;
+        }
+
+        var nhsNumber = matchedRecord.ApiResult?.Result?.NhsNumber;
+
+        if (string.IsNullOrWhiteSpace(nhsNumber))
+        {
+            logger.LogWarning(
+                "Skipping successful match record from blob {SourceBlobName} for {InputIdHeader} {Id} because required field {FieldName} is missing.",
+                sourceBlobName,
+                inputIdHeader,
+                id,
+                successNhsNumberHeader
+            );
+
+            return null;
+        }
+
+        return new SuccessfulMatchRecord(id, nhsNoType, nhsNumber);
+    }
+
+    private string BuildSuccessBlobName(string sourceBlobName)
+    {
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceBlobName);
+        var timestamp = timeProvider
+            .GetUtcNow()
+            .ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+
+        return $"{timestamp}_{fileNameWithoutExtension}/{fileNameWithoutExtension}_success.csv";
+    }
+
+    private static string BuildSuccessCsv(IReadOnlyCollection<SuccessfulMatchRecord> records)
+    {
+        const string successIdHeader = "LL ID";
+        const string successTypeHeader = "Type";
+        const string successNhsNumberHeader = "NhsNumber";
+
+        var builder = new StringBuilder();
+        using var textWriter = new StringWriter(builder, CultureInfo.InvariantCulture);
+        using var csvWriter = new CsvWriter(
+            textWriter,
+            new CsvConfiguration(CultureInfo.InvariantCulture) { NewLine = Environment.NewLine }
+        );
+
+        csvWriter.WriteField(successIdHeader);
+        csvWriter.WriteField(successTypeHeader);
+        csvWriter.WriteField(successNhsNumberHeader);
+        csvWriter.NextRecord();
+
+        foreach (var record in records)
+        {
+            csvWriter.WriteField(record.Id);
+            csvWriter.WriteField(record.Type);
+            csvWriter.WriteField(record.NhsNumber);
+            csvWriter.NextRecord();
+        }
+
+        return builder.ToString();
+    }
+
+    private static string BuildFullResultsCsv(
+        IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults
+    )
+    {
+        const string fullStatusHeader = "SUI_Status";
+        const string fullScoreHeader = "SUI_Score";
+        const string fullNhsNumberHeader = "SUI_NHSNo";
+
+        var originalHeaders =
+            matchedResults.FirstOrDefault()?.OriginalData.Record.Keys.ToList() ?? [];
+
+        var builder = new StringBuilder();
+        using var textWriter = new StringWriter(builder, CultureInfo.InvariantCulture);
+        using var csvWriter = new CsvWriter(
+            textWriter,
+            new CsvConfiguration(CultureInfo.InvariantCulture) { NewLine = Environment.NewLine }
+        );
+
+        foreach (var header in originalHeaders)
+        {
+            csvWriter.WriteField(header);
+        }
+
+        csvWriter.WriteField(fullStatusHeader);
+        csvWriter.WriteField(fullScoreHeader);
+        csvWriter.WriteField(fullNhsNumberHeader);
+        csvWriter.NextRecord();
+
+        foreach (var matchedResult in matchedResults)
+        {
+            foreach (var header in originalHeaders)
+            {
+                matchedResult.OriginalData.Record.TryGetValue(header, out var value);
+                csvWriter.WriteField(value);
+            }
+
+            csvWriter.WriteField(MapStatus(matchedResult));
+            csvWriter.WriteField(
+                matchedResult.ApiResult?.Result?.Score?.ToString(CultureInfo.InvariantCulture)
+            );
+            csvWriter.WriteField(matchedResult.ApiResult?.Result?.NhsNumber);
+            csvWriter.NextRecord();
+        }
+
+        return builder.ToString();
+    }
+
+    private static string MapStatus(ProcessedMatchRecord<CsvRecordDto> matchedResult)
+    {
+        if (matchedResult.ApiResult?.Result is not null)
+        {
+            return matchedResult.ApiResult.Result.MatchStatus.ToString();
+        }
+
+        return matchedResult.IsSuccess ? string.Empty : MatchStatus.Error.ToString();
+    }
+}
