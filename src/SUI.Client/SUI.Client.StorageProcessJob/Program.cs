@@ -37,6 +37,11 @@ builder
 builder.Services.Configure<PersonMatchingOptions>(
     builder.Configuration.GetSection(PersonMatchingOptions.SectionName)
 );
+builder
+    .Services.AddOptions<CsvMatchDataOptions>()
+    .Bind(builder.Configuration.GetSection(CsvMatchDataOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services.AddSingleton(TimeProvider.System);
 
@@ -90,11 +95,8 @@ builder.Services.AddSingleton(
     typeof(IMatchPersonRecordOrchestrator<>),
     typeof(MatchPersonRecordOrchestrator<>)
 );
-builder.Services.AddSingleton<IPersonSpecParser<CsvRecordDto>>(serviceProvider =>
-{
-    var options = serviceProvider.GetRequiredService<IOptions<StorageProcessJobOptions>>().Value;
-    return new CsvPersonSpecParser(options.CsvParserName);
-});
+builder.Services.AddSingleton<IPersonSpecParser<CsvRecordDto>, CsvPersonSpecParser>();
+builder.Services.AddSingleton<ICsvHeadersProvider, CsvMatchingHeadersProvider>();
 
 builder.Services.AddHttpClient();
 

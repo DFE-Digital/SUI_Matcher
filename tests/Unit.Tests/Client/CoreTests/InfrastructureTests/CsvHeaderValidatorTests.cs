@@ -11,8 +11,9 @@ public class CsvHeaderValidatorTests
             ["Id", "GivenName", "FamilyName", "DOB", "Postcode"],
             StringComparer.OrdinalIgnoreCase
         );
+        var requiredHeaders = new[] { "Id", "GivenName", "FamilyName", "DOB", "Postcode" };
 
-        CsvHeaderValidator.Validate(headers, CsvParserNameConstants.TypeOne);
+        CsvHeaderValidator.Validate(headers, requiredHeaders);
     }
 
     [Fact]
@@ -22,9 +23,10 @@ public class CsvHeaderValidatorTests
             ["GivenName", "FamilyName", "DOB"],
             StringComparer.OrdinalIgnoreCase
         );
+        var requiredHeaders = new[] { "Id", "GivenName", "FamilyName", "DOB", "Postcode" };
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            CsvHeaderValidator.Validate(headers, CsvParserNameConstants.TypeOne)
+            CsvHeaderValidator.Validate(headers, requiredHeaders)
         );
 
         Assert.Contains("Id", exception.Message);
@@ -32,12 +34,42 @@ public class CsvHeaderValidatorTests
     }
 
     [Fact]
-    public void Should_Throw_When_ParserTypeIsUnknown()
+    public void Should_NotThrow_When_ExtraHeadersArePresent()
     {
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            CsvHeaderValidator.Validate([], "InvalidParser")
+        var headers = new HashSet<string>(
+            ["Id", "GivenName", "FamilyName", "DOB", "Postcode", "ExtraColumn1", "ExtraColumn2"],
+            StringComparer.OrdinalIgnoreCase
         );
+        var requiredHeaders = new[] { "Id", "GivenName", "FamilyName", "DOB", "Postcode" };
 
-        Assert.Equal("Unknown parser type: InvalidParser.", exception.Message);
+        CsvHeaderValidator.Validate(headers, requiredHeaders);
+    }
+
+    [Fact]
+    public void Should_ReturnEmpty_When_AllExpectedHeadersArePresent()
+    {
+        var headers = new HashSet<string>(
+            ["Id", "GivenName", "FamilyName", "DOB", "Postcode", "Email", "Gender", "Phone"],
+            StringComparer.OrdinalIgnoreCase
+        );
+        var expectedHeaders = new[] { "Email", "Gender", "Phone" };
+
+        var missingHeaders = CsvHeaderValidator.GetMissingHeaders(headers, expectedHeaders);
+
+        Assert.Empty(missingHeaders);
+    }
+
+    [Fact]
+    public void Should_ReturnMissingHeaders_When_ExpectedHeadersAreMissing()
+    {
+        var headers = new HashSet<string>(
+            ["Id", "GivenName", "FamilyName", "DOB", "Postcode", "Email"],
+            StringComparer.OrdinalIgnoreCase
+        );
+        var expectedHeaders = new[] { "Email", "Gender", "Phone" };
+
+        var missingHeaders = CsvHeaderValidator.GetMissingHeaders(headers, expectedHeaders);
+
+        Assert.Equal(["Gender", "Phone"], missingHeaders);
     }
 }
