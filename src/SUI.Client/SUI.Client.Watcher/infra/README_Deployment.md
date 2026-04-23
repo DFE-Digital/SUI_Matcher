@@ -6,8 +6,8 @@ This document is a work in progress. More information will be added as we update
 
 ## Deployment autoamated.
 
-Run the client.bicep file from the pipeline to deploy most of the required infrastructure. This does not include all aspects as some needs to be added manually due to not having implicit references to the app host.
-The long-term stack root for this deployment shape is [`infra/stacks/client-agent/main.bicep`](../../../../infra/stacks/client-agent/main.bicep); this directory's `client.bicep` remains in place for compatibility with the current deployment flow.
+Run the client-agent stack from the pipeline to deploy most of the required infrastructure. This does not include all aspects as some needs to be added manually due to access restrictions around existing app-host resources.
+The deployment stack root is [`infra/stacks/client-agent/main.bicep`](../../../../infra/stacks/client-agent/main.bicep); this directory's `client.bicep` remains in place as a compatibility wrapper.
 
 ## Deployment manual.
 
@@ -16,5 +16,4 @@ There are a few steps to be able to get all the infrastructure running.
 - Add a private endpoint between the client VM VNET and the managedEnvrionment (where the API containers are running).
 - Add the route table '-rt-01' to the 'cae' VNETs subnet.
 - Add VNET peering between cae VNET and the VNET for the firewall.
-
 
