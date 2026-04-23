@@ -20,7 +20,6 @@ public interface IMatchResultsService
     /// Append result headers to the original data and export to blob storage.
     /// </summary>
     Task ExportFullResultsAsync(
-        string destinationBlobName,
         string sourceBlobName,
         IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
         CancellationToken cancellationToken

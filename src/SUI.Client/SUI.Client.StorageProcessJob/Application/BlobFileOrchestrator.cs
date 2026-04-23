@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SUI.Client.Core.Application.Interfaces;
@@ -11,10 +10,10 @@ namespace SUI.Client.StorageProcessJob.Application;
 
 public sealed class BlobFileOrchestrator(
     ILogger<BlobFileOrchestrator> logger,
-    TimeProvider timeProvider,
     IBlobStorageClient blobStorageClient,
     IMatchPersonRecordOrchestrator<CsvRecordDto> matchPersonRecordOrchestrator,
     IMatchResultsService matchResultsService,
+    MatchResultsBlobNameBuilder matchResultsBlobNameBuilder,
     ICsvHeadersProvider csvHeadersProvider,
     IOptions<StorageProcessJobOptions> options
 ) : IBlobFileOrchestrator
@@ -65,24 +64,20 @@ public sealed class BlobFileOrchestrator(
             cancellationToken
         );
 
-        var processedDirectory = BuildProcessedDirectoryName(queueMessage.BlobName!);
-        var processedBlobName = BuildProcessedBlobName(processedDirectory, queueMessage.BlobName!);
-        var fullResultsBlobName = BuildFullResultsBlobName(
-            processedDirectory,
-            queueMessage.BlobName!
-        );
-
         await matchResultsService.ExportFullResultsAsync(
-            fullResultsBlobName,
             queueMessage.BlobName!,
             matchedResults,
             cancellationToken
         );
 
+        var archivedOriginalBlobName = matchResultsBlobNameBuilder.BuildArchivedOriginalBlobName(
+            queueMessage.BlobName!
+        );
+
         await blobStorageClient.ArchiveProcessedAsync(
             queueMessage,
             options.Value.ProcessedContainerName,
-            processedBlobName,
+            archivedOriginalBlobName,
             cancellationToken
         );
     }
@@ -110,27 +105,5 @@ public sealed class BlobFileOrchestrator(
                 queueMessage.BlobName
             );
         }
-    }
-
-    private string BuildProcessedDirectoryName(string blobName)
-    {
-        var fileNameNoExt = Path.GetFileNameWithoutExtension(blobName);
-        var timestamp = timeProvider
-            .GetUtcNow()
-            .ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-
-        return $"{timestamp}_{fileNameNoExt}";
-    }
-
-    private static string BuildProcessedBlobName(string processedDirectory, string blobName)
-    {
-        var fileName = Path.GetFileName(blobName);
-        return $"{processedDirectory}/{fileName}";
-    }
-
-    private static string BuildFullResultsBlobName(string processedDirectory, string blobName)
-    {
-        var fileNameNoExt = Path.GetFileNameWithoutExtension(blobName);
-        return $"{processedDirectory}/{fileNameNoExt}_full-results.csv";
     }
 }

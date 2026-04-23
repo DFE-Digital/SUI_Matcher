@@ -69,6 +69,7 @@ builder.Services.AddSingleton<IBlobStorageClient, AzureBlobStorageClient>();
 builder.Services.AddSingleton<IStorageQueueClient, AzureStorageQueueClient>();
 builder.Services.AddSingleton<IStorageQueueMessageParser, EventGridMessageParser>();
 builder.Services.AddSingleton<IBlobFileOrchestrator, BlobFileOrchestrator>();
+builder.Services.AddSingleton<MatchResultsBlobNameBuilder>();
 builder.Services.AddSingleton<IMatchResultsService, MatchResultsService>();
 builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
     (serviceProvider, client) =>

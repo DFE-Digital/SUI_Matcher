@@ -1,12 +1,11 @@
 using Microsoft.Extensions.Time.Testing;
 using SUI.Client.StorageProcessJob.Application;
-using SUI.Client.StorageProcessJob.Application.Interfaces;
 
 namespace Unit.Tests.Client.StorageProcessJob;
 
 public class MatchResultsBlobNameBuilderTests
 {
-    private readonly IMatchResultsBlobNameBuilder _sut;
+    private readonly MatchResultsBlobNameBuilder _sut;
 
     public MatchResultsBlobNameBuilderTests()
     {

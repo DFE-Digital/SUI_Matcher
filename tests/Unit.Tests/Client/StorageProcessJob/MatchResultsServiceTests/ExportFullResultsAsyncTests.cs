@@ -24,14 +24,19 @@ public class ExportFullResultsAsyncTests
         + $"2222,John,Smith,Error,,{Environment.NewLine}";
 
     private readonly Mock<IBlobStorageClient> _blobStorageClient = new();
+    private readonly MatchResultsBlobNameBuilder _blobNameBuilder;
     private readonly IMatchResultsService _sut;
 
     public ExportFullResultsAsyncTests()
     {
+        _blobNameBuilder = new MatchResultsBlobNameBuilder(
+            new FakeTimeProvider(new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero))
+        );
+
         _sut = new MatchResultsService(
-            new FakeTimeProvider(),
             Mock.Of<ILogger<MatchResultsService>>(),
             _blobStorageClient.Object,
+            _blobNameBuilder,
             Options.Create(
                 new StorageProcessJobOptions
                 {
@@ -61,12 +66,7 @@ public class ExportFullResultsAsyncTests
             ),
         };
 
-        await _sut.ExportFullResultsAsync(
-            "20260120120000_test-file/test-file_full-results.csv",
-            "test-file.csv",
-            matchedResults,
-            CancellationToken.None
-        );
+        await _sut.ExportFullResultsAsync("test-file.csv", matchedResults, CancellationToken.None);
 
         _blobStorageClient.Verify(
             x =>
@@ -108,12 +108,7 @@ public class ExportFullResultsAsyncTests
             ),
         };
 
-        await _sut.ExportFullResultsAsync(
-            "20260120120000_test-file/test-file_full-results.csv",
-            "test-file.csv",
-            matchedResults,
-            CancellationToken.None
-        );
+        await _sut.ExportFullResultsAsync("test-file.csv", matchedResults, CancellationToken.None);
 
         _blobStorageClient.Verify(
             x =>

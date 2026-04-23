@@ -12,9 +12,9 @@ using SUI.Client.StorageProcessJob.Application.Interfaces;
 namespace SUI.Client.StorageProcessJob.Application;
 
 public sealed class MatchResultsService(
-    TimeProvider timeProvider,
     ILogger<MatchResultsService> logger,
     IBlobStorageClient blobStorageClient,
+    MatchResultsBlobNameBuilder matchResultsBlobNameBuilder,
     IOptions<StorageProcessJobOptions> options
 ) : IMatchResultsService
 {
@@ -61,7 +61,9 @@ public sealed class MatchResultsService(
         }
 
         var csvContent = BuildSuccessCsv(successfulMatches);
-        var destinationBlobName = BuildSuccessBlobName(sourceBlobName);
+        var destinationBlobName = matchResultsBlobNameBuilder.BuildSuccessResultsBlobName(
+            sourceBlobName
+        );
 
         await blobStorageClient.UploadBlobAsync(
             options.Value.SuccessContainerName,
@@ -73,13 +75,15 @@ public sealed class MatchResultsService(
     }
 
     public Task ExportFullResultsAsync(
-        string destinationBlobName,
         string sourceBlobName,
         IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
         CancellationToken cancellationToken
     )
     {
         var csvContent = BuildFullResultsCsv(matchedResults);
+        var destinationBlobName = matchResultsBlobNameBuilder.BuildFullResultsBlobName(
+            sourceBlobName
+        );
 
         return blobStorageClient.UploadBlobAsync(
             options.Value.ProcessedContainerName,
@@ -129,16 +133,6 @@ public sealed class MatchResultsService(
         }
 
         return new SuccessfulMatchRecord(id, nhsNoType, nhsNumber);
-    }
-
-    private string BuildSuccessBlobName(string sourceBlobName)
-    {
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceBlobName);
-        var timestamp = timeProvider
-            .GetUtcNow()
-            .ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-
-        return $"{timestamp}_{fileNameWithoutExtension}/{fileNameWithoutExtension}_success.csv";
     }
 
     private static string BuildSuccessCsv(IReadOnlyCollection<SuccessfulMatchRecord> records)

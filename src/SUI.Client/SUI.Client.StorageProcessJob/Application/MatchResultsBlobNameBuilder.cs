@@ -1,10 +1,8 @@
 using System.Globalization;
-using SUI.Client.StorageProcessJob.Application.Interfaces;
 
 namespace SUI.Client.StorageProcessJob.Application;
 
 public sealed class MatchResultsBlobNameBuilder(TimeProvider timeProvider)
-    : IMatchResultsBlobNameBuilder
 {
     public string BuildArchivedOriginalBlobName(string sourceBlobName)
     {

@@ -27,10 +27,10 @@ public class BlobFileOrchestratorTests
     private readonly Mock<IBlobStorageClient> _blobFileReader;
     private readonly Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>> _blobPayloadProcessor;
     private readonly Mock<ILogger<BlobFileOrchestrator>> _logger;
+    private readonly MatchResultsBlobNameBuilder _matchResultsBlobNameBuilder;
     private readonly Mock<IMatchResultsService> _matchResultsService;
     private readonly BlobFileOrchestrator _sut;
     private readonly CsvMatchingHeadersProvider _matchingHeadersProvider;
-    private readonly FakeTimeProvider _timeProvider;
     private readonly IOptions<StorageProcessJobOptions> _options = Options.Create(
         new StorageProcessJobOptions
         {
@@ -45,11 +45,11 @@ public class BlobFileOrchestratorTests
         _blobFileReader = new Mock<IBlobStorageClient>();
         _blobPayloadProcessor = new Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>>();
         _logger = new Mock<ILogger<BlobFileOrchestrator>>();
+        _matchResultsBlobNameBuilder = new MatchResultsBlobNameBuilder(
+            new FakeTimeProvider(new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero))
+        );
         _matchResultsService = new Mock<IMatchResultsService>();
         _matchingHeadersProvider = CreateRequiredHeadersProvider();
-        _timeProvider = new FakeTimeProvider(
-            new DateTimeOffset(2026, 1, 20, 12, 0, 0, TimeSpan.Zero)
-        );
         _sut = CreateSut();
     }
 
@@ -100,13 +100,12 @@ public class BlobFileOrchestratorTests
                 ),
             Times.Once
         );
-        var utcNow = $"{_timeProvider.GetUtcNow():yyyyMMddHHmmss}_test-file/test-file.csv";
         _blobFileReader.Verify(
             x =>
                 x.ArchiveProcessedAsync(
                     queueMessage,
                     "processed",
-                    It.Is<string>(name => name == utcNow),
+                    It.Is<string>(name => name == "20260120120000_test-file/test-file.csv"),
                     CancellationToken.None
                 ),
             Times.Once
@@ -175,7 +174,6 @@ public class BlobFileOrchestratorTests
         _matchResultsService.Verify(
             x =>
                 x.ExportFullResultsAsync(
-                    "20260120120000_test-file/test-file_full-results.csv",
                     "test-file.csv",
                     It.Is<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(records =>
                         records.Count == 1 && records.Single().OriginalData.Record["Id"] == "1111"
@@ -277,10 +275,10 @@ public class BlobFileOrchestratorTests
         var failingOrchestrator = new Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>>();
         var sut = new BlobFileOrchestrator(
             NullLogger<BlobFileOrchestrator>.Instance,
-            _timeProvider,
             _blobFileReader.Object,
             failingOrchestrator.Object,
             _matchResultsService.Object,
+            _matchResultsBlobNameBuilder,
             _matchingHeadersProvider,
             Options.Create(
                 new StorageProcessJobOptions
@@ -364,7 +362,6 @@ public class BlobFileOrchestratorTests
             x =>
                 x.ExportFullResultsAsync(
                     It.IsAny<string>(),
-                    It.IsAny<string>(),
                     It.IsAny<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(),
                     It.IsAny<CancellationToken>()
                 ),
@@ -425,7 +422,6 @@ public class BlobFileOrchestratorTests
             x =>
                 x.ExportFullResultsAsync(
                     It.IsAny<string>(),
-                    It.IsAny<string>(),
                     It.IsAny<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(),
                     It.IsAny<CancellationToken>()
                 ),
@@ -453,12 +449,7 @@ public class BlobFileOrchestratorTests
             .ReturnsAsync(matchedResults);
         _matchResultsService
             .Setup(x =>
-                x.ExportFullResultsAsync(
-                    "20260120120000_test-file/test-file_full-results.csv",
-                    "test-file.csv",
-                    matchedResults,
-                    CancellationToken.None
-                )
+                x.ExportFullResultsAsync("test-file.csv", matchedResults, CancellationToken.None)
             )
             .ThrowsAsync(new InvalidOperationException("Could not write full match results file."));
 
@@ -506,10 +497,10 @@ public class BlobFileOrchestratorTests
     {
         return new BlobFileOrchestrator(
             _logger.Object,
-            _timeProvider,
             _blobFileReader.Object,
             _blobPayloadProcessor.Object,
             _matchResultsService.Object,
+            _matchResultsBlobNameBuilder,
             _matchingHeadersProvider,
             _options
         );
@@ -570,7 +561,6 @@ public class BlobFileOrchestratorTests
         _matchResultsService.Verify(
             x =>
                 x.ExportFullResultsAsync(
-                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>>>(),
                     It.IsAny<CancellationToken>()
