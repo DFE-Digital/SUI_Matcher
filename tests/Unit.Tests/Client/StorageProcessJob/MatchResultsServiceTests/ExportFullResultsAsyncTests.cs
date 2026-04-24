@@ -22,6 +22,7 @@ public class ExportFullResultsAsyncTests
         $"Id,GivenName,FamilyName,SUI_Status,SUI_Score,SUI_NHSNo{Environment.NewLine}"
         + $"1111,Jane,Doe,Match,0.96,92938475748{Environment.NewLine}"
         + $"2222,John,Smith,Error,-,-{Environment.NewLine}";
+
     private static readonly MatchResultsBlobNames BlobNames = new(
         "20260120120000_test-file/test-file.csv",
         "20260120120000_test-file/test-file_full-results.csv",
@@ -34,10 +35,23 @@ public class ExportFullResultsAsyncTests
 
     public ExportFullResultsAsyncTests()
     {
+        var csvMatchDataOptions = new CsvMatchDataOptions()
+        {
+            ColumnMappings = new CsvMatchDataOptions.Headers
+            {
+                Id = "Id",
+                Given = "GivenName",
+                Family = "FamilyName",
+                BirthDate = "DOB",
+                Postcode = "Postcode",
+            },
+            DateFormat = "yyyy-MM-dd",
+        };
         _sut = new MatchResultsService(
             _logger.Object,
             _blobStorageClient.Object,
-            Options.Create(new StorageProcessJobOptions { ProcessedContainerName = "processed" })
+            Options.Create(new StorageProcessJobOptions { ProcessedContainerName = "processed" }),
+            Options.Create(csvMatchDataOptions)
         );
     }
 

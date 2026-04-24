@@ -30,10 +30,23 @@ public class ExportSuccessResultsAsyncTests
 
     public ExportSuccessResultsAsyncTests()
     {
+        var csvMatchDataOptions = new CsvMatchDataOptions()
+        {
+            ColumnMappings = new CsvMatchDataOptions.Headers
+            {
+                Id = "Id",
+                Given = "GivenName",
+                Family = "FamilyName",
+                BirthDate = "DOB",
+                Postcode = "Postcode",
+            },
+            DateFormat = "yyyy-MM-dd",
+        };
         _sut = new MatchResultsService(
             _logger.Object,
             _blobStorageClient.Object,
-            Options.Create(new StorageProcessJobOptions { SuccessContainerName = "success" })
+            Options.Create(new StorageProcessJobOptions { SuccessContainerName = "success" }),
+            Options.Create(csvMatchDataOptions)
         );
     }
 

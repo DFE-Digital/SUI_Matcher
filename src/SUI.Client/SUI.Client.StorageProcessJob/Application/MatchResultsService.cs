@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Shared.Models;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.StorageProcessJob.Application.Interfaces;
 
 namespace SUI.Client.StorageProcessJob.Application;
@@ -14,7 +15,8 @@ namespace SUI.Client.StorageProcessJob.Application;
 public sealed class MatchResultsService(
     ILogger<MatchResultsService> logger,
     IBlobStorageClient blobStorageClient,
-    IOptions<StorageProcessJobOptions> options
+    IOptions<StorageProcessJobOptions> storageOptions,
+    IOptions<CsvMatchDataOptions> csvMatchOptions
 ) : IMatchResultsService
 {
     private const string CsvContentType = "text/csv";
@@ -26,7 +28,6 @@ public sealed class MatchResultsService(
         CancellationToken cancellationToken
     )
     {
-        const string inputIdHeader = "Id";
         var successfulMatches = new List<SuccessfulMatchRecord>();
 
         var highConfidenceMatches = matchedResults
@@ -43,11 +44,7 @@ public sealed class MatchResultsService(
 
         foreach (var matchedResult in highConfidenceMatches)
         {
-            var successfulMatch = TryMapSuccessfulMatchRecord(
-                sourceBlobName,
-                matchedResult,
-                inputIdHeader
-            );
+            var successfulMatch = TryMapSuccessfulMatchRecord(sourceBlobName, matchedResult);
 
             if (successfulMatch is not null)
             {
@@ -63,7 +60,7 @@ public sealed class MatchResultsService(
         var csvContent = BuildSuccessCsv(successfulMatches);
 
         await blobStorageClient.UploadBlobAsync(
-            options.Value.SuccessContainerName,
+            storageOptions.Value.SuccessContainerName,
             blobNames.SuccessResultsBlobName,
             BinaryData.FromString(csvContent),
             CsvContentType,
@@ -88,7 +85,7 @@ public sealed class MatchResultsService(
         var csvContent = BuildFullResultsCsv(matchedResults);
 
         await blobStorageClient.UploadBlobAsync(
-            options.Value.ProcessedContainerName,
+            storageOptions.Value.ProcessedContainerName,
             blobNames.FullResultsBlobName,
             BinaryData.FromString(csvContent),
             CsvContentType,
@@ -98,10 +95,10 @@ public sealed class MatchResultsService(
 
     private SuccessfulMatchRecord? TryMapSuccessfulMatchRecord(
         string sourceBlobName,
-        ProcessedMatchRecord<CsvRecordDto> matchedRecord,
-        string inputIdHeader
+        ProcessedMatchRecord<CsvRecordDto> matchedRecord
     )
     {
+        var inputIdHeader = csvMatchOptions.Value.ColumnMappings.Id;
         const string successNhsNumberHeader = "NhsNumber";
         const string nhsNoType = "NHSNo";
 
