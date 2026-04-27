@@ -1,6 +1,7 @@
 # Deploying Infra and App (Laptop Edition)
 
 This guide explains how to deploy the app infra and app from your laptop.
+This remains the current manual deployment flow for existing client environments.
 
 The authoritative IaC stack roots now live under [`infra/`](../../../infra/README.md). This guide remains relevant for the existing `app-host` application-layer deployment flow while CI/CD and deployment docs catch up with the new stack-root structure.
 

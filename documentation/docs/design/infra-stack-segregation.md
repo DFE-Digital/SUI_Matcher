@@ -88,6 +88,9 @@ Represents the current client-agent deployment shape:
 - externally hosted client agent and related networking
 - firewall and routing components required for the current model
 - private connectivity needed by the client-agent path
+- a DfE-hosted VM path used to mimic an on-prem client host in test environments
+
+The legacy dedicated client-infrastructure path remains separately deployable and should not be collapsed into this full test stack unless the ownership model is intentionally redesigned.
 
 This stack exists to keep the current infrastructure deployable during and after the refactor.
 
