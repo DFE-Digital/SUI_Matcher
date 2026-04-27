@@ -4,20 +4,23 @@ The deployable infrastructure roots now live under `infra/stacks`.
 
 Current structure:
 
-- `client-agent`: the current deployable architecture, composed from shared modules and client-agent-specific resources
+- `client-agent`: the full DfE-hosted test architecture, composed from shared modules and client-agent-specific resources
 - `blob-event-processor`: placeholder isolated stack root for the next event-driven architecture
 - `api-batch-processor`: placeholder isolated stack root for the future batch-oriented architecture
 
 Shared Bicep modules live under `infra/modules`.
 
-Transitional compatibility:
+Supported deployment roots:
 
-- `src/app-host/infra` still contains the existing application-layer deployment assets and compatibility entry points
-- `src/SUI.Client/SUI.Client.Watcher/infra/client.bicep` remains as a compatibility root for the old client-only deployment path, but now delegates to the shared `client-agent` module
+- `src/app-host/infra` still contains the existing application-layer deployment assets and the current laptop-driven deployment flow for existing client environments
+- `src/SUI.Client/SUI.Client.Watcher/infra/client.bicep` remains a legacy dedicated client-infrastructure root used by the client infra workflow
+- `infra/stacks/client-agent/main.bicep` is the full DfE-hosted test stack root
 
 CI/CD:
 
-- `.github/workflows/gh-client-infra-deploy.yml` deploys the `client-agent` stack root
+- `.github/workflows/gh-deploy-infra.yml` remains the existing `src/app-host/infra` infrastructure workflow and still drives the current `azd provision` path
+- `.github/workflows/gh-client-infra-deploy.yml` deploys the legacy dedicated client-infrastructure path under `src/SUI.Client/SUI.Client.Watcher/infra`
+- `.github/workflows/gh-client-agent-infra-deploy.yml` deploys the full `client-agent` stack root
 - The placeholder stacks do not have runnable deployment workflows yet; those should be added when their stack roots become deployable
 
 The intent is that stack roots define environment topology, while application deployment consumes outputs from the selected stack.
