@@ -5,7 +5,7 @@ The deployable infrastructure roots now live under `infra/stacks`.
 Current structure:
 
 - `client-agent`: the full DfE-hosted test architecture, composed from shared modules and client-agent-specific resources
-- `blob-event-processor`: placeholder isolated stack root for the next event-driven architecture
+- `blob-event-processor`: initial deployable event-driven stack foundation, composed from shared modules plus blob/queue storage resources
 - `api-batch-processor`: placeholder isolated stack root for the future batch-oriented architecture
 
 Shared Bicep modules live under `infra/modules`.
@@ -21,6 +21,7 @@ CI/CD:
 - `.github/workflows/gh-deploy-infra.yml` remains the existing `src/app-host/infra` infrastructure workflow and still drives the current `azd provision` path
 - `.github/workflows/gh-client-infra-deploy.yml` deploys the legacy dedicated client-infrastructure path under `src/SUI.Client/SUI.Client.Watcher/infra`
 - `.github/workflows/gh-client-agent-infra-deploy.yml` deploys the full `client-agent` stack root
-- The placeholder stacks do not have runnable deployment workflows yet; those should be added when their stack roots become deployable
+- `blob-event-processor` does not have a dedicated deployment workflow yet; it is currently a manually deployable stack root
+- The placeholder/future stacks should gain dedicated workflows when their stack roots become deployable
 
 The intent is that stack roots define environment topology, while application deployment consumes outputs from the selected stack.

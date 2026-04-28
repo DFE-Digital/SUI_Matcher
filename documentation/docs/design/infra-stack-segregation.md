@@ -100,8 +100,10 @@ Represents the next blob-triggered event processing deployment shape:
 
 - any shared Azure resources required by this architecture
 - blob storage and event-driven processing path
-- eventing and function-hosted processing resources as required by that model
+- eventing and ACA Job-hosted processing resources as required by that model
 - network/security resources needed for that environment
+
+The first implemented slice of this stack is the shared-platform and storage foundation. Event Grid wiring and processing-job deployment remain follow-up work.
 
 This stack must not depend on the client-agent infrastructure.
 
@@ -185,7 +187,7 @@ The recommended order of work is:
 
 1. extract shared modules from the current Bicep
 2. recreate the current deployment path behind an explicit `client-agent` stack root
-3. introduce the next `blob-event-processor` stack root and skeleton
+3. introduce the next `blob-event-processor` stack root and initial deployable foundation
 4. define the future `api-batch-processor` stack contract and skeleton
 5. update deployment documentation once the new structure is stable
 
@@ -229,7 +231,7 @@ The following items remain follow-up work outside the first restructure:
 
 - whether deployment IaC should later move into a private infra repo
 - whether any later CI/CD changes should accompany the new stack structure
-- the exact minimum first deployable slice for the next `blob-event-processor` application resources, where that belongs in separate implementation tickets
+- the Event Grid and ACA Job deployment work needed to complete the next `blob-event-processor` application slice, and where that belongs in separate implementation tickets
 - the exact boundary between automatable networking/security resources and LA-owned manual steps in each tenant
 
 ---
