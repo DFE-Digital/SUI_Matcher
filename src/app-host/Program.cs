@@ -36,41 +36,6 @@ var externalApi = builder
 
 var matchingApi = builder.AddProject<Projects.Matching>("matching-api");
 
-// Feature flag setup
-var auditLoggingFlag = builder.Configuration.GetValue<string>("FeatureToggles:EnableAuditLogging");
-var auditLoggingEnabled = bool.Parse(auditLoggingFlag!);
-
-matchingApi.WithEnvironment("FeatureManagement__EnableAuditLogging", auditLoggingFlag);
-
-var storage = auditLoggingEnabled ? builder.AddAzureStorage("sui-az-storage") : null;
-
-if (storage is not null && builder.Environment.IsDevelopment())
-{
-    storage.RunAsEmulator(cfg =>
-    {
-        cfg.WithImageTag("3.35.0");
-        cfg.WithBlobPort(10000);
-        cfg.WithQueuePort(10001);
-        cfg.WithTablePort(10002);
-        cfg.WithLifetime(ContainerLifetime.Persistent);
-    });
-}
-
-// Wrap in feature management to allow for feature toggling
-if (auditLoggingEnabled)
-{
-    if (builder.Environment.IsDevelopment())
-    {
-        var table = storage!.AddTables("tables");
-        matchingApi.WithReference(table).WaitFor(table);
-    }
-    else
-    {
-        var table = builder.AddConnectionString("tables");
-        matchingApi.WithReference(table).WaitFor(table);
-    }
-}
-
 matchingApi
     .WithReference(externalApi)
     .WithHttpHealthCheck("health")
