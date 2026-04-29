@@ -59,7 +59,7 @@ public class MatchingService(
             {
                 Result = new MatchResult { MatchStatus = MatchStatus.Error },
                 DataQuality = dataQualityResult,
-                SearchId = activityHashService.GetUniqueSearchId(),
+                SearchId = searchId,
             };
         }
 
@@ -96,7 +96,7 @@ public class MatchingService(
                 ProcessStage = result.ProcessStage,
             },
             DataQuality = dataQualityResult,
-            SearchId = activityHashService.GetUniqueSearchId(),
+            SearchId = searchId,
         };
     }
 
