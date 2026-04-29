@@ -105,6 +105,7 @@ public class MatchingService(
     )
     {
         var result = await MatchNoLogicAsync(personSpecification);
+        var searchId = activityHashService.StoreUniqueSearchIdFor(personSpecification);
         return new PersonMatchResponse
         {
             Result = new MatchResult
@@ -113,7 +114,7 @@ public class MatchingService(
                 Score = result.Result?.Score,
                 ProcessStage = result.ProcessStage,
             },
-            SearchId = activityHashService.GetUniqueSearchId(),
+            SearchId = searchId,
         };
     }
 
