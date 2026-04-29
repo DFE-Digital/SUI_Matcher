@@ -1,8 +1,7 @@
-using System;
+using System.Diagnostics;
 using System.Globalization;
 using Shared.Models;
 using Shared.Util;
-using Xunit;
 
 namespace Unit.Tests.Util;
 
@@ -197,5 +196,76 @@ public class HashUtilTest
         var hash1 = HashUtil.StoreUniqueSearchIdFor(personSpec);
         var hash2 = HashUtil.StoreUniqueSearchIdFor(matchPerson);
         Assert.Equal(hash1, hash2);
+    }
+
+    [Fact]
+    public void GetUniqueSearchId_Should_ReturnUniqueSearchIdInActivity()
+    {
+        // Arrange
+        var personSpec = new PersonSpecification
+        {
+            Given = "Jane",
+            Family = "Smith",
+            Gender = "female",
+            BirthDate = new DateOnly(2004, 5, 15),
+            AddressPostalCode = "XY9 8ZW",
+        };
+
+        // Act
+        using var activityScope = ActivityTestScope.Start();
+
+        // Act
+        var hash = HashUtil.StoreUniqueSearchIdFor(personSpec);
+        var retrievedHash = HashUtil.GetUniqueSearchId();
+
+        // Assert
+        Assert.Equal(hash, retrievedHash);
+        Assert.Equal(
+            "2f383866c432df9a75556ed5d732bb8e348b134b8bfc5c5394990af77090c155",
+            retrievedHash
+        );
+    }
+
+    private sealed class ActivityTestScope : IDisposable
+    {
+        private readonly ActivityListener _listener;
+        private readonly ActivitySource _activitySource;
+        private readonly Activity _activity;
+
+        private ActivityTestScope(
+            ActivityListener listener,
+            ActivitySource activitySource,
+            Activity activity
+        )
+        {
+            _listener = listener;
+            _activitySource = activitySource;
+            _activity = activity;
+        }
+
+        public static ActivityTestScope Start()
+        {
+            var listener = new ActivityListener
+            {
+                ShouldListenTo = source => source.Name == "TestScope",
+                Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
+            };
+            ActivitySource.AddActivityListener(listener);
+
+            var activitySource = new ActivitySource("TestScope");
+            var activity = activitySource.StartActivity(nameof(ActivityTestScope));
+
+            Assert.NotNull(activity); // Ensure Activity.Current is set
+
+            return new ActivityTestScope(listener, activitySource, activity);
+        }
+
+        public void Dispose()
+        {
+            _activity.Stop();
+            _activity.Dispose();
+            _activitySource.Dispose();
+            _listener.Dispose();
+        }
     }
 }

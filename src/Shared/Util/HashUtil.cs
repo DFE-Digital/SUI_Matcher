@@ -95,4 +95,9 @@ public static class HashUtil
         Activity.Current?.SetBaggage("SearchId", hash);
         return hash;
     }
+
+    public static string? GetUniqueSearchId()
+    {
+        return Activity.Current?.GetBaggageItem("SearchId");
+    }
 }
