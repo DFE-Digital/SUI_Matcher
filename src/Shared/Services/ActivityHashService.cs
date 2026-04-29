@@ -1,10 +1,10 @@
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+
 using Shared.Models;
 using Shared.Util;
 
-namespace MatchingApi.Services;
+namespace Shared.Services;
 
 public interface IActivityHashService
 {

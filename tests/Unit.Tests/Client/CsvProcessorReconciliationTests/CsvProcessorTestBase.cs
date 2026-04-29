@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.FeatureManagement;
 using Shared.Endpoint;
 using Shared.Logging;
+using Shared.Services;
 using SUI.Client.Core;
 using SUI.Client.Core.Infrastructure.FileSystem;
 using Unit.Tests.Util;

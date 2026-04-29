@@ -8,6 +8,7 @@ using Shared;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
+using Shared.Services;
 using Unit.Tests.Util;
 
 namespace Unit.Tests.Matching;

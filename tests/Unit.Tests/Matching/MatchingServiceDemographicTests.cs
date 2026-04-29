@@ -4,6 +4,7 @@ using Moq;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
+using Shared.Services;
 
 namespace Unit.Tests.Matching;
 

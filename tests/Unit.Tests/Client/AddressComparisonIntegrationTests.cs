@@ -8,6 +8,7 @@ using Moq;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
+using Shared.Services;
 using SUI.Client.Core;
 using SUI.Client.Core.Infrastructure.FileSystem;
 using Unit.Tests.Util;

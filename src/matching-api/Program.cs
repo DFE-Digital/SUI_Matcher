@@ -11,6 +11,7 @@ using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
 using Shared.Logging;
+using Shared.Services;
 using Shared.Util;
 
 Env.TraversePath().Load();

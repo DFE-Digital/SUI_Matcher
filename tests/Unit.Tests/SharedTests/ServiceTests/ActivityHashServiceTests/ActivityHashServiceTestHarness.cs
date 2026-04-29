@@ -1,8 +1,9 @@
 using System.Diagnostics;
-using MatchingApi.Services;
-using Shared.Models;
 
-namespace Unit.Tests.Matching.ActivityHashServiceTests;
+using Shared.Models;
+using Shared.Services;
+
+namespace Unit.Tests.SharedTests.ServiceTests.ActivityHashServiceTests;
 
 public sealed class ActivityHashServiceTestHarness
 {

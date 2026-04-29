@@ -1,4 +1,4 @@
-namespace Unit.Tests.Matching.ActivityHashServiceTests;
+namespace Unit.Tests.SharedTests.ServiceTests.ActivityHashServiceTests;
 
 public class GetUniqueSearchIdTests
 {
