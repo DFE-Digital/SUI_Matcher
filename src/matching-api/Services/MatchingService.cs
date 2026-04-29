@@ -13,8 +13,7 @@ public class MatchingService(
     ILogger<MatchingService> logger,
     INhsFhirClient nhsFhirClient,
     IValidationService validationService,
-    IActivityHashService activityHashService,
-    IAuditLogger auditLogger
+    IActivityHashService activityHashService
 ) : IMatchingService
 {
     public async Task<PersonMatchResponse> SearchAsync(
@@ -30,11 +29,6 @@ public class MatchingService(
         StoreAlgorithmVersion(
             searchStrategy.GetAlgorithmVersion(),
             searchSpecification.SearchStrategy
-        );
-
-        var auditDetails = new Dictionary<string, string> { { "SearchId", searchId } };
-        await auditLogger.LogAsync(
-            new AuditLogEntry(AuditLogEntry.AuditLogAction.Match, auditDetails)
         );
 
         var validationResults = validationService.Validate(searchSpecification);
@@ -132,9 +126,6 @@ public class MatchingService(
     public async Task<DemographicResponse?> GetDemographicsAsync(DemographicRequest request)
     {
         logger.LogInformation("Searching for matching person by NHS number");
-        await auditLogger.LogAsync(
-            new AuditLogEntry(AuditLogEntry.AuditLogAction.Demographic, null)
-        );
 
         var validationResults = validationService.Validate(request);
 
