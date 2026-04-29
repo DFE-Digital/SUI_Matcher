@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Shared.Logging;
+using Shared.Services;
 using SUI.DBS.Response.Logger.Core.Watcher;
 
 namespace SUI.DBS.Response.Logger.Core.Extensions;
@@ -26,6 +27,7 @@ public static class ServiceCollectionExtensions
             );
         });
 
+        services.AddSingleton<IActivityHashService, ActivityHashService>();
         services.AddSingleton<ITxtFileProcessor, TxtFileProcessor>();
         services.AddSingleton<TxtFileWatcherService>();
         services.AddSingleton<TxtFileMonitor>();
