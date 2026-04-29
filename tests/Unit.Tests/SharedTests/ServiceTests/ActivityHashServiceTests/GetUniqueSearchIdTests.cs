@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using Shared;
+
 namespace Unit.Tests.SharedTests.ServiceTests.ActivityHashServiceTests;
 
 public class GetUniqueSearchIdTests
@@ -23,6 +26,33 @@ public class GetUniqueSearchIdTests
         Assert.Equal(
             "2f383866c432df9a75556ed5d732bb8e348b134b8bfc5c5394990af77090c155",
             retrievedHash
+        );
+    }
+
+    [Fact]
+    public void Should_StoreAlgorithmVersionInCurrentActivity_When_AlgorithmVersionHasBeenStored()
+    {
+        var harness = new ActivityHashServiceTestHarness();
+
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
+        harness.Service.StoreAlgorithmVersion(3);
+
+        Assert.Equal("3", Activity.Current?.GetBaggageItem("AlgorithmVersion"));
+    }
+
+    [Fact]
+    public void Should_StoreSearchStrategyInCurrentActivity_When_SearchStrategyHasBeenStored()
+    {
+        var harness = new ActivityHashServiceTestHarness();
+
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
+        harness.Service.StoreSearchStrategy(SharedConstants.SearchStrategy.Strategies.Strategy3);
+
+        Assert.Equal(
+            SharedConstants.SearchStrategy.Strategies.Strategy3,
+            Activity.Current?.GetBaggageItem(SharedConstants.SearchStrategy.LogName)
         );
     }
 }

@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using MatchingApi.Search;
+﻿using MatchingApi.Search;
 using Newtonsoft.Json;
-using Shared;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
@@ -121,8 +119,8 @@ public class MatchingService(
 
     private void StoreAlgorithmVersion(int versionNumber, string searchStrategy)
     {
-        Activity.Current?.SetBaggage("AlgorithmVersion", versionNumber.ToString());
-        Activity.Current?.SetBaggage(SharedConstants.SearchStrategy.LogName, searchStrategy);
+        activityHashService.StoreAlgorithmVersion(versionNumber);
+        activityHashService.StoreSearchStrategy(searchStrategy);
         logger.LogInformation(
             "StoreAlgorithmVersion: Version: {Version}, Strategy {Strategy}",
             versionNumber,

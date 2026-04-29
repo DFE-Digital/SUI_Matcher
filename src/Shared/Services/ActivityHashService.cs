@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-
 using Shared.Models;
 using Shared.Util;
 
@@ -9,6 +8,8 @@ namespace Shared.Services;
 public interface IActivityHashService
 {
     string? GetUniqueSearchId();
+    void StoreAlgorithmVersion(int versionNumber);
+    void StoreSearchStrategy(string searchStrategy);
     string StoreUniqueSearchIdFor(MatchPersonResult personSpecification);
     string StoreUniqueSearchIdFor(PersonSpecification personSpecification);
 }
@@ -18,6 +19,16 @@ public class ActivityHashService : IActivityHashService
     public string? GetUniqueSearchId()
     {
         return Activity.Current?.GetBaggageItem("SearchId");
+    }
+
+    public void StoreAlgorithmVersion(int versionNumber)
+    {
+        Activity.Current?.SetBaggage("AlgorithmVersion", versionNumber.ToString());
+    }
+
+    public void StoreSearchStrategy(string searchStrategy)
+    {
+        Activity.Current?.SetBaggage(SharedConstants.SearchStrategy.LogName, searchStrategy);
     }
 
     public string StoreUniqueSearchIdFor(MatchPersonResult personSpecification)
