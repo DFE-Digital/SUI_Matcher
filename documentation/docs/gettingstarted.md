@@ -68,6 +68,33 @@ You should then be able to build the solution, using
 dotnet build sui-matching.sln
 ```
 
+## Local commit hooks
+
+The repository uses Husky.Net to run pre-commit checks, including a GitLeaks
+scan for staged secrets. Restore the local .NET tools and install the hooks
+before committing:
+
+```bash
+dotnet tool restore
+dotnet husky install
+```
+
+The GitLeaks hook uses a pinned GitLeaks binary and downloads it into a user
+cache directory if it is not already available. You do not need to install
+GitLeaks globally.
+
+To run the secret scan manually:
+
+```bash
+dotnet pwsh ./scripts/security/run-gitleaks.ps1
+```
+
+If GitLeaks blocks a commit and you are certain the finding is expected, update `.gitleaks.toml` or regenerate `.gitleaks.baseline.json`. For urgent one-off commits only, you can bypass the local scan with:
+
+```bash
+SUI_SKIP_GITLEAKS=1 git commit
+```
+
 ## Unit and integration testing
 
 - To run the whole test suite via the terminal:

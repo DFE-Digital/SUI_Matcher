@@ -1,0 +1,12 @@
+title = "SUI GitLeaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documentation files with known placeholder values"
+paths = [
+  '''^documentation/docs/gettingstarted\.md$''',
+  '''^documentation/docs/index\.md$''',
+  '''^gettingstarted/index.html$''',
+]
