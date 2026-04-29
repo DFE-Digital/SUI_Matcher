@@ -23,6 +23,7 @@ public class ReconciliationService(
         {
             var reconciliationResponse = new ReconciliationResponse
             {
+                SearchId = matchingResponse.SearchId,
                 MatchingResult = matchingResponse.Result,
                 Status = ReconciliationStatus.LocalDemographicsDidNotMatchToAnNhsNumber,
                 Errors = ["Local demographics did not match to an NHS number"],
@@ -44,6 +45,7 @@ public class ReconciliationService(
         {
             var reconciliationResponse = new ReconciliationResponse
             {
+                SearchId = matchingResponse.SearchId,
                 MatchingResult = matchingResponse.Result,
                 // Generic error, since we'd expect a matched number to return demographics
                 Status = ReconciliationStatus.Error,
@@ -70,6 +72,7 @@ public class ReconciliationService(
         // Prepare response, with initial status on whether differences have occurred
         var reconResponse = new ReconciliationResponse
         {
+            SearchId = matchingResponse.SearchId,
             MatchingResult = matchingResponse.Result,
             Person = matchedNhsNumberDemographics.Result,
             Status =

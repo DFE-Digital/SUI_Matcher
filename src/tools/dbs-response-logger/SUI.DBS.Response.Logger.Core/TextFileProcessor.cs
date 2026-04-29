@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Shared.Models;
+using Shared.Services;
 using Shared.Util;
 
 namespace SUI.DBS.Response.Logger.Core;
@@ -14,7 +12,10 @@ public interface ITxtFileProcessor
     Task ProcessFileAsync(string filePath);
 }
 
-public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProcessor
+public class TxtFileProcessor(
+    ILogger<TxtFileProcessor> logger,
+    IActivityHashService activityHashService
+) : ITxtFileProcessor
 {
     private static void AssertFileExists(string inputFilePath)
     {
@@ -59,7 +60,7 @@ public class TxtFileProcessor(ILogger<TxtFileProcessor> logger) : ITxtFileProces
 
             var result = ParseMatchPersonResult(recordColumns, recordData);
 
-            HashUtil.StoreUniqueSearchIdFor(result);
+            activityHashService.StoreUniqueSearchIdFor(result);
 
             var matched = !string.IsNullOrWhiteSpace(result.NhsNumber);
 

@@ -13,4 +13,5 @@ public class ReconciliationResponse
     public ReconciliationStatus Status { get; set; }
 
     public MatchResult? MatchingResult { get; init; }
+    public string? SearchId { get; set; }
 }

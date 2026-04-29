@@ -9,6 +9,7 @@ using Moq;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
+using Shared.Services;
 using Shared.Util;
 using SUI.Client.Core;
 using SUI.Client.Core.Infrastructure.FileSystem;
@@ -1571,6 +1572,7 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
 
         // core domain deps
         servicesCollection.AddSingleton<Shared.Endpoint.IMatchingService, MatchingService>();
+        servicesCollection.AddSingleton<IActivityHashService, ActivityHashService>();
         servicesCollection.AddSingleton<IReconciliationService, ReconciliationService>();
         servicesCollection.AddSingleton<IValidationService, ValidationService>();
         servicesCollection.AddSingleton<IAuditLogger, ChannelAuditLogger>();

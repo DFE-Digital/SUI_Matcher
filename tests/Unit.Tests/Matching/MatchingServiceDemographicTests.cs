@@ -4,6 +4,7 @@ using Moq;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
+using Shared.Services;
 
 namespace Unit.Tests.Matching;
 
@@ -11,6 +12,7 @@ public class MatchingServiceDemographicTests
 {
     private readonly ValidationService _validationService = new();
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new(MockBehavior.Loose);
+    private readonly Mock<IActivityHashService> _activityHashService = new();
     private readonly Mock<IAuditLogger> _auditLogger = new();
 
     [Fact]
@@ -26,6 +28,7 @@ public class MatchingServiceDemographicTests
             NullLogger<MatchingService>.Instance,
             _nhsFhirClient.Object,
             _validationService,
+            _activityHashService.Object,
             _auditLogger.Object
         );
 
@@ -50,6 +53,7 @@ public class MatchingServiceDemographicTests
             NullLogger<MatchingService>.Instance,
             _nhsFhirClient.Object,
             _validationService,
+            _activityHashService.Object,
             _auditLogger.Object
         );
 

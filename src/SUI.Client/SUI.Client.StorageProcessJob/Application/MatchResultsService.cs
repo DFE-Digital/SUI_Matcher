@@ -170,6 +170,7 @@ public sealed class MatchResultsService(
         const string fullStatusHeader = "SUI_Status";
         const string fullScoreHeader = "SUI_Score";
         const string fullNhsNumberHeader = "SUI_NHSNo";
+        const string fullSearchIdHeader = "SUI_SearchId";
 
         var originalHeaders =
             matchedResults.FirstOrDefault()?.OriginalData.Record.Keys.ToList() ?? [];
@@ -189,6 +190,7 @@ public sealed class MatchResultsService(
         csvWriter.WriteField(fullStatusHeader);
         csvWriter.WriteField(fullScoreHeader);
         csvWriter.WriteField(fullNhsNumberHeader);
+        csvWriter.WriteField(fullSearchIdHeader);
         csvWriter.NextRecord();
 
         foreach (var matchedResult in matchedResults)
@@ -205,6 +207,7 @@ public sealed class MatchResultsService(
                     ?? "-"
             );
             csvWriter.WriteField(matchedResult.ApiResult?.Result?.NhsNumber ?? "-");
+            csvWriter.WriteField(matchedResult.ApiResult?.SearchId ?? "-");
             csvWriter.NextRecord();
         }
 

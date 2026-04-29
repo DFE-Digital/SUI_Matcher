@@ -1,10 +1,9 @@
-﻿using System.Diagnostics;
-using MatchingApi.Search;
+﻿using MatchingApi.Search;
 using Newtonsoft.Json;
-using Shared;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
+using Shared.Services;
 using Shared.Util;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -14,6 +13,7 @@ public class MatchingService(
     ILogger<MatchingService> logger,
     INhsFhirClient nhsFhirClient,
     IValidationService validationService,
+    IActivityHashService activityHashService,
     IAuditLogger auditLogger
 ) : IMatchingService
 {
@@ -22,7 +22,7 @@ public class MatchingService(
         bool logMatch = true
     )
     {
-        var searchId = HashUtil.StoreUniqueSearchIdFor(searchSpecification);
+        var searchId = activityHashService.StoreUniqueSearchIdFor(searchSpecification);
         var searchStrategy = SearchStrategyFactory.Get(
             searchSpecification.SearchStrategy,
             searchSpecification.StrategyVersion
@@ -59,6 +59,7 @@ public class MatchingService(
             {
                 Result = new MatchResult { MatchStatus = MatchStatus.Error },
                 DataQuality = dataQualityResult,
+                SearchId = searchId,
             };
         }
 
@@ -95,6 +96,7 @@ public class MatchingService(
                 ProcessStage = result.ProcessStage,
             },
             DataQuality = dataQualityResult,
+            SearchId = searchId,
         };
     }
 
@@ -103,6 +105,7 @@ public class MatchingService(
     )
     {
         var result = await MatchNoLogicAsync(personSpecification);
+        var searchId = activityHashService.StoreUniqueSearchIdFor(personSpecification);
         return new PersonMatchResponse
         {
             Result = new MatchResult
@@ -111,13 +114,14 @@ public class MatchingService(
                 Score = result.Result?.Score,
                 ProcessStage = result.ProcessStage,
             },
+            SearchId = searchId,
         };
     }
 
     private void StoreAlgorithmVersion(int versionNumber, string searchStrategy)
     {
-        Activity.Current?.SetBaggage("AlgorithmVersion", versionNumber.ToString());
-        Activity.Current?.SetBaggage(SharedConstants.SearchStrategy.LogName, searchStrategy);
+        activityHashService.StoreAlgorithmVersion(versionNumber);
+        activityHashService.StoreSearchStrategy(searchStrategy);
         logger.LogInformation(
             "StoreAlgorithmVersion: Version: {Version}, Strategy {Strategy}",
             versionNumber,

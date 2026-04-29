@@ -15,13 +15,13 @@ namespace Unit.Tests.Client.StorageProcessJob.MatchResultsServiceTests;
 public class ExportFullResultsAsyncTests
 {
     private static readonly string FullResultsCsv =
-        $"Id,GivenName,FamilyName,SUI_Status,SUI_Score,SUI_NHSNo{Environment.NewLine}"
-        + $"1111,Jane,Doe,Match,0.96,92938475748{Environment.NewLine}";
+        $"Id,GivenName,FamilyName,SUI_Status,SUI_Score,SUI_NHSNo,SUI_SearchId{Environment.NewLine}"
+        + $"1111,Jane,Doe,Match,0.96,92938475748,search-id-1{Environment.NewLine}";
 
     private static readonly string FullResultsCsvWithErrorRow =
-        $"Id,GivenName,FamilyName,SUI_Status,SUI_Score,SUI_NHSNo{Environment.NewLine}"
-        + $"1111,Jane,Doe,Match,0.96,92938475748{Environment.NewLine}"
-        + $"2222,John,Smith,Error,-,-{Environment.NewLine}";
+        $"Id,GivenName,FamilyName,SUI_Status,SUI_Score,SUI_NHSNo,SUI_SearchId{Environment.NewLine}"
+        + $"1111,Jane,Doe,Match,0.96,92938475748,search-id-1{Environment.NewLine}"
+        + $"2222,John,Smith,Error,-,-,-{Environment.NewLine}";
 
     private static readonly MatchResultsBlobNames BlobNames = new(
         "20260120120000_test-file/test-file.csv",
@@ -112,7 +112,8 @@ public class ExportFullResultsAsyncTests
                 true,
                 MatchStatus.Match,
                 0.96m,
-                "92938475748"
+                "92938475748",
+                "search-id-1"
             ),
         };
 
@@ -151,7 +152,8 @@ public class ExportFullResultsAsyncTests
                 true,
                 MatchStatus.Match,
                 0.96m,
-                "92938475748"
+                "92938475748",
+                "search-id-1"
             ),
             CreateFailedRecord(
                 new Dictionary<string, string>
@@ -188,7 +190,8 @@ public class ExportFullResultsAsyncTests
         bool isSuccess,
         MatchStatus matchStatus,
         decimal? score,
-        string? nhsNumber
+        string? nhsNumber,
+        string? searchId
     )
     {
         return new ProcessedMatchRecord<CsvRecordDto>
@@ -197,6 +200,7 @@ public class ExportFullResultsAsyncTests
             IsSuccess = isSuccess,
             ApiResult = new PersonMatchResponse
             {
+                SearchId = searchId,
                 Result = new MatchResult
                 {
                     MatchStatus = matchStatus,

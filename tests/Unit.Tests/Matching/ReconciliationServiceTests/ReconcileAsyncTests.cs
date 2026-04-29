@@ -14,6 +14,7 @@ public class ReconcileAsyncTests
 
     public const string ValidNhsNumber = "9449305552";
     private const string InvalidNhsNumber = "1234567890";
+    private const string SearchId = "test-search-id";
 
     [Fact]
     public async Task ReconcileAsync_WhenLocalDemographicsDidNotMatch_ReturnCorrectStatusAndNoDifferences()
@@ -39,6 +40,7 @@ public class ReconcileAsyncTests
             .ReturnsAsync(
                 new PersonMatchResponse
                 {
+                    SearchId = SearchId,
                     Result = new MatchResult { MatchStatus = MatchStatus.NoMatch, NhsNumber = "" },
                 }
             );
@@ -61,6 +63,7 @@ public class ReconcileAsyncTests
         Assert.Empty(result.DifferenceFields);
         Assert.Empty(result.MissingNhsFields);
         Assert.Null(result.Person);
+        Assert.Equal(SearchId, result.SearchId);
     }
 
     [Fact]
@@ -87,6 +90,7 @@ public class ReconcileAsyncTests
             .ReturnsAsync(
                 new PersonMatchResponse
                 {
+                    SearchId = SearchId,
                     Result = new MatchResult
                     {
                         MatchStatus = MatchStatus.Match,
@@ -152,6 +156,7 @@ public class ReconcileAsyncTests
             .ReturnsAsync(
                 new PersonMatchResponse
                 {
+                    SearchId = SearchId,
                     Result = new MatchResult
                     {
                         MatchStatus = MatchStatus.Match,
@@ -222,6 +227,7 @@ public class ReconcileAsyncTests
             .ReturnsAsync(
                 new PersonMatchResponse
                 {
+                    SearchId = SearchId,
                     Result = new MatchResult
                     {
                         MatchStatus = MatchStatus.Match,
@@ -282,6 +288,7 @@ public class ReconcileAsyncTests
             .ReturnsAsync(
                 new PersonMatchResponse
                 {
+                    SearchId = SearchId,
                     Result = new MatchResult
                     {
                         MatchStatus = MatchStatus.Match,
@@ -318,6 +325,7 @@ public class ReconcileAsyncTests
         Assert.Equal(successfulCase.ExpectedDifferences, result.DifferenceFields);
         Assert.Equal(successfulCase.ExpectedMissingLocalFields, result.MissingLocalFields);
         Assert.Equal(successfulCase.ExpectedMissingNhsFields, result.MissingNhsFields);
+        Assert.Equal(SearchId, result.SearchId);
     }
 
     [Fact]

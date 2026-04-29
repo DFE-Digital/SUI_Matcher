@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using MatchingApi.Search;
+﻿using MatchingApi.Search;
 using MatchingApi.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -8,7 +7,7 @@ using Shared;
 using Shared.Endpoint;
 using Shared.Logging;
 using Shared.Models;
-using Unit.Tests.Util;
+using Shared.Services;
 
 namespace Unit.Tests.Matching;
 
@@ -17,15 +16,19 @@ public sealed class MatchingServiceTests
     private readonly Mock<IAuditLogger> _auditLogger = new();
     private readonly Mock<ILogger<MatchingService>> _loggerMock = new();
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new();
+    private readonly Mock<IActivityHashService> _activityHashService = new();
     private readonly ValidationService _validationService = new();
     private MatchingService _sut;
 
     public MatchingServiceTests()
     {
+        ConfigureActivityHashService();
+
         _sut = new MatchingService(
             _loggerMock.Object,
             _nhsFhirClient.Object,
             _validationService,
+            _activityHashService.Object,
             _auditLogger.Object
         );
     }
@@ -332,9 +335,6 @@ public sealed class MatchingServiceTests
                 new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.99m }
             );
 
-        using var activity = new Activity("TestActivity");
-        activity.Start();
-
         // Act
         await _sut.SearchAsync(model);
 
@@ -358,51 +358,28 @@ public sealed class MatchingServiceTests
     }
 
     [Fact]
-    public async Task ShouldPrependCurrentAlgorithmVersionToLogMessage()
+    public async Task Should_StoreAlgorithmVersionAndSearchStrategy_When_Searching()
     {
-        // Arrange
-        var logMessages = new List<string>();
-        var loggerFactory = LoggerFactory.Create(builder =>
-        {
-            builder
-                .AddConsole(options => options.FormatterName = SharedConstants.LogFormatter)
-                .AddConsoleFormatter<TestLogConsoleFormatter, TestConsoleFormatterOptions>(
-                    options =>
-                    {
-                        options.TestLogMessages = logMessages;
-                    }
-                );
-        });
-
-        var logger = loggerFactory.CreateLogger<MatchingService>();
-        _sut = new MatchingService(
-            logger,
-            _nhsFhirClient.Object,
-            _validationService,
-            _auditLogger.Object
-        );
-
         var model = new SearchSpecification
         {
             BirthDate = new DateOnly(1970, 1, 1),
             Family = "Smith",
             Given = "John",
-            StrategyVersion = 3,
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy4,
+            StrategyVersion = 1,
         };
 
         _nhsFhirClient
             .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.Matched, Score = 1 });
 
-        using var activity = new Activity("TestActivity");
-        activity.Start();
-
-        // Act
         await _sut.SearchAsync(model);
 
-        // Assert
-        Assert.NotEmpty(logMessages);
-        Assert.Contains(logMessages, x => x.Contains("[Algorithm=v3]"));
+        _activityHashService.Verify(x => x.StoreAlgorithmVersion(1), Times.Once);
+        _activityHashService.Verify(
+            x => x.StoreSearchStrategy(SharedConstants.SearchStrategy.Strategies.Strategy4),
+            Times.Once
+        );
     }
 
     [Fact]
@@ -506,9 +483,6 @@ public sealed class MatchingServiceTests
                 new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.99m }
             );
 
-        using var activity = new Activity("TestActivity");
-        activity.Start();
-
         // Act
         await _sut.SearchAsync(model);
 
@@ -600,5 +574,36 @@ public sealed class MatchingServiceTests
 
         // Assert
         Assert.Equal(MatchStatus.ManyMatch, result.Result!.MatchStatus);
+    }
+
+    private void ConfigureActivityHashService()
+    {
+        var activityHashService = new ActivityHashService();
+
+        _activityHashService
+            .Setup(x => x.StoreUniqueSearchIdFor(It.IsAny<PersonSpecification>()))
+            .Returns(
+                (PersonSpecification personSpecification) =>
+                    activityHashService.StoreUniqueSearchIdFor(personSpecification)
+            );
+
+        _activityHashService
+            .Setup(x => x.StoreUniqueSearchIdFor(It.IsAny<MatchPersonResult>()))
+            .Returns(
+                (MatchPersonResult matchPersonResult) =>
+                    activityHashService.StoreUniqueSearchIdFor(matchPersonResult)
+            );
+
+        _activityHashService
+            .Setup(x => x.GetUniqueSearchId())
+            .Returns(activityHashService.GetUniqueSearchId);
+
+        _activityHashService
+            .Setup(x => x.StoreAlgorithmVersion(It.IsAny<int>()))
+            .Callback<int>(activityHashService.StoreAlgorithmVersion);
+
+        _activityHashService
+            .Setup(x => x.StoreSearchStrategy(It.IsAny<string>()))
+            .Callback<string>(activityHashService.StoreSearchStrategy);
     }
 }
