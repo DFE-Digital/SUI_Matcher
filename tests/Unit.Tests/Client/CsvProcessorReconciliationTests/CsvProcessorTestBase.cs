@@ -59,8 +59,6 @@ public class CsvProcessorTestBase(ITestOutputHelper testOutputHelper)
         servicesCollection.AddSingleton<IActivityHashService, ActivityHashService>();
         servicesCollection.AddSingleton<IReconciliationService, ReconciliationService>();
         servicesCollection.AddSingleton<IValidationService, ValidationService>();
-        servicesCollection.AddSingleton<IAuditLogger, ChannelAuditLogger>();
-        servicesCollection.AddSingleton(Channel.CreateUnbounded<AuditLogEntry>());
         servicesCollection.AddFeatureManagement();
         servicesCollection.AddSingleton<IConfiguration>(config);
 

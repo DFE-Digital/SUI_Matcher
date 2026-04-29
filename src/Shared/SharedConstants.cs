@@ -4,11 +4,6 @@ public static class SharedConstants
 {
     public const string LogFormatter = "custom-formatter";
 
-    public static class AuditLog
-    {
-        public const string AzStorageTableName = "AuditLogs";
-    }
-
     public static class SearchQuery
     {
         public const string DateFormat = "yyyy-MM-dd";

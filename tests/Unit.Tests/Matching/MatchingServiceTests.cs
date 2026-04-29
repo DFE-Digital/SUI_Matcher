@@ -13,7 +13,6 @@ namespace Unit.Tests.Matching;
 
 public sealed class MatchingServiceTests
 {
-    private readonly Mock<IAuditLogger> _auditLogger = new();
     private readonly Mock<ILogger<MatchingService>> _loggerMock = new();
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new();
     private readonly Mock<IActivityHashService> _activityHashService = new();
@@ -28,8 +27,7 @@ public sealed class MatchingServiceTests
             _loggerMock.Object,
             _nhsFhirClient.Object,
             _validationService,
-            _activityHashService.Object,
-            _auditLogger.Object
+            _activityHashService.Object
         );
     }
 

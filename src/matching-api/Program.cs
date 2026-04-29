@@ -1,16 +1,13 @@
 using System.Text.Json.Serialization;
-using System.Threading.Channels;
 using DotNetEnv;
 using MatchingApi;
 using MatchingApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
-using Shared.Logging;
 using Shared.Services;
 using Shared.Util;
 
@@ -52,19 +49,6 @@ builder.Services.AddSingleton<IActivityHashService, ActivityHashService>();
 builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
 builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
-
-// Audit logging setup
-builder.Services.AddFeatureManagement();
-var auditFeatureFlag = builder.Configuration.GetValue<bool>("FeatureManagement:EnableAuditLogging");
-Console.WriteLine($"[AUDIT] Matching API started with audit logging set to {auditFeatureFlag}");
-if (auditFeatureFlag)
-{
-    builder.AddAzureTableServiceClient("tables");
-    builder.Services.AddHostedService<AuditLogBackgroundService>();
-}
-
-builder.Services.AddSingleton(Channel.CreateUnbounded<AuditLogEntry>());
-builder.Services.AddSingleton<IAuditLogger, ChannelAuditLogger>();
 
 IHttpClientBuilder client = builder.Services.AddHttpClient<INhsFhirClient, NhsFhirClientApiWrapper>(
     static client => client.BaseAddress = new Uri("https+http://external-api")
