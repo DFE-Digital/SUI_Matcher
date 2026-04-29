@@ -40,11 +40,6 @@ param monitoringActionGroupEmail string
 @description('Turn on monitoring alerts')
 param turnOnAlerts bool = false
 
-@description('Enable Audit Logging feature for Aspire application')
-// Preserved for compatibility with the existing audit deployment docs and parameter surface.
-#disable-next-line no-unused-params
-param enableAuditLogging bool = false
-
 @description('Network')
 param clientNetwork string = '192.168.0.128/25'
 
