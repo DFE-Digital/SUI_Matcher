@@ -1,7 +1,6 @@
 ﻿using MatchingApi.Search;
 using Newtonsoft.Json;
 using Shared.Endpoint;
-using Shared.Logging;
 using Shared.Models;
 using Shared.Services;
 using Shared.Util;

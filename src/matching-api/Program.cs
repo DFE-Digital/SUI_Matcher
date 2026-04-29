@@ -4,12 +4,10 @@ using MatchingApi;
 using MatchingApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 using Shared.Aspire;
 using Shared.Endpoint;
 using Shared.Exceptions;
-using Shared.Logging;
 using Shared.Services;
 using Shared.Util;
 
