@@ -17,15 +17,19 @@ public sealed class MatchingServiceTests
     private readonly Mock<IAuditLogger> _auditLogger = new();
     private readonly Mock<ILogger<MatchingService>> _loggerMock = new();
     private readonly Mock<INhsFhirClient> _nhsFhirClient = new();
+    private readonly Mock<IActivityHashService> _activityHashService = new();
     private readonly ValidationService _validationService = new();
     private MatchingService _sut;
 
     public MatchingServiceTests()
     {
+        ConfigureActivityHashService();
+
         _sut = new MatchingService(
             _loggerMock.Object,
             _nhsFhirClient.Object,
             _validationService,
+            _activityHashService.Object,
             _auditLogger.Object
         );
     }
@@ -379,6 +383,7 @@ public sealed class MatchingServiceTests
             logger,
             _nhsFhirClient.Object,
             _validationService,
+            _activityHashService.Object,
             _auditLogger.Object
         );
 
@@ -600,5 +605,28 @@ public sealed class MatchingServiceTests
 
         // Assert
         Assert.Equal(MatchStatus.ManyMatch, result.Result!.MatchStatus);
+    }
+
+    private void ConfigureActivityHashService()
+    {
+        var activityHashService = new ActivityHashService();
+
+        _activityHashService
+            .Setup(x => x.StoreUniqueSearchIdFor(It.IsAny<PersonSpecification>()))
+            .Returns(
+                (PersonSpecification personSpecification) =>
+                    activityHashService.StoreUniqueSearchIdFor(personSpecification)
+            );
+
+        _activityHashService
+            .Setup(x => x.StoreUniqueSearchIdFor(It.IsAny<MatchPersonResult>()))
+            .Returns(
+                (MatchPersonResult matchPersonResult) =>
+                    activityHashService.StoreUniqueSearchIdFor(matchPersonResult)
+            );
+
+        _activityHashService
+            .Setup(x => x.GetUniqueSearchId())
+            .Returns(activityHashService.GetUniqueSearchId);
     }
 }

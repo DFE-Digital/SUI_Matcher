@@ -9,4 +9,7 @@ public class PersonMatchResponse
 
     [JsonPropertyName("dataQuality")]
     public DataQualityResult? DataQuality { get; set; }
+
+    [JsonPropertyName("searchId")]
+    public string? SearchId { get; set; }
 }

@@ -14,6 +14,7 @@ public class MatchingService(
     ILogger<MatchingService> logger,
     INhsFhirClient nhsFhirClient,
     IValidationService validationService,
+    IActivityHashService activityHashService,
     IAuditLogger auditLogger
 ) : IMatchingService
 {
@@ -22,7 +23,7 @@ public class MatchingService(
         bool logMatch = true
     )
     {
-        var searchId = HashUtil.StoreUniqueSearchIdFor(searchSpecification);
+        var searchId = activityHashService.StoreUniqueSearchIdFor(searchSpecification);
         var searchStrategy = SearchStrategyFactory.Get(
             searchSpecification.SearchStrategy,
             searchSpecification.StrategyVersion
@@ -59,6 +60,7 @@ public class MatchingService(
             {
                 Result = new MatchResult { MatchStatus = MatchStatus.Error },
                 DataQuality = dataQualityResult,
+                SearchId = activityHashService.GetUniqueSearchId(),
             };
         }
 
@@ -95,6 +97,7 @@ public class MatchingService(
                 ProcessStage = result.ProcessStage,
             },
             DataQuality = dataQualityResult,
+            SearchId = activityHashService.GetUniqueSearchId(),
         };
     }
 
@@ -111,6 +114,7 @@ public class MatchingService(
                 Score = result.Result?.Score,
                 ProcessStage = result.ProcessStage,
             },
+            SearchId = activityHashService.GetUniqueSearchId(),
         };
     }
 

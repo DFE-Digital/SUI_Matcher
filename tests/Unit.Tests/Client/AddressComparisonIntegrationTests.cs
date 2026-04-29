@@ -942,6 +942,7 @@ public class AddressComparisonIntegrationTests(ITestOutputHelper testOutputHelpe
         servicesCollection.AddSingleton<IMatchingService, MatchingServiceAdapter>();
 
         servicesCollection.AddSingleton<Shared.Endpoint.IMatchingService, MatchingService>();
+        servicesCollection.AddSingleton<IActivityHashService, ActivityHashService>();
         servicesCollection.AddSingleton<IReconciliationService, ReconciliationService>();
         servicesCollection.AddSingleton<IValidationService, ValidationService>();
         servicesCollection.AddSingleton<IAuditLogger, ChannelAuditLogger>();

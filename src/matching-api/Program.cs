@@ -47,6 +47,7 @@ if (builder.Configuration.GetValue<bool>("EnableAuth"))
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IMatchingService, MatchingService>();
+builder.Services.AddSingleton<IActivityHashService, ActivityHashService>();
 builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<INhsFhirClient, NhsFhirClientApiWrapper>();
 builder.Services.AddSingleton<IReconciliationService, ReconciliationService>();
