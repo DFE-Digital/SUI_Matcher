@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
@@ -95,10 +95,13 @@ public class QueueFileProcessorTests
     {
         var harness = new TestHarness();
         harness.FailVisibilityRenewalWhileProcessingContinues();
+        var runTask = harness.Sut.RunAsync(CancellationToken.None);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            harness.Sut.RunAsync(CancellationToken.None)
-        );
+        await harness.WaitForRenewalAttemptAsync();
+        harness.AllowRenewalFailure();
+        await harness.WaitForRenewalFailureLogAsync();
+        harness.AllowProcessingToComplete();
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await runTask);
 
         harness.VerifyMessageWasNotDeleted();
     }
@@ -162,6 +165,16 @@ public class QueueFileProcessorTests
     // Consider base class if we have more than 1 test file
     private sealed class TestHarness
     {
+        private readonly TaskCompletionSource _allowProcessingCompletion = new(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+        private readonly TaskCompletionSource _allowRenewalFailure = new(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+        private readonly TaskCompletionSource _renewalAttempted = new(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+        private readonly Mock<ILogger<QueueFileProcessor>> _logger = new();
         public Mock<IStorageQueueClient> QueueClient { get; } = new();
         public Mock<IStorageQueueMessageParser> MessageParser { get; } = new();
         public Mock<IBlobFileOrchestrator> BlobFileOrchestrator { get; } = new();
@@ -193,7 +206,7 @@ public class QueueFileProcessorTests
                 .ReturnsAsync(QueueMessage with { PopReceipt = "renewed-pop-receipt" });
 
             Sut = new QueueFileProcessor(
-                NullLogger<QueueFileProcessor>.Instance,
+                _logger.Object,
                 TimeProvider,
                 QueueClient.Object,
                 MessageParser.Object,
@@ -217,10 +230,6 @@ public class QueueFileProcessorTests
 
         public void FailVisibilityRenewalWhileProcessingContinues()
         {
-            var renewalAttempted = new TaskCompletionSource(
-                TaskCreationOptions.RunContinuationsAsynchronously
-            );
-
             QueueClient
                 .Setup(x =>
                     x.RenewMessageVisibilityAsync(
@@ -231,8 +240,8 @@ public class QueueFileProcessorTests
                 )
                 .Returns(async () =>
                 {
-                    renewalAttempted.SetResult();
-                    await Task.Yield();
+                    _renewalAttempted.TrySetResult();
+                    await _allowRenewalFailure.Task;
                     throw new InvalidOperationException("Renewal failed.");
                 });
 
@@ -241,9 +250,25 @@ public class QueueFileProcessorTests
                 .Returns(async () =>
                 {
                     await AdvanceToFirstRenewalAsync();
-                    await renewalAttempted.Task;
-                    await Task.Delay(10);
+                    await _allowProcessingCompletion.Task;
                 });
+        }
+
+        public Task WaitForRenewalAttemptAsync() => _renewalAttempted.Task;
+
+        public void AllowRenewalFailure() => _allowRenewalFailure.TrySetResult();
+
+        public void AllowProcessingToComplete() => _allowProcessingCompletion.TrySetResult();
+
+        public async Task WaitForRenewalFailureLogAsync()
+        {
+            await WaitUntilAsync(() =>
+                _logger.Invocations.Any(invocation =>
+                    invocation.Method.Name == nameof(ILogger.Log)
+                    && invocation.Arguments[0] is LogLevel logLevel
+                    && logLevel == LogLevel.Error
+                )
+            );
         }
 
         public void FailVisibilityRenewalAfterProcessingCompletes()
