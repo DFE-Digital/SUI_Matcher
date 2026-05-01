@@ -122,7 +122,31 @@ Strategy 4 takes version 14 of Strategy 3, splits the given name into an array, 
 
 ### Strategy 5
 
-Strategy 5 takes version 2 of Strategy 4, and added 2 new queries based on not using the Forename.
+Strategy 5 builds on Version 2 of Strategy 4 by adding two new queries that omit the `GivenName` field.
+
+#### Why this version exists
+
+Initial analysis suggested that the GivenName field sometimes contains "noisy" data, such as:
+
+- Multiple names or middle names merged into one field.
+- Special characters or formatting errors.
+- Temporary placeholders (e.g., "baby" or "infant") used before a formal name is registered.
+
+The theory behind this strategy is that by omitting the GivenName in specific scenarios, 
+the Personal Demographics Service (PDS) can better identify an individual using its internal name history and other demographic anchors, rather than being blocked by a non-matching first-name string.
+
+#### What we did to get here
+
+We started with Strategy 4 Version 2, as it was the most effective version at the time. 
+We then inserted two new queries (steps 3 and 4 below) after our most effective initial rules.
+This ensures that we first attempt to match using the most accurate data (including first name) to minimize risk, before falling back to the GivenName-omitted queries for the remaining unmatched records.
+Note that the queries in this strategy were run on all records and were not limited to only those that had quality issues.
+
+#### What we found as a result of the changes
+
+When running this strategy against our dataset,
+we found that while these new queries had only a small effect on the specific records they were designed to target, 
+they had an unexpectedly larger impact on overall results, improving the match rate by several percentage points and elevating some previously non-confident matches to confident ones.
 
 #### Version 1
 
