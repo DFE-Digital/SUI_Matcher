@@ -199,6 +199,9 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
   location: location
   tags: paramTags
   properties: {
+    sku: {
+      tier: 'Basic'
+    }
     threatIntelMode: 'Alert'
   }
 }
@@ -210,7 +213,7 @@ resource azureFirewallsVnetfwFirewallNameResource 'Microsoft.Network/azureFirewa
   properties: {
     sku: {
       name: 'AZFW_VNet'
-      tier: 'Standard'
+      tier: 'Basic'
     }
     threatIntelMode: 'Alert'
     firewallPolicy: {
