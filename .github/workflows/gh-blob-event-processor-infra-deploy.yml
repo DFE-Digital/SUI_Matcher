@@ -38,7 +38,6 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
-      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
       STACK_VERSION: ${{ inputs.version }}
       AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
       AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ vars.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
@@ -67,25 +66,40 @@ jobs:
 
       - name: Run Bicep What-If
         if: ${{ inputs.what_if == true }}
-        uses: Azure/deployment-what-if-action@v1.0.0
-        with:
-          subscription: ${{ env.AZURE_SUBSCRIPTION_ID }}
-          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
-          templateFile: infra/stacks/blob-event-processor/main.bicep
-          additionalParameters: environmentName="${{ env.AZURE_ENV_NAME }}" environmentPrefix="${{ env.AZURE_ENV_PREFIX }}" location="${{ env.AZURE_LOCATION }}" monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}" containerAppManagedEnvironmentNumber="${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}" containerAppVnet="${{ env.AZURE_CONTAINER_APP_VNET }}" containerAppEnvSubnet="${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}" turnOnAlerts="${{ env.AZURE_TURN_ON_ALERTS }}"
+        run: |
+          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-blob-event-processor"
+          echo "Target stack resource group: ${STACK_RESOURCE_GROUP}"
+
+          az deployment sub what-if \
+            --name "${STACK_RESOURCE_GROUP}-what-if" \
+            --location "${AZURE_LOCATION}" \
+            --subscription "${AZURE_SUBSCRIPTION_ID}" \
+            --template-file infra/stacks/blob-event-processor/subscription.bicep \
+            --parameters environmentName="${AZURE_ENV_NAME}" \
+              environmentPrefix="${AZURE_ENV_PREFIX}" \
+              location="${AZURE_LOCATION}" \
+              monitoringActionGroupEmail="${AZURE_MONITORING_ACTION_GROUP_EMAIL}" \
+              containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" \
+              containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
+              containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
+              turnOnAlerts="${AZURE_TURN_ON_ALERTS}"
 
       - name: Deploy blob-event-processor infrastructure
         if: ${{ inputs.what_if == false }}
         run: |
-          az deployment group create \
-            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
-            --subscription "${{ env.AZURE_SUBSCRIPTION_ID }}" \
-            --template-file infra/stacks/blob-event-processor/main.bicep \
-            --parameters environmentName="${{ env.AZURE_ENV_NAME }}" \
-              environmentPrefix="${{ env.AZURE_ENV_PREFIX }}" \
-              location="${{ env.AZURE_LOCATION }}" \
-              monitoringActionGroupEmail="${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}" \
-              containerAppManagedEnvironmentNumber="${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}" \
-              containerAppVnet="${{ env.AZURE_CONTAINER_APP_VNET }}" \
-              containerAppEnvSubnet="${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}" \
-              turnOnAlerts="${{ env.AZURE_TURN_ON_ALERTS }}"
+          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-blob-event-processor"
+          echo "Target stack resource group: ${STACK_RESOURCE_GROUP}"
+
+          az deployment sub create \
+            --name "${STACK_RESOURCE_GROUP}-deploy" \
+            --location "${AZURE_LOCATION}" \
+            --subscription "${AZURE_SUBSCRIPTION_ID}" \
+            --template-file infra/stacks/blob-event-processor/subscription.bicep \
+            --parameters environmentName="${AZURE_ENV_NAME}" \
+              environmentPrefix="${AZURE_ENV_PREFIX}" \
+              location="${AZURE_LOCATION}" \
+              monitoringActionGroupEmail="${AZURE_MONITORING_ACTION_GROUP_EMAIL}" \
+              containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" \
+              containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
+              containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
+              turnOnAlerts="${AZURE_TURN_ON_ALERTS}"

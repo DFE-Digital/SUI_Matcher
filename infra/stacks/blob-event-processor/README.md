@@ -11,4 +11,6 @@ Current scope:
 - blob containers for incoming, processed, and success files
 - primary and poison storage queues for the processing job contract
 
+`infra/stacks/blob-event-processor/subscription.bicep` is the stack-owned resource-group entrypoint for this stack. It creates or updates the `blob-event-processor` resource group and then deploys `main.bicep` into it.
+
 Follow-up work should add the Event Grid wiring, ACA Job deployment path, and any further networking/security resources directly to this stack without introducing any dependency on `client-agent`.

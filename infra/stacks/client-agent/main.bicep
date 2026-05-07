@@ -2,7 +2,7 @@ targetScope = 'resourceGroup'
 
 @minLength(1)
 @maxLength(64)
-@description('Name of the environment that can be used as part of naming resource convention, the name of the resource group for your application will use this name, prefixed with rg-')
+@description('Name of the deployment environment used for stack resource naming')
 param environmentName string
 
 @minLength(1)
@@ -53,6 +53,7 @@ var tags = {
   Environment: environmentName
   EnvironmentPrefix: environmentPrefix
   'Service Offering': 'SUI'
+  Stack: 'client-agent'
 }
 
 module identity '../../modules/shared/identity.bicep' = {

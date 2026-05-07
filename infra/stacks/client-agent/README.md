@@ -9,4 +9,6 @@ It composes:
 
 The authoritative topology root for this architecture is `infra/stacks/client-agent/main.bicep`.
 
-`.github/workflows/gh-client-agent-infra-deploy.yml` deploys this root. The existing `src/app-host/infra` workflow remains in place via `.github/workflows/gh-deploy-infra.yml`, while the current laptop-driven deployment flow for existing client environments remains documented under `src/app-host/infra/deploy_readme.md`.
+`infra/stacks/client-agent/subscription.bicep` is the stack-owned resource-group entrypoint for this stack. It creates or updates the `client-agent` resource group and then deploys `main.bicep` into it.
+
+`.github/workflows/gh-client-agent-infra-deploy.yml` deploys this wrapper. The existing `src/app-host/infra` workflow remains in place via `.github/workflows/gh-deploy-infra.yml`, while the current laptop-driven deployment flow for existing client environments remains documented under `src/app-host/infra/deploy_readme.md`.
