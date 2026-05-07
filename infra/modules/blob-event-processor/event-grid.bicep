@@ -19,8 +19,8 @@ param incomingContainerName string = 'incoming'
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
-// bepeg = blob event processor event grid
-var systemTopicName = toLower('${take(environmentPrefix, 8)}${take(lowercaseEnvironmentName, 8)}bepeg${take(uniqueString(resourceGroup().id, environmentPrefix, lowercaseEnvironmentName), 5)}')
+// https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules
+var systemTopicName = toLower('${take(environmentPrefix, 8)}-${take(lowercaseEnvironmentName, 11)}-blob-eventgrid')
 var eventSubscriptionName = 'incoming-blob-created-to-storage-process-job'
 
 resource systemTopic 'Microsoft.EventGrid/systemTopics@2025-02-15' = {
