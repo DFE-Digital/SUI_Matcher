@@ -115,6 +115,19 @@ module storage '../../modules/blob-event-processor/storage.bicep' = {
   }
 }
 
+module eventGrid '../../modules/blob-event-processor/event-grid.bicep' = {
+  name: 'blob-event-processor-event-grid'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    storageAccountId: storage.outputs.accountId
+    queueName: storage.outputs.queueName
+    incomingContainerName: storage.outputs.incomingContainerName
+    tags: tags
+  }
+}
+
 output STACK_NAME string = 'blob-event-processor'
 output LOCATION string = location
 output TAGS object = tags
@@ -141,3 +154,7 @@ output STORAGE_PROCESSED_CONTAINER_NAME string = storage.outputs.processedContai
 output STORAGE_SUCCESS_CONTAINER_NAME string = storage.outputs.successContainerName
 output STORAGE_QUEUE_NAME string = storage.outputs.queueName
 output STORAGE_POISON_QUEUE_NAME string = storage.outputs.poisonQueueName
+output EVENT_GRID_SYSTEM_TOPIC_NAME string = eventGrid.outputs.systemTopicName
+output EVENT_GRID_SYSTEM_TOPIC_ID string = eventGrid.outputs.systemTopicId
+output EVENT_GRID_EVENT_SUBSCRIPTION_NAME string = eventGrid.outputs.eventSubscriptionName
+output EVENT_GRID_EVENT_SUBSCRIPTION_ID string = eventGrid.outputs.eventSubscriptionId
