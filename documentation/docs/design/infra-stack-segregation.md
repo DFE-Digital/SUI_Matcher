@@ -80,6 +80,8 @@ These map to the current known deployment shapes as follows.
 
 Each stack root should deploy an isolated environment by composing the shared Bicep modules it needs directly. Shared resources are therefore a module concern, not a separately deployed stack that other stacks depend on.
 
+Each stack should also own its own Azure resource group. In practice this means a subscription-scope stack entrypoint creates or updates the stack resource group and then deploys the resourceGroup-scoped stack root into it.
+
 ### 4.1 Client agent stack
 
 Represents the current client-agent deployment shape:
@@ -170,6 +172,7 @@ To keep public repository artefacts generic:
 - avoid local-authority names in stack names, resource groups, workflow names, and parameter file names
 - prefer names based on architecture pattern or integration shape
 - keep environment/resource naming inputs generic and reusable
+- keep stack-owned resource group names deterministic and derived from the DfE prefix plus environment and stack suffix
 
 Examples:
 

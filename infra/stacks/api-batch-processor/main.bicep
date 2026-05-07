@@ -1,7 +1,7 @@
 targetScope = 'resourceGroup'
 
 @minLength(1)
-@description('The name of the deployment environment')
+@description('Name of the deployment environment used for stack resource naming')
 param environmentName string
 
 @minLength(1)

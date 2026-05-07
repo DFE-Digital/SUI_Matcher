@@ -10,18 +10,21 @@ Current structure:
 
 Shared Bicep modules live under `infra/modules`.
 
+Each stack root under `infra/stacks` is paired with a subscription-scope wrapper that creates or updates the stack-owned resource group and then deploys the stack into it.
+
 Supported deployment roots:
 
 - `src/app-host/infra` still contains the existing application-layer deployment assets and the current laptop-driven deployment flow for existing client environments
 - `src/SUI.Client/SUI.Client.Watcher/infra/client.bicep` remains a legacy dedicated client-infrastructure root used by the client infra workflow
 - `infra/stacks/client-agent/main.bicep` is the full DfE-hosted test stack root
+- `infra/stacks/*/subscription.bicep` are the stack-owned resource-group entrypoints for the stack roots
 
 CI/CD:
 
 - `.github/workflows/gh-deploy-infra.yml` remains the existing `src/app-host/infra` infrastructure workflow and still drives the current `azd provision` path
 - `.github/workflows/gh-client-infra-deploy.yml` deploys the legacy dedicated client-infrastructure path under `src/SUI.Client/SUI.Client.Watcher/infra`
-- `.github/workflows/gh-client-agent-infra-deploy.yml` deploys the full `client-agent` stack root
-- `.github/workflows/gh-blob-event-processor-infra-deploy.yml` deploys the `blob-event-processor` stack root
+- `.github/workflows/gh-client-agent-infra-deploy.yml` deploys the full `client-agent` stack through its subscription-scope wrapper and stack-owned resource group
+- `.github/workflows/gh-blob-event-processor-infra-deploy.yml` deploys the `blob-event-processor` stack through its subscription-scope wrapper and stack-owned resource group
 - The placeholder/future stacks should gain dedicated workflows when their stack roots become deployable
 
 The intent is that stack roots define environment topology, while application deployment consumes outputs from the selected stack.
