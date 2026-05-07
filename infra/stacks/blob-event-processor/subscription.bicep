@@ -91,3 +91,7 @@ output STORAGE_PROCESSED_CONTAINER_NAME string = stackDeployment.outputs.STORAGE
 output STORAGE_SUCCESS_CONTAINER_NAME string = stackDeployment.outputs.STORAGE_SUCCESS_CONTAINER_NAME
 output STORAGE_QUEUE_NAME string = stackDeployment.outputs.STORAGE_QUEUE_NAME
 output STORAGE_POISON_QUEUE_NAME string = stackDeployment.outputs.STORAGE_POISON_QUEUE_NAME
+output EVENT_GRID_SYSTEM_TOPIC_NAME string = stackDeployment.outputs.EVENT_GRID_SYSTEM_TOPIC_NAME
+output EVENT_GRID_SYSTEM_TOPIC_ID string = stackDeployment.outputs.EVENT_GRID_SYSTEM_TOPIC_ID
+output EVENT_GRID_EVENT_SUBSCRIPTION_NAME string = stackDeployment.outputs.EVENT_GRID_EVENT_SUBSCRIPTION_NAME
+output EVENT_GRID_EVENT_SUBSCRIPTION_ID string = stackDeployment.outputs.EVENT_GRID_EVENT_SUBSCRIPTION_ID
