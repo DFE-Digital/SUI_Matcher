@@ -1,0 +1,1215 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../waysof/">
+      
+      
+        <link rel="next" href="../../reconciliation/address_parsing/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+    
+    
+      
+        <title>Deployment IaC Stack Strategy - NHS Number Matcher</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8608ea7d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#deployment-iac-stack-strategy" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="NHS Number Matcher" class="md-header__button md-logo" aria-label="NHS Number Matcher" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            NHS Number Matcher
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Deployment IaC Stack Strategy
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="NHS Number Matcher" class="md-nav__button md-logo" aria-label="NHS Number Matcher" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    NHS Number Matcher
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adrs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Decision Records
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cicd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clientarchitecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Client Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gettingstarted/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../waysof/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Ways of Working
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Design
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Design
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Deployment IaC Stack Strategy
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Deployment IaC Stack Strategy
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-current-position" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Current Position
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-proposed-direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Proposed Direction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-stack-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Stack Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Stack Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-client-agent-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1 Client agent stack
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-blob-event-processor-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2 Blob event processor stack
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-api-batch-processor-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.3 API batch processor stack
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-application-deployment-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Application Deployment Layer
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-module-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Module Boundaries
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-naming-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Naming Rules
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-implementation-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Implementation Order
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-success-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Success Criteria
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-confirmed-assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Confirmed Assumptions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-open-follow-up-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      11. Open Follow-Up Work
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-outcome-sought" class="md-nav__link">
+    <span class="md-ellipsis">
+      12. Outcome Sought
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Reconciliation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Reconciliation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reconciliation/address_parsing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Address Parsing &amp; Comparison Rules
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reconciliation/reconciliation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Reconciliation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Strategies
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            Strategies
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../strategies/rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rule Definitions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../strategies/strategies/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Strategies
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../strategies/strategy3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Strategy 3 Full Version History
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-current-position" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Current Position
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-proposed-direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Proposed Direction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-stack-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Stack Model
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Stack Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-client-agent-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1 Client agent stack
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-blob-event-processor-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2 Blob event processor stack
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-api-batch-processor-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.3 API batch processor stack
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-application-deployment-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Application Deployment Layer
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-module-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Module Boundaries
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-naming-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Naming Rules
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-implementation-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Implementation Order
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-success-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Success Criteria
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-confirmed-assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Confirmed Assumptions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-open-follow-up-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      11. Open Follow-Up Work
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-outcome-sought" class="md-nav__link">
+    <span class="md-ellipsis">
+      12. Outcome Sought
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="deployment-iac-stack-strategy">Deployment IaC Stack Strategy</h1>
+<p><strong>Date:</strong> <code>2026-04-02</code></p>
+<p><strong>Scope:</strong> Proposed direction for restructuring deployment IaC so different local-authority architectures can be deployed without breaking the current deployment path.</p>
+<p>This document captures the current proposed direction for deployment infrastructure in the SUI Matcher repo.</p>
+<p>It is a design note intended to:</p>
+<ul>
+<li>formalise the current direction of travel</li>
+<li>record the main structural changes needed in the existing IaC</li>
+<li>make assumptions and follow-up work explicit</li>
+</ul>
+<hr />
+<h2 id="1-overview">1. Overview</h2>
+<p>The current deployment IaC is not structured to support multiple deployment architectures cleanly.</p>
+<p>Today the repo contains:</p>
+<ul>
+<li>a saved Aspire-shaped deployment baseline under <code>src/app-host/infra</code></li>
+<li>an Aspire app definition in <code>src/app-host/azure.yaml</code> that assumes a single container app deployment flow</li>
+<li>additional client, VM, firewall, and connectivity infrastructure under <code>src/SUI.Client/SUI.Client.Watcher/infra</code></li>
+</ul>
+<p>This has been workable for the current deployment shape, but it is not a good fit for the next set of environments.</p>
+<p>The next deployment target needs a different architecture from the current VM/client shape. A future deployment is also expected to diverge further, with batch-oriented Eclipse integration as the current baseline. If we continue extending the existing single-root deployment model with more flags and conditionals, the IaC will get harder to reason about, harder to validate, and more likely to break the current deployment path.</p>
+<p>The proposed direction is to restructure deployment IaC around <strong>separate deployment stacks by architecture pattern</strong>, while keeping genuinely shared Azure resources in reusable modules.</p>
+<hr />
+<h2 id="2-current-position">2. Current Position</h2>
+<p>The current position in the repo is:</p>
+<ul>
+<li>Aspire is useful for local development, but it is not the authoritative deployment model</li>
+<li>deployment Bicep is manually maintained and already diverged from generated Aspire output</li>
+<li>the existing deployment structure effectively assumes one overall shape with environment-specific parameters</li>
+<li>the current VM/client infrastructure is already separate in practice, but not yet represented as a first-class stack boundary</li>
+<li>several networking and security steps are still partly manual</li>
+</ul>
+<p>This creates two main problems:</p>
+<ol>
+<li>architecture-specific infrastructure is mixed into a deployment model that looks more generic than it really is</li>
+<li>adding a new architecture risks bolting it onto the current VM/client-oriented code rather than introducing a clear new boundary</li>
+</ol>
+<hr />
+<h2 id="3-proposed-direction">3. Proposed Direction</h2>
+<p>The proposed direction is:</p>
+<ul>
+<li>keep Aspire focused on local development only</li>
+<li>stop treating <code>src/app-host/infra/main.bicep</code> as the universal deployment root for all environments</li>
+<li>restructure deployment IaC into separate top-level stacks based on architecture shape</li>
+<li>preserve the current deployment path behind its own explicit stack so it remains deployable</li>
+<li>add a separate <code>blob-event-processor</code> stack next</li>
+<li>shape the structure so <code>api-batch-processor</code> can follow without reworking the same boundaries again</li>
+<li>extract only genuinely shared Azure resources into reusable modules</li>
+<li>automate as much infrastructure as permissions allow, and explicitly document anything that must remain manual</li>
+</ul>
+<p>The initial restructure should stay in this repo to avoid delaying delivery with a repo move. A later split to a private infra repo can be reconsidered once the new stack boundaries are stable.</p>
+<hr />
+<h2 id="4-stack-model">4. Stack Model</h2>
+<p>The stack names and resource naming should stay <strong>generic</strong> and avoid local-authority names in code, stack names, workflows, and deployment artefacts.</p>
+<p>Examples of generic stack labels:</p>
+<ul>
+<li><code>client-agent</code></li>
+<li><code>blob-event-processor</code></li>
+<li><code>api-batch-processor</code></li>
+</ul>
+<p>These map to the current known deployment shapes as follows.</p>
+<p>Each stack root should deploy an isolated environment by composing the shared Bicep modules it needs directly. Shared resources are therefore a module concern, not a separately deployed stack that other stacks depend on.</p>
+<p>Each stack should also own its own Azure resource group. In practice this means a subscription-scope stack entrypoint creates or updates the stack resource group and then deploys the resourceGroup-scoped stack root into it.</p>
+<h3 id="41-client-agent-stack">4.1 Client agent stack</h3>
+<p>Represents the current client-agent deployment shape:</p>
+<ul>
+<li>any shared Azure resources required by this architecture</li>
+<li>externally hosted client agent and related networking</li>
+<li>firewall and routing components required for the current model</li>
+<li>private connectivity needed by the client-agent path</li>
+<li>a DfE-hosted VM path used to mimic an on-prem client host in test environments</li>
+</ul>
+<p>The legacy dedicated client-infrastructure path remains separately deployable and should not be collapsed into this full test stack unless the ownership model is intentionally redesigned.</p>
+<p>This stack exists to keep the current infrastructure deployable during and after the refactor.</p>
+<h3 id="42-blob-event-processor-stack">4.2 Blob event processor stack</h3>
+<p>Represents the next blob-triggered event processing deployment shape:</p>
+<ul>
+<li>any shared Azure resources required by this architecture</li>
+<li>blob storage and event-driven processing path</li>
+<li>eventing and ACA Job-hosted processing resources as required by that model</li>
+<li>network/security resources needed for that environment</li>
+</ul>
+<p>The first implemented slice of this stack is the shared-platform and storage foundation. Event Grid wiring and processing-job deployment remain follow-up work.</p>
+<p>This stack must not depend on the client-agent infrastructure.</p>
+<h3 id="43-api-batch-processor-stack">4.3 API batch processor stack</h3>
+<p>Represents the current scheduled API batch baseline:</p>
+<ul>
+<li>any shared Azure resources required by this architecture</li>
+<li>scheduled batch processing against an external API</li>
+<li>API read/write integration concerns</li>
+<li>identity, secret, and networking requirements for that model</li>
+</ul>
+<p>This should be treated as the baseline future path for batch-oriented API integration unless the architecture changes later.</p>
+<hr />
+<h2 id="5-application-deployment-layer">5. Application Deployment Layer</h2>
+<p>The deployment stacks described above define environment topology and infrastructure ownership. They do not, by themselves, define where the application services are deployed from.</p>
+<p>The intended ownership model is:</p>
+<ul>
+<li><code>client-agent</code>, <code>blob-event-processor</code>, and <code>api-batch-processor</code> are the deployable infrastructure roots</li>
+<li>each stack root composes the shared modules it needs directly, alongside any architecture-specific infrastructure</li>
+<li>application deployment remains a separate layer that consumes outputs from the selected stack</li>
+</ul>
+<p>In practical terms, the current application deployment artefacts under <code>src/app-host/infra</code> should be treated as application-layer deployment inputs, not as the authoritative source of environment topology.</p>
+<p>This means:</p>
+<ul>
+<li>stack roots define what infrastructure exists</li>
+<li>shared modules define reusable infrastructure building blocks and stable outputs</li>
+<li>application deployment targets the outputs of the chosen stack rather than redefining the stack shape itself</li>
+</ul>
+<hr />
+<h2 id="6-module-boundaries">6. Module Boundaries</h2>
+<p>Shared modules should be extracted from the current Bicep only where the resource is truly common.</p>
+<p>Good candidates for shared modules:</p>
+<ul>
+<li>observability resources</li>
+<li>identities</li>
+<li>key vault</li>
+<li>shared ACA environment resources</li>
+<li>reusable networking/security building blocks</li>
+<li>stable deployment outputs consumed by application deployment</li>
+</ul>
+<p>Poor candidates for shared modules:</p>
+<ul>
+<li>anything that exists only because one deployment architecture has a different topology</li>
+<li>pilot-specific VM, function, eventing, or Eclipse integration concerns</li>
+<li>modules that only stay "shared" by introducing many boolean switches</li>
+</ul>
+<p>If a resource exists because one deployment architecture needs it, it should stay in that architecture's stack root.</p>
+<hr />
+<h2 id="7-naming-rules">7. Naming Rules</h2>
+<p>To keep public repository artefacts generic:</p>
+<ul>
+<li>avoid local-authority names in stack names, resource groups, workflow names, and parameter file names</li>
+<li>prefer names based on architecture pattern or integration shape</li>
+<li>keep environment/resource naming inputs generic and reusable</li>
+<li>keep stack-owned resource group names deterministic and derived from the DfE prefix plus environment and stack suffix</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li>use <code>blob-event-processor</code> instead of an LA-specific name</li>
+<li>use <code>client-agent</code> instead of an LA-specific name</li>
+<li>use <code>api-batch-processor</code> instead of an LA-specific name</li>
+</ul>
+<p>This rule applies to new deployment structure, new module names, and any new pipeline/workflow naming that follows later.</p>
+<hr />
+<h2 id="8-implementation-order">8. Implementation Order</h2>
+<p>The recommended order of work is:</p>
+<ol>
+<li>extract shared modules from the current Bicep</li>
+<li>recreate the current deployment path behind an explicit <code>client-agent</code> stack root</li>
+<li>introduce the next <code>blob-event-processor</code> stack root and initial deployable foundation</li>
+<li>define the future <code>api-batch-processor</code> stack contract and skeleton</li>
+<li>update deployment documentation once the new structure is stable</li>
+</ol>
+<p>This order keeps the current deployment path safe while making room for the next target architecture.</p>
+<hr />
+<h2 id="9-success-criteria">9. Success Criteria</h2>
+<p>The first restructure should be considered successful when all of the following are true:</p>
+<ul>
+<li>the current deployment path can be represented by an explicit <code>client-agent</code> stack root without changing its intended infrastructure shape</li>
+<li>the next <code>blob-event-processor</code> stack can be introduced without depending on <code>client-agent</code> resources</li>
+<li>the future <code>api-batch-processor</code> stack has a documented contract and placeholder structure, even if it is not fully implemented in the first pass</li>
+<li>shared modules expose the outputs needed by individual stack roots and the application deployment layer</li>
+<li>any current manual or externally owned deployment steps are either preserved and documented, or replaced with automated equivalents</li>
+</ul>
+<p>Preserving deployability in this note means keeping the deployment path usable after the refactor, with equivalent infrastructure intent and clearly documented dependencies.</p>
+<hr />
+<h2 id="10-confirmed-assumptions">10. Confirmed Assumptions</h2>
+<p>The following assumptions are treated as current working direction:</p>
+<ul>
+<li>the next environment architecture to support is the <code>blob-event-processor</code> stack</li>
+<li>future Eclipse integration should be planned around the current batch model</li>
+<li>the current deployment path must remain deployable throughout the refactor</li>
+<li>Aspire should remain focused on local development rather than deployment modelling</li>
+<li>generic naming should be enforced for new stacks and resources</li>
+<li>the aim is to automate as much firewall, private endpoint, DNS, and routing work as permissions allow</li>
+<li>any infrastructure that cannot be automated yet should be recorded explicitly as manual or externally owned</li>
+</ul>
+<hr />
+<h2 id="11-open-follow-up-work">11. Open Follow-Up Work</h2>
+<p>This note does not redesign the whole deployment process.</p>
+<p>The following items remain follow-up work outside the first restructure:</p>
+<ul>
+<li>whether deployment IaC should later move into a private infra repo</li>
+<li>whether any later CI/CD changes should accompany the new stack structure</li>
+<li>the Event Grid and ACA Job deployment work needed to complete the next <code>blob-event-processor</code> application slice, and where that belongs in separate implementation tickets</li>
+<li>the exact boundary between automatable networking/security resources and LA-owned manual steps in each tenant</li>
+</ul>
+<hr />
+<h2 id="12-outcome-sought">12. Outcome Sought</h2>
+<p>At the end of this work, the repo should support:</p>
+<ul>
+<li>a deployable <code>client-agent</code> stack for the current deployment path</li>
+<li>a clean path to add <code>blob-event-processor</code> without bolting it into the current client-agent-oriented IaC</li>
+<li>a clear place for <code>api-batch-processor</code> to land later</li>
+<li>shared modules that are actually reusable</li>
+<li>deployment structure that reflects the real architecture differences between environments</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+    
+  </body>
+</html>
