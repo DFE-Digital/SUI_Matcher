@@ -25,6 +25,13 @@ CI/CD:
 - `.github/workflows/gh-client-infra-deploy.yml` deploys the legacy dedicated client-infrastructure path under `src/SUI.Client/SUI.Client.Watcher/infra`
 - `.github/workflows/gh-client-agent-infra-deploy.yml` deploys the full `client-agent` stack through its subscription-scope wrapper and stack-owned resource group
 - `.github/workflows/gh-blob-event-processor-infra-deploy.yml` deploys the `blob-event-processor` stack through its subscription-scope wrapper and stack-owned resource group
+- `.github/workflows/gh-stack-decommission.yml` is the generic manual decommission workflow for stack-owned resource groups under `infra/stacks`
 - The placeholder/future stacks should gain dedicated workflows when their stack roots become deployable
 
 The intent is that stack roots define environment topology, while application deployment consumes outputs from the selected stack.
+
+Decommissioning:
+
+- Stack decommissioning for `infra/stacks` means deleting the entire stack-owned resource group.
+- `.github/workflows/gh-stack-decommission.yml` is the supported teardown path for stacks deployed through `infra/stacks/*/subscription.bicep`.
+- The legacy `src/app-host/infra` and `src/SUI.Client/SUI.Client.Watcher/infra` deployment paths are outside that decommission contract.

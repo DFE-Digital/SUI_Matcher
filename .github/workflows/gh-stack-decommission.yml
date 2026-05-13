@@ -1,0 +1,123 @@
+name: Decommission Stack Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: The stack to decommission
+        required: true
+        default: client-agent
+        type: choice
+        options:
+          - client-agent
+          - blob-event-processor
+          - api-batch-processor
+      environment:
+        description: The environment target for decommissioning
+        required: true
+        default: 'Integration'
+        type: string
+      environment_prefix:
+        description: The prefix for the environment
+        default: 's215d01'
+        type: string
+      list_only:
+        description: Only inspect the target resource group
+        default: true
+        type: boolean
+      confirm_resource_group:
+        description: Exact resource-group name confirmation required for deletion
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  decommission:
+    runs-on: ubuntu-latest
+    env:
+      STACK_NAME: ${{ inputs.stack }}
+      AZURE_ENV_NAME: ${{ inputs.environment }}
+      AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      CONFIRM_RESOURCE_GROUP: ${{ inputs.confirm_resource_group }}
+
+    steps:
+      - name: Ensure Azure CLI is installed
+        run: |
+          if ! command -v az &> /dev/null; then
+            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+          fi
+
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Inspect target stack resource group
+        run: |
+          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-${STACK_NAME}"
+
+          echo "Target stack: ${STACK_NAME}"
+          echo "Target environment: ${AZURE_ENV_NAME}"
+          echo "Target resource group: ${STACK_RESOURCE_GROUP}"
+
+          echo "STACK_RESOURCE_GROUP=${STACK_RESOURCE_GROUP}" >> "${GITHUB_ENV}"
+
+          if az group show \
+            --name "${STACK_RESOURCE_GROUP}" \
+            --subscription "${AZURE_SUBSCRIPTION_ID}" \
+            --output none 2>/dev/null; then
+            echo "Resource group exists."
+            echo "RESOURCE_GROUP_EXISTS=true" >> "${GITHUB_ENV}"
+
+            echo "Resources currently in ${STACK_RESOURCE_GROUP}:"
+            az resource list \
+              --resource-group "${STACK_RESOURCE_GROUP}" \
+              --subscription "${AZURE_SUBSCRIPTION_ID}" \
+              --query "[].{name:name,type:type,location:location}" \
+              --output table
+          else
+            echo "Resource group does not exist."
+            echo "RESOURCE_GROUP_EXISTS=false" >> "${GITHUB_ENV}"
+          fi
+
+      - name: Finish after inspection
+        if: ${{ inputs.list_only == true }}
+        run: echo "Inspection completed. No delete requested."
+
+      - name: Validate delete request
+        if: ${{ inputs.list_only == false }}
+        run: |
+          if [ "${RESOURCE_GROUP_EXISTS}" != "true" ]; then
+            echo "Resource group ${STACK_RESOURCE_GROUP} does not exist. Nothing to delete."
+            exit 1
+          fi
+
+          if [ -z "${CONFIRM_RESOURCE_GROUP}" ]; then
+            echo "confirm_resource_group must exactly match ${STACK_RESOURCE_GROUP} to allow deletion."
+            exit 1
+          fi
+
+          if [ "${CONFIRM_RESOURCE_GROUP}" != "${STACK_RESOURCE_GROUP}" ]; then
+            echo "confirm_resource_group (${CONFIRM_RESOURCE_GROUP}) does not match ${STACK_RESOURCE_GROUP}."
+            exit 1
+          fi
+
+      - name: Delete stack resource group
+        if: ${{ inputs.list_only == false }}
+        run: |
+          echo "Deleting resource group ${STACK_RESOURCE_GROUP}"
+          echo "This can take a while depending on the resources in the group."
+          az group delete \
+            --name "${STACK_RESOURCE_GROUP}" \
+            --subscription "${AZURE_SUBSCRIPTION_ID}" \
+            --yes
+          echo "Resource group ${STACK_RESOURCE_GROUP} deleted successfully."
