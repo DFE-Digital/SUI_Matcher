@@ -82,6 +82,8 @@ Each stack root should deploy an isolated environment by composing the shared Bi
 
 Each stack should also own its own Azure resource group. In practice this means a subscription-scope stack entrypoint creates or updates the stack resource group and then deploys the resourceGroup-scoped stack root into it.
 
+Decommissioning should follow the same ownership model. The supported teardown path for these stacks is deleting the entire stack-owned resource group through a manual workflow, rather than trying to selectively remove individual resources from mixed or legacy environments.
+
 ### 4.1 Client agent stack
 
 Represents the current client-agent deployment shape:
