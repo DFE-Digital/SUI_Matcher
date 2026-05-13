@@ -13,6 +13,11 @@ param stackNameSuffix string = ''
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
+@description('Principal ID to grant AcrPull role')
+param acrPullPrincipalId string
+
+var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+
 var stackNameToken = empty(stackNameSuffix) ? '' : toLower(stackNameSuffix)
 
 // The resource name can only contain alphanumeric characters.
