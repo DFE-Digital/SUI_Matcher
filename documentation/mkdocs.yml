@@ -1,4 +1,4 @@
-site_name: NHS Number Matcher 
+site_name: SUI Matcher Public Documentation
 theme:
   name: material
   highlightjs: true
