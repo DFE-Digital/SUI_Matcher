@@ -7,7 +7,7 @@ Dependencies:
 
 Install the dependencies:
 
-    poetry init 
+    poetry install --no-root
 
 Run the docs locally:
 

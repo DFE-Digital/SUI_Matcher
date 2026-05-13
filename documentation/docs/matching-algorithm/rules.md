@@ -1,10 +1,13 @@
-# Rule Definitions
+# List of rules
 
-Please refer to the following definitions for the individual rules used within the search strategies.
+Please refer to the following definitions for the individual rules used within
+the [search strategies](./strategies.md). See the [overview](./overview.md) for
+an explanation of what rules are.
 
 ## Exact All
 
-Exact search with all provided values.
+Exact search with all provided values. All fields must match exactly on both the
+calling and NHS sides to return a match.
 
 `_exact-match`=`true`, <br>
 `family`=`harley`, <br>
@@ -14,7 +17,8 @@ Exact search with all provided values.
 
 ## Exact GFD
 
-Exact search with given name, family name and DOB.
+Exact search with given name, family name and DOB -- with just these fields
+needing to match exactly on both the calling and NHS sides.
 
 `_exact-match`=`true`, <br>
 `family`=`harley`,<br>
