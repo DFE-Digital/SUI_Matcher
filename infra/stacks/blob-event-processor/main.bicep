@@ -67,7 +67,6 @@ module containerRegistry '../../modules/shared/container-registry.bicep' = {
     lowercaseEnvironmentName: lowercaseEnvironmentName
     stackNameSuffix: stackNameSuffix
     tags: tags
-    acrPullPrincipalId: identity.outputs.principalId
   }
 }
 
@@ -155,6 +154,7 @@ module storageProcessJob '../../modules/blob-event-processor/container-app-job.b
     blobServiceUri: storage.outputs.blobEndpoint
     queueServiceUri: storage.outputs.queueEndpoint
     containerRegistryServer: containerRegistry.outputs.endpoint
+    containerRegistryName: containerRegistry.outputs.name
     imageTag: storageProcessJobImageTag
     matchApiBaseAddress: 'https://matching-api.internal.${containerAppEnvironment.outputs.defaultDomain}'
     tags: tags

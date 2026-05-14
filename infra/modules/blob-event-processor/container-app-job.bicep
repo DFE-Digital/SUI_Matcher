@@ -34,6 +34,9 @@ param queueServiceUri string
 @description('The container registry server endpoint')
 param containerRegistryServer string
 
+@description('The container registry resource name')
+param containerRegistryName string
+
 @description('The container image name')
 param imageName string = 'sui-client-storage-process-job'
 
@@ -51,9 +54,24 @@ param tags object = {}
 var jobName = toLower('${take(environmentPrefix, 8)}-${take(lowercaseEnvironmentName, 3)}-storage-process-job')
 var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 var storageQueueDataContributorRoleId = '974c5e8b-45b9-4653-ba55-5f855dd0fb88'
+var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
+}
+
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
+  name: containerRegistryName
+}
+
+resource acrPullAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: containerRegistry
+  name: guid(containerRegistry.id, managedIdentityPrincipalId, acrPullRoleId)
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
+    principalId: managedIdentityPrincipalId
+    principalType: 'ServicePrincipal'
+  }
 }
 
 resource storageBlobDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -157,6 +175,7 @@ resource storageProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
     }
   }
   dependsOn: [
+    acrPullAssignment
     storageBlobDataContributorAssignment
     storageQueueDataContributorAssignment
   ]
