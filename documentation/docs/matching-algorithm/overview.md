@@ -72,6 +72,7 @@ Many of these are taken from [NHS FHIR API
 documentation](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir#get-/Patient).
 
 ### Exact search
+
 An exact search will return a result if the demographic details match exactly.
 This might be useful if you are verifying an NHS number against details you
 already believe to be correct.
@@ -109,5 +110,6 @@ An initialism for: Given name, Family name, Date of Birth.
 Where postcode fields are only compared using the [postcode area](https://en.wikipedia.org/wiki/Postcodes_in_the_United_Kingdom#Postcode_area), widening the search when postcodes may be inaccurate.
 
 ## See also
+
 - [List of rules](./rules.md)
 - [List of strategies](./strategies.md)
