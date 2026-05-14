@@ -38,7 +38,7 @@ A full [List of strategies](./strategies.md) and their related rules is
 maintained for reference.
 
 The overall output of a search strategy will return one of the following
-statuses, alongisde any matched NHS number and demographics of the matched person:
+statuses:
 
 1. *Match.* A confident match has been found, where the NHS number retrieved can
    be used operationally without review. At least one of the rules must have
