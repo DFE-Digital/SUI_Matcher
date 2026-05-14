@@ -76,7 +76,14 @@ module containerRegistry '../../modules/shared/container-registry.bicep' = {
     lowercaseEnvironmentName: lowercaseEnvironmentName
     stackNameSuffix: stackNameSuffix
     tags: tags
-    acrPullPrincipalId: identity.outputs.principalId
+  }
+}
+
+module acrPullRbac '../../modules/shared/acr-pull-rbac.bicep' = {
+  name: 'acr-pull-rbac'
+  params: {
+    containerRegistryName: containerRegistry.outputs.name
+    principalId: identity.outputs.principalId
   }
 }
 
