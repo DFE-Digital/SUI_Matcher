@@ -76,6 +76,7 @@ module containerRegistry '../../modules/shared/container-registry.bicep' = {
     lowercaseEnvironmentName: lowercaseEnvironmentName
     stackNameSuffix: stackNameSuffix
     tags: tags
+    acrPullPrincipalId: identity.outputs.principalId
   }
 }
 

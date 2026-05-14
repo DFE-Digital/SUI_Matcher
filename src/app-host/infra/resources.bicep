@@ -38,6 +38,7 @@ module containerRegistry 'modules/container-registry.bicep' = {
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
     tags: tags
+    acrPullPrincipalId: identity.outputs.principalId
   }
 }
 
