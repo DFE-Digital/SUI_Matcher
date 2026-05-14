@@ -42,13 +42,13 @@ statuses, alongisde any matched NHS number and demographics of the matched perso
 
 1. *Match.* A confident match has been found, where the NHS number retrieved can
    be used operationally without review. At least one of the rules must have
-   returned with a confidence score above the 'Match' threshold, which is 0.95
-   by default.
+   returned with a confidence score equal to or above the 'Match' threshold,
+   which is 0.95 by default.
 
 2. *PotentialMatch.* No confident match could be found, but with improvements in
    demographics a confident match may be possible. The highest confidence score
-   returned by any of the rules must have been between the potential threshold,
-   between 0.85 and 0.95 by default.
+   returned by any of the rules must have been within the potential threshold range,
+   greater than or equal to 0.85 and less than 0.95 by default.
 
 3. *LowConfidenceMatch.* No confident match could be found but match data was
    returned. The highest confidence score returned by any of the rules must have
