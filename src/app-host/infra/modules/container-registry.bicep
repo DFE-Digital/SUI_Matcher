@@ -10,9 +10,6 @@ param lowercaseEnvironmentName string
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
-@description('Principal ID to grant AcrPull role')
-param acrPullPrincipalId string
-
 module containerRegistry '../../../../infra/modules/shared/container-registry.bicep' = {
   name: 'container-registry'
   params: {
@@ -20,7 +17,6 @@ module containerRegistry '../../../../infra/modules/shared/container-registry.bi
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
     tags: tags
-    acrPullPrincipalId: acrPullPrincipalId
   }
 }
 
