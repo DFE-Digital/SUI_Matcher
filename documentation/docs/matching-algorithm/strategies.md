@@ -122,7 +122,7 @@ they had an unexpectedly larger impact on overall results, improving the match r
 
 1. [Non Fuzzy GFD](rules.md#non-fuzzy-gfd)
 2. [Fuzzy GFD](rules.md#fuzzy-gfd)
-3. [Fuzzy FDG postcode](rules.md#fuzzy-fdrange-g-postcode)
+3. [Fuzzy FDG postcode](rules.md#fuzzy-fdrange-gender-postcode)
 4. [Fuzzy FD postcode](rules.md#fuzzy-fdrange-postcode)
 5. [Fuzzy All](rules.md#fuzzy-all)
 6. [Non Fuzzy GFD Range (Postcode)](rules.md#non-fuzzy-gfd-range-postcode)
