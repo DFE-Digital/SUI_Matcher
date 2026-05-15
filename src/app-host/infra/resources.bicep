@@ -41,14 +41,6 @@ module containerRegistry 'modules/container-registry.bicep' = {
   }
 }
 
-module acrPullRbac '../../../infra/modules/shared/acr-pull-rbac.bicep' = {
-  name: 'acr-pull-rbac'
-  params: {
-    containerRegistryName: containerRegistry.outputs.name
-    principalId: identity.outputs.principalId
-  }
-}
-
 module observability 'modules/observability.bicep' = {
   name: 'observability'
   params: {
