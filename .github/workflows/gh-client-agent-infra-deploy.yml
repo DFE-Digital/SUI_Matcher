@@ -65,10 +65,12 @@ jobs:
         if: ${{ inputs.what_if == true }}
         run: |
           STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-client-agent"
+          DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-what-if"
           echo "Target stack resource group: ${STACK_RESOURCE_GROUP}"
+          echo "Deployment name: ${DEPLOYMENT_NAME}"
 
           az deployment sub what-if \
-            --name "${STACK_RESOURCE_GROUP}-what-if" \
+            --name "${DEPLOYMENT_NAME}" \
             --location "${AZURE_LOCATION}" \
             --subscription "${AZURE_SUBSCRIPTION_ID}" \
             --template-file infra/stacks/client-agent/subscription.bicep \
@@ -86,10 +88,12 @@ jobs:
         if: ${{ inputs.what_if == false }}
         run: |
           STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-client-agent"
+          DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-deploy"
           echo "Target stack resource group: ${STACK_RESOURCE_GROUP}"
+          echo "Deployment name: ${DEPLOYMENT_NAME}"
 
           az deployment sub create \
-            --name "${STACK_RESOURCE_GROUP}-deploy" \
+            --name "${DEPLOYMENT_NAME}" \
             --location "${AZURE_LOCATION}" \
             --subscription "${AZURE_SUBSCRIPTION_ID}" \
             --template-file infra/stacks/client-agent/subscription.bicep \
