@@ -59,7 +59,7 @@ jobs:
     uses: ./.github/workflows/gh-smoke-test-executer.yml
     with:
       smoke_test_type: dbs_batch_search
-      azure_location: westeurope
+      azure_location: ${{ vars.AZURE_LOCATION }}
       version: ${{ needs.env_setup.outputs.client_version }}
       vm_name: ${{ inputs.virtual_machine_name || 's215d01-integration-vm-01' }}
     secrets:
@@ -77,7 +77,7 @@ jobs:
     with:
       smoke_test_type: client_batch_search
       use_small_dataset: true
-      azure_location: westeurope
+      azure_location: ${{ vars.AZURE_LOCATION }}
       version: ${{ needs.env_setup.outputs.client_version }}
       vm_name: ${{ inputs.virtual_machine_name || 's215d01-integration-vm-01' }}
     secrets:
