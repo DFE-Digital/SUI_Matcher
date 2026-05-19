@@ -25,6 +25,9 @@ param environmentName string
 @description('The container image tag to deploy')
 param imageTag string
 
+@description('The Key Vault resource name used by the application secrets connection string')
+param keyVaultName string
+
 @secure()
 @description('The Key Vault URI used by the application secrets connection string')
 param keyVaultUri string
@@ -43,6 +46,14 @@ module acrPullRbac '../shared/acr-pull-rbac.bicep' = {
   name: '${appName}-acr-pull-rbac'
   params: {
     containerRegistryName: containerRegistryName
+    principalId: managedIdentityPrincipalId
+  }
+}
+
+module keyVaultSecretsUserRbac '../shared/key-vault-secrets-user-rbac.bicep' = {
+  name: '${appName}-kv-secrets-user-rbac'
+  params: {
+    keyVaultName: keyVaultName
     principalId: managedIdentityPrincipalId
   }
 }
@@ -141,6 +152,7 @@ resource externalApi 'Microsoft.App/containerApps@2024-10-02-preview' = {
   }
   dependsOn: [
     acrPullRbac
+    keyVaultSecretsUserRbac
   ]
 }
 

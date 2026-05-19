@@ -4,9 +4,12 @@ title = "SUI GitLeaks configuration"
 useDefault = true
 
 [allowlist]
-description = "Documentation files with known placeholder values"
+description = "Known non-secret values and documentation files with placeholder values"
 paths = [
   '''^documentation/docs/gettingstarted\.md$''',
   '''^documentation/docs/index\.md$''',
   '''^gettingstarted/index.html$''',
+]
+regexes = [
+  '''4633458b-17de-408a-b874-0445c86b69e6''',
 ]
