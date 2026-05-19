@@ -7,11 +7,16 @@ param environmentPrefix string
 @description('The lowercase environment name used for resource naming')
 param lowercaseEnvironmentName string
 
+@description('Short stack-specific suffix used to avoid cross-stack name collisions.')
+param stackNameSuffix string = ''
+
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
+var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
+
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-loganalytics-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-loganalytics-01'
   location: location
   tags: tags
   properties: {
@@ -45,7 +50,7 @@ resource loganalyticsDbsConsoleApplogs 'Microsoft.OperationalInsights/workspaces
 }
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-appinsights-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-appinsights-01'
   location: location
   kind: 'web'
   tags: tags

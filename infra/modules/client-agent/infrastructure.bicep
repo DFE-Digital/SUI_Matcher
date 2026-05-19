@@ -37,16 +37,16 @@ param logAnalyticsWorkspaceResourceGroupName string = resourceGroup().name
 param containerRegistryEndpoint string
 
 @description('The name of the shared Key Vault')
-param keyVaultName string = '${environmentPrefix}-int-kv01'
+param keyVaultName string = '${environmentPrefix}-${substring(toLower(environmentName), 0, environmentName == 'Production' ? 4 : 3)}-ca-kv01'
 
 @description('The Key Vault FQDN allowed through the client-agent firewall')
 param keyVaultEndpoint string = '${keyVaultName}.vault.azure.net'
 
-param virtualNetworksVnetfwName string = '${environmentPrefix}-vnetfw-01'
+param virtualNetworksVnetfwName string = '${environmentPrefix}-${toLower(environmentName)}-ca-vnetfw-01'
 
-param vnetFirewallName string = '${environmentPrefix}-vnetfw-Firewall'
+param vnetFirewallName string = '${environmentPrefix}-${toLower(environmentName)}-ca-vnetfw-Firewall'
 
-param routeTablesIntegrationRtName01 string = '${environmentPrefix}-${toLower(environmentName)}-rt-01'
+param routeTablesIntegrationRtName01 string = '${environmentPrefix}-${toLower(environmentName)}-ca-rt-01'
 
 param dbsClientConsoleApplogsEndpointName string = 'DbsClientConsoleApplogsEndpoint'
 
@@ -59,6 +59,8 @@ param tags object = {
   'Service Offering': 'SUI'
 }
 
+var lowercaseEnvironmentName = toLower(environmentName)
+
 resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
   scope: resourceGroup(containerAppEnvironmentResourceGroupName)
   name: containerAppEnvironmentVnetName
@@ -70,7 +72,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06
 }
 
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
-  name: '${environmentPrefix}-${environmentName}-clientvnet-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-ca-clientvnet-01'
   location: location
   properties: {
     addressSpace: {
@@ -80,7 +82,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
     }
     subnets: [
       {
-        name: '${environmentPrefix}-${environmentName}-clientsubnet-01'
+        name: '${environmentPrefix}-${lowercaseEnvironmentName}-ca-clientsubnet-01'
         properties: {
           addressPrefix: subnetRange
         }
@@ -90,7 +92,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
 }
 
 resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
-  name: '${environmentPrefix}-${environmentName}-nic-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-ca-nic-01'
   location: location
   properties: {
     ipConfigurations: [
@@ -108,7 +110,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 }
 
 resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
-  name: '${environmentPrefix}-${environmentName}-vm-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-ca-vm-01'
   location: location
   identity: {
     type: 'SystemAssigned'
@@ -202,7 +204,7 @@ resource caeToFirewallPeering 'Microsoft.Network/virtualNetworks/virtualNetworkP
 }
 
 resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
-  name: '${environmentPrefix}-${environmentName}-pib-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-ca-pib-01'
   location: location
   sku: {
     name: 'Standard'
@@ -215,7 +217,7 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
 }
 
 resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
-  name: '${environmentPrefix}-${environmentName}-fwp-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}-ca-fwp-01'
   location: location
   tags: tags
   properties: {
