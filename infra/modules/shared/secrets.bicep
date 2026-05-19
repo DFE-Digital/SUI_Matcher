@@ -5,9 +5,15 @@ param environmentName string
 
 param environmentPrefix string
 
+@description('Short stack-specific suffix used to avoid cross-stack name collisions.')
+param stackNameSuffix string = ''
+
+var environmentToken = toLower(substring(environmentName, 0, environmentName == 'Production' ? 4 : 3))
+var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
+
 // 3 - 24 alphanumeric characters
 resource secrets 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: '${environmentPrefix}-${toLower(substring(environmentName, 0, environmentName == 'Production' ? 4 : 3))}-kv01'
+  name: '${environmentPrefix}-${environmentToken}${stackNameToken}-kv01'
   location: location
   tags: {
     'aspire-resource-name': 'secrets'

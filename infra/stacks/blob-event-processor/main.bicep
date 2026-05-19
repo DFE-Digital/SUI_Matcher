@@ -33,6 +33,7 @@ param monitoringActionGroupEmail string
 param turnOnAlerts bool = false
 
 var lowercaseEnvironmentName = toLower(environmentName)
+var stackNameSuffix = 'bep'
 
 var tags = {
   'azd-env-name': environmentName
@@ -49,6 +50,7 @@ module identity '../../modules/shared/identity.bicep' = {
     location: location
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
+    stackNameSuffix: stackNameSuffix
     tags: tags
   }
 }
@@ -59,6 +61,7 @@ module containerRegistry '../../modules/shared/container-registry.bicep' = {
     location: location
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
+    stackNameSuffix: stackNameSuffix
     tags: tags
   }
 }
@@ -69,6 +72,7 @@ module observability '../../modules/shared/observability.bicep' = {
     location: location
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
+    stackNameSuffix: stackNameSuffix
     tags: tags
   }
 }
@@ -79,6 +83,7 @@ module containerAppEnvironment '../../modules/shared/container-app-environment.b
     location: location
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
+    stackNameSuffix: stackNameSuffix
     containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
     containerAppVnet: containerAppVnet
     containerAppEnvSubnet: containerAppEnvSubnet
@@ -93,6 +98,7 @@ module secrets '../../modules/shared/secrets.bicep' = {
     location: location
     environmentName: environmentName
     environmentPrefix: environmentPrefix
+    stackNameSuffix: stackNameSuffix
   }
 }
 

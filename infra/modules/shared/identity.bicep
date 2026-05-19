@@ -7,11 +7,16 @@ param environmentPrefix string
 @description('The lowercase environment name used for resource naming')
 param lowercaseEnvironmentName string
 
+@description('Short stack-specific suffix used to avoid cross-stack name collisions.')
+param stackNameSuffix string = ''
+
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
+var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
+
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-mi-01'
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-mi-01'
   location: location
   tags: tags
 }
