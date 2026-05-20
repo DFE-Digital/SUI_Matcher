@@ -93,7 +93,6 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      CONFIRM_RESOURCE_GROUP: ${{ inputs.confirm_resource_group }}
       STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
     outputs:
       resource_group_exists: ${{ steps.inspect.outputs.resource_group_exists }}
@@ -158,14 +157,9 @@ jobs:
               } >> "$GITHUB_STEP_SUMMARY"
 
               jq -r '
-                .[:25][]
+                .[]
                 | "| \(.name) | \(.type) | \(.location // "") |"
               ' "${RESOURCE_LIST_FILE}" >> "$GITHUB_STEP_SUMMARY"
-
-              if [ "${RESOURCE_COUNT}" -gt 25 ]; then
-                echo >> "$GITHUB_STEP_SUMMARY"
-                echo "_Only the first 25 resources are shown. Total resources: ${RESOURCE_COUNT}._" >> "$GITHUB_STEP_SUMMARY"
-              fi
             else
               echo >> "$GITHUB_STEP_SUMMARY"
               echo "No resources were found in the target resource group." >> "$GITHUB_STEP_SUMMARY"
