@@ -41,6 +41,9 @@ jobs:
       AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
       VM_USERNAME: ${{ secrets.VM_USERNAME }}
       VM_PASSWORD: ${{ secrets.VM_PASSWORD }}
+      NHS_DIGITAL_CLIENT_ID: ${{ secrets.NHS_DIGITAL_CLIENT_ID_INT }}
+      NHS_DIGITAL_KID: ${{ secrets.NHS_DIGITAL_KID_INT }}
+      NHS_DIGITAL_PRIVATE_KEY: ${{ secrets.NHS_DIGITAL_PRIVATE_KEY_INT }}
 
     steps:
       - name: Checkout repository
@@ -82,7 +85,10 @@ jobs:
               containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
               containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
               adminUsername="${VM_USERNAME}" \
-              adminPassword="${VM_PASSWORD}"
+              adminPassword="${VM_PASSWORD}" \
+              nhsDigitalClientId="${NHS_DIGITAL_CLIENT_ID}" \
+              nhsDigitalKid="${NHS_DIGITAL_KID}" \
+              nhsDigitalPrivateKey="${NHS_DIGITAL_PRIVATE_KEY}"
 
       - name: Deploy client-agent full infrastructure
         if: ${{ inputs.what_if == false }}
@@ -105,4 +111,7 @@ jobs:
               containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
               containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
               adminUsername="${VM_USERNAME}" \
-              adminPassword="${VM_PASSWORD}"
+              adminPassword="${VM_PASSWORD}" \
+              nhsDigitalClientId="${NHS_DIGITAL_CLIENT_ID}" \
+              nhsDigitalKid="${NHS_DIGITAL_KID}" \
+              nhsDigitalPrivateKey="${NHS_DIGITAL_PRIVATE_KEY}"

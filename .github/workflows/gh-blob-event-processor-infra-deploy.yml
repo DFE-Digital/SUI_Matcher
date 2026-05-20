@@ -44,6 +44,9 @@ jobs:
       AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
       AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
       AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
+      NHS_DIGITAL_CLIENT_ID: ${{ secrets.NHS_DIGITAL_CLIENT_ID_INT }}
+      NHS_DIGITAL_KID: ${{ secrets.NHS_DIGITAL_KID_INT }}
+      NHS_DIGITAL_PRIVATE_KEY: ${{ secrets.NHS_DIGITAL_PRIVATE_KEY_INT }}
 
     steps:
       - name: Checkout repository
@@ -84,7 +87,10 @@ jobs:
               containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" \
               containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
               containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
-              turnOnAlerts="${AZURE_TURN_ON_ALERTS}"
+              turnOnAlerts="${AZURE_TURN_ON_ALERTS}" \
+              nhsDigitalClientId="${NHS_DIGITAL_CLIENT_ID}" \
+              nhsDigitalKid="${NHS_DIGITAL_KID}" \
+              nhsDigitalPrivateKey="${NHS_DIGITAL_PRIVATE_KEY}"
 
       - name: Deploy blob-event-processor infrastructure
         if: ${{ inputs.what_if == false }}
@@ -106,4 +112,7 @@ jobs:
               containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" \
               containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
               containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
-              turnOnAlerts="${AZURE_TURN_ON_ALERTS}"
+              turnOnAlerts="${AZURE_TURN_ON_ALERTS}" \
+              nhsDigitalClientId="${NHS_DIGITAL_CLIENT_ID}" \
+              nhsDigitalKid="${NHS_DIGITAL_KID}" \
+              nhsDigitalPrivateKey="${NHS_DIGITAL_PRIVATE_KEY}"
