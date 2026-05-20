@@ -1,4 +1,7 @@
 name: Deploy Blob-Event-Processor Infrastructure
+run-name: >-
+  Blob Event Processor / ${{ inputs.environment }} / ${{ inputs.environment_prefix }} /
+  ${{ inputs.what_if && 'what-if' || 'deploy' }} / ${{ inputs.version }}
 
 on:
   workflow_dispatch:
@@ -28,22 +31,76 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  AZURE_ENV_NAME: ${{ inputs.environment }}
+  AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+  STACK_VERSION: ${{ inputs.version }}
+  AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
+  AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ vars.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
+  AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
+  AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
+  AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
+
+concurrency:
+  group: blob-event-processor-${{ inputs.environment_prefix }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  deploy:
+  prepare:
+    name: Prepare blob-event-processor context
     runs-on: ubuntu-latest
     env:
-      AZURE_ENV_NAME: ${{ inputs.environment }}
-      AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
-      STACK_VERSION: ${{ inputs.version }}
-      AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
-      AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ vars.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
-      AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
-      AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
-      AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
+      STACK_NAME: blob-event-processor
+      DEPLOYMENT_MODE: ${{ inputs.what_if && 'what-if' || 'deploy' }}
+    outputs:
+      stack_resource_group: ${{ steps.context.outputs.stack_resource_group }}
+      deployment_name: ${{ steps.context.outputs.deployment_name }}
+      deployment_mode: ${{ steps.context.outputs.deployment_mode }}
+    steps:
+      - name: Derive target names
+        id: context
+        run: |
+          set -euo pipefail
+          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-${STACK_NAME}"
+          DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-${DEPLOYMENT_MODE}"
+
+          {
+            echo "stack_resource_group=${STACK_RESOURCE_GROUP}"
+            echo "deployment_name=${DEPLOYMENT_NAME}"
+            echo "deployment_mode=${DEPLOYMENT_MODE}"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Deployment context"
+            echo
+            echo "**Stack:** \`${STACK_NAME}\`"
+            echo "**Mode:** \`${DEPLOYMENT_MODE}\`"
+            echo
+            echo "### Target"
+            echo "- Environment: \`${AZURE_ENV_NAME}\`"
+            echo "- Environment prefix: \`${AZURE_ENV_PREFIX}\`"
+            echo "- Azure location: \`${AZURE_LOCATION}\`"
+            echo "- Version/ref: \`${STACK_VERSION}\`"
+            echo "- Resource group: \`${STACK_RESOURCE_GROUP}\`"
+            echo "- Deployment name: \`${DEPLOYMENT_NAME}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  what_if:
+    name: What-if blob-event-processor infrastructure
+    if: ${{ inputs.what_if == true }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    env:
+      STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
+      DEPLOYMENT_NAME: ${{ needs.prepare.outputs.deployment_name }}
 
     steps:
       - name: Checkout repository
@@ -51,59 +108,100 @@ jobs:
         with:
           ref: ${{ env.STACK_VERSION }}
 
-      - name: Ensure Azure CLI is installed
-        run: |
-          if ! command -v az &> /dev/null; then
-            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-          fi
-
-      - name: Login to Azure
-        uses: azure/login@v3
+      - name: Run blob-event-processor what-if
+        uses: ./.github/actions/stack-infra-run
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
-          tenant-id: ${{ env.AZURE_TENANT_ID }}
-          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          mode: what-if
+          stack_label: blob-event-processor
+          template_file: infra/stacks/blob-event-processor/subscription.bicep
+          azure_env_name: ${{ env.AZURE_ENV_NAME }}
+          azure_env_prefix: ${{ env.AZURE_ENV_PREFIX }}
+          azure_client_id: ${{ env.AZURE_CLIENT_ID }}
+          azure_tenant_id: ${{ env.AZURE_TENANT_ID }}
+          azure_subscription_id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          azure_location: ${{ env.AZURE_LOCATION }}
+          azure_monitoring_action_group_email: ${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
+          azure_container_app_managed_environment_number: ${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
+          azure_container_app_vnet: ${{ env.AZURE_CONTAINER_APP_VNET }}
+          azure_container_app_env_subnet: ${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}
+          stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
+          deployment_name: ${{ env.DEPLOYMENT_NAME }}
+          turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
 
-      - name: Run Bicep What-If
-        if: ${{ inputs.what_if == true }}
-        run: |
-          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-blob-event-processor"
-          DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-what-if"
-          echo "Target stack resource group: ${STACK_RESOURCE_GROUP}"
-          echo "Deployment name: ${DEPLOYMENT_NAME}"
+  deploy:
+    name: Deploy blob-event-processor infrastructure
+    if: ${{ inputs.what_if == false }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    env:
+      STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
+      DEPLOYMENT_NAME: ${{ needs.prepare.outputs.deployment_name }}
 
-          az deployment sub what-if \
-            --name "${DEPLOYMENT_NAME}" \
-            --location "${AZURE_LOCATION}" \
-            --subscription "${AZURE_SUBSCRIPTION_ID}" \
-            --template-file infra/stacks/blob-event-processor/subscription.bicep \
-            --parameters environmentName="${AZURE_ENV_NAME}" \
-              environmentPrefix="${AZURE_ENV_PREFIX}" \
-              location="${AZURE_LOCATION}" \
-              monitoringActionGroupEmail="${AZURE_MONITORING_ACTION_GROUP_EMAIL}" \
-              containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" \
-              containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
-              containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
-              turnOnAlerts="${AZURE_TURN_ON_ALERTS}"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.STACK_VERSION }}
 
       - name: Deploy blob-event-processor infrastructure
-        if: ${{ inputs.what_if == false }}
-        run: |
-          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-blob-event-processor"
-          DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-deploy"
-          echo "Target stack resource group: ${STACK_RESOURCE_GROUP}"
-          echo "Deployment name: ${DEPLOYMENT_NAME}"
+        uses: ./.github/actions/stack-infra-run
+        with:
+          mode: deploy
+          stack_label: blob-event-processor
+          template_file: infra/stacks/blob-event-processor/subscription.bicep
+          azure_env_name: ${{ env.AZURE_ENV_NAME }}
+          azure_env_prefix: ${{ env.AZURE_ENV_PREFIX }}
+          azure_client_id: ${{ env.AZURE_CLIENT_ID }}
+          azure_tenant_id: ${{ env.AZURE_TENANT_ID }}
+          azure_subscription_id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          azure_location: ${{ env.AZURE_LOCATION }}
+          azure_monitoring_action_group_email: ${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
+          azure_container_app_managed_environment_number: ${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
+          azure_container_app_vnet: ${{ env.AZURE_CONTAINER_APP_VNET }}
+          azure_container_app_env_subnet: ${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}
+          stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
+          deployment_name: ${{ env.DEPLOYMENT_NAME }}
+          turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
 
-          az deployment sub create \
-            --name "${DEPLOYMENT_NAME}" \
-            --location "${AZURE_LOCATION}" \
-            --subscription "${AZURE_SUBSCRIPTION_ID}" \
-            --template-file infra/stacks/blob-event-processor/subscription.bicep \
-            --parameters environmentName="${AZURE_ENV_NAME}" \
-              environmentPrefix="${AZURE_ENV_PREFIX}" \
-              location="${AZURE_LOCATION}" \
-              monitoringActionGroupEmail="${AZURE_MONITORING_ACTION_GROUP_EMAIL}" \
-              containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" \
-              containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
-              containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
-              turnOnAlerts="${AZURE_TURN_ON_ALERTS}"
+  summarize:
+    name: Summarize blob-event-processor run
+    if: always()
+    needs:
+      - prepare
+      - what_if
+      - deploy
+    runs-on: ubuntu-latest
+    env:
+      STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
+      DEPLOYMENT_NAME: ${{ needs.prepare.outputs.deployment_name }}
+      DEPLOYMENT_MODE: ${{ needs.prepare.outputs.deployment_mode }}
+      PREPARE_RESULT: ${{ needs.prepare.result }}
+      WHAT_IF_RESULT: ${{ needs.what_if.result }}
+      DEPLOY_RESULT: ${{ needs.deploy.result }}
+      AZURE_ENV_NAME: ${{ inputs.environment }}
+      AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+    steps:
+      - name: Write workflow summary
+        run: |
+          set -euo pipefail
+          EXECUTION_RESULT="${DEPLOY_RESULT}"
+          if [ "${DEPLOYMENT_MODE}" = "what-if" ]; then
+            EXECUTION_RESULT="${WHAT_IF_RESULT}"
+          fi
+
+          {
+            echo "## Workflow summary"
+            echo
+            echo "### Job results"
+            echo "- Prepare: \`${PREPARE_RESULT}\`"
+            echo "- Execution: \`${EXECUTION_RESULT}\`"
+            echo
+            echo "### Target"
+            echo "- Mode: \`${DEPLOYMENT_MODE}\`"
+            echo "- Environment: \`${AZURE_ENV_NAME}\`"
+            echo "- Environment prefix: \`${AZURE_ENV_PREFIX}\`"
+            echo "- Azure location: \`${AZURE_LOCATION}\`"
+            echo "- Resource group: \`${STACK_RESOURCE_GROUP}\`"
+            echo "- Deployment name: \`${DEPLOYMENT_NAME}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
