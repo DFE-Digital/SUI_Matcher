@@ -70,6 +70,14 @@ module containerRegistry '../../modules/shared/container-registry.bicep' = {
   }
 }
 
+module storageProcessJobAcrPullRbac '../../modules/shared/acr-pull-rbac.bicep' = {
+  name: 'storage-process-job-acr-pull-rbac'
+  params: {
+    containerRegistryName: containerRegistry.outputs.name
+    principalId: identity.outputs.principalId
+  }
+}
+
 module observability '../../modules/shared/observability.bicep' = {
   name: 'observability'
   params: {
@@ -154,11 +162,13 @@ module storageProcessJob '../../modules/blob-event-processor/container-app-job.b
     blobServiceUri: storage.outputs.blobEndpoint
     queueServiceUri: storage.outputs.queueEndpoint
     containerRegistryServer: containerRegistry.outputs.endpoint
-    containerRegistryName: containerRegistry.outputs.name
     imageTag: storageProcessJobImageTag
     matchApiBaseAddress: 'https://matching-api.internal.${containerAppEnvironment.outputs.defaultDomain}'
     tags: tags
   }
+  dependsOn: [
+    storageProcessJobAcrPullRbac
+  ]
 }
 
 output STACK_NAME string = 'blob-event-processor'

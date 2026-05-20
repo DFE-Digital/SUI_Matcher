@@ -34,9 +34,6 @@ param queueServiceUri string
 @description('The container registry server endpoint')
 param containerRegistryServer string
 
-@description('The container registry resource name')
-param containerRegistryName string
-
 @description('The container image name')
 param imageName string = 'sui-client-storage-process-job'
 
@@ -57,14 +54,6 @@ var storageQueueDataContributorRoleId = '974c5e8b-45b9-4653-ba55-5f855dd0fb88'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
-}
-
-module acrPullRbac '../shared/acr-pull-rbac.bicep' = {
-  name: 'storage-process-job-acr-pull-rbac'
-  params: {
-    containerRegistryName: containerRegistryName
-    principalId: managedIdentityPrincipalId
-  }
 }
 
 resource storageBlobDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -168,7 +157,6 @@ resource storageProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
     }
   }
   dependsOn: [
-    acrPullRbac
     storageBlobDataContributorAssignment
     storageQueueDataContributorAssignment
   ]
