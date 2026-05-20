@@ -84,7 +84,17 @@ runs:
         set -euo pipefail
 
         MODE="${{ inputs.mode }}"
+        STACK_LABEL="${{ inputs.stack_label }}"
+        TARGET_ENVIRONMENT="${{ inputs.azure_env_name }}"
+        TARGET_RESOURCE_GROUP="${{ inputs.stack_resource_group }}"
+        TARGET_DEPLOYMENT_NAME="${{ inputs.deployment_name }}"
+        TARGET_LOCATION="${{ inputs.azure_location }}"
+        TARGET_SUBSCRIPTION_ID="${{ inputs.azure_subscription_id }}"
+        TEMPLATE_FILE="${{ inputs.template_file }}"
         OUTPUT_FILE="$(mktemp)"
+        RESOURCE_LIST_FILE=""
+        ERROR_JSON_FILE=""
+        FAILURE_RESOURCE_LIST_FILE=""
         PARAMETERS=(
           "environmentName=${{ inputs.azure_env_name }}"
           "environmentPrefix=${{ inputs.azure_env_prefix }}"
@@ -107,15 +117,67 @@ runs:
           PARAMETERS+=("adminPassword=${{ inputs.vm_password }}")
         fi
 
-        echo "Target stack resource group: ${{ inputs.stack_resource_group }}"
-        echo "Deployment name: ${{ inputs.deployment_name }}"
+        cleanup() {
+          rm -f \
+            "${OUTPUT_FILE}" \
+            "${RESOURCE_LIST_FILE:-}" \
+            "${ERROR_JSON_FILE:-}" \
+            "${FAILURE_RESOURCE_LIST_FILE:-}"
+        }
+
+        append_target_summary() {
+          {
+            echo "### Target"
+            echo "- Stack: \`${STACK_LABEL}\`"
+            echo "- Environment: \`${TARGET_ENVIRONMENT}\`"
+            echo "- Resource group: \`${TARGET_RESOURCE_GROUP}\`"
+            echo "- Deployment name: \`${TARGET_DEPLOYMENT_NAME}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+        }
+
+        append_resource_inventory_summary() {
+          local heading="$1"
+          local resource_list_file="$2"
+          local resource_count="$3"
+          local empty_message="$4"
+
+          {
+            echo
+            echo "### ${heading}"
+            echo
+            echo "- Resource count: \`${resource_count}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "${resource_count}" -gt 0 ]; then
+            {
+              echo
+              echo "| Name | Type | Location |"
+              echo "| ---- | ---- | -------- |"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            jq -r '
+              .[]
+              | "| \(.name) | \(.type) | \(.location // "") |"
+            ' "${resource_list_file}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo
+              echo "${empty_message}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+        }
+
+        trap cleanup EXIT
+
+        echo "Target stack resource group: ${TARGET_RESOURCE_GROUP}"
+        echo "Deployment name: ${TARGET_DEPLOYMENT_NAME}"
 
         if [ "${MODE}" = "what-if" ]; then
           az deployment sub what-if \
-            --name "${{ inputs.deployment_name }}" \
-            --location "${{ inputs.azure_location }}" \
-            --subscription "${{ inputs.azure_subscription_id }}" \
-            --template-file "${{ inputs.template_file }}" \
+            --name "${TARGET_DEPLOYMENT_NAME}" \
+            --location "${TARGET_LOCATION}" \
+            --subscription "${TARGET_SUBSCRIPTION_ID}" \
+            --template-file "${TEMPLATE_FILE}" \
             --parameters "${PARAMETERS[@]}" \
             | tee "${OUTPUT_FILE}"
 
@@ -124,71 +186,180 @@ runs:
             echo
             echo "**Status:** \`Succeeded\`"
             echo
-            echo "### Target"
-            echo "- Stack: \`${{ inputs.stack_label }}\`"
-            echo "- Environment: \`${{ inputs.azure_env_name }}\`"
-            echo "- Resource group: \`${{ inputs.stack_resource_group }}\`"
-            echo "- Deployment name: \`${{ inputs.deployment_name }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          append_target_summary
+
+          {
             echo
             echo "<details><summary>What-if output</summary>"
             echo
             echo '```text'
-            sed -n '1,200p' "${OUTPUT_FILE}"
+            cat "${OUTPUT_FILE}"
             echo '```'
             echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
         else
+          set +e
           az deployment sub create \
-            --name "${{ inputs.deployment_name }}" \
-            --location "${{ inputs.azure_location }}" \
-            --subscription "${{ inputs.azure_subscription_id }}" \
-            --template-file "${{ inputs.template_file }}" \
+            --name "${TARGET_DEPLOYMENT_NAME}" \
+            --location "${TARGET_LOCATION}" \
+            --subscription "${TARGET_SUBSCRIPTION_ID}" \
+            --template-file "${TEMPLATE_FILE}" \
             --parameters "${PARAMETERS[@]}" \
-            --output json > "${OUTPUT_FILE}"
+            --only-show-errors \
+            --output json > "${OUTPUT_FILE}" 2>&1
+          DEPLOY_EXIT_CODE=$?
+          set -e
 
-          STATUS="$(jq -r '.properties.provisioningState // "Succeeded"' "${OUTPUT_FILE}")"
-          RESOURCE_GROUP="$(jq -r '.resourceGroup // ""' "${OUTPUT_FILE}")"
-          DEPLOYMENT_RESULT_NAME="$(jq -r '.name // ""' "${OUTPUT_FILE}")"
+          if [ "${DEPLOY_EXIT_CODE}" -eq 0 ]; then
+            STATUS="$(jq -r '.properties.provisioningState // "Succeeded"' "${OUTPUT_FILE}")"
+            DEPLOYMENT_RESULT_NAME="$(jq -r '.name // ""' "${OUTPUT_FILE}")"
+            RESOURCE_LIST_FILE="$(mktemp)"
 
-          {
-            echo "## Deployment result"
-            echo
-            echo "**Status:** \`${STATUS}\`"
-            echo
-            echo "### Target"
-            echo "- Stack: \`${{ inputs.stack_label }}\`"
-            echo "- Environment: \`${{ inputs.azure_env_name }}\`"
-            echo "- Resource group: \`${RESOURCE_GROUP}\`"
-            echo "- Deployment name: \`${DEPLOYMENT_RESULT_NAME}\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-          OUTPUT_COUNT="$(jq '(.properties.outputs // {}) | length' "${OUTPUT_FILE}")"
-
-          if [ "${OUTPUT_COUNT}" -gt 0 ]; then
             {
+              echo "## Deployment result"
               echo
-              echo "### Template outputs"
+              echo "**Status:** \`${STATUS}\`"
+              echo
             } >> "$GITHUB_STEP_SUMMARY"
 
-            jq -r '
-              def stringify:
-                if . == null then ""
-                elif (type == "object" or type == "array") then tojson
-                else tostring
-                end;
-              def trim120:
-                stringify as $value
-                | if ($value | length) > 120 then ($value[0:117] + "...") else $value end;
+            TARGET_DEPLOYMENT_NAME="${DEPLOYMENT_RESULT_NAME:-$TARGET_DEPLOYMENT_NAME}"
+            append_target_summary
 
-              (.properties.outputs // {})
-              | to_entries
-              | sort_by(.key)[]
-              | "- `\(.key)`: `\(.value.value | trim120)`"
-            ' "${OUTPUT_FILE}" >> "$GITHUB_STEP_SUMMARY"
+            OUTPUT_COUNT="$(jq '(.properties.outputs // {}) | length' "${OUTPUT_FILE}")"
+
+            if [ "${OUTPUT_COUNT}" -gt 0 ]; then
+              {
+                echo
+                echo "### Template outputs"
+              } >> "$GITHUB_STEP_SUMMARY"
+
+              jq -r '
+                def stringify:
+                  if . == null then ""
+                  elif (type == "object" or type == "array") then tojson
+                  else tostring
+                  end;
+
+                (.properties.outputs // {})
+                | to_entries
+                | sort_by(.key)[]
+                | "- `\(.key | ascii_upcase)`: `\(.value.value | stringify)`"
+              ' "${OUTPUT_FILE}" >> "$GITHUB_STEP_SUMMARY"
+            else
+              {
+                echo
+                echo "_No template outputs were returned._"
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            az resource list \
+              --resource-group "${TARGET_RESOURCE_GROUP}" \
+              --subscription "${TARGET_SUBSCRIPTION_ID}" \
+              --query "[].{name:name,type:type,location:location}" \
+              --output json > "${RESOURCE_LIST_FILE}"
+
+            RESOURCE_COUNT="$(jq 'length' "${RESOURCE_LIST_FILE}")"
+            append_resource_inventory_summary \
+              "Deployed resources" \
+              "${RESOURCE_LIST_FILE}" \
+              "${RESOURCE_COUNT}" \
+              "_No resources were found in the target resource group._"
           else
+            ERROR_JSON_FILE="$(mktemp)"
+            FAILURE_RESOURCE_LIST_FILE="$(mktemp)"
+            sed -n 's/^ERROR: //p' "${OUTPUT_FILE}" > "${ERROR_JSON_FILE}"
+
+            ERROR_SUMMARY="$(jq -r '
+              [.. | objects | select(has("code") and has("message")) | {code, message}]
+              | last // {"code":"DeploymentFailed","message":"Azure CLI deployment failed. See raw output for details."}
+              | @tsv
+            ' "${ERROR_JSON_FILE}" 2>/dev/null || true)"
+
+            if [ -n "${ERROR_SUMMARY}" ]; then
+              ERROR_CODE="$(printf '%s' "${ERROR_SUMMARY}" | cut -f1)"
+              ERROR_MESSAGE="$(printf '%s' "${ERROR_SUMMARY}" | cut -f2-)"
+            else
+              ERROR_CODE="DeploymentFailed"
+              ERROR_MESSAGE="Azure CLI deployment failed. See raw output for details."
+            fi
+
+            {
+              echo "## Deployment result"
+              echo
+              echo "**Status:** \`Failed\`"
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            append_target_summary
+
             {
               echo
-              echo "_No template outputs were returned._"
+              echo "### Error"
+              echo "- Code: \`${ERROR_CODE}\`"
+              echo "- Message: ${ERROR_MESSAGE}"
             } >> "$GITHUB_STEP_SUMMARY"
+
+            echo >> "$GITHUB_STEP_SUMMARY"
+
+            if az group show \
+              --name "${TARGET_RESOURCE_GROUP}" \
+              --subscription "${TARGET_SUBSCRIPTION_ID}" \
+              --output none 2>/dev/null; then
+              az resource list \
+                --resource-group "${TARGET_RESOURCE_GROUP}" \
+                --subscription "${TARGET_SUBSCRIPTION_ID}" \
+                --query "[].{name:name,type:type,location:location}" \
+                --output json > "${FAILURE_RESOURCE_LIST_FILE}"
+
+              FAILURE_RESOURCE_COUNT="$(jq 'length' "${FAILURE_RESOURCE_LIST_FILE}")"
+
+              {
+                echo "### Current resource group state"
+                echo "- Resource group exists: \`true\`"
+              } >> "$GITHUB_STEP_SUMMARY"
+
+              if [ "${FAILURE_RESOURCE_COUNT}" -gt 0 ]; then
+                {
+                  echo
+                  echo "_Some resources were created before the deployment failed._"
+                } >> "$GITHUB_STEP_SUMMARY"
+
+                append_resource_inventory_summary \
+                  "Partially deployed resources" \
+                  "${FAILURE_RESOURCE_LIST_FILE}" \
+                  "${FAILURE_RESOURCE_COUNT}" \
+                  "_No resources were found in the target resource group._"
+              else
+                {
+                  echo
+                  echo "- Resource count: \`${FAILURE_RESOURCE_COUNT}\`"
+                  echo
+                  echo "_The target resource group exists, but no resources were present when the deployment failed._"
+                } >> "$GITHUB_STEP_SUMMARY"
+              fi
+            else
+              {
+                echo
+                echo "### Current resource group state"
+                echo "- Resource group exists: \`false\`"
+                echo "- Resource count: \`0\`"
+                echo
+                echo "_The target resource group was not present when the deployment failed._"
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            {
+              echo
+              echo "<details><summary>Raw Azure CLI output</summary>"
+              echo
+              echo '```text'
+              cat "${OUTPUT_FILE}"
+              echo '```'
+              echo "</details>"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            exit "${DEPLOY_EXIT_CODE}"
           fi
         fi
