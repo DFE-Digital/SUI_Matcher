@@ -1,0 +1,194 @@
+name: Stack Infrastructure Run
+
+description: "Run stack infrastructure what-if or deploy and write a GitHub summary."
+
+inputs:
+  mode:
+    description: "Execution mode: what-if or deploy"
+    required: true
+  stack_label:
+    description: "Human-readable stack label for summaries"
+    required: true
+  template_file:
+    description: "Path to the subscription-scope Bicep template"
+    required: true
+  azure_env_name:
+    description: "Azure environment name"
+    required: true
+  azure_env_prefix:
+    description: "Azure environment prefix"
+    required: true
+  azure_client_id:
+    description: "Azure client ID"
+    required: true
+  azure_tenant_id:
+    description: "Azure tenant ID"
+    required: true
+  azure_subscription_id:
+    description: "Azure subscription ID"
+    required: true
+  azure_location:
+    description: "Azure location"
+    required: true
+  azure_monitoring_action_group_email:
+    description: "Monitoring action group email"
+    required: true
+  azure_container_app_managed_environment_number:
+    description: "Container app managed environment number"
+    required: true
+  azure_container_app_vnet:
+    description: "Container app VNet"
+    required: true
+  azure_container_app_env_subnet:
+    description: "Container app environment subnet"
+    required: true
+  stack_resource_group:
+    description: "Target stack resource group"
+    required: true
+  deployment_name:
+    description: "Target subscription deployment name"
+    required: true
+  turn_on_alerts:
+    description: "Optional turnOnAlerts parameter"
+    required: false
+    default: ""
+  vm_username:
+    description: "Optional VM admin username"
+    required: false
+    default: ""
+  vm_password:
+    description: "Optional VM admin password"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Ensure Azure CLI is installed
+      shell: bash
+      run: |
+        if ! command -v az &> /dev/null; then
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+        fi
+
+    - name: Login to Azure
+      uses: azure/login@v3
+      with:
+        client-id: ${{ inputs.azure_client_id }}
+        tenant-id: ${{ inputs.azure_tenant_id }}
+        subscription-id: ${{ inputs.azure_subscription_id }}
+
+    - name: Run stack infrastructure command
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        MODE="${{ inputs.mode }}"
+        OUTPUT_FILE="$(mktemp)"
+        PARAMETERS=(
+          "environmentName=${{ inputs.azure_env_name }}"
+          "environmentPrefix=${{ inputs.azure_env_prefix }}"
+          "location=${{ inputs.azure_location }}"
+          "monitoringActionGroupEmail=${{ inputs.azure_monitoring_action_group_email }}"
+          "containerAppManagedEnvironmentNumber=${{ inputs.azure_container_app_managed_environment_number }}"
+          "containerAppVnet=${{ inputs.azure_container_app_vnet }}"
+          "containerAppEnvSubnet=${{ inputs.azure_container_app_env_subnet }}"
+        )
+
+        if [ -n "${{ inputs.turn_on_alerts }}" ]; then
+          PARAMETERS+=("turnOnAlerts=${{ inputs.turn_on_alerts }}")
+        fi
+
+        if [ -n "${{ inputs.vm_username }}" ]; then
+          PARAMETERS+=("adminUsername=${{ inputs.vm_username }}")
+        fi
+
+        if [ -n "${{ inputs.vm_password }}" ]; then
+          PARAMETERS+=("adminPassword=${{ inputs.vm_password }}")
+        fi
+
+        echo "Target stack resource group: ${{ inputs.stack_resource_group }}"
+        echo "Deployment name: ${{ inputs.deployment_name }}"
+
+        if [ "${MODE}" = "what-if" ]; then
+          az deployment sub what-if \
+            --name "${{ inputs.deployment_name }}" \
+            --location "${{ inputs.azure_location }}" \
+            --subscription "${{ inputs.azure_subscription_id }}" \
+            --template-file "${{ inputs.template_file }}" \
+            --parameters "${PARAMETERS[@]}" \
+            | tee "${OUTPUT_FILE}"
+
+          {
+            echo "## What-if result"
+            echo
+            echo "**Status:** \`Succeeded\`"
+            echo
+            echo "### Target"
+            echo "- Stack: \`${{ inputs.stack_label }}\`"
+            echo "- Environment: \`${{ inputs.azure_env_name }}\`"
+            echo "- Resource group: \`${{ inputs.stack_resource_group }}\`"
+            echo "- Deployment name: \`${{ inputs.deployment_name }}\`"
+            echo
+            echo "<details><summary>What-if output</summary>"
+            echo
+            echo '```text'
+            sed -n '1,200p' "${OUTPUT_FILE}"
+            echo '```'
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+        else
+          az deployment sub create \
+            --name "${{ inputs.deployment_name }}" \
+            --location "${{ inputs.azure_location }}" \
+            --subscription "${{ inputs.azure_subscription_id }}" \
+            --template-file "${{ inputs.template_file }}" \
+            --parameters "${PARAMETERS[@]}" \
+            --output json > "${OUTPUT_FILE}"
+
+          STATUS="$(jq -r '.properties.provisioningState // "Succeeded"' "${OUTPUT_FILE}")"
+          RESOURCE_GROUP="$(jq -r '.resourceGroup // ""' "${OUTPUT_FILE}")"
+          DEPLOYMENT_RESULT_NAME="$(jq -r '.name // ""' "${OUTPUT_FILE}")"
+
+          {
+            echo "## Deployment result"
+            echo
+            echo "**Status:** \`${STATUS}\`"
+            echo
+            echo "### Target"
+            echo "- Stack: \`${{ inputs.stack_label }}\`"
+            echo "- Environment: \`${{ inputs.azure_env_name }}\`"
+            echo "- Resource group: \`${RESOURCE_GROUP}\`"
+            echo "- Deployment name: \`${DEPLOYMENT_RESULT_NAME}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          OUTPUT_COUNT="$(jq '(.properties.outputs // {}) | length' "${OUTPUT_FILE}")"
+
+          if [ "${OUTPUT_COUNT}" -gt 0 ]; then
+            {
+              echo
+              echo "### Template outputs"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            jq -r '
+              def stringify:
+                if . == null then ""
+                elif (type == "object" or type == "array") then tojson
+                else tostring
+                end;
+              def trim120:
+                stringify as $value
+                | if ($value | length) > 120 then ($value[0:117] + "...") else $value end;
+
+              (.properties.outputs // {})
+              | to_entries
+              | sort_by(.key)[]
+              | "- `\(.key)`: `\(.value.value | trim120)`"
+            ' "${OUTPUT_FILE}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo
+              echo "_No template outputs were returned._"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+        fi
