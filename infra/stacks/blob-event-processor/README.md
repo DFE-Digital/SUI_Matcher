@@ -37,4 +37,4 @@ Setup of Event Grid, the EventGrid will trigger from a new blob file being creat
 
 ### KEDA
 
-KEDA is a Kubernetes-based event-driven auto scaler. It will monitor the configured storage queue for new messages, and then scale the processing job up or down, we currently set the maximum number of instances to 1.
+KEDA is a Kubernetes-based event-driven auto scaler. It monitors the configured storage queue for new messages and scales the processing job up or down. The job is configured to run a maximum of one execution at a time, so only one queue message is processed at a time and later messages wait until the current execution finishes.

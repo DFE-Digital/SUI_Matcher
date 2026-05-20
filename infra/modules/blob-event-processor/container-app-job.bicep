@@ -104,7 +104,7 @@ resource storageProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
         parallelism: 1
         scale: {
           minExecutions: 0
-          maxExecutions: 10
+          maxExecutions: 1
           pollingInterval: 30
           rules: [
             {
