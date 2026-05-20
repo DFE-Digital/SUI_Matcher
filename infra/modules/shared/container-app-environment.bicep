@@ -26,6 +26,7 @@ param tags object = {}
 param logAnalyticsWorkspaceName string
 
 var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
+var dashboardComponentName = '${empty(stackNameSuffix) ? 'aspire' : toLower(stackNameSuffix)}-dashboard-01'
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logAnalyticsWorkspaceName
@@ -92,7 +93,7 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
   }
 
   resource aspireDashboard 'dotNetComponents' = {
-    name: '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-dashboard-01'
+    name: dashboardComponentName
     properties: {
       componentType: 'AspireDashboard'
     }

@@ -10,10 +10,11 @@ param stackNameSuffix string = ''
 
 var environmentToken = toLower(substring(environmentName, 0, environmentName == 'Production' ? 4 : 3))
 var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
+var uniqueSuffix = take(uniqueString(subscription().subscriptionId, resourceGroup().name, environmentPrefix, environmentName, stackNameSuffix), 3)
 
 // 3 - 24 alphanumeric characters
 resource secrets 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: '${environmentPrefix}-${environmentToken}${stackNameToken}-kv01'
+  name: '${environmentPrefix}-${environmentToken}${stackNameToken}-kv${uniqueSuffix}'
   location: location
   tags: {
     'aspire-resource-name': 'secrets'
