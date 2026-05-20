@@ -31,6 +31,21 @@ param monitoringActionGroupEmail string
 @description('Turn on monitoring alerts')
 param turnOnAlerts bool = false
 
+@secure()
+@minLength(1)
+@description('NHS Digital client ID secret value.')
+param nhsDigitalClientId string
+
+@secure()
+@minLength(1)
+@description('NHS Digital key ID secret value.')
+param nhsDigitalKid string
+
+@secure()
+@minLength(1)
+@description('NHS Digital private key secret value.')
+param nhsDigitalPrivateKey string
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackName = 'blob-event-processor'
 var resourceGroupName = '${environmentPrefix}-${lowercaseEnvironmentName}-${stackName}'
@@ -60,6 +75,9 @@ module stackDeployment 'main.bicep' = {
     location: location
     monitoringActionGroupEmail: monitoringActionGroupEmail
     turnOnAlerts: turnOnAlerts
+    nhsDigitalClientId: nhsDigitalClientId
+    nhsDigitalKid: nhsDigitalKid
+    nhsDigitalPrivateKey: nhsDigitalPrivateKey
   }
 }
 

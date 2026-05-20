@@ -46,6 +46,21 @@ param clientNetwork string = '192.168.0.128/25'
 @description('Subnet Range')
 param clientSubnetRange string = '192.168.0.128/26'
 
+@secure()
+@minLength(1)
+@description('NHS Digital client ID secret value.')
+param nhsDigitalClientId string
+
+@secure()
+@minLength(1)
+@description('NHS Digital key ID secret value.')
+param nhsDigitalKid string
+
+@secure()
+@minLength(1)
+@description('NHS Digital private key secret value.')
+param nhsDigitalPrivateKey string
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'ca'
 var tags = {
@@ -112,6 +127,9 @@ module secrets '../../modules/shared/secrets.bicep' = {
     environmentName: environmentName
     environmentPrefix: environmentPrefix
     stackNameSuffix: stackNameSuffix
+    nhsDigitalClientId: nhsDigitalClientId
+    nhsDigitalKid: nhsDigitalKid
+    nhsDigitalPrivateKey: nhsDigitalPrivateKey
   }
 }
 

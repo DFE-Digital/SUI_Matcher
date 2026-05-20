@@ -45,6 +45,21 @@ param clientNetwork string = '192.168.0.128/25'
 @description('Subnet Range')
 param clientSubnetRange string = '192.168.0.128/26'
 
+@secure()
+@minLength(1)
+@description('NHS Digital client ID secret value.')
+param nhsDigitalClientId string
+
+@secure()
+@minLength(1)
+@description('NHS Digital key ID secret value.')
+param nhsDigitalKid string
+
+@secure()
+@minLength(1)
+@description('NHS Digital private key secret value.')
+param nhsDigitalPrivateKey string
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackName = 'client-agent'
 var resourceGroupName = '${environmentPrefix}-${lowercaseEnvironmentName}-${stackName}'
@@ -78,6 +93,9 @@ module stackDeployment 'main.bicep' = {
     turnOnAlerts: turnOnAlerts
     clientNetwork: clientNetwork
     clientSubnetRange: clientSubnetRange
+    nhsDigitalClientId: nhsDigitalClientId
+    nhsDigitalKid: nhsDigitalKid
+    nhsDigitalPrivateKey: nhsDigitalPrivateKey
   }
 }
 
