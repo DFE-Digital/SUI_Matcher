@@ -1,4 +1,7 @@
 name: Decommission Stack Infrastructure
+run-name: >-
+  Decommission / ${{ inputs.stack }} / ${{ inputs.environment }} / ${{ inputs.environment_prefix }} /
+  ${{ inputs.list_only && 'inspect' || 'delete' }}
 
 on:
   workflow_dispatch:
@@ -35,8 +38,53 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: decommission-${{ inputs.stack }}-${{ inputs.environment_prefix }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  decommission:
+  prepare:
+    name: Prepare decommission context
+    runs-on: ubuntu-latest
+    env:
+      STACK_NAME: ${{ inputs.stack }}
+      AZURE_ENV_NAME: ${{ inputs.environment }}
+      AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+      OPERATION_MODE: ${{ inputs.list_only && 'inspect' || 'delete' }}
+    outputs:
+      stack_resource_group: ${{ steps.context.outputs.stack_resource_group }}
+      operation_mode: ${{ steps.context.outputs.operation_mode }}
+    steps:
+      - name: Derive target names
+        id: context
+        run: |
+          set -euo pipefail
+          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-${STACK_NAME}"
+
+          {
+            echo "stack_resource_group=${STACK_RESOURCE_GROUP}"
+            echo "operation_mode=${OPERATION_MODE}"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Decommission context"
+            echo
+            echo "**Stack:** \`${STACK_NAME}\`"
+            echo "**Mode:** \`${OPERATION_MODE}\`"
+            echo
+            echo "### Target"
+            echo "- Environment: \`${AZURE_ENV_NAME}\`"
+            echo "- Environment prefix: \`${AZURE_ENV_PREFIX}\`"
+            echo "- Resource group: \`${STACK_RESOURCE_GROUP}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  inspect:
+    name: Inspect target resource group
+    needs: prepare
     runs-on: ubuntu-latest
     env:
       STACK_NAME: ${{ inputs.stack }}
@@ -46,7 +94,10 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       CONFIRM_RESOURCE_GROUP: ${{ inputs.confirm_resource_group }}
-
+      STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
+    outputs:
+      resource_group_exists: ${{ steps.inspect.outputs.resource_group_exists }}
+      resource_count: ${{ steps.inspect.outputs.resource_count }}
     steps:
       - name: Ensure Azure CLI is installed
         run: |
@@ -62,45 +113,108 @@ jobs:
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Inspect target stack resource group
+        id: inspect
         run: |
-          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-${STACK_NAME}"
+          set -euo pipefail
+          RESOURCE_LIST_FILE="$(mktemp)"
 
           echo "Target stack: ${STACK_NAME}"
           echo "Target environment: ${AZURE_ENV_NAME}"
           echo "Target resource group: ${STACK_RESOURCE_GROUP}"
 
-          echo "STACK_RESOURCE_GROUP=${STACK_RESOURCE_GROUP}" >> "${GITHUB_ENV}"
-
           if az group show \
             --name "${STACK_RESOURCE_GROUP}" \
             --subscription "${AZURE_SUBSCRIPTION_ID}" \
             --output none 2>/dev/null; then
-            echo "Resource group exists."
-            echo "RESOURCE_GROUP_EXISTS=true" >> "${GITHUB_ENV}"
-
-            echo "Resources currently in ${STACK_RESOURCE_GROUP}:"
             az resource list \
               --resource-group "${STACK_RESOURCE_GROUP}" \
               --subscription "${AZURE_SUBSCRIPTION_ID}" \
               --query "[].{name:name,type:type,location:location}" \
-              --output table
+              --output json > "${RESOURCE_LIST_FILE}"
+
+            RESOURCE_COUNT="$(jq 'length' "${RESOURCE_LIST_FILE}")"
+
+            {
+              echo "resource_group_exists=true"
+              echo "resource_count=${RESOURCE_COUNT}"
+            } >> "$GITHUB_OUTPUT"
+
+            {
+              echo "## Inspection result"
+              echo
+              echo "**Resource group found:** \`${STACK_RESOURCE_GROUP}\`"
+              echo
+              echo "### Inventory"
+              echo "- Resource count: \`${RESOURCE_COUNT}\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            if [ "${RESOURCE_COUNT}" -gt 0 ]; then
+              {
+                echo
+                echo "### Resources"
+                echo
+                echo "| Name | Type | Location |"
+                echo "| ---- | ---- | -------- |"
+              } >> "$GITHUB_STEP_SUMMARY"
+
+              jq -r '
+                .[:25][]
+                | "| \(.name) | \(.type) | \(.location // "") |"
+              ' "${RESOURCE_LIST_FILE}" >> "$GITHUB_STEP_SUMMARY"
+
+              if [ "${RESOURCE_COUNT}" -gt 25 ]; then
+                echo >> "$GITHUB_STEP_SUMMARY"
+                echo "_Only the first 25 resources are shown. Total resources: ${RESOURCE_COUNT}._" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            else
+              echo >> "$GITHUB_STEP_SUMMARY"
+              echo "No resources were found in the target resource group." >> "$GITHUB_STEP_SUMMARY"
+            fi
           else
-            echo "Resource group does not exist."
-            echo "RESOURCE_GROUP_EXISTS=false" >> "${GITHUB_ENV}"
-          fi
+            {
+              echo "resource_group_exists=false"
+              echo "resource_count=0"
+            } >> "$GITHUB_OUTPUT"
 
-      - name: Finish after inspection
-        if: ${{ inputs.list_only == true }}
-        run: echo "Inspection completed. No delete requested."
+            {
+              echo "## Inspection result"
+              echo
+              echo "**Resource group not found:** \`${STACK_RESOURCE_GROUP}\`"
+              echo
+              echo "### Inventory"
+              echo "- Resource count: \`0\`"
+            } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Validate delete request
-        if: ${{ inputs.list_only == false }}
+  delete:
+    name: Delete target resource group
+    if: ${{ inputs.list_only == false && needs.inspect.outputs.resource_group_exists == 'true' }}
+    needs:
+      - prepare
+      - inspect
+    runs-on: ubuntu-latest
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      CONFIRM_RESOURCE_GROUP: ${{ inputs.confirm_resource_group }}
+      STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
+    steps:
+      - name: Ensure Azure CLI is installed
         run: |
-          if [ "${RESOURCE_GROUP_EXISTS}" != "true" ]; then
-            echo "Resource group ${STACK_RESOURCE_GROUP} does not exist. Nothing to delete."
-            exit 1
+          if ! command -v az &> /dev/null; then
+            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
           fi
 
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate delete confirmation
+        run: |
+          set -euo pipefail
           if [ -z "${CONFIRM_RESOURCE_GROUP}" ]; then
             echo "confirm_resource_group must exactly match ${STACK_RESOURCE_GROUP} to allow deletion."
             exit 1
@@ -112,12 +226,63 @@ jobs:
           fi
 
       - name: Delete stack resource group
-        if: ${{ inputs.list_only == false }}
         run: |
+          set -euo pipefail
           echo "Deleting resource group ${STACK_RESOURCE_GROUP}"
           echo "This can take a while depending on the resources in the group."
           az group delete \
             --name "${STACK_RESOURCE_GROUP}" \
             --subscription "${AZURE_SUBSCRIPTION_ID}" \
             --yes
-          echo "Resource group ${STACK_RESOURCE_GROUP} deleted successfully."
+
+          {
+            echo "## Delete result"
+            echo
+            echo "**Status:** \`Succeeded\`"
+            echo
+            echo "### Target"
+            echo "- Resource group: \`${STACK_RESOURCE_GROUP}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  summarize:
+    name: Summarize decommission run
+    if: always()
+    needs:
+      - prepare
+      - inspect
+      - delete
+    runs-on: ubuntu-latest
+    env:
+      STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
+      OPERATION_MODE: ${{ needs.prepare.outputs.operation_mode }}
+      PREPARE_RESULT: ${{ needs.prepare.result }}
+      INSPECT_RESULT: ${{ needs.inspect.result }}
+      DELETE_RESULT: ${{ needs.delete.result }}
+      RESOURCE_GROUP_EXISTS: ${{ needs.inspect.outputs.resource_group_exists }}
+      RESOURCE_COUNT: ${{ needs.inspect.outputs.resource_count }}
+      AZURE_ENV_NAME: ${{ inputs.environment }}
+      AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+      STACK_NAME: ${{ inputs.stack }}
+    steps:
+      - name: Write workflow summary
+        run: |
+          set -euo pipefail
+          {
+            echo "## Workflow summary"
+            echo
+            echo "### Job results"
+            echo "- Prepare: \`${PREPARE_RESULT}\`"
+            echo "- Inspect: \`${INSPECT_RESULT}\`"
+            echo "- Delete: \`${DELETE_RESULT}\`"
+            echo
+            echo "### Target"
+            echo "- Mode: \`${OPERATION_MODE}\`"
+            echo "- Stack: \`${STACK_NAME}\`"
+            echo "- Environment: \`${AZURE_ENV_NAME}\`"
+            echo "- Environment prefix: \`${AZURE_ENV_PREFIX}\`"
+            echo "- Resource group: \`${STACK_RESOURCE_GROUP}\`"
+            echo
+            echo "### Current state"
+            echo "- Resource group exists: \`${RESOURCE_GROUP_EXISTS}\`"
+            echo "- Resource count: \`${RESOURCE_COUNT}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
