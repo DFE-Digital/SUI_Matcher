@@ -60,6 +60,10 @@ inputs:
     description: "Optional VM admin password"
     required: false
     default: ""
+  storage_process_job_image_tag:
+    description: "Optional storage process job image tag"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -115,6 +119,10 @@ runs:
 
         if [ -n "${{ inputs.vm_password }}" ]; then
           PARAMETERS+=("adminPassword=${{ inputs.vm_password }}")
+        fi
+
+        if [ -n "${{ inputs.storage_process_job_image_tag }}" ]; then
+          PARAMETERS+=("storageProcessJobImageTag=${{ inputs.storage_process_job_image_tag }}")
         fi
 
         cleanup() {

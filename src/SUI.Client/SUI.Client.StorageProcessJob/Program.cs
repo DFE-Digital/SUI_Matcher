@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Queues;
 using Microsoft.Extensions.Configuration;
@@ -48,21 +49,35 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton(serviceProvider =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var connectionString =
-        configuration["AzureWebJobsStorage"]
-        ?? throw new InvalidOperationException("AzureWebJobsStorage configuration is missing.");
+    var connectionString = configuration["AzureWebJobsStorage"];
+    if (!string.IsNullOrWhiteSpace(connectionString))
+    {
+        return new BlobServiceClient(connectionString);
+    }
 
-    return new BlobServiceClient(connectionString);
+    var uri =
+        configuration["StorageProcessJob:BlobServiceUri"]
+        ?? throw new InvalidOperationException(
+            "StorageProcessJob:BlobServiceUri must be configured when AzureWebJobsStorage is not set."
+        );
+    return new BlobServiceClient(new Uri(uri), new DefaultAzureCredential());
 });
 
 builder.Services.AddSingleton(serviceProvider =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var connectionString =
-        configuration["AzureWebJobsStorage"]
-        ?? throw new InvalidOperationException("AzureWebJobsStorage configuration is missing.");
+    var connectionString = configuration["AzureWebJobsStorage"];
+    if (!string.IsNullOrWhiteSpace(connectionString))
+    {
+        return new QueueServiceClient(connectionString);
+    }
 
-    return new QueueServiceClient(connectionString);
+    var uri =
+        configuration["StorageProcessJob:QueueServiceUri"]
+        ?? throw new InvalidOperationException(
+            "StorageProcessJob:QueueServiceUri must be configured when AzureWebJobsStorage is not set."
+        );
+    return new QueueServiceClient(new Uri(uri), new DefaultAzureCredential());
 });
 
 builder.Services.AddSingleton<IBlobStorageClient, AzureBlobStorageClient>();

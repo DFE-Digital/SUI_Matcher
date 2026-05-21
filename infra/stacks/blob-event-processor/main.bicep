@@ -32,6 +32,10 @@ param monitoringActionGroupEmail string
 @description('Turn on monitoring alerts')
 param turnOnAlerts bool = false
 
+@minLength(1)
+@description('Container image tag for the storage process job')
+param storageProcessJobImageTag string = 'latest'
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
 
@@ -63,6 +67,14 @@ module containerRegistry '../../modules/shared/container-registry.bicep' = {
     lowercaseEnvironmentName: lowercaseEnvironmentName
     stackNameSuffix: stackNameSuffix
     tags: tags
+  }
+}
+
+module storageProcessJobAcrPullRbac '../../modules/shared/acr-pull-rbac.bicep' = {
+  name: 'storage-process-job-acr-pull-rbac'
+  params: {
+    containerRegistryName: containerRegistry.outputs.name
+    principalId: identity.outputs.principalId
   }
 }
 
@@ -135,6 +147,30 @@ module eventGrid '../../modules/blob-event-processor/event-grid.bicep' = {
   }
 }
 
+module storageProcessJob '../../modules/blob-event-processor/container-app-job.bicep' = {
+  name: 'blob-event-processor-storage-process-job'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    containerAppsEnvironmentId: containerAppEnvironment.outputs.id
+    managedIdentityId: identity.outputs.id
+    managedIdentityPrincipalId: identity.outputs.principalId
+    managedIdentityClientId: identity.outputs.clientId
+    storageAccountName: storage.outputs.accountName
+    queueName: storage.outputs.queueName
+    blobServiceUri: storage.outputs.blobEndpoint
+    queueServiceUri: storage.outputs.queueEndpoint
+    containerRegistryServer: containerRegistry.outputs.endpoint
+    imageTag: storageProcessJobImageTag
+    matchApiBaseAddress: 'https://matching-api.internal.${containerAppEnvironment.outputs.defaultDomain}'
+    tags: tags
+  }
+  dependsOn: [
+    storageProcessJobAcrPullRbac
+  ]
+}
+
 output STACK_NAME string = 'blob-event-processor'
 output LOCATION string = location
 output TAGS object = tags
@@ -165,3 +201,5 @@ output EVENT_GRID_SYSTEM_TOPIC_NAME string = eventGrid.outputs.systemTopicName
 output EVENT_GRID_SYSTEM_TOPIC_ID string = eventGrid.outputs.systemTopicId
 output EVENT_GRID_EVENT_SUBSCRIPTION_NAME string = eventGrid.outputs.eventSubscriptionName
 output EVENT_GRID_EVENT_SUBSCRIPTION_ID string = eventGrid.outputs.eventSubscriptionId
+output STORAGE_PROCESS_JOB_NAME string = storageProcessJob.outputs.jobName
+output STORAGE_PROCESS_JOB_ID string = storageProcessJob.outputs.jobId

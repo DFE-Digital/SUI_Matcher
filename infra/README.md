@@ -14,7 +14,7 @@ Each stack root under `infra/stacks` is paired with a subscription-scope wrapper
 
 Supported deployment roots:
 
-- `src/app-host/infra` still contains the existing application-layer deployment assets and the current laptop-driven deployment flow for existing client environments
+- `src/app-host/infra` is a legacy application-layer deployment path for existing client environments. It is intentionally frozen: new infrastructure capability — including registry/RBAC modules such as `acr-pull-rbac` — is added to the stack roots under `infra/stacks`, not retrofitted onto `app-host`. The new stacks own the full container-registry → managed-identity → AcrPull chain in code; the legacy path does not, and is deliberately not partially converted.
 - `src/SUI.Client/SUI.Client.Watcher/infra/client.bicep` remains a legacy dedicated client-infrastructure root used by the client infra workflow
 - `infra/stacks/client-agent/main.bicep` is the full DfE-hosted test stack root
 - `infra/stacks/*/subscription.bicep` are the stack-owned resource-group entrypoints for the stack roots

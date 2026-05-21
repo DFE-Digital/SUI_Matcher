@@ -22,6 +22,11 @@ on:
         description: The prefix for the environment
         default: 's215d01'
         type: string
+      storage_process_image_tag:
+        description: Storage process job image tag
+        default: 'latest'
+        required: false
+        type: string
       turn_on_alerts:
         description: Enable monitoring alerts
         default: false
@@ -44,6 +49,7 @@ env:
   AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
   AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
   AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
+  STORAGE_PROCESS_JOB_IMAGE_TAG: ${{ inputs.storage_process_image_tag || 'latest' }}
 
 concurrency:
   group: blob-event-processor-${{ inputs.environment_prefix }}-${{ inputs.environment }}
@@ -127,6 +133,7 @@ jobs:
           stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
+          storage_process_job_image_tag: ${{ env.STORAGE_PROCESS_JOB_IMAGE_TAG }}
 
   deploy:
     name: Deploy blob-event-processor infrastructure
@@ -162,6 +169,7 @@ jobs:
           stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
+          storage_process_job_image_tag: ${{ env.STORAGE_PROCESS_JOB_IMAGE_TAG }}
 
   summarize:
     name: Summarize blob-event-processor run

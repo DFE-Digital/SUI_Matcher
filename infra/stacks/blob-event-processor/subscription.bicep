@@ -31,6 +31,10 @@ param monitoringActionGroupEmail string
 @description('Turn on monitoring alerts')
 param turnOnAlerts bool = false
 
+@minLength(1)
+@description('Container image tag for the storage process job')
+param storageProcessJobImageTag string = 'latest'
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackName = 'blob-event-processor'
 var resourceGroupName = '${environmentPrefix}-${lowercaseEnvironmentName}-${stackName}'
@@ -60,6 +64,7 @@ module stackDeployment 'main.bicep' = {
     location: location
     monitoringActionGroupEmail: monitoringActionGroupEmail
     turnOnAlerts: turnOnAlerts
+    storageProcessJobImageTag: storageProcessJobImageTag
   }
 }
 
@@ -95,3 +100,5 @@ output EVENT_GRID_SYSTEM_TOPIC_NAME string = stackDeployment.outputs.EVENT_GRID_
 output EVENT_GRID_SYSTEM_TOPIC_ID string = stackDeployment.outputs.EVENT_GRID_SYSTEM_TOPIC_ID
 output EVENT_GRID_EVENT_SUBSCRIPTION_NAME string = stackDeployment.outputs.EVENT_GRID_EVENT_SUBSCRIPTION_NAME
 output EVENT_GRID_EVENT_SUBSCRIPTION_ID string = stackDeployment.outputs.EVENT_GRID_EVENT_SUBSCRIPTION_ID
+output STORAGE_PROCESS_JOB_NAME string = stackDeployment.outputs.STORAGE_PROCESS_JOB_NAME
+output STORAGE_PROCESS_JOB_ID string = stackDeployment.outputs.STORAGE_PROCESS_JOB_ID
