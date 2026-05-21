@@ -44,4 +44,5 @@ ENV DOTNET_ENVIRONMENT=Production \
     CsvMatchData__ColumnMappings__NhsNumber=${CSV_COLUMN_NHS_NUMBER}
 
 COPY --from=build /app/publish .
+USER app
 ENTRYPOINT ["dotnet", "SUI.Client.StorageProcessJob.dll"]
