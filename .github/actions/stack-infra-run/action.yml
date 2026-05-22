@@ -42,6 +42,10 @@ inputs:
   azure_container_app_env_subnet:
     description: "Container app environment subnet"
     required: true
+  azure_container_app_pe_subnet:
+    description: "Optional container app private endpoint subnet"
+    required: false
+    default: ""
   stack_resource_group:
     description: "Target stack resource group"
     required: true
@@ -108,6 +112,10 @@ runs:
           "containerAppVnet=${{ inputs.azure_container_app_vnet }}"
           "containerAppEnvSubnet=${{ inputs.azure_container_app_env_subnet }}"
         )
+
+        if [ -n "${{ inputs.azure_container_app_pe_subnet }}" ]; then
+          PARAMETERS+=("containerAppPeSubnet=${{ inputs.azure_container_app_pe_subnet }}")
+        fi
 
         if [ -n "${{ inputs.turn_on_alerts }}" ]; then
           PARAMETERS+=("turnOnAlerts=${{ inputs.turn_on_alerts }}")

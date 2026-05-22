@@ -22,6 +22,10 @@ param containerAppVnet string
 param containerAppEnvSubnet string
 
 @minLength(1)
+@description('The address prefix for the private endpoint subnet')
+param containerAppPeSubnet string
+
+@minLength(1)
 @description('The location used for all deployed resources')
 param location string
 
@@ -38,6 +42,8 @@ param storageProcessJobImageTag string = 'latest'
 
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
+var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
+var containerAppEnvironmentVnetName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-vnet-cae-01'
 
 var tags = {
   'azd-env-name': environmentName
@@ -124,6 +130,21 @@ module monitoring '../../modules/shared/monitoring.bicep' = {
   }
 }
 
+resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
+  name: containerAppEnvironmentVnetName
+}
+
+resource peSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
+  parent: caeVnet
+  name: '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-subnet-pe-01'
+  properties: {
+    addressPrefix: containerAppPeSubnet
+  }
+  dependsOn: [
+    containerAppEnvironment
+  ]
+}
+
 module storage '../../modules/blob-event-processor/storage.bicep' = {
   name: 'blob-event-processor-storage'
   params: {
@@ -131,6 +152,8 @@ module storage '../../modules/blob-event-processor/storage.bicep' = {
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
     tags: tags
+    peSubnetId: peSubnet.id
+    vnetId: caeVnet.id
   }
 }
 

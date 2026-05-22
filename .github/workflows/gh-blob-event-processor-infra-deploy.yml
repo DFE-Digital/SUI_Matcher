@@ -48,6 +48,7 @@ env:
   AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ vars.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
   AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
   AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
+  AZURE_CONTAINER_APP_PE_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_PE_SUBNET }}
   AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
   STORAGE_PROCESS_JOB_IMAGE_TAG: ${{ inputs.storage_process_image_tag || 'latest' }}
 
@@ -130,6 +131,7 @@ jobs:
           azure_container_app_managed_environment_number: ${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
           azure_container_app_vnet: ${{ env.AZURE_CONTAINER_APP_VNET }}
           azure_container_app_env_subnet: ${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}
+          azure_container_app_pe_subnet: ${{ env.AZURE_CONTAINER_APP_PE_SUBNET }}
           stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
@@ -166,6 +168,7 @@ jobs:
           azure_container_app_managed_environment_number: ${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
           azure_container_app_vnet: ${{ env.AZURE_CONTAINER_APP_VNET }}
           azure_container_app_env_subnet: ${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}
+          azure_container_app_pe_subnet: ${{ env.AZURE_CONTAINER_APP_PE_SUBNET }}
           stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}

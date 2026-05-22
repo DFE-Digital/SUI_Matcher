@@ -21,6 +21,10 @@ param containerAppVnet string
 param containerAppEnvSubnet string
 
 @minLength(1)
+@description('The address prefix for the private endpoint subnet')
+param containerAppPeSubnet string
+
+@minLength(1)
 @description('The location used for all deployed resources')
 param location string
 
@@ -61,6 +65,7 @@ module stackDeployment 'main.bicep' = {
     containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
     containerAppVnet: containerAppVnet
     containerAppEnvSubnet: containerAppEnvSubnet
+    containerAppPeSubnet: containerAppPeSubnet
     location: location
     monitoringActionGroupEmail: monitoringActionGroupEmail
     turnOnAlerts: turnOnAlerts
