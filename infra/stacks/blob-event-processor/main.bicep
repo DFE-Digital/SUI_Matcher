@@ -42,8 +42,6 @@ param storageProcessJobImageTag string = 'latest'
 
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
-var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
-var containerAppEnvironmentVnetName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-vnet-cae-01'
 
 var tags = {
   'azd-env-name': environmentName
@@ -105,6 +103,7 @@ module containerAppEnvironment '../../modules/shared/container-app-environment.b
     containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
     containerAppVnet: containerAppVnet
     containerAppEnvSubnet: containerAppEnvSubnet
+    privateEndpointSubnetAddressPrefix: containerAppPeSubnet
     tags: tags
     logAnalyticsWorkspaceName: observability.outputs.workspaceName
   }
@@ -130,21 +129,6 @@ module monitoring '../../modules/shared/monitoring.bicep' = {
   }
 }
 
-resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
-  name: containerAppEnvironmentVnetName
-}
-
-resource peSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
-  parent: caeVnet
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-subnet-pe-01'
-  properties: {
-    addressPrefix: containerAppPeSubnet
-  }
-  dependsOn: [
-    containerAppEnvironment
-  ]
-}
-
 module storage '../../modules/blob-event-processor/storage.bicep' = {
   name: 'blob-event-processor-storage'
   params: {
@@ -152,8 +136,8 @@ module storage '../../modules/blob-event-processor/storage.bicep' = {
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
     tags: tags
-    peSubnetId: peSubnet.id
-    vnetId: caeVnet.id
+    peSubnetId: containerAppEnvironment.outputs.privateEndpointSubnetId
+    vnetId: containerAppEnvironment.outputs.virtualNetworkId
   }
 }
 
