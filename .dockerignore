@@ -1,0 +1,7 @@
+.git/
+.idea/
+.vs/
+**/bin/
+**/obj/
+*.user
+*.log
