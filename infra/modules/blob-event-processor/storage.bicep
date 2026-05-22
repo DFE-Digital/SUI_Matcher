@@ -170,7 +170,7 @@ resource blobDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGrou
   properties: {
     privateDnsZoneConfigs: [
       {
-        name: 'privatelink-blob-core-windows-net'
+        name: replace(blobDnsZone.name, '.', '-')
         properties: {
           privateDnsZoneId: blobDnsZone.id
         }
@@ -185,7 +185,7 @@ resource queueDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGro
   properties: {
     privateDnsZoneConfigs: [
       {
-        name: 'privatelink-queue-core-windows-net'
+        name: replace(queueDnsZone.name, '.', '-')
         properties: {
           privateDnsZoneId: queueDnsZone.id
         }
