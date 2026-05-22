@@ -22,6 +22,10 @@ param containerAppVnet string
 param containerAppEnvSubnet string
 
 @minLength(1)
+@description('The address prefix for the private endpoint subnet')
+param containerAppPeSubnet string
+
+@minLength(1)
 @description('The location used for all deployed resources')
 param location string
 
@@ -99,6 +103,7 @@ module containerAppEnvironment '../../modules/shared/container-app-environment.b
     containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
     containerAppVnet: containerAppVnet
     containerAppEnvSubnet: containerAppEnvSubnet
+    privateEndpointSubnetAddressPrefix: containerAppPeSubnet
     tags: tags
     logAnalyticsWorkspaceName: observability.outputs.workspaceName
   }
@@ -131,6 +136,8 @@ module storage '../../modules/blob-event-processor/storage.bicep' = {
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
     tags: tags
+    peSubnetId: containerAppEnvironment.outputs.privateEndpointSubnetId
+    vnetId: containerAppEnvironment.outputs.virtualNetworkId
   }
 }
 
