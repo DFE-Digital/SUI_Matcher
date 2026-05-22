@@ -43,6 +43,10 @@ Start Azurite first. From the repository root:
 docker compose up -d azurite
 ```
 
+> [!NOTE]
+> **For Linux users:** `host.docker.internal` is not automatically mapped on Linux. Add `--add-host=host.docker.internal:host-gateway` to the `docker run` command to enable it.
+
+
 If the CSV mapping and matching API base address were supplied as build args, run the job with only the local Azurite connection:
 
 ```bash
@@ -71,5 +75,6 @@ docker run --rm \
 ```
 
 `host.docker.internal` lets the job container reach services exposed by the host machine. `UseDevelopmentStorage=true` without `DevelopmentStorageProxyUri` points to `127.0.0.1` inside the job container and will not reach Azurite running outside that container.
+
 
 The job reads from the `storage-process-job` queue. Create that queue in Azurite before running the job if it does not already exist.
