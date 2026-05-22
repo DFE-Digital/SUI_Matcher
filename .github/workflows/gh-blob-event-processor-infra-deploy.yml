@@ -72,6 +72,15 @@ jobs:
       deployment_name: ${{ steps.context.outputs.deployment_name }}
       deployment_mode: ${{ steps.context.outputs.deployment_mode }}
     steps:
+      - name: Validate private endpoint subnet configuration
+        run: |
+          set -euo pipefail
+
+          if [ -z "${AZURE_CONTAINER_APP_PE_SUBNET}" ]; then
+            echo "::error::AZURE_CONTAINER_APP_PE_SUBNET secret must be configured for blob-event-processor infrastructure deployments."
+            exit 1
+          fi
+
       - name: Derive target names
         id: context
         run: |
