@@ -40,6 +40,9 @@ param turnOnAlerts bool = false
 @description('Container image tag for the storage process job')
 param storageProcessJobImageTag string = 'latest'
 
+@description('Whether or not to include role assignments, since some environments may restrict these.')
+param includeRoleAssignments bool = true
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
 
@@ -74,7 +77,7 @@ module containerRegistry '../../modules/shared/container-registry.bicep' = {
   }
 }
 
-module storageProcessJobAcrPullRbac '../../modules/shared/acr-pull-rbac.bicep' = {
+module storageProcessJobAcrPullRbac '../../modules/shared/acr-pull-rbac.bicep' = if (includeRoleAssignments) {
   name: 'storage-process-job-acr-pull-rbac'
   params: {
     containerRegistryName: containerRegistry.outputs.name
