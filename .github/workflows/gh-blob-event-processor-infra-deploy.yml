@@ -32,7 +32,7 @@ on:
         default: false
         type: boolean
       include_role_assignments:
-        description: Whether or not to include role assignments, since some environments may restrict these.
+        description: Include role assignments? # since some environments may restrict these.
         default: true
         type: boolean
 
