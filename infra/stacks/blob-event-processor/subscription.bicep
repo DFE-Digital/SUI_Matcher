@@ -39,6 +39,9 @@ param turnOnAlerts bool = false
 @description('Container image tag for the storage process job')
 param storageProcessJobImageTag string = 'latest'
 
+@description('Whether or not to include role assignments, since some environments may restrict these.')
+param includeRoleAssignments bool = true
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackName = 'blob-event-processor'
 var resourceGroupName = '${environmentPrefix}-${lowercaseEnvironmentName}-${stackName}'
@@ -70,6 +73,7 @@ module stackDeployment 'main.bicep' = {
     monitoringActionGroupEmail: monitoringActionGroupEmail
     turnOnAlerts: turnOnAlerts
     storageProcessJobImageTag: storageProcessJobImageTag
+    includeRoleAssignments: includeRoleAssignments
   }
 }
 
