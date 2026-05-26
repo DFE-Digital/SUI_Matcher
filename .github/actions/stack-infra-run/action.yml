@@ -68,7 +68,7 @@ inputs:
     description: "Optional storage process job image tag"
     required: false
     default: ""
-  include_role_assignments:
+  azure_include_role_assignments:
     description: Whether or not to include role assignments, since some environments may restrict these. 
     default: true
     type: boolean
@@ -116,7 +116,7 @@ runs:
           "containerAppManagedEnvironmentNumber=${{ inputs.azure_container_app_managed_environment_number }}"
           "containerAppVnet=${{ inputs.azure_container_app_vnet }}"
           "containerAppEnvSubnet=${{ inputs.azure_container_app_env_subnet }}"
-          "includeRoleAssignments=${{ inputs.include_role_assignments }}"
+          "includeRoleAssignments=${{ inputs.azure_include_role_assignments }}"
         )
 
         if [ -n "${{ inputs.azure_container_app_pe_subnet }}" ]; then
