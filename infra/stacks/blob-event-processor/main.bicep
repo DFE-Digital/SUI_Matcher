@@ -175,6 +175,7 @@ module storageProcessJob '../../modules/blob-event-processor/container-app-job.b
     imageTag: storageProcessJobImageTag
     matchApiBaseAddress: 'https://matching-api.internal.${containerAppEnvironment.outputs.defaultDomain}'
     tags: tags
+    includeRoleAssignments: includeRoleAssignments
   }
   dependsOn: [
     storageProcessJobAcrPullRbac
