@@ -43,6 +43,16 @@ param storageProcessJobImageTag string = 'latest'
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
+@allowed([
+  'create'
+  'existing'
+])
+@description('Whether the stack should create its storage account or use an existing account in the target resource group.')
+param storageAccountMode string = 'create'
+
+@description('The name of the existing storage account to use when storageAccountMode is existing.')
+param existingStorageAccountName string = ''
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
 
@@ -132,7 +142,7 @@ module monitoring '../../modules/shared/monitoring.bicep' = {
   }
 }
 
-module storage '../../modules/blob-event-processor/storage.bicep' = {
+module createdStorage '../../modules/blob-event-processor/storage.bicep' = if (storageAccountMode == 'create') {
   name: 'blob-event-processor-storage'
   params: {
     location: location
@@ -144,15 +154,36 @@ module storage '../../modules/blob-event-processor/storage.bicep' = {
   }
 }
 
+module existingStorage '../../modules/blob-event-processor/existing-storage.bicep' = if (storageAccountMode == 'existing') {
+  name: 'blob-event-processor-existing-storage'
+  params: {
+    location: location
+    tags: tags
+    peSubnetId: containerAppEnvironment.outputs.privateEndpointSubnetId
+    vnetId: containerAppEnvironment.outputs.virtualNetworkId
+    storageAccountName: existingStorageAccountName
+  }
+}
+
+var storageAccountName = storageAccountMode == 'create' ? createdStorage!.outputs.accountName : existingStorage!.outputs.accountName
+var storageAccountId = storageAccountMode == 'create' ? createdStorage!.outputs.accountId : existingStorage!.outputs.accountId
+var storageBlobEndpoint = storageAccountMode == 'create' ? createdStorage!.outputs.blobEndpoint : existingStorage!.outputs.blobEndpoint
+var storageQueueEndpoint = storageAccountMode == 'create' ? createdStorage!.outputs.queueEndpoint : existingStorage!.outputs.queueEndpoint
+var storageIncomingContainerName = storageAccountMode == 'create' ? createdStorage!.outputs.incomingContainerName : existingStorage!.outputs.incomingContainerName
+var storageProcessedContainerName = storageAccountMode == 'create' ? createdStorage!.outputs.processedContainerName : existingStorage!.outputs.processedContainerName
+var storageSuccessContainerName = storageAccountMode == 'create' ? createdStorage!.outputs.successContainerName : existingStorage!.outputs.successContainerName
+var storageQueueName = storageAccountMode == 'create' ? createdStorage!.outputs.queueName : existingStorage!.outputs.queueName
+var storagePoisonQueueName = storageAccountMode == 'create' ? createdStorage!.outputs.poisonQueueName : existingStorage!.outputs.poisonQueueName
+
 module eventGrid '../../modules/blob-event-processor/event-grid.bicep' = {
   name: 'blob-event-processor-event-grid'
   params: {
     location: location
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
-    storageAccountId: storage.outputs.accountId
-    queueName: storage.outputs.queueName
-    incomingContainerName: storage.outputs.incomingContainerName
+    storageAccountId: storageAccountId
+    queueName: storageQueueName
+    incomingContainerName: storageIncomingContainerName
     tags: tags
   }
 }
@@ -167,10 +198,10 @@ module storageProcessJob '../../modules/blob-event-processor/container-app-job.b
     managedIdentityId: identity.outputs.id
     managedIdentityPrincipalId: identity.outputs.principalId
     managedIdentityClientId: identity.outputs.clientId
-    storageAccountName: storage.outputs.accountName
-    queueName: storage.outputs.queueName
-    blobServiceUri: storage.outputs.blobEndpoint
-    queueServiceUri: storage.outputs.queueEndpoint
+    storageAccountName: storageAccountName
+    queueName: storageQueueName
+    blobServiceUri: storageBlobEndpoint
+    queueServiceUri: storageQueueEndpoint
     containerRegistryServer: containerRegistry.outputs.endpoint
     imageTag: storageProcessJobImageTag
     matchApiBaseAddress: 'https://matching-api.internal.${containerAppEnvironment.outputs.defaultDomain}'
@@ -199,15 +230,15 @@ output AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN string = containerAppEnvi
 output APPLICATION_INSIGHTS_CONNECTION_STRING string = observability.outputs.applicationInsightsConnectionString
 output SECRETS_VAULTURI string = secrets.outputs.vaultUri
 output SECRETS_VAULT_NAME string = secrets.outputs.name
-output STORAGE_ACCOUNT_NAME string = storage.outputs.accountName
-output STORAGE_ACCOUNT_ID string = storage.outputs.accountId
-output STORAGE_BLOB_ENDPOINT string = storage.outputs.blobEndpoint
-output STORAGE_QUEUE_ENDPOINT string = storage.outputs.queueEndpoint
-output STORAGE_INCOMING_CONTAINER_NAME string = storage.outputs.incomingContainerName
-output STORAGE_PROCESSED_CONTAINER_NAME string = storage.outputs.processedContainerName
-output STORAGE_SUCCESS_CONTAINER_NAME string = storage.outputs.successContainerName
-output STORAGE_QUEUE_NAME string = storage.outputs.queueName
-output STORAGE_POISON_QUEUE_NAME string = storage.outputs.poisonQueueName
+output STORAGE_ACCOUNT_NAME string = storageAccountName
+output STORAGE_ACCOUNT_ID string = storageAccountId
+output STORAGE_BLOB_ENDPOINT string = storageBlobEndpoint
+output STORAGE_QUEUE_ENDPOINT string = storageQueueEndpoint
+output STORAGE_INCOMING_CONTAINER_NAME string = storageIncomingContainerName
+output STORAGE_PROCESSED_CONTAINER_NAME string = storageProcessedContainerName
+output STORAGE_SUCCESS_CONTAINER_NAME string = storageSuccessContainerName
+output STORAGE_QUEUE_NAME string = storageQueueName
+output STORAGE_POISON_QUEUE_NAME string = storagePoisonQueueName
 output EVENT_GRID_SYSTEM_TOPIC_NAME string = eventGrid.outputs.systemTopicName
 output EVENT_GRID_SYSTEM_TOPIC_ID string = eventGrid.outputs.systemTopicId
 output EVENT_GRID_EVENT_SUBSCRIPTION_NAME string = eventGrid.outputs.eventSubscriptionName

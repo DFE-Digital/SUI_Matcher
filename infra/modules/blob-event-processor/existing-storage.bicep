@@ -1,12 +1,6 @@
 @description('The location used for all deployed resources')
 param location string
 
-@description('The prefix used for all deployed resources')
-param environmentPrefix string
-
-@description('The lowercase environment name used for resource naming')
-param lowercaseEnvironmentName string
-
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
@@ -16,28 +10,12 @@ param peSubnetId string
 @description('The resource ID of the virtual network for private DNS zone links')
 param vnetId string
 
-var storageAccountName = toLower('${take(environmentPrefix, 8)}${take(lowercaseEnvironmentName, 8)}bep${take(uniqueString(resourceGroup().id, environmentPrefix, lowercaseEnvironmentName), 5)}')
+@minLength(3)
+@description('The name of the existing storage account to use.')
+param storageAccountName string
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
-  location: location
-  kind: 'StorageV2'
-  sku: {
-    name: 'Standard_LRS'
-  }
-  tags: tags
-  properties: {
-    accessTier: 'Hot'
-    allowBlobPublicAccess: false
-    allowSharedKeyAccess: true
-    minimumTlsVersion: 'TLS1_2'
-    publicNetworkAccess: 'Enabled' // Must be Enabled to allow Trusted Microsoft Services when networkAcls are used
-    supportsHttpsTrafficOnly: true
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Deny'
-    }
-  }
 }
 
 module storageResources './storage-resources.bicep' = {
