@@ -46,6 +46,9 @@ param matchApiBaseAddress string
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
+@description('Whether or not to include role assignments, since some environments may restrict these.')
+param includeRoleAssignments bool = true
+
 // https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules
 // 32 chars max
 var jobName = toLower('${take(environmentPrefix, 8)}-${take(lowercaseEnvironmentName, 3)}-storage-process-job')
@@ -56,7 +59,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing 
   name: storageAccountName
 }
 
-resource storageBlobDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource storageBlobDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (includeRoleAssignments) {
   scope: storageAccount
   name: guid(storageAccount.id, managedIdentityPrincipalId, storageBlobDataContributorRoleId)
   properties: {
@@ -66,7 +69,7 @@ resource storageBlobDataContributorAssignment 'Microsoft.Authorization/roleAssig
   }
 }
 
-resource storageQueueDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource storageQueueDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (includeRoleAssignments) {
   scope: storageAccount
   name: guid(storageAccount.id, managedIdentityPrincipalId, storageQueueDataContributorRoleId)
   properties: {
