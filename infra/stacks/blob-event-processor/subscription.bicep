@@ -42,9 +42,30 @@ param storageProcessJobImageTag string = 'latest'
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
+@allowed([
+  'create'
+  'existing'
+])
+@description('Whether the subscription wrapper should create the stack resource group or deploy into an existing one.')
+param resourceGroupMode string = 'create'
+
+@description('The existing resource group name to deploy into when resourceGroupMode is existing.')
+param targetResourceGroupName string = ''
+
+@allowed([
+  'create'
+  'existing'
+])
+@description('Whether the stack should create its storage account or use an existing account in the target resource group.')
+param storageAccountMode string = 'create'
+
+@description('The name of the existing storage account to use when storageAccountMode is existing.')
+param existingStorageAccountName string = ''
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackName = 'blob-event-processor'
-var resourceGroupName = '${environmentPrefix}-${lowercaseEnvironmentName}-${stackName}'
+var stackResourceGroupName = '${environmentPrefix}-${lowercaseEnvironmentName}-${stackName}'
+var deploymentResourceGroupName = resourceGroupMode == 'existing' ? targetResourceGroupName : stackResourceGroupName
 var resourceGroupTags = {
   Product: 'SUI'
   Environment: environmentName
@@ -53,15 +74,15 @@ var resourceGroupTags = {
   Stack: stackName
 }
 
-resource stackResourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
-  name: resourceGroupName
+resource stackResourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = if (resourceGroupMode == 'create') {
+  name: stackResourceGroupName
   location: location
   tags: resourceGroupTags
 }
 
 module stackDeployment 'main.bicep' = {
   name: '${stackName}-deployment'
-  scope: stackResourceGroup
+  scope: resourceGroup(deploymentResourceGroupName)
   params: {
     environmentName: environmentName
     environmentPrefix: environmentPrefix
@@ -74,11 +95,16 @@ module stackDeployment 'main.bicep' = {
     turnOnAlerts: turnOnAlerts
     storageProcessJobImageTag: storageProcessJobImageTag
     includeRoleAssignments: includeRoleAssignments
+    storageAccountMode: storageAccountMode
+    existingStorageAccountName: existingStorageAccountName
   }
+  dependsOn: [
+    stackResourceGroup
+  ]
 }
 
-output RESOURCE_GROUP_NAME string = stackResourceGroup.name
-output RESOURCE_GROUP_ID string = stackResourceGroup.id
+output RESOURCE_GROUP_NAME string = deploymentResourceGroupName
+output RESOURCE_GROUP_ID string = subscriptionResourceId('Microsoft.Resources/resourceGroups', deploymentResourceGroupName)
 output STACK_NAME string = stackDeployment.outputs.STACK_NAME
 output LOCATION string = stackDeployment.outputs.LOCATION
 output TAGS object = stackDeployment.outputs.TAGS

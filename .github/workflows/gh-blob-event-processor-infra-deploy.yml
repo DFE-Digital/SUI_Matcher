@@ -35,6 +35,28 @@ on:
         description: Include role assignments? # since some environments may restrict these.
         default: true
         type: boolean
+      resource_group_mode:
+        description: Resource group mode
+        default: create
+        type: choice
+        options:
+          - create
+          - existing
+      target_resource_group_name:
+        description: Existing resource group name when resource_group_mode is existing
+        required: false
+        type: string
+      storage_account_mode:
+        description: Storage account mode
+        default: create
+        type: choice
+        options:
+          - create
+          - existing
+      existing_storage_account_name:
+        description: Existing storage account name when storage_account_mode is existing
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -56,6 +78,10 @@ env:
   AZURE_INCLUDE_ROLE_ASSIGNMENTS: ${{ inputs.include_role_assignments }}
   AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
   STORAGE_PROCESS_JOB_IMAGE_TAG: ${{ inputs.storage_process_image_tag || 'latest' }}
+  RESOURCE_GROUP_MODE: ${{ inputs.resource_group_mode || 'create' }}
+  TARGET_RESOURCE_GROUP_NAME: ${{ inputs.target_resource_group_name }}
+  STORAGE_ACCOUNT_MODE: ${{ inputs.storage_account_mode || 'create' }}
+  EXISTING_STORAGE_ACCOUNT_NAME: ${{ inputs.existing_storage_account_name }}
 
 concurrency:
   group: blob-event-processor-${{ inputs.environment_prefix }}-${{ inputs.environment }}
@@ -91,6 +117,19 @@ jobs:
         run: |
           set -euo pipefail
           STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-${STACK_NAME}"
+          if [ "${RESOURCE_GROUP_MODE}" = "existing" ]; then
+            if [ -z "${TARGET_RESOURCE_GROUP_NAME}" ]; then
+              echo "::error::target_resource_group_name must be set when resource_group_mode is existing."
+              exit 1
+            fi
+            STACK_RESOURCE_GROUP="${TARGET_RESOURCE_GROUP_NAME}"
+          fi
+
+          if [ "${STORAGE_ACCOUNT_MODE}" = "existing" ] && [ -z "${EXISTING_STORAGE_ACCOUNT_NAME}" ]; then
+            echo "::error::existing_storage_account_name must be set when storage_account_mode is existing."
+            exit 1
+          fi
+
           DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-${DEPLOYMENT_MODE}"
 
           {
@@ -111,6 +150,8 @@ jobs:
             echo "- Azure location: \`${AZURE_LOCATION}\`"
             echo "- Version/ref: \`${STACK_VERSION}\`"
             echo "- Resource group: \`${STACK_RESOURCE_GROUP}\`"
+            echo "- Resource group mode: \`${RESOURCE_GROUP_MODE}\`"
+            echo "- Storage account mode: \`${STORAGE_ACCOUNT_MODE}\`"
             echo "- Deployment name: \`${DEPLOYMENT_NAME}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -151,6 +192,10 @@ jobs:
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
           storage_process_job_image_tag: ${{ env.STORAGE_PROCESS_JOB_IMAGE_TAG }}
+          resource_group_mode: ${{ env.RESOURCE_GROUP_MODE }}
+          target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
+          storage_account_mode: ${{ env.STORAGE_ACCOUNT_MODE }}
+          existing_storage_account_name: ${{ env.EXISTING_STORAGE_ACCOUNT_NAME }}
 
   deploy:
     name: Deploy blob-event-processor infrastructure
@@ -189,6 +234,10 @@ jobs:
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
           storage_process_job_image_tag: ${{ env.STORAGE_PROCESS_JOB_IMAGE_TAG }}
+          resource_group_mode: ${{ env.RESOURCE_GROUP_MODE }}
+          target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
+          storage_account_mode: ${{ env.STORAGE_ACCOUNT_MODE }}
+          existing_storage_account_name: ${{ env.EXISTING_STORAGE_ACCOUNT_NAME }}
 
   summarize:
     name: Summarize blob-event-processor run

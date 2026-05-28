@@ -12,6 +12,8 @@ Shared Bicep modules live under `infra/modules`.
 
 Each stack root under `infra/stacks` is paired with a subscription-scope wrapper that creates or updates the stack-owned resource group and then deploys the stack into it.
 
+The `blob-event-processor` wrapper also supports deploying into an existing resource group and using an existing storage account. In that mode, the stack still creates its standard blob containers and storage queues, but it does not create the storage account or private endpoints for that existing account.
+
 Supported deployment roots:
 
 - `src/app-host/infra` is a legacy application-layer deployment path for existing client environments. It is intentionally frozen: new infrastructure capability — including registry/RBAC modules such as `acr-pull-rbac` — is added to the stack roots under `infra/stacks`, not retrofitted onto `app-host`. The new stacks own the full container-registry → managed-identity → AcrPull chain in code; the legacy path does not, and is deliberately not partially converted.
@@ -34,4 +36,5 @@ Decommissioning:
 
 - Stack decommissioning for `infra/stacks` means deleting the entire stack-owned resource group.
 - `.github/workflows/gh-stack-decommission.yml` is the supported teardown path for stacks deployed through `infra/stacks/*/subscription.bicep`.
+- Deployments made with `resourceGroupMode=existing` are outside the stack-owned resource group teardown contract and must be cleaned up selectively.
 - The legacy `src/app-host/infra` and `src/SUI.Client/SUI.Client.Watcher/infra` deployment paths are outside that decommission contract.

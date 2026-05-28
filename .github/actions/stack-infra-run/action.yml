@@ -72,6 +72,22 @@ inputs:
     description: Whether or not to include role assignments, since some environments may restrict these. 
     default: true
     type: boolean
+  resource_group_mode:
+    description: "Optional resource group mode: create or existing"
+    required: false
+    default: ""
+  target_resource_group_name:
+    description: "Optional existing resource group name when resource_group_mode is existing"
+    required: false
+    default: ""
+  storage_account_mode:
+    description: "Optional storage account mode: create or existing"
+    required: false
+    default: ""
+  existing_storage_account_name:
+    description: "Optional existing storage account name when storage_account_mode is existing"
+    required: false
+    default: ""
 
 
 runs:
@@ -137,6 +153,22 @@ runs:
 
         if [ -n "${{ inputs.storage_process_job_image_tag }}" ]; then
           PARAMETERS+=("storageProcessJobImageTag=${{ inputs.storage_process_job_image_tag }}")
+        fi
+
+        if [ -n "${{ inputs.resource_group_mode }}" ]; then
+          PARAMETERS+=("resourceGroupMode=${{ inputs.resource_group_mode }}")
+        fi
+
+        if [ -n "${{ inputs.target_resource_group_name }}" ]; then
+          PARAMETERS+=("targetResourceGroupName=${{ inputs.target_resource_group_name }}")
+        fi
+
+        if [ -n "${{ inputs.storage_account_mode }}" ]; then
+          PARAMETERS+=("storageAccountMode=${{ inputs.storage_account_mode }}")
+        fi
+
+        if [ -n "${{ inputs.existing_storage_account_name }}" ]; then
+          PARAMETERS+=("existingStorageAccountName=${{ inputs.existing_storage_account_name }}")
         fi
 
         cleanup() {
