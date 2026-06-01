@@ -90,6 +90,33 @@ module observability '../../modules/shared/observability.bicep' = {
   }
 }
 
+module secrets '../../modules/shared/secrets.bicep' = {
+  name: 'secrets'
+  params: {
+    location: location
+    environmentName: environmentName
+    environmentPrefix: environmentPrefix
+    stackNameSuffix: stackNameSuffix
+  }
+}
+
+module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
+  name: 'egress-firewall'
+  params: {
+    location: location
+    environmentName: environmentName
+    environmentPrefix: environmentPrefix
+    stackNameSuffix: stackNameSuffix
+    containerRegistryEndpoint: containerRegistry.outputs.endpoint
+    keyVaultName: secrets.outputs.name
+    keyVaultEndpoint: '${secrets.outputs.name}.vault.azure.net'
+    caeVnetAddressPrefixes: [
+      containerAppVnet
+    ]
+    tags: tags
+  }
+}
+
 module containerAppEnvironment '../../modules/shared/container-app-environment.bicep' = {
   name: 'container-app-environment'
   params: {
@@ -102,16 +129,17 @@ module containerAppEnvironment '../../modules/shared/container-app-environment.b
     containerAppEnvSubnet: containerAppEnvSubnet
     tags: tags
     logAnalyticsWorkspaceName: observability.outputs.workspaceName
+    routeTableId: egressFirewall.outputs.routeTableId
   }
 }
 
-module secrets '../../modules/shared/secrets.bicep' = {
-  name: 'secrets'
+module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' = {
+  name: 'cae-firewall-peering'
   params: {
-    location: location
-    environmentName: environmentName
-    environmentPrefix: environmentPrefix
-    stackNameSuffix: stackNameSuffix
+    vnet1Name: containerAppEnvironment.outputs.virtualNetworkName
+    vnet2Name: egressFirewall.outputs.firewallVnetName
+    vnet1ToVnet2PeeringName: 'peering-fw-shared-01'
+    vnet2ToVnet1PeeringName: 'peering-cae-01'
   }
 }
 
