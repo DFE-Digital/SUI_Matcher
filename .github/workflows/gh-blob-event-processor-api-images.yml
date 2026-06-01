@@ -39,8 +39,6 @@ env:
   INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
   EXTERNAL_API_IMAGE_REPOSITORY: external-api
   MATCHING_API_IMAGE_REPOSITORY: matching-api
-  NHS_DIGITAL_TOKEN_URL: ${{ vars.NHS_DIGITAL_TOKEN_URL }}
-  NHS_DIGITAL_FHIR_ENDPOINT: ${{ vars.NHS_DIGITAL_FHIR_ENDPOINT }}
 
 concurrency:
   group: blob-event-processor-api-images-${{ inputs.environment_prefix }}-${{ inputs.environment }}
@@ -115,21 +113,6 @@ jobs:
             echo "image_tag=${IMAGE_TAG}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Validate NHS endpoint configuration
-        id: nhs-config
-        run: |
-          set -euo pipefail
-
-          if [ -z "${NHS_DIGITAL_TOKEN_URL}" ] || [ -z "${NHS_DIGITAL_FHIR_ENDPOINT}" ]; then
-            echo "Required NHS endpoint configuration is missing from GitHub variables." >&2
-            exit 1
-          fi
-
-          {
-            echo "nhs_digital_token_url=${NHS_DIGITAL_TOKEN_URL}"
-            echo "nhs_digital_fhir_endpoint=${NHS_DIGITAL_FHIR_ENDPOINT}"
-          } >> "$GITHUB_OUTPUT"
-
       - name: Build external API image in ACR
         run: |
           set -euo pipefail
@@ -139,8 +122,6 @@ jobs:
             --image "${EXTERNAL_API_IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
             --image "${EXTERNAL_API_IMAGE_REPOSITORY}:latest \
             --file src/external-api/Dockerfile \
-            --build-arg NHS_DIGITAL_TOKEN_URL="${{ steps.nhs-config.outputs.nhs_digital_token_url }}" \
-            --build-arg NHS_DIGITAL_FHIR_ENDPOINT="${{ steps.nhs-config.outputs.nhs_digital_fhir_endpoint }}" \
             .
 
       - name: Build matching API image in ACR
@@ -169,7 +150,6 @@ jobs:
             echo "- Resource group: \`${{ steps.context.outputs.stack_resource_group }}\`"
             echo "- ACR: \`${{ steps.context.outputs.acr_login_server }}\`"
             echo "- Container Apps environment: \`${{ steps.context.outputs.container_apps_environment_name }}\`"
-            echo "- NHS endpoint source: GitHub variables"
             echo "- External API endpoint for matching API: \`${{ steps.context.outputs.external_api_https_endpoint }}\`"
             echo "- External API image: \`${{ steps.context.outputs.external_api_image_name }}\`"
             echo "- Matching API image: \`${{ steps.context.outputs.matching_api_image_name }}\`"
