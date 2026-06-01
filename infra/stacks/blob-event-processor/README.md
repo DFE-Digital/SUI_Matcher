@@ -11,6 +11,7 @@ Current scope:
 - blob containers for incoming, processed, and success files
 - primary and poison storage queues for the processing job contract
 - blob and queue private endpoints for the configured storage account
+- matching API and external API container apps (internal ingress) deployed into the stack's CAE
 
 `infra/stacks/blob-event-processor/subscription.bicep` is the subscription-scope entry point for this stack. By default, `resourceGroupMode=create` creates or updates the stack-owned `blob-event-processor` resource group and then deploys `main.bicep` into it.
 
@@ -75,6 +76,8 @@ az deployment sub what-if \
     containerAppPeSubnet=<private-endpoint-subnet-cidr> \
     includeRoleAssignments=true \
     storageProcessJobImageTag=<image-tag> \
+    matchingApiImageTag=<image-tag> \
+    externalApiImageTag=<image-tag> \
     turnOnAlerts=false \
     resourceGroupMode=existing \
     targetResourceGroupName=<existing-resource-group-name> \
@@ -88,8 +91,6 @@ If Azure CLI cannot write to the default local config directory, set `AZURE_CONF
 
 Follow up work:
 
-- ACA - Deploying to the ACR
-- Match/External/Yarp - Infrastructure and deployment to the ACR
 - Any further network/infrastructure needs for the processing job
 
 ## Unique to blob stack infrastructure
