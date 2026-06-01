@@ -1,0 +1,161 @@
+name: Publish Blob-Event-Processor API Images
+run-name: >-
+  Blob Event Processor API Images / ${{ inputs.environment }} /
+  ${{ inputs.environment_prefix }} / ${{ inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: The environment target for the images
+        required: true
+        default: 'Integration'
+        type: choice
+        options:
+          - Integration
+      version:
+        description: The version, tag, branch, or SHA to build
+        required: true
+        type: string
+      environment_prefix:
+        description: The prefix for the environment
+        default: 's215d01'
+        type: string
+      image_tag:
+        description: Optional image tag. Defaults to the checked-out commit SHA.
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_ENV_NAME: ${{ inputs.environment }}
+  AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ vars.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
+  STACK_VERSION: ${{ inputs.version }}
+  INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
+  EXTERNAL_API_IMAGE_REPOSITORY: external-api
+  MATCHING_API_IMAGE_REPOSITORY: matching-api
+
+concurrency:
+  group: blob-event-processor-api-images-${{ inputs.environment_prefix }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    name: Build API images in ACR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.STACK_VERSION }}
+
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Derive image context
+        id: context
+        run: |
+          set -euo pipefail
+
+          LOWERCASE_ENVIRONMENT_NAME="${AZURE_ENV_NAME,,}"
+          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${LOWERCASE_ENVIRONMENT_NAME}-blob-event-processor"
+          ACR_NAME="${AZURE_ENV_PREFIX}${LOWERCASE_ENVIRONMENT_NAME}bepacr01"
+          CONTAINER_APPS_ENVIRONMENT_NAME="${AZURE_ENV_PREFIX}-${LOWERCASE_ENVIRONMENT_NAME}-bep-cae-${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}"
+          IMAGE_TAG="${INPUT_IMAGE_TAG}"
+
+          if [ -z "${IMAGE_TAG}" ]; then
+            IMAGE_TAG="$(git rev-parse --short=12 HEAD)"
+          fi
+
+          az config set extension.use_dynamic_install=yes_without_prompt
+
+          ACR_LOGIN_SERVER="$(az acr show \
+            --name "${ACR_NAME}" \
+            --resource-group "${STACK_RESOURCE_GROUP}" \
+            --query loginServer \
+            --output tsv)"
+
+          CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN="$(az containerapp env show \
+            --name "${CONTAINER_APPS_ENVIRONMENT_NAME}" \
+            --resource-group "${STACK_RESOURCE_GROUP}" \
+            --query properties.defaultDomain \
+            --output tsv)"
+
+          EXTERNAL_API_HTTP_ENDPOINT="http://external-api.internal.${CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}"
+          EXTERNAL_API_HTTPS_ENDPOINT="https://external-api.internal.${CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}"
+          EXTERNAL_API_IMAGE_NAME="${ACR_LOGIN_SERVER}/${EXTERNAL_API_IMAGE_REPOSITORY}:${IMAGE_TAG}"
+          MATCHING_API_IMAGE_NAME="${ACR_LOGIN_SERVER}/${MATCHING_API_IMAGE_REPOSITORY}:${IMAGE_TAG}"
+
+          {
+            echo "stack_resource_group=${STACK_RESOURCE_GROUP}"
+            echo "acr_name=${ACR_NAME}"
+            echo "acr_login_server=${ACR_LOGIN_SERVER}"
+            echo "container_apps_environment_name=${CONTAINER_APPS_ENVIRONMENT_NAME}"
+            echo "container_apps_environment_default_domain=${CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}"
+            echo "external_api_http_endpoint=${EXTERNAL_API_HTTP_ENDPOINT}"
+            echo "external_api_https_endpoint=${EXTERNAL_API_HTTPS_ENDPOINT}"
+            echo "external_api_image_name=${EXTERNAL_API_IMAGE_NAME}"
+            echo "matching_api_image_name=${MATCHING_API_IMAGE_NAME}"
+            echo "image_tag=${IMAGE_TAG}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build external API image in ACR
+        run: |
+          set -euo pipefail
+
+          az acr build \
+            --registry "${{ steps.context.outputs.acr_name }}" \
+            --image "${EXTERNAL_API_IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
+            --image "${EXTERNAL_API_IMAGE_REPOSITORY}:latest \
+            --file src/external-api/Dockerfile \
+            --build-arg ASPNETCORE_ENVIRONMENT="${AZURE_ENV_NAME}" \
+            .
+
+      - name: Build matching API image in ACR
+        run: |
+          set -euo pipefail
+
+          az acr build \
+            --registry "${{ steps.context.outputs.acr_name }}" \
+            --image "${MATCHING_API_IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
+            --image "${MATCHING_API_IMAGE_REPOSITORY}:latest \
+            --file src/matching-api/Dockerfile \
+            --build-arg ASPNETCORE_ENVIRONMENT="${AZURE_ENV_NAME}" \
+            --build-arg EXTERNAL_API_HTTP_ENDPOINT="${{ steps.context.outputs.external_api_http_endpoint }}" \
+            --build-arg EXTERNAL_API_HTTPS_ENDPOINT="${{ steps.context.outputs.external_api_https_endpoint }}" \
+            .
+
+      - name: Write workflow summary
+        run: |
+          set -euo pipefail
+
+          {
+            echo "## API images"
+            echo
+            echo "- Environment: \`${AZURE_ENV_NAME}\`"
+            echo "- Environment prefix: \`${AZURE_ENV_PREFIX}\`"
+            echo "- Version/ref: \`${STACK_VERSION}\`"
+            echo "- Resource group: \`${{ steps.context.outputs.stack_resource_group }}\`"
+            echo "- ACR: \`${{ steps.context.outputs.acr_login_server }}\`"
+            echo "- Container Apps environment: \`${{ steps.context.outputs.container_apps_environment_name }}\`"
+            echo "- External API endpoint for matching API: \`${{ steps.context.outputs.external_api_https_endpoint }}\`"
+            echo "- External API image: \`${{ steps.context.outputs.external_api_image_name }}\`"
+            echo "- Matching API image: \`${{ steps.context.outputs.matching_api_image_name }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
