@@ -137,6 +137,7 @@ jobs:
           az acr build \
             --registry "${{ steps.context.outputs.acr_name }}" \
             --image "${EXTERNAL_API_IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
+            --image "${EXTERNAL_API_IMAGE_REPOSITORY}:latest \
             --file src/external-api/Dockerfile \
             --build-arg NHS_DIGITAL_TOKEN_URL="${{ steps.nhs-config.outputs.nhs_digital_token_url }}" \
             --build-arg NHS_DIGITAL_FHIR_ENDPOINT="${{ steps.nhs-config.outputs.nhs_digital_fhir_endpoint }}" \
@@ -149,6 +150,7 @@ jobs:
           az acr build \
             --registry "${{ steps.context.outputs.acr_name }}" \
             --image "${MATCHING_API_IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
+            --image "${MATCHING_API_IMAGE_REPOSITORY}:latest \
             --file src/matching-api/Dockerfile \
             --build-arg EXTERNAL_API_HTTP_ENDPOINT="${{ steps.context.outputs.external_api_http_endpoint }}" \
             --build-arg EXTERNAL_API_HTTPS_ENDPOINT="${{ steps.context.outputs.external_api_https_endpoint }}" \
