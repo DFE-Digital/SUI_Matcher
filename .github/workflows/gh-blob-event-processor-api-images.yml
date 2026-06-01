@@ -10,6 +10,9 @@ on:
         description: The environment target for the images
         required: true
         default: 'Integration'
+        type: choice
+        options:
+          - Integration
       version:
         description: The version, tag, branch, or SHA to build
         required: true
@@ -122,6 +125,7 @@ jobs:
             --image "${EXTERNAL_API_IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
             --image "${EXTERNAL_API_IMAGE_REPOSITORY}:latest \
             --file src/external-api/Dockerfile \
+            --build-arg ASPNETCORE_ENVIRONMENT="${AZURE_ENV_NAME}" \
             .
 
       - name: Build matching API image in ACR
@@ -133,6 +137,7 @@ jobs:
             --image "${MATCHING_API_IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
             --image "${MATCHING_API_IMAGE_REPOSITORY}:latest \
             --file src/matching-api/Dockerfile \
+            --build-arg ASPNETCORE_ENVIRONMENT="${AZURE_ENV_NAME}" \
             --build-arg EXTERNAL_API_HTTP_ENDPOINT="${{ steps.context.outputs.external_api_http_endpoint }}" \
             --build-arg EXTERNAL_API_HTTPS_ENDPOINT="${{ steps.context.outputs.external_api_https_endpoint }}" \
             .
