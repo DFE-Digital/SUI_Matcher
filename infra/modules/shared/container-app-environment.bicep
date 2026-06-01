@@ -25,6 +25,9 @@ param privateEndpointSubnetAddressPrefix string = ''
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
+@description('Resource ID of the route table associated with the container app environment subnet. Required so that all egress traffic flows through the firewall.')
+param routeTableId string
+
 @description('The Log Analytics workspace name used by the container app environment')
 param logAnalyticsWorkspaceName string
 
@@ -59,6 +62,9 @@ resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
         name: containerAppEnvironmentSubnetName
         properties: {
           addressPrefix: containerAppEnvSubnet
+          routeTable: {
+            id: routeTableId
+          }
           delegations: [
             {
               name: 'Microsoft.App.environments'
