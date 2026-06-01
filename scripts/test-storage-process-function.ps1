@@ -122,13 +122,16 @@ $message = @(
         metadataVersion = "1"
     }
 ) | ConvertTo-Json -Compress -Depth 5
+$encodedMessage = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($message))
 
 az storage message put `
     --queue-name $QueueName `
-    --content $message `
+    --content $encodedMessage `
     --connection-string $ConnectionString `
     --only-show-errors | Out-Null
 
 Write-Host "Uploaded blob to $ContainerName/$BlobName"
-Write-Host "Added queue message:"
+Write-Host "Added base64 queue message:"
+Write-Host $encodedMessage
+Write-Host "Decoded queue message:"
 Write-Host $message
