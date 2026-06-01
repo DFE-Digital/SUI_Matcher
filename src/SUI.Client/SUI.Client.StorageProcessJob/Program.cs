@@ -1,4 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
+// See https://aka.ms/new-console-template for more information
 
 using Azure.Identity;
 using Azure.Storage.Blobs;
@@ -67,9 +67,11 @@ builder.Services.AddSingleton(serviceProvider =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
     var connectionString = configuration["AzureWebJobsStorage"];
+    var options = new QueueClientOptions { MessageEncoding = QueueMessageEncoding.Base64 };
+
     if (!string.IsNullOrWhiteSpace(connectionString))
     {
-        return new QueueServiceClient(connectionString);
+        return new QueueServiceClient(connectionString, options);
     }
 
     var uri =
@@ -77,7 +79,7 @@ builder.Services.AddSingleton(serviceProvider =>
         ?? throw new InvalidOperationException(
             "StorageProcessJob:QueueServiceUri must be configured when AzureWebJobsStorage is not set."
         );
-    return new QueueServiceClient(new Uri(uri), new DefaultAzureCredential());
+    return new QueueServiceClient(new Uri(uri), new DefaultAzureCredential(), options);
 });
 
 builder.Services.AddSingleton<IBlobStorageClient, AzureBlobStorageClient>();
