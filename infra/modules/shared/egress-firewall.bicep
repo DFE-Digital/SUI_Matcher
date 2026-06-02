@@ -47,6 +47,13 @@ var systemFqdnRules = [
     fqdn: containerRegistryEndpoint
   }
   {
+    // Basic-tier ACR serves image layers from shared Azure Storage; narrowing
+    // this requires upgrading ACR to Premium with dedicated data endpoints.
+    name: 'acr-blob-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: '*.blob.core.windows.net'
+  }
+  {
     name: 'kv-allow'
     fqdn: keyVaultEndpoint
   }
@@ -195,6 +202,31 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
           terminateTLS: false
           sourceAddresses: caeVnetAddressPrefixes
         }]
+      }
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        action: {
+          type: 'Allow'
+        }
+        name: 'allow-azure-monitor-arc'
+        priority: 250
+        rules: [
+          {
+            ruleType: 'ApplicationRule'
+            name: 'azure-monitor-allow'
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            fqdnTags: [
+              'AzureMonitor'
+            ]
+            terminateTLS: false
+            sourceAddresses: caeVnetAddressPrefixes
+          }
+        ]
       }
     ]
   }
