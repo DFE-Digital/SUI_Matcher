@@ -9,6 +9,8 @@ namespace SUI.Client.Core.Infrastructure.Http;
 
 public sealed class MatchingApiClient(HttpClient httpClient) : IMatchingApiClient
 {
+    private const string MatchPersonPath = "api/v1/matchperson";
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         Converters = { new JsonStringEnumConverter() },
@@ -21,7 +23,7 @@ public sealed class MatchingApiClient(HttpClient httpClient) : IMatchingApiClien
     )
     {
         var response = await httpClient.PostAsJsonAsync(
-            "/api/v1/matchperson",
+            BuildRequestUri(MatchPersonPath),
             payload,
             cancellationToken
         );
@@ -61,5 +63,21 @@ public sealed class MatchingApiClient(HttpClient httpClient) : IMatchingApiClien
         }
 
         return null;
+    }
+
+    private Uri BuildRequestUri(string relativePath)
+    {
+        if (httpClient.BaseAddress is null)
+        {
+            return new Uri(relativePath, UriKind.Relative);
+        }
+
+        var baseAddress = httpClient.BaseAddress.ToString();
+        if (!baseAddress.EndsWith('/'))
+        {
+            baseAddress += "/";
+        }
+
+        return new Uri(new Uri(baseAddress), relativePath);
     }
 }
