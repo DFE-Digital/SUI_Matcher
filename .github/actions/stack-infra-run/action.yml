@@ -68,6 +68,14 @@ inputs:
     description: "Optional storage process job image tag"
     required: false
     default: ""
+  matching_api_image_tag:
+    description: "Optional matching API image tag"
+    required: false
+    default: ""
+  external_api_image_tag:
+    description: "Optional external API image tag"
+    required: false
+    default: ""
   azure_include_role_assignments:
     description: Whether or not to include role assignments, since some environments may restrict these. 
     default: true
@@ -153,6 +161,14 @@ runs:
 
         if [ -n "${{ inputs.storage_process_job_image_tag }}" ]; then
           PARAMETERS+=("storageProcessJobImageTag=${{ inputs.storage_process_job_image_tag }}")
+        fi
+
+        if [ -n "${{ inputs.matching_api_image_tag }}" ]; then
+          PARAMETERS+=("matchingApiImageTag=${{ inputs.matching_api_image_tag }}")
+        fi
+
+        if [ -n "${{ inputs.external_api_image_tag }}" ]; then
+          PARAMETERS+=("externalApiImageTag=${{ inputs.external_api_image_tag }}")
         fi
 
         if [ -n "${{ inputs.resource_group_mode }}" ]; then

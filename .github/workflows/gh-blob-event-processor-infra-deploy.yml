@@ -27,6 +27,16 @@ on:
         default: 'latest'
         required: false
         type: string
+      matching_api_image_tag:
+        description: Matching API image tag
+        default: 'latest'
+        required: false
+        type: string
+      external_api_image_tag:
+        description: External API image tag
+        default: 'latest'
+        required: false
+        type: string
       turn_on_alerts:
         description: Enable monitoring alerts
         default: false
@@ -78,6 +88,8 @@ env:
   AZURE_INCLUDE_ROLE_ASSIGNMENTS: ${{ inputs.include_role_assignments }}
   AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
   STORAGE_PROCESS_JOB_IMAGE_TAG: ${{ inputs.storage_process_image_tag || 'latest' }}
+  MATCHING_API_IMAGE_TAG: ${{ inputs.matching_api_image_tag || 'latest' }}
+  EXTERNAL_API_IMAGE_TAG: ${{ inputs.external_api_image_tag || 'latest' }}
   RESOURCE_GROUP_MODE: ${{ inputs.resource_group_mode || 'create' }}
   TARGET_RESOURCE_GROUP_NAME: ${{ inputs.target_resource_group_name }}
   STORAGE_ACCOUNT_MODE: ${{ inputs.storage_account_mode || 'create' }}
@@ -192,6 +204,8 @@ jobs:
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
           storage_process_job_image_tag: ${{ env.STORAGE_PROCESS_JOB_IMAGE_TAG }}
+          matching_api_image_tag: ${{ env.MATCHING_API_IMAGE_TAG }}
+          external_api_image_tag: ${{ env.EXTERNAL_API_IMAGE_TAG }}
           resource_group_mode: ${{ env.RESOURCE_GROUP_MODE }}
           target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
           storage_account_mode: ${{ env.STORAGE_ACCOUNT_MODE }}
@@ -234,6 +248,8 @@ jobs:
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
           storage_process_job_image_tag: ${{ env.STORAGE_PROCESS_JOB_IMAGE_TAG }}
+          matching_api_image_tag: ${{ env.MATCHING_API_IMAGE_TAG }}
+          external_api_image_tag: ${{ env.EXTERNAL_API_IMAGE_TAG }}
           resource_group_mode: ${{ env.RESOURCE_GROUP_MODE }}
           target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
           storage_account_mode: ${{ env.STORAGE_ACCOUNT_MODE }}
