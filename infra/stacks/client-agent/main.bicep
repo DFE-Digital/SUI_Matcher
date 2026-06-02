@@ -48,7 +48,8 @@ param clientSubnetRange string = '192.168.0.128/26'
 
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'ca'
-var allowedNhsFqdns = lowercaseEnvironmentName == 'production' ? [
+var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
+var allowedNhsFqdns = isProductionEnvironment ? [
   'api.service.nhs.uk'
 ] : [
   'int.api.service.nhs.uk'

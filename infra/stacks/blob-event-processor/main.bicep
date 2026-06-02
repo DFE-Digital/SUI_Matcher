@@ -63,7 +63,8 @@ param existingStorageAccountName string = ''
 
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
-var allowedNhsFqdns = lowercaseEnvironmentName == 'production' ? [
+var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
+var allowedNhsFqdns = isProductionEnvironment ? [
   'api.service.nhs.uk'
 ] : [
   'int.api.service.nhs.uk'
