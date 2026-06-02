@@ -109,7 +109,6 @@ module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
     stackNameSuffix: stackNameSuffix
     containerRegistryEndpoint: containerRegistry.outputs.endpoint
     keyVaultName: secrets.outputs.name
-    keyVaultEndpoint: '${secrets.outputs.name}.vault.azure.net'
     caeVnetAddressPrefixes: [
       containerAppVnet
     ]
@@ -163,13 +162,8 @@ module clientInfrastructure '../../modules/client-agent/infrastructure.bicep' = 
     network: clientNetwork
     subnetRange: clientSubnetRange
     location: location
-    containerAppEnvironmentVnetName: containerAppEnvironment.outputs.virtualNetworkName
-    containerAppEnvironmentResourceGroupName: resourceGroup().name
     logAnalyticsWorkspaceName: observability.outputs.workspaceName
     logAnalyticsWorkspaceResourceGroupName: resourceGroup().name
-    containerRegistryEndpoint: containerRegistry.outputs.endpoint
-    keyVaultName: secrets.outputs.name
-    keyVaultEndpoint: '${secrets.outputs.name}.vault.azure.net'
     tags: tags
   }
 }
@@ -191,5 +185,5 @@ output SECRETS_VAULTURI string = secrets.outputs.vaultUri
 output SECRETS_VAULT_NAME string = secrets.outputs.name
 output CLIENT_VM_NAME string = clientInfrastructure.outputs.vmName
 output CLIENT_VIRTUAL_NETWORK_NAME string = clientInfrastructure.outputs.clientVirtualNetworkName
-output CLIENT_FIREWALL_NAME string = clientInfrastructure.outputs.firewallName
-output CLIENT_ROUTE_TABLE_NAME string = clientInfrastructure.outputs.routeTableName
+output CLIENT_FIREWALL_NAME string = egressFirewall.outputs.firewallName
+output CLIENT_ROUTE_TABLE_NAME string = egressFirewall.outputs.routeTableName
