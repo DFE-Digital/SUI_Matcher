@@ -40,6 +40,14 @@ param turnOnAlerts bool = false
 @description('Container image tag for the storage process job')
 param storageProcessJobImageTag string = 'latest'
 
+@minLength(1)
+@description('Container image tag for the matching API')
+param matchingApiImageTag string = 'latest'
+
+@minLength(1)
+@description('Container image tag for the external API')
+param externalApiImageTag string = 'latest'
+
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
@@ -213,6 +221,43 @@ module storageProcessJob '../../modules/blob-event-processor/container-app-job.b
   ]
 }
 
+module matchingApi '../../modules/api-apps/matching-api.bicep' = {
+  name: 'matching-api'
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppEnvironment.outputs.id
+    containerAppsEnvironmentDefaultDomain: containerAppEnvironment.outputs.defaultDomain
+    containerRegistryServer: containerRegistry.outputs.endpoint
+    containerRegistryName: containerRegistry.outputs.name
+    managedIdentityId: identity.outputs.id
+    managedIdentityPrincipalId: identity.outputs.principalId
+    managedIdentityClientId: identity.outputs.clientId
+    environmentName: environmentName
+    imageTag: matchingApiImageTag
+    applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
+    tags: tags
+  }
+}
+
+module externalApi '../../modules/api-apps/external-api.bicep' = {
+  name: 'external-api'
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppEnvironment.outputs.id
+    containerRegistryServer: containerRegistry.outputs.endpoint
+    containerRegistryName: containerRegistry.outputs.name
+    managedIdentityId: identity.outputs.id
+    managedIdentityPrincipalId: identity.outputs.principalId
+    managedIdentityClientId: identity.outputs.clientId
+    environmentName: environmentName
+    imageTag: externalApiImageTag
+    keyVaultName: secrets.outputs.name
+    keyVaultUri: secrets.outputs.vaultUri
+    applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
+    tags: tags
+  }
+}
+
 output STACK_NAME string = 'blob-event-processor'
 output LOCATION string = location
 output TAGS object = tags
@@ -245,3 +290,7 @@ output EVENT_GRID_EVENT_SUBSCRIPTION_NAME string = eventGrid.outputs.eventSubscr
 output EVENT_GRID_EVENT_SUBSCRIPTION_ID string = eventGrid.outputs.eventSubscriptionId
 output STORAGE_PROCESS_JOB_NAME string = storageProcessJob.outputs.jobName
 output STORAGE_PROCESS_JOB_ID string = storageProcessJob.outputs.jobId
+output MATCHING_API_NAME string = matchingApi.outputs.name
+output MATCHING_API_ID string = matchingApi.outputs.id
+output EXTERNAL_API_NAME string = externalApi.outputs.name
+output EXTERNAL_API_ID string = externalApi.outputs.id

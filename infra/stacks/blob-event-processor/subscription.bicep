@@ -39,6 +39,14 @@ param turnOnAlerts bool = false
 @description('Container image tag for the storage process job')
 param storageProcessJobImageTag string = 'latest'
 
+@minLength(1)
+@description('Container image tag for the matching API')
+param matchingApiImageTag string = 'latest'
+
+@minLength(1)
+@description('Container image tag for the external API')
+param externalApiImageTag string = 'latest'
+
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
@@ -94,6 +102,8 @@ module stackDeployment 'main.bicep' = {
     monitoringActionGroupEmail: monitoringActionGroupEmail
     turnOnAlerts: turnOnAlerts
     storageProcessJobImageTag: storageProcessJobImageTag
+    matchingApiImageTag: matchingApiImageTag
+    externalApiImageTag: externalApiImageTag
     includeRoleAssignments: includeRoleAssignments
     storageAccountMode: storageAccountMode
     existingStorageAccountName: existingStorageAccountName
@@ -137,3 +147,7 @@ output EVENT_GRID_EVENT_SUBSCRIPTION_NAME string = stackDeployment.outputs.EVENT
 output EVENT_GRID_EVENT_SUBSCRIPTION_ID string = stackDeployment.outputs.EVENT_GRID_EVENT_SUBSCRIPTION_ID
 output STORAGE_PROCESS_JOB_NAME string = stackDeployment.outputs.STORAGE_PROCESS_JOB_NAME
 output STORAGE_PROCESS_JOB_ID string = stackDeployment.outputs.STORAGE_PROCESS_JOB_ID
+output MATCHING_API_NAME string = stackDeployment.outputs.MATCHING_API_NAME
+output MATCHING_API_ID string = stackDeployment.outputs.MATCHING_API_ID
+output EXTERNAL_API_NAME string = stackDeployment.outputs.EXTERNAL_API_NAME
+output EXTERNAL_API_ID string = stackDeployment.outputs.EXTERNAL_API_ID
