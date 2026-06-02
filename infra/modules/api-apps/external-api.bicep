@@ -36,10 +36,13 @@ param applicationInsightsConnectionString string
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
+@description('Whether or not to include role assignments')
+param includeRoleAssignments bool = true
+
 var appName = 'external-api'
 var targetPort = 8080
 
-module keyVaultSecretsUserRbac '../shared/key-vault-secrets-user-rbac.bicep' = {
+module keyVaultSecretsUserRbac '../shared/key-vault-secrets-user-rbac.bicep' = if (includeRoleAssignments) {
   name: '${appName}-kv-secrets-user-rbac'
   params: {
     keyVaultName: keyVaultName
