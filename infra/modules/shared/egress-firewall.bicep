@@ -41,6 +41,22 @@ var firewallPolicyName = '${environmentPrefix}-${lowercaseEnvironmentName}${stac
 var publicIpName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-pib-01'
 var routeTableName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-rt-01'
 
+var systemFqdnRules = [
+  {
+    name: 'acr-allow'
+    fqdn: containerRegistryEndpoint
+  }
+  {
+    name: 'kv-allow'
+    fqdn: keyVaultEndpoint
+  }
+  {
+    name: 'login-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'login.microsoftonline.com'
+  }
+]
+
 resource firewallVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: firewallVnetName
   location: location
@@ -164,53 +180,21 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
         }
         name: 'allow-system-arc'
         priority: 200
-        rules: [
-          {
-            ruleType: 'ApplicationRule'
-            name: 'acr-allow'
-            protocols: [
-              {
-                protocolType: 'Https'
-                port: 443
-              }
-            ]
-            targetFqdns: [
-              containerRegistryEndpoint
-            ]
-            terminateTLS: false
-            sourceAddresses: caeVnetAddressPrefixes
-          }
-          {
-            ruleType: 'ApplicationRule'
-            name: 'kv-allow'
-            protocols: [
-              {
-                protocolType: 'Https'
-                port: 443
-              }
-            ]
-            targetFqdns: [
-              keyVaultEndpoint
-            ]
-            terminateTLS: false
-            sourceAddresses: caeVnetAddressPrefixes
-          }
-          {
-            ruleType: 'ApplicationRule'
-            name: 'login-allow'
-            protocols: [
-              {
-                protocolType: 'Https'
-                port: 443
-              }
-            ]
-            targetFqdns: [
-              'login.microsoftonline.com'
-            ]
-            terminateTLS: false
-            sourceAddresses: caeVnetAddressPrefixes
-          }
-        ]
+        rules: [for rule in systemFqdnRules: {
+          ruleType: 'ApplicationRule'
+          name: rule.name
+          protocols: [
+            {
+              protocolType: 'Https'
+              port: 443
+            }
+          ]
+          targetFqdns: [
+            rule.fqdn
+          ]
+          terminateTLS: false
+          sourceAddresses: caeVnetAddressPrefixes
+        }]
       }
     ]
   }
@@ -238,6 +222,7 @@ resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
 
 output routeTableId string = routeTable.id
 output routeTableName string = routeTable.name
+output firewallName string = firewall.name
 output firewallPrivateIp string = firewall.properties.ipConfigurations[0].properties.privateIPAddress
 output firewallVnetName string = firewallVirtualNetwork.name
 output firewallVnetId string = firewallVirtualNetwork.id

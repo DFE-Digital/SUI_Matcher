@@ -25,8 +25,9 @@ param privateEndpointSubnetAddressPrefix string = ''
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
-@description('Resource ID of the route table associated with the container app environment subnet. Required so that all egress traffic flows through the firewall.')
-param routeTableId string
+// Backwards compatibility with legacy in app-host/infra 
+@description('Optional resource ID of the route table to attach to the container app environment subnet so that egress traffic flows through a firewall. When empty, no route table is attached.')
+param routeTableId string = ''
 
 @description('The Log Analytics workspace name used by the container app environment')
 param logAnalyticsWorkspaceName string
@@ -35,6 +36,11 @@ var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}
 var dashboardComponentName = '${empty(stackNameSuffix) ? 'aspire' : toLower(stackNameSuffix)}-dashboard-01'
 var containerAppEnvironmentSubnetName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-subnet-cae-01'
 var privateEndpointSubnetName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-subnet-pe-01'
+var caeSubnetRouteTable = empty(routeTableId) ? {} : {
+  routeTable: {
+    id: routeTableId
+  }
+}
 var privateEndpointSubnets = empty(privateEndpointSubnetAddressPrefix) ? [] : [
   {
     name: privateEndpointSubnetName
@@ -60,11 +66,8 @@ resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
     subnets: concat([
       {
         name: containerAppEnvironmentSubnetName
-        properties: {
+        properties: union({
           addressPrefix: containerAppEnvSubnet
-          routeTable: {
-            id: routeTableId
-          }
           delegations: [
             {
               name: 'Microsoft.App.environments'
@@ -73,7 +76,7 @@ resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
               }
             }
           ]
-        }
+        }, caeSubnetRouteTable)
       }
     ], privateEndpointSubnets)
   }

@@ -117,7 +117,6 @@ module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
     stackNameSuffix: stackNameSuffix
     containerRegistryEndpoint: containerRegistry.outputs.endpoint
     keyVaultName: secrets.outputs.name
-    keyVaultEndpoint: '${secrets.outputs.name}.vault.azure.net'
     caeVnetAddressPrefixes: [
       containerAppVnet
     ]
