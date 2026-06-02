@@ -10,14 +10,8 @@ param containerAppsEnvironmentDefaultDomain string
 @description('The login server for the container registry')
 param containerRegistryServer string
 
-@description('The container registry resource name')
-param containerRegistryName string
-
 @description('The resource ID of the managed identity')
 param managedIdentityId string
-
-@description('The principal ID of the managed identity, used for RBAC assignments')
-param managedIdentityPrincipalId string
 
 @description('The client ID of the managed identity')
 param managedIdentityClientId string
@@ -38,14 +32,6 @@ param tags object = {}
 var appName = 'matching-api'
 var externalApiName = 'external-api'
 var targetPort = 8080
-
-module acrPullRbac '../shared/acr-pull-rbac.bicep' = {
-  name: '${appName}-acr-pull-rbac'
-  params: {
-    containerRegistryName: containerRegistryName
-    principalId: managedIdentityPrincipalId
-  }
-}
 
 resource matchingApi 'Microsoft.App/containerApps@2024-10-02-preview' = {
   name: appName
@@ -139,9 +125,6 @@ resource matchingApi 'Microsoft.App/containerApps@2024-10-02-preview' = {
       }
     }
   }
-  dependsOn: [
-    acrPullRbac
-  ]
 }
 
 output name string = matchingApi.name
