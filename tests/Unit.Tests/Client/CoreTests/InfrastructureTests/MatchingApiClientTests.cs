@@ -72,8 +72,7 @@ public class MatchingApiClientTests
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.Method == HttpMethod.Post
                     && req.RequestUri != null
-                    && req.RequestUri.ToString()
-                        == "http://localhost:5000/matching/api/v1/matchperson"
+                    && req.RequestUri.ToString() == "http://localhost:5000/api/v1/matchperson"
                 ),
                 ItExpr.IsAny<CancellationToken>()
             );

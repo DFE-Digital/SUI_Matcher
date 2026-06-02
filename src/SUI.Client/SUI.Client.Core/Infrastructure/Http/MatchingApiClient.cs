@@ -21,7 +21,7 @@ public sealed class MatchingApiClient(HttpClient httpClient) : IMatchingApiClien
     )
     {
         var response = await httpClient.PostAsJsonAsync(
-            "/matching/api/v1/matchperson",
+            "/api/v1/matchperson",
             payload,
             cancellationToken
         );
