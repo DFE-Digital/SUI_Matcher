@@ -10,6 +10,12 @@ param vnet1ToVnet2PeeringName string = 'peering-to-${vnet2Name}'
 @description('The name of the peering created on vnet2 (pointing at vnet1)')
 param vnet2ToVnet1PeeringName string = 'peering-to-${vnet1Name}'
 
+@description('Whether vnet1 can receive forwarded traffic from vnet2')
+param vnet1AllowForwardedTraffic bool = false
+
+@description('Whether vnet2 can receive forwarded traffic from vnet1')
+param vnet2AllowForwardedTraffic bool = false
+
 resource vnet1 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: vnet1Name
 }
@@ -23,7 +29,7 @@ resource vnet1ToVnet2Peering 'Microsoft.Network/virtualNetworks/virtualNetworkPe
   name: vnet1ToVnet2PeeringName
   properties: {
     allowVirtualNetworkAccess: true
-    allowForwardedTraffic: false
+    allowForwardedTraffic: vnet1AllowForwardedTraffic
     allowGatewayTransit: false
     useRemoteGateways: false
     remoteVirtualNetwork: {
@@ -37,7 +43,7 @@ resource vnet2ToVnet1Peering 'Microsoft.Network/virtualNetworks/virtualNetworkPe
   name: vnet2ToVnet1PeeringName
   properties: {
     allowVirtualNetworkAccess: true
-    allowForwardedTraffic: false
+    allowForwardedTraffic: vnet2AllowForwardedTraffic
     allowGatewayTransit: false
     useRemoteGateways: false
     remoteVirtualNetwork: {

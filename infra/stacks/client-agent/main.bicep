@@ -48,6 +48,11 @@ param clientSubnetRange string = '192.168.0.128/26'
 
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'ca'
+var allowedNhsFqdns = lowercaseEnvironmentName == 'production' ? [
+  'api.service.nhs.uk'
+] : [
+  'int.api.service.nhs.uk'
+]
 var tags = {
   'azd-env-name': environmentName
   Product: 'SUI'
@@ -109,6 +114,8 @@ module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
     stackNameSuffix: stackNameSuffix
     containerRegistryEndpoint: containerRegistry.outputs.endpoint
     keyVaultName: secrets.outputs.name
+    allowedNhsFqdns: allowedNhsFqdns
+    logAnalyticsWorkspaceId: observability.outputs.workspaceId
     caeVnetAddressPrefixes: [
       containerAppVnet
     ]
@@ -139,6 +146,7 @@ module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' =
     vnet2Name: egressFirewall.outputs.firewallVnetName
     vnet1ToVnet2PeeringName: 'peering-fw-shared-01'
     vnet2ToVnet1PeeringName: 'peering-cae-01'
+    vnet1AllowForwardedTraffic: true
   }
 }
 

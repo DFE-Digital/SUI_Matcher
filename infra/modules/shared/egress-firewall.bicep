@@ -20,6 +20,12 @@ param keyVaultName string
 #disable-next-line no-hardcoded-env-urls
 param keyVaultEndpoint string = '${keyVaultName}.vault.azure.net'
 
+@description('The NHS API FQDNs allowed through the firewall for this environment')
+param allowedNhsFqdns array
+
+@description('Resource ID of the Log Analytics workspace that receives firewall diagnostic logs and metrics')
+param logAnalyticsWorkspaceId string
+
 @description('The address prefix for the firewall virtual network')
 param firewallVnetAddressPrefix string = '192.168.4.0/23'
 
@@ -40,8 +46,29 @@ var firewallName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameT
 var firewallPolicyName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-fwp-01'
 var publicIpName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-pib-01'
 var routeTableName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-rt-01'
+var containerAppRegion = toLower(replace(location, ' ', ''))
 
-var systemFqdnRules = [
+var platformFqdnRules = [
+  {
+    name: 'mcr-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'mcr.microsoft.com'
+  }
+  {
+    name: 'mcr-data-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: '*.data.mcr.microsoft.com'
+  }
+  {
+    name: 'aks-packages-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'packages.aks.azure.com'
+  }
+  {
+    name: 'aks-mirror-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'acs-mirror.azureedge.net'
+  }
   {
     name: 'acr-allow'
     fqdn: containerRegistryEndpoint
@@ -60,7 +87,32 @@ var systemFqdnRules = [
   {
     name: 'login-allow'
     #disable-next-line no-hardcoded-env-urls
+    fqdn: 'login.microsoft.com'
+  }
+  {
+    name: 'login-online-allow'
+    #disable-next-line no-hardcoded-env-urls
     fqdn: 'login.microsoftonline.com'
+  }
+  {
+    name: 'login-online-wildcard-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: '*.login.microsoftonline.com'
+  }
+  {
+    name: 'login-wildcard-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: '*.login.microsoft.com'
+  }
+  {
+    name: 'managed-identity-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: '*.identity.azure.net'
+  }
+  {
+    name: 'aspire-dashboard-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: '${containerAppRegion}.ext.azurecontainerapps.dev'
   }
 ]
 
@@ -172,8 +224,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
               }
             ]
             targetFqdns: [
-              'int.api.service.nhs.uk'
-              'api.service.nhs.uk'
+              for fqdn in allowedNhsFqdns: fqdn
             ]
             terminateTLS: false
             sourceAddresses: caeVnetAddressPrefixes
@@ -187,7 +238,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
         }
         name: 'allow-system-arc'
         priority: 200
-        rules: [for rule in systemFqdnRules: {
+        rules: [for rule in platformFqdnRules: {
           ruleType: 'ApplicationRule'
           name: rule.name
           protocols: [
@@ -232,6 +283,41 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
   }
 }
 
+resource networkRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
+  parent: firewallPolicy
+  name: 'DefaultNetworkRuleCollectionGroup'
+  properties: {
+    priority: 400
+    ruleCollections: [
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        action: {
+          type: 'Allow'
+        }
+        name: 'allow-platform-network-nrc'
+        priority: 200
+        rules: [
+          {
+            ruleType: 'NetworkRule'
+            name: 'azure-dns-allow'
+            ipProtocols: [
+              'TCP'
+              'UDP'
+            ]
+            sourceAddresses: caeVnetAddressPrefixes
+            destinationAddresses: [
+              '168.63.129.16'
+            ]
+            destinationPorts: [
+              '53'
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+
 resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
   name: routeTableName
   location: location
@@ -247,6 +333,26 @@ resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
           nextHopIpAddress: firewall.properties.ipConfigurations[0].properties.privateIPAddress
         }
         type: 'Microsoft.Network/routeTables/routes'
+      }
+    ]
+  }
+}
+
+resource firewallDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${firewallName}-diagnostics'
+  scope: firewall
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      {
+        categoryGroup: 'AllLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
       }
     ]
   }

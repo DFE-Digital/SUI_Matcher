@@ -63,6 +63,11 @@ param existingStorageAccountName string = ''
 
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
+var allowedNhsFqdns = lowercaseEnvironmentName == 'production' ? [
+  'api.service.nhs.uk'
+] : [
+  'int.api.service.nhs.uk'
+]
 
 var tags = {
   'azd-env-name': environmentName
@@ -117,6 +122,8 @@ module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
     stackNameSuffix: stackNameSuffix
     containerRegistryEndpoint: containerRegistry.outputs.endpoint
     keyVaultName: secrets.outputs.name
+    allowedNhsFqdns: allowedNhsFqdns
+    logAnalyticsWorkspaceId: observability.outputs.workspaceId
     caeVnetAddressPrefixes: [
       containerAppVnet
     ]
@@ -148,6 +155,7 @@ module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' =
     vnet2Name: egressFirewall.outputs.firewallVnetName
     vnet1ToVnet2PeeringName: 'peering-fw-01'
     vnet2ToVnet1PeeringName: 'peering-cae-01'
+    vnet1AllowForwardedTraffic: true
   }
 }
 
