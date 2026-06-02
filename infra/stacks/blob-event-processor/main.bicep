@@ -80,6 +80,8 @@ module identity '../../modules/shared/identity.bicep' = {
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
     stackNameSuffix: stackNameSuffix
+    includeRoleAssignments: includeRoleAssignments
+    containerRegistryName: containerRegistry.outputs.name
     tags: tags
   }
 }
@@ -92,14 +94,6 @@ module containerRegistry '../../modules/shared/container-registry.bicep' = {
     lowercaseEnvironmentName: lowercaseEnvironmentName
     stackNameSuffix: stackNameSuffix
     tags: tags
-  }
-}
-
-module storageProcessJobAcrPullRbac '../../modules/shared/acr-pull-rbac.bicep' = if (includeRoleAssignments) {
-  name: 'storage-process-job-acr-pull-rbac'
-  params: {
-    containerRegistryName: containerRegistry.outputs.name
-    principalId: identity.outputs.principalId
   }
 }
 
@@ -216,9 +210,6 @@ module storageProcessJob '../../modules/blob-event-processor/container-app-job.b
     tags: tags
     includeRoleAssignments: includeRoleAssignments
   }
-  dependsOn: [
-    storageProcessJobAcrPullRbac
-  ]
 }
 
 module matchingApi '../../modules/api-apps/matching-api.bicep' = {
@@ -228,9 +219,7 @@ module matchingApi '../../modules/api-apps/matching-api.bicep' = {
     containerAppsEnvironmentId: containerAppEnvironment.outputs.id
     containerAppsEnvironmentDefaultDomain: containerAppEnvironment.outputs.defaultDomain
     containerRegistryServer: containerRegistry.outputs.endpoint
-    containerRegistryName: containerRegistry.outputs.name
     managedIdentityId: identity.outputs.id
-    managedIdentityPrincipalId: identity.outputs.principalId
     managedIdentityClientId: identity.outputs.clientId
     environmentName: environmentName
     imageTag: matchingApiImageTag
@@ -245,7 +234,6 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
     location: location
     containerAppsEnvironmentId: containerAppEnvironment.outputs.id
     containerRegistryServer: containerRegistry.outputs.endpoint
-    containerRegistryName: containerRegistry.outputs.name
     managedIdentityId: identity.outputs.id
     managedIdentityPrincipalId: identity.outputs.principalId
     managedIdentityClientId: identity.outputs.clientId
