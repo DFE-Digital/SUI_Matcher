@@ -6,7 +6,7 @@ using Shared;
 using Shared.Models;
 using SUI.Client.Core.Infrastructure.Http;
 
-namespace Unit.Tests.StorageProcessFunction;
+namespace Unit.Tests.Client.CoreTests.InfrastructureTests;
 
 public class MatchingApiClientTests
 {
@@ -72,11 +72,58 @@ public class MatchingApiClientTests
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.Method == HttpMethod.Post
                     && req.RequestUri != null
-                    && req.RequestUri.ToString()
-                        == "http://localhost:5000/matching/api/v1/matchperson"
+                    && req.RequestUri.ToString() == "http://localhost:5000/api/v1/matchperson"
                 ),
                 ItExpr.IsAny<CancellationToken>()
             );
+    }
+
+    [Theory]
+    [InlineData("http://localhost:5000", "http://localhost:5000/api/v1/matchperson")]
+    [InlineData("http://localhost:5000/", "http://localhost:5000/api/v1/matchperson")]
+    [InlineData(
+        "http://localhost:5000/matching",
+        "http://localhost:5000/matching/api/v1/matchperson"
+    )]
+    [InlineData(
+        "http://localhost:5000/matching/",
+        "http://localhost:5000/matching/api/v1/matchperson"
+    )]
+    public async Task Should_PreserveRouteRoot_When_BaseAddressTrailingSlashVaries(
+        string baseAddress,
+        string expectedRequestUri
+    )
+    {
+        Uri? requestUri = null;
+        var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
+        handlerMock
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .Returns<HttpRequestMessage, CancellationToken>(
+                (request, _) =>
+                {
+                    requestUri = request.RequestUri;
+                    return Task.FromResult(
+                        new HttpResponseMessage
+                        {
+                            StatusCode = HttpStatusCode.OK,
+                            Content = JsonContent.Create(new PersonMatchResponse()),
+                        }
+                    );
+                }
+            );
+
+        var httpClient = new HttpClient(handlerMock.Object) { BaseAddress = new Uri(baseAddress) };
+        var sut = new MatchingApiClient(httpClient);
+
+        await sut.MatchPersonAsync(new SearchSpecification(), CancellationToken.None);
+
+        // A leading slash in the client path would drop the configured /matching route root.
+        Assert.Equal(expectedRequestUri, requestUri?.ToString());
     }
 
     [Fact]
