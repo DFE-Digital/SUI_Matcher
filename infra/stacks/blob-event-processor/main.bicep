@@ -243,6 +243,7 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
     keyVaultUri: secrets.outputs.vaultUri
     applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
     tags: tags
+    includeRoleAssignments: includeRoleAssignments
   }
 }
 
