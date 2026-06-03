@@ -134,6 +134,17 @@ module secrets '../../modules/shared/secrets.bicep' = {
   }
 }
 
+module keyVaultPrivateEndpoint '../../modules/shared/key-vault-private-endpoint.bicep' = {
+  name: 'secrets-private-endpoint'
+  params: {
+    location: location
+    tags: tags
+    keyVaultName: secrets.outputs.name
+    peSubnetId: containerAppEnvironment.outputs.privateEndpointSubnetId
+    vnetId: containerAppEnvironment.outputs.virtualNetworkId
+  }
+}
+
 module monitoring '../../modules/shared/monitoring.bicep' = {
   name: 'monitoring'
   params: {
