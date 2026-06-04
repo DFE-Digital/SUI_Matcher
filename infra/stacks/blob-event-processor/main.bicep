@@ -267,6 +267,7 @@ output MANAGED_IDENTITY_PRINCIPAL_ID string = identity.outputs.principalId
 output AZURE_LOG_ANALYTICS_WORKSPACE_NAME string = observability.outputs.workspaceName
 output AZURE_LOG_ANALYTICS_WORKSPACE_ID string = observability.outputs.workspaceId
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.endpoint
+output AZURE_CONTAINER_REGISTRY_DATA_ENDPOINT_HOST_NAMES array = containerRegistry.outputs.dataEndpointHostNames
 output AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID string = identity.outputs.id
 output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.name
 output AZURE_CONTAINER_APPS_ENVIRONMENT_NAME string = containerAppEnvironment.outputs.name
