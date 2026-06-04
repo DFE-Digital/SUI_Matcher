@@ -304,7 +304,7 @@ resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
   location: location
   tags: tags
   properties: {
-    disableBgpRoutePropagation: false
+    disableBgpRoutePropagation: true
     routes: [
       {
         name: 'DefaultToFirewall'
