@@ -20,6 +20,9 @@ param keyVaultName string
 #disable-next-line no-hardcoded-env-urls
 param keyVaultEndpoint string = '${keyVaultName}.vault.azure.net'
 
+@description('Whether to allow public Key Vault egress through the firewall. Set to false when the stack uses a Key Vault private endpoint with private DNS.')
+param allowKeyVaultPublicEgress bool = true
+
 @description('The NHS API FQDNs allowed through the firewall for this environment')
 param allowedNhsFqdns array
 
@@ -81,10 +84,6 @@ var platformFqdnRules = [
     fqdn: '*.blob.core.windows.net'
   }
   {
-    name: 'kv-allow'
-    fqdn: keyVaultEndpoint
-  }
-  {
     name: 'login-allow'
     #disable-next-line no-hardcoded-env-urls
     fqdn: 'login.microsoft.com'
@@ -115,6 +114,15 @@ var platformFqdnRules = [
     fqdn: '${containerAppRegion}.ext.azurecontainerapps.dev'
   }
 ]
+
+var keyVaultFqdnRules = allowKeyVaultPublicEgress ? [
+  {
+    name: 'kv-allow'
+    fqdn: keyVaultEndpoint
+  }
+] : []
+
+var systemFqdnRules = concat(platformFqdnRules, keyVaultFqdnRules)
 
 resource firewallVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: firewallVnetName
@@ -238,7 +246,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
         }
         name: 'allow-system-arc'
         priority: 200
-        rules: [for rule in platformFqdnRules: {
+        rules: [for rule in systemFqdnRules: {
           ruleType: 'ApplicationRule'
           name: rule.name
           protocols: [

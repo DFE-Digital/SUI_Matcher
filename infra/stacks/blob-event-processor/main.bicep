@@ -123,6 +123,7 @@ module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
     stackNameSuffix: stackNameSuffix
     containerRegistryEndpoint: containerRegistry.outputs.endpoint
     keyVaultName: secrets.outputs.name
+    allowKeyVaultPublicEgress: false
     allowedNhsFqdns: allowedNhsFqdns
     logAnalyticsWorkspaceId: observability.outputs.workspaceId
     caeVnetAddressPrefixes: [
@@ -292,6 +293,9 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
     tags: tags
     includeRoleAssignments: includeRoleAssignments
   }
+  dependsOn: [
+    keyVaultPrivateEndpoint
+  ]
 }
 
 output STACK_NAME string = 'blob-event-processor'
