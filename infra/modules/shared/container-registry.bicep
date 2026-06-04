@@ -20,10 +20,14 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
   name: '${environmentPrefix}${lowercaseEnvironmentName}${stackNameToken}acr01'
   location: location
   sku: {
-    name: 'Basic'
+    name: 'Premium'
+  }
+  properties: {
+    dataEndpointEnabled: true
   }
   tags: tags
 }
 
 output endpoint string = containerRegistry.properties.loginServer
 output name string = containerRegistry.name
+output dataEndpointHostNames array = containerRegistry.properties.dataEndpointHostNames
