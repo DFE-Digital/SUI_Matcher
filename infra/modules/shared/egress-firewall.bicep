@@ -104,11 +104,6 @@ var platformFqdnRules = [
     #disable-next-line no-hardcoded-env-urls
     fqdn: '*.identity.azure.net'
   }
-  {
-    name: 'aspire-dashboard-allow'
-    #disable-next-line no-hardcoded-env-urls
-    fqdn: '${containerAppRegion}.ext.azurecontainerapps.dev'
-  }
 ]
 
 var containerRegistryDataEndpointFqdnRules = [
