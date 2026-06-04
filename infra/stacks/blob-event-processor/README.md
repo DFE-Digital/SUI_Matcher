@@ -6,12 +6,17 @@ It composes the shared platform modules directly and adds the blob/queue storage
 
 Current scope:
 
-- shared platform resources for this stack
+- shared platform resources for this stack: identity, ACR, observability, monitoring, secrets, CAE, egress firewall, and VNet peering
 - storage account, either created by the stack or supplied as an existing account
 - blob containers for incoming, processed, and success files
 - primary and poison storage queues for the processing job contract
 - blob and queue private endpoints for the configured storage account
+- Event Grid system topic and blob-created subscription for incoming files
+- storage process ACA job triggered from the primary storage queue
 - matching API and external API container apps (internal ingress) deployed into the stack's CAE
+- Key Vault private endpoint for application secrets access
+
+Production egress allows `api.service.nhs.uk`. Non-production egress allows `int.api.service.nhs.uk`.
 
 `infra/stacks/blob-event-processor/subscription.bicep` is the subscription-scope entry point for this stack. By default, `resourceGroupMode=create` creates or updates the stack-owned `blob-event-processor` resource group and then deploys `main.bicep` into it.
 
@@ -23,6 +28,8 @@ It can also deploy into an existing resource group by setting:
 ## Storage modes
 
 The default storage mode is `storageAccountMode=create`. In this mode the stack creates the storage account, the blob/queue containers, and the blob/queue private endpoints and private DNS wiring.
+
+Created storage accounts use Standard LRS hot storage, disable blob public access, require TLS 1.2, and deny network access except for trusted Azure services.
 
 For client-provided storage, set:
 
@@ -89,15 +96,15 @@ Use `az deployment sub create` with the same parameters to deploy after reviewin
 
 If Azure CLI cannot write to the default local config directory, set `AZURE_CONFIG_DIR` to a writable temporary directory before running the commands.
 
-Follow up work:
-
-- Any further network/infrastructure needs for the processing job
-
 ## Unique to blob stack infrastructure
 
 ### ACA Job - Azure Container App job
 
-The ACA Job is the blob event driven processor that runs alongside the Matching, External API's in the same ACAE (Azure container apps environment)
+The ACA job is the blob event driven processor that runs alongside the Matching and External APIs in the same ACAE (Azure container apps environment).
+
+It uses the shared managed identity, pulls `sui-client-storage-process-job:<tag>` from the stack ACR, and is granted Storage Blob Data Contributor and Storage Queue Data Contributor when `includeRoleAssignments=true`.
+
+The job is configured with 2 vCPU, 4Gi memory, a 6 hour replica timeout, no automatic replica retries, and `StorageProcessJob__MaxDequeueCount=1`.
 
 ### Azure Storage blob and queues
 
@@ -107,7 +114,7 @@ Setup of Azure storage queues for the processing job contract, one for primary m
 
 ### Event Grid
 
-Setup of Event Grid, the EventGrid will trigger from a new blob file being created in the configured storage, it will then send a message to the configured storage queue.
+Setup of Event Grid. The Event Grid subscription listens for `Microsoft.Storage.BlobCreated` events under the `incoming` container and sends messages to the configured storage queue.
 
 ### KEDA
 
