@@ -260,31 +260,6 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
           }
         ]
       }
-      {
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-        action: {
-          type: 'Allow'
-        }
-        name: 'allow-azure-monitor-arc'
-        priority: 250
-        rules: [
-          {
-            ruleType: 'ApplicationRule'
-            name: 'azure-monitor-allow'
-            protocols: [
-              {
-                protocolType: 'Https'
-                port: 443
-              }
-            ]
-            fqdnTags: [
-              'AzureMonitor'
-            ]
-            terminateTLS: false
-            sourceAddresses: caeVnetAddressPrefixes
-          }
-        ]
-      }
     ]
   }
 }
