@@ -144,8 +144,6 @@ resource firewallVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' =
         name: 'AzureFirewallSubnet'
         properties: {
           addressPrefix: firewallSubnetAddressPrefix
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
         }
         type: 'Microsoft.Network/virtualNetworks/subnets'
       }
