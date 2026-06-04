@@ -33,10 +33,10 @@ param allowedNhsFqdns array
 param logAnalyticsWorkspaceId string
 
 @description('The address prefix for the firewall virtual network')
-param firewallVnetAddressPrefix string = '192.168.2.0/23'
+param firewallVnetAddressPrefix string = '192.168.1.0/24'
 
 @description('The address prefix for the Azure Firewall subnet')
-param firewallSubnetAddressPrefix string = '192.168.2.0/25'
+param firewallSubnetAddressPrefix string = '192.168.1.0/24'
 
 @description('The address spaces of the CAE virtual network (used as source address ranges in the firewall policy)')
 param caeVnetAddressPrefixes array
@@ -118,12 +118,14 @@ var containerRegistryDataEndpointFqdnRules = [
   }
 ]
 
-var keyVaultFqdnRules = allowKeyVaultPublicEgress ? [
-  {
-    name: 'kv-allow'
-    fqdn: keyVaultEndpoint
-  }
-] : []
+var keyVaultFqdnRules = allowKeyVaultPublicEgress
+  ? [
+      {
+        name: 'kv-allow'
+        fqdn: keyVaultEndpoint
+      }
+    ]
+  : []
 
 var systemFqdnRules = concat(platformFqdnRules, containerRegistryDataEndpointFqdnRules, keyVaultFqdnRules)
 
@@ -234,9 +236,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
                 port: 443
               }
             ]
-            targetFqdns: [
-              for fqdn in allowedNhsFqdns: fqdn
-            ]
+            targetFqdns: [for fqdn in allowedNhsFqdns: fqdn]
             terminateTLS: false
             sourceAddresses: caeVnetAddressPrefixes
           }
@@ -249,21 +249,23 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
         }
         name: 'allow-system-arc'
         priority: 200
-        rules: [for rule in systemFqdnRules: {
-          ruleType: 'ApplicationRule'
-          name: rule.name
-          protocols: [
-            {
-              protocolType: 'Https'
-              port: 443
-            }
-          ]
-          targetFqdns: [
-            rule.fqdn
-          ]
-          terminateTLS: false
-          sourceAddresses: caeVnetAddressPrefixes
-        }]
+        rules: [
+          for rule in systemFqdnRules: {
+            ruleType: 'ApplicationRule'
+            name: rule.name
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
+              }
+            ]
+            targetFqdns: [
+              rule.fqdn
+            ]
+            terminateTLS: false
+            sourceAddresses: caeVnetAddressPrefixes
+          }
+        ]
       }
       {
         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
