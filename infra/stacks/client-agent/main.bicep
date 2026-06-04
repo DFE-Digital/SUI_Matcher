@@ -144,7 +144,7 @@ module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' =
   params: {
     vnet1Name: containerAppNetwork.outputs.virtualNetworkName
     vnet2Name: egressFirewall.outputs.firewallVnetName
-    vnet1ToVnet2PeeringName: 'peering-fw-shared-01'
+    vnet1ToVnet2PeeringName: 'peering-fw-01'
     vnet2ToVnet1PeeringName: 'peering-cae-01'
     vnet1AllowForwardedTraffic: true
   }
