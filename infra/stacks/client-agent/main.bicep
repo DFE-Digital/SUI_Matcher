@@ -125,6 +125,29 @@ module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
   }
 }
 
+module containerAppNetwork '../../modules/shared/container-app-network.bicep' = {
+  name: 'container-app-network'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    stackNameSuffix: stackNameSuffix
+    containerAppVnet: containerAppVnet
+    tags: tags
+  }
+}
+
+module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' = {
+  name: 'cae-firewall-peering'
+  params: {
+    vnet1Name: containerAppNetwork.outputs.virtualNetworkName
+    vnet2Name: egressFirewall.outputs.firewallVnetName
+    vnet1ToVnet2PeeringName: 'peering-fw-shared-01'
+    vnet2ToVnet1PeeringName: 'peering-cae-01'
+    vnet1AllowForwardedTraffic: true
+  }
+}
+
 module containerAppEnvironment '../../modules/shared/container-app-environment.bicep' = {
   name: 'container-app-environment'
   params: {
@@ -133,23 +156,15 @@ module containerAppEnvironment '../../modules/shared/container-app-environment.b
     lowercaseEnvironmentName: lowercaseEnvironmentName
     stackNameSuffix: stackNameSuffix
     containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
-    containerAppVnet: containerAppVnet
+    virtualNetworkName: containerAppNetwork.outputs.virtualNetworkName
     containerAppEnvSubnet: containerAppEnvSubnet
     tags: tags
     logAnalyticsWorkspaceName: observability.outputs.workspaceName
     routeTableId: egressFirewall.outputs.routeTableId
   }
-}
-
-module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' = {
-  name: 'cae-firewall-peering'
-  params: {
-    vnet1Name: containerAppEnvironment.outputs.virtualNetworkName
-    vnet2Name: egressFirewall.outputs.firewallVnetName
-    vnet1ToVnet2PeeringName: 'peering-fw-shared-01'
-    vnet2ToVnet1PeeringName: 'peering-cae-01'
-    vnet1AllowForwardedTraffic: true
-  }
+  dependsOn: [
+    caeFirewallPeering
+  ]
 }
 
 module monitoring '../../modules/shared/monitoring.bicep' = {
