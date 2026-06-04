@@ -50,6 +50,9 @@ var firewallPolicyName = '${environmentPrefix}-${lowercaseEnvironmentName}${stac
 var publicIpName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-pib-01'
 var routeTableName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-rt-01'
 var containerAppRegion = toLower(replace(location, ' ', ''))
+var containerRegistryName = replace(toLower(containerRegistryEndpoint), '.azurecr.io', '')
+#disable-next-line no-hardcoded-env-urls
+var containerRegistryDataEndpoint = '${containerRegistryName}.${containerAppRegion}.data.azurecr.io'
 
 var platformFqdnRules = [
   {
@@ -77,11 +80,8 @@ var platformFqdnRules = [
     fqdn: containerRegistryEndpoint
   }
   {
-    // Basic-tier ACR serves image layers from shared Azure Storage; narrowing
-    // this requires upgrading ACR to Premium with dedicated data endpoints.
-    name: 'acr-blob-allow'
-    #disable-next-line no-hardcoded-env-urls
-    fqdn: '*.blob.core.windows.net'
+    name: 'acr-data-allow'
+    fqdn: containerRegistryDataEndpoint
   }
   {
     name: 'login-allow'
