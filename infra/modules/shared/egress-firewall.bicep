@@ -33,10 +33,10 @@ param allowedNhsFqdns array
 param logAnalyticsWorkspaceId string
 
 @description('The address prefix for the firewall virtual network')
-param firewallVnetAddressPrefix string = '192.168.4.0/23'
+param firewallVnetAddressPrefix string = '192.168.2.0/23'
 
 @description('The address prefix for the Azure Firewall subnet')
-param firewallSubnetAddressPrefix string = '192.168.4.0/25'
+param firewallSubnetAddressPrefix string = '192.168.2.0/25'
 
 @description('The address spaces of the CAE virtual network (used as source address ranges in the firewall policy)')
 param caeVnetAddressPrefixes array
