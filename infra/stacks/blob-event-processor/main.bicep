@@ -122,6 +122,7 @@ module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
     environmentPrefix: environmentPrefix
     stackNameSuffix: stackNameSuffix
     containerRegistryEndpoint: containerRegistry.outputs.endpoint
+    containerRegistryDataEndpointHostNames: containerRegistry.outputs.dataEndpointHostNames
     keyVaultName: secrets.outputs.name
     allowKeyVaultPublicEgress: false
     allowedNhsFqdns: allowedNhsFqdns

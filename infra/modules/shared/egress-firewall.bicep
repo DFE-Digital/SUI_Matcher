@@ -13,6 +13,9 @@ param stackNameSuffix string = ''
 @description('The login server for the container registry to allow through the firewall')
 param containerRegistryEndpoint string
 
+@description('The dedicated data endpoint host names for the Premium container registry to allow through the firewall')
+param containerRegistryDataEndpointHostNames array
+
 @description('The name of the shared Key Vault')
 param keyVaultName string
 
@@ -50,9 +53,6 @@ var firewallPolicyName = '${environmentPrefix}-${lowercaseEnvironmentName}${stac
 var publicIpName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-pib-01'
 var routeTableName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-rt-01'
 var containerAppRegion = toLower(replace(location, ' ', ''))
-var containerRegistryName = replace(toLower(containerRegistryEndpoint), '.azurecr.io', '')
-#disable-next-line no-hardcoded-env-urls
-var containerRegistryDataEndpoint = '${containerRegistryName}.${containerAppRegion}.data.azurecr.io'
 
 var platformFqdnRules = [
   {
@@ -78,10 +78,6 @@ var platformFqdnRules = [
   {
     name: 'acr-allow'
     fqdn: containerRegistryEndpoint
-  }
-  {
-    name: 'acr-data-allow'
-    fqdn: containerRegistryDataEndpoint
   }
   {
     name: 'login-allow'
@@ -115,6 +111,13 @@ var platformFqdnRules = [
   }
 ]
 
+var containerRegistryDataEndpointFqdnRules = [
+  for (hostName, index) in containerRegistryDataEndpointHostNames: {
+    name: index == 0 ? 'acr-data-allow' : 'acr-data-${index + 1}-allow'
+    fqdn: hostName
+  }
+]
+
 var keyVaultFqdnRules = allowKeyVaultPublicEgress ? [
   {
     name: 'kv-allow'
@@ -122,7 +125,7 @@ var keyVaultFqdnRules = allowKeyVaultPublicEgress ? [
   }
 ] : []
 
-var systemFqdnRules = concat(platformFqdnRules, keyVaultFqdnRules)
+var systemFqdnRules = concat(platformFqdnRules, containerRegistryDataEndpointFqdnRules, keyVaultFqdnRules)
 
 resource firewallVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: firewallVnetName
