@@ -217,7 +217,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
         action: {
           type: 'Allow'
         }
-        name: 'Global-rules-arc'
+        name: 'allow-nhs-fqdns'
         priority: 300
         rules: [
           {
@@ -240,7 +240,7 @@ resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/rule
         action: {
           type: 'Allow'
         }
-        name: 'allow-system-arc'
+        name: 'allow-sui-system-fqds'
         priority: 200
         rules: [
           for rule in systemFqdnRules: {
