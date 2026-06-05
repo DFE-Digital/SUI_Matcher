@@ -143,23 +143,23 @@ resource firewallVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' =
       enforcement: 'AllowUnencrypted'
     }
     privateEndpointVNetPolicies: 'Disabled'
-    subnets: [
-      {
-        name: 'AzureFirewallSubnet'
-        properties: {
-          addressPrefix: firewallSubnetAddressPrefix
-        }
-        type: 'Microsoft.Network/virtualNetworks/subnets'
-      }
-      {
-        name: 'AzureFirewallManagementSubnet'
-        properties: {
-          addressPrefix: firewallManagementSubnetAddressPrefix
-        }
-        type: 'Microsoft.Network/virtualNetworks/subnets'
-      }
-    ]
     enableDdosProtection: false
+  }
+}
+
+resource firewallSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+  parent: firewallVirtualNetwork
+  name: 'AzureFirewallSubnet'
+  properties: {
+    addressPrefix: firewallSubnetAddressPrefix
+  }
+}
+
+resource firewallManagementSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+  parent: firewallVirtualNetwork
+  name: 'AzureFirewallManagementSubnet'
+  properties: {
+    addressPrefix: firewallManagementSubnetAddressPrefix
   }
 }
 
@@ -222,7 +222,7 @@ resource firewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
             id: publicIP.id
           }
           subnet: {
-            id: '${firewallVirtualNetwork.id}/subnets/AzureFirewallSubnet'
+            id: firewallSubnet.id
           }
         }
       }
@@ -234,7 +234,7 @@ resource firewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
           id: managementPublicIP.id
         }
         subnet: {
-          id: '${firewallVirtualNetwork.id}/subnets/AzureFirewallManagementSubnet'
+          id: firewallManagementSubnet.id
         }
       }
     }
