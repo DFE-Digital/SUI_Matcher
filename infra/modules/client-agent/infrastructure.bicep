@@ -21,32 +21,11 @@ param subnetRange string = '192.168.0.128/26'
 @description('The location used for all deployed resources')
 param location string = resourceGroup().location
 
-@description('The name of the container app environment virtual network')
-param containerAppEnvironmentVnetName string
-
-@description('The resource group that contains the container app environment virtual network')
-param containerAppEnvironmentResourceGroupName string = resourceGroup().name
-
 @description('The name of the shared Log Analytics workspace')
 param logAnalyticsWorkspaceName string
 
 @description('The resource group that contains the shared Log Analytics workspace')
 param logAnalyticsWorkspaceResourceGroupName string = resourceGroup().name
-
-@description('The login server for the shared container registry')
-param containerRegistryEndpoint string
-
-@description('The name of the shared Key Vault')
-param keyVaultName string = '${environmentPrefix}-${substring(toLower(environmentName), 0, environmentName == 'Production' ? 4 : 3)}-ca-kv01'
-
-@description('The Key Vault FQDN allowed through the client-agent firewall')
-param keyVaultEndpoint string = '${keyVaultName}.vault.azure.net'
-
-param virtualNetworksVnetfwName string = '${environmentPrefix}-${toLower(environmentName)}-ca-vnetfw-01'
-
-param vnetFirewallName string = '${environmentPrefix}-${toLower(environmentName)}-ca-vnetfw-Firewall'
-
-param routeTablesIntegrationRtName01 string = '${environmentPrefix}-${toLower(environmentName)}-ca-rt-01'
 
 param dbsClientConsoleApplogsEndpointName string = 'DbsClientConsoleApplogsEndpoint'
 
@@ -60,11 +39,6 @@ param tags object = {
 }
 
 var lowercaseEnvironmentName = toLower(environmentName)
-
-resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
-  scope: resourceGroup(containerAppEnvironmentResourceGroupName)
-  name: containerAppEnvironmentVnetName
-}
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {
   scope: resourceGroup(logAnalyticsWorkspaceResourceGroupName)
@@ -158,238 +132,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   }
 }
 
-resource firewallVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
-  name: virtualNetworksVnetfwName
-  location: location
-  tags: tags
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '192.168.2.0/23'
-      ]
-    }
-    encryption: {
-      enabled: false
-      enforcement: 'AllowUnencrypted'
-    }
-    privateEndpointVNetPolicies: 'Disabled'
-    subnets: [
-      {
-        name: 'AzureFirewallSubnet'
-        properties: {
-          addressPrefixes: [
-            '192.168.2.0/25'
-          ]
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
-        }
-        type: 'Microsoft.Network/virtualNetworks/subnets'
-      }
-    ]
-    enableDdosProtection: false
-  }
-}
-
-resource caeToFirewallPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-05-01' = {
-  name: '${caeVnet.name}/peering-fw-01'
-  properties: {
-    allowVirtualNetworkAccess: true
-    allowForwardedTraffic: false
-    allowGatewayTransit: false
-    useRemoteGateways: false
-    remoteVirtualNetwork: {
-      id: firewallVirtualNetwork.id
-    }
-  }
-}
-
-resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-ca-pib-01'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  tags: tags
-  properties: {
-    publicIPAllocationMethod: 'static'
-    publicIPAddressVersion: 'IPv4'
-  }
-}
-
-resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}-ca-fwp-01'
-  location: location
-  tags: tags
-  properties: {
-    sku: {
-      tier: 'Basic'
-    }
-    threatIntelMode: 'Alert'
-  }
-}
-
-resource firewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
-  name: vnetFirewallName
-  location: location
-  tags: tags
-  properties: {
-    sku: {
-      name: 'AZFW_VNet'
-      tier: 'Basic'
-    }
-    threatIntelMode: 'Alert'
-    firewallPolicy: {
-      id: firewallPolicy.id
-    }
-    ipConfigurations: [
-      {
-        name: 'fw-ip-config-01'
-        properties: {
-          publicIPAddress: {
-            id: publicIP.id
-          }
-          subnet: {
-            id: '${firewallVirtualNetwork.id}/subnets/AzureFirewallSubnet'
-          }
-        }
-      }
-    ]
-  }
-}
-
-resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
-  parent: firewallPolicy
-  name: 'DefaultApplicationRuleCollectionGroup'
-  properties: {
-    priority: 300
-    ruleCollections: [
-      {
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-        action: {
-          type: 'Allow'
-        }
-        name: 'Global-rules-arc'
-        priority: 300
-        rules: [
-          {
-            ruleType: 'ApplicationRule'
-            name: 'global-rule-01'
-            protocols: [
-              {
-                protocolType: 'Https'
-                port: 443
-              }
-            ]
-            targetFqdns: [
-              'int.api.service.nhs.uk'
-            ]
-            terminateTLS: false
-            sourceAddresses: [...caeVnet.properties.addressSpace.addressPrefixes]
-          }
-        ]
-      }
-      {
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-        action: {
-          type: 'Allow'
-        }
-        rules: [
-          {
-            ruleType: 'ApplicationRule'
-            name: 'acr-allow'
-            protocols: [
-              {
-                protocolType: 'Https'
-                port: 443
-              }
-            ]
-            targetFqdns: [
-              containerRegistryEndpoint
-            ]
-            terminateTLS: false
-            sourceAddresses: [
-              '192.168.0.0/24'
-            ]
-          }
-          {
-            ruleType: 'ApplicationRule'
-            name: 'Nuget'
-            protocols: [
-              {
-                protocolType: 'Https'
-                port: 443
-              }
-            ]
-            targetFqdns: [
-              'api.nuget.org'
-            ]
-            terminateTLS: false
-            sourceAddresses: [
-              '192.168.0.0/24'
-            ]
-          }
-          {
-            ruleType: 'ApplicationRule'
-            name: 'kv'
-            protocols: [
-              {
-                protocolType: 'Https'
-                port: 443
-              }
-            ]
-            targetFqdns: [
-              keyVaultEndpoint
-            ]
-            terminateTLS: false
-            sourceAddresses: [
-              '192.168.0.0/24'
-            ]
-          }
-          {
-            ruleType: 'ApplicationRule'
-            name: 'login'
-            protocols: [
-              {
-                protocolType: 'Https'
-                port: 443
-              }
-            ]
-            targetFqdns: [
-              'login.microsoftonline.com'
-            ]
-            terminateTLS: false
-            sourceAddresses: [
-              '192.168.0.0/24'
-            ]
-          }
-        ]
-        name: 'allow-acr'
-        priority: 200
-      }
-    ]
-  }
-}
-
-resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
-  name: routeTablesIntegrationRtName01
-  location: location
-  tags: tags
-  properties: {
-    disableBgpRoutePropagation: false
-    routes: [
-      {
-        name: 'DefaultToFirewall'
-        properties: {
-          addressPrefix: '0.0.0.0/0'
-          nextHopType: 'VirtualAppliance'
-          nextHopIpAddress: firewall.properties.ipConfigurations[0].properties.privateIPAddress
-        }
-        type: 'Microsoft.Network/routeTables/routes'
-      }
-    ]
-  }
-}
-
 resource dbsClientConsoleApplogsEndpoint 'Microsoft.Insights/dataCollectionEndpoints@2023-03-11' = {
   name: dbsClientConsoleApplogsEndpointName
   location: location
@@ -457,5 +199,3 @@ resource dbsClientConsoleAppLogsRule 'Microsoft.Insights/dataCollectionRules@202
 
 output vmName string = vm.name
 output clientVirtualNetworkName string = vnet.name
-output firewallName string = firewall.name
-output routeTableName string = routeTable.name

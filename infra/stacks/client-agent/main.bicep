@@ -48,6 +48,14 @@ param clientSubnetRange string = '192.168.0.128/26'
 
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'ca'
+var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
+var allowedNhsFqdns = isProductionEnvironment
+  ? [
+      'api.service.nhs.uk'
+    ]
+  : [
+      'int.api.service.nhs.uk'
+    ]
 var tags = {
   'azd-env-name': environmentName
   Product: 'SUI'
@@ -90,21 +98,6 @@ module observability '../../modules/shared/observability.bicep' = {
   }
 }
 
-module containerAppEnvironment '../../modules/shared/container-app-environment.bicep' = {
-  name: 'container-app-environment'
-  params: {
-    location: location
-    environmentPrefix: environmentPrefix
-    lowercaseEnvironmentName: lowercaseEnvironmentName
-    stackNameSuffix: stackNameSuffix
-    containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
-    containerAppVnet: containerAppVnet
-    containerAppEnvSubnet: containerAppEnvSubnet
-    tags: tags
-    logAnalyticsWorkspaceName: observability.outputs.workspaceName
-  }
-}
-
 module secrets '../../modules/shared/secrets.bicep' = {
   name: 'secrets'
   params: {
@@ -113,6 +106,67 @@ module secrets '../../modules/shared/secrets.bicep' = {
     environmentPrefix: environmentPrefix
     stackNameSuffix: stackNameSuffix
   }
+}
+
+module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
+  name: 'egress-firewall'
+  params: {
+    location: location
+    environmentName: environmentName
+    environmentPrefix: environmentPrefix
+    stackNameSuffix: stackNameSuffix
+    containerRegistryEndpoint: containerRegistry.outputs.endpoint
+    containerRegistryDataEndpointHostNames: containerRegistry.outputs.dataEndpointHostNames
+    keyVaultName: secrets.outputs.name
+    allowedNhsFqdns: allowedNhsFqdns
+    logAnalyticsWorkspaceId: observability.outputs.workspaceId
+    caeVnetAddressPrefixes: [
+      containerAppVnet
+    ]
+    tags: tags
+  }
+}
+
+module containerAppNetwork '../../modules/shared/container-app-network.bicep' = {
+  name: 'container-app-network'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    stackNameSuffix: stackNameSuffix
+    containerAppVnet: containerAppVnet
+    tags: tags
+  }
+}
+
+module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' = {
+  name: 'cae-firewall-peering'
+  params: {
+    vnet1Name: containerAppNetwork.outputs.virtualNetworkName
+    vnet2Name: egressFirewall.outputs.firewallVnetName
+    vnet1ToVnet2PeeringName: 'peering-fw-01'
+    vnet2ToVnet1PeeringName: 'peering-cae-01'
+    vnet1AllowForwardedTraffic: true
+  }
+}
+
+module containerAppEnvironment '../../modules/shared/container-app-environment.bicep' = {
+  name: 'container-app-environment'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    stackNameSuffix: stackNameSuffix
+    containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
+    virtualNetworkName: containerAppNetwork.outputs.virtualNetworkName
+    containerAppEnvSubnet: containerAppEnvSubnet
+    tags: tags
+    logAnalyticsWorkspaceName: observability.outputs.workspaceName
+    routeTableId: egressFirewall.outputs.routeTableId
+  }
+  dependsOn: [
+    caeFirewallPeering
+  ]
 }
 
 module monitoring '../../modules/shared/monitoring.bicep' = {
@@ -135,13 +189,8 @@ module clientInfrastructure '../../modules/client-agent/infrastructure.bicep' = 
     network: clientNetwork
     subnetRange: clientSubnetRange
     location: location
-    containerAppEnvironmentVnetName: containerAppEnvironment.outputs.virtualNetworkName
-    containerAppEnvironmentResourceGroupName: resourceGroup().name
     logAnalyticsWorkspaceName: observability.outputs.workspaceName
     logAnalyticsWorkspaceResourceGroupName: resourceGroup().name
-    containerRegistryEndpoint: containerRegistry.outputs.endpoint
-    keyVaultName: secrets.outputs.name
-    keyVaultEndpoint: '${secrets.outputs.name}.vault.azure.net'
     tags: tags
   }
 }
@@ -163,5 +212,5 @@ output SECRETS_VAULTURI string = secrets.outputs.vaultUri
 output SECRETS_VAULT_NAME string = secrets.outputs.name
 output CLIENT_VM_NAME string = clientInfrastructure.outputs.vmName
 output CLIENT_VIRTUAL_NETWORK_NAME string = clientInfrastructure.outputs.clientVirtualNetworkName
-output CLIENT_FIREWALL_NAME string = clientInfrastructure.outputs.firewallName
-output CLIENT_ROUTE_TABLE_NAME string = clientInfrastructure.outputs.routeTableName
+output CLIENT_FIREWALL_NAME string = egressFirewall.outputs.firewallName
+output CLIENT_ROUTE_TABLE_NAME string = egressFirewall.outputs.routeTableName

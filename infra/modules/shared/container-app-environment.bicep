@@ -13,8 +13,11 @@ param stackNameSuffix string = ''
 @description('container app managed environment number')
 param containerAppManagedEnvironmentNumber string
 
-@description('The address prefix for the virtual network')
-param containerAppVnet string
+@description('The name of the virtual network that contains the container app environment subnet. When empty, the module creates the virtual network for backwards compatibility.')
+param virtualNetworkName string = ''
+
+@description('The address prefix for the virtual network. Required when virtualNetworkName is empty.')
+param containerAppVnet string = ''
 
 @description('Container App environment subnet')
 param containerAppEnvSubnet string
@@ -25,28 +28,30 @@ param privateEndpointSubnetAddressPrefix string = ''
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
+// Backwards compatibility with legacy in app-host/infra
+@description('Optional resource ID of the route table to attach to the container app environment subnet so that egress traffic flows through a firewall. When empty, no route table is attached.')
+param routeTableId string = ''
+
 @description('The Log Analytics workspace name used by the container app environment')
 param logAnalyticsWorkspaceName string
 
 var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
 var dashboardComponentName = '${empty(stackNameSuffix) ? 'aspire' : toLower(stackNameSuffix)}-dashboard-01'
+var caeVnetName = empty(virtualNetworkName) ? '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-vnet-cae-01' : virtualNetworkName
 var containerAppEnvironmentSubnetName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-subnet-cae-01'
 var privateEndpointSubnetName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-subnet-pe-01'
-var privateEndpointSubnets = empty(privateEndpointSubnetAddressPrefix) ? [] : [
-  {
-    name: privateEndpointSubnetName
-    properties: {
-      addressPrefix: privateEndpointSubnetAddressPrefix
-    }
+var caeSubnetRouteTable = empty(routeTableId) ? {} : {
+  routeTable: {
+    id: routeTableId
   }
-]
+}
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 
-resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
-  name: '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-vnet-cae-01'
+resource caeVnet 'Microsoft.Network/virtualNetworks@2024-05-01' = if (empty(virtualNetworkName)) {
+  name: caeVnetName
   location: location
   properties: {
     addressSpace: {
@@ -54,23 +59,37 @@ resource caeVnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
         containerAppVnet
       ]
     }
-    subnets: concat([
+  }
+}
+
+resource containerAppEnvironmentSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+  #disable-next-line use-parent-property
+  name: '${caeVnetName}/${containerAppEnvironmentSubnetName}'
+  properties: union({
+    addressPrefix: containerAppEnvSubnet
+    delegations: [
       {
-        name: containerAppEnvironmentSubnetName
+        name: 'Microsoft.App.environments'
         properties: {
-          addressPrefix: containerAppEnvSubnet
-          delegations: [
-            {
-              name: 'Microsoft.App.environments'
-              properties: {
-                serviceName: 'Microsoft.App/environments'
-              }
-            }
-          ]
+          serviceName: 'Microsoft.App/environments'
         }
       }
-    ], privateEndpointSubnets)
+    ]
+  }, caeSubnetRouteTable)
+  dependsOn: [
+    caeVnet
+  ]
+}
+
+resource privateEndpointSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = if (!empty(privateEndpointSubnetAddressPrefix)) {
+  #disable-next-line use-parent-property
+  name: '${caeVnetName}/${privateEndpointSubnetName}'
+  properties: {
+    addressPrefix: privateEndpointSubnetAddressPrefix
   }
+  dependsOn: [
+    caeVnet
+  ]
 }
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-preview' = {
@@ -100,7 +119,7 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
     }
     publicNetworkAccess: 'Disabled'
     vnetConfiguration: {
-      infrastructureSubnetId: '${caeVnet.id}/subnets/${containerAppEnvironmentSubnetName}'
+      infrastructureSubnetId: containerAppEnvironmentSubnet.id
       internal: true
     }
   }
@@ -116,6 +135,6 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
 output name string = containerAppEnvironment.name
 output id string = containerAppEnvironment.id
 output defaultDomain string = containerAppEnvironment.properties.defaultDomain
-output virtualNetworkName string = caeVnet.name
-output virtualNetworkId string = caeVnet.id
-output privateEndpointSubnetId string = empty(privateEndpointSubnetAddressPrefix) ? '' : '${caeVnet.id}/subnets/${privateEndpointSubnetName}'
+output virtualNetworkName string = caeVnetName
+output virtualNetworkId string = resourceId('Microsoft.Network/virtualNetworks', caeVnetName)
+output privateEndpointSubnetId string = empty(privateEndpointSubnetAddressPrefix) ? '' : resourceId('Microsoft.Network/virtualNetworks/subnets', caeVnetName, privateEndpointSubnetName)

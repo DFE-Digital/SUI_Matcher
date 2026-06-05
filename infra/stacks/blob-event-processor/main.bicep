@@ -63,6 +63,12 @@ param existingStorageAccountName string = ''
 
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
+var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
+var allowedNhsFqdns = isProductionEnvironment ? [
+  'api.service.nhs.uk'
+] : [
+  'int.api.service.nhs.uk'
+]
 
 var tags = {
   'azd-env-name': environmentName
@@ -108,6 +114,50 @@ module observability '../../modules/shared/observability.bicep' = {
   }
 }
 
+module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
+  name: 'egress-firewall'
+  params: {
+    location: location
+    environmentName: environmentName
+    environmentPrefix: environmentPrefix
+    stackNameSuffix: stackNameSuffix
+    containerRegistryEndpoint: containerRegistry.outputs.endpoint
+    containerRegistryDataEndpointHostNames: containerRegistry.outputs.dataEndpointHostNames
+    keyVaultName: secrets.outputs.name
+    allowKeyVaultPublicEgress: false
+    allowedNhsFqdns: allowedNhsFqdns
+    logAnalyticsWorkspaceId: observability.outputs.workspaceId
+    caeVnetAddressPrefixes: [
+      containerAppVnet
+    ]
+    tags: tags
+  }
+}
+
+module containerAppNetwork '../../modules/shared/container-app-network.bicep' = {
+  name: 'container-app-network'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    stackNameSuffix: stackNameSuffix
+    containerAppVnet: containerAppVnet
+    privateEndpointSubnetAddressPrefix: containerAppPeSubnet
+    tags: tags
+  }
+}
+
+module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' = {
+  name: 'cae-firewall-peering'
+  params: {
+    vnet1Name: containerAppNetwork.outputs.virtualNetworkName
+    vnet2Name: egressFirewall.outputs.firewallVnetName
+    vnet1ToVnet2PeeringName: 'peering-fw-01'
+    vnet2ToVnet1PeeringName: 'peering-cae-01'
+    vnet1AllowForwardedTraffic: true
+  }
+}
+
 module containerAppEnvironment '../../modules/shared/container-app-environment.bicep' = {
   name: 'container-app-environment'
   params: {
@@ -116,12 +166,15 @@ module containerAppEnvironment '../../modules/shared/container-app-environment.b
     lowercaseEnvironmentName: lowercaseEnvironmentName
     stackNameSuffix: stackNameSuffix
     containerAppManagedEnvironmentNumber: containerAppManagedEnvironmentNumber
-    containerAppVnet: containerAppVnet
+    virtualNetworkName: containerAppNetwork.outputs.virtualNetworkName
     containerAppEnvSubnet: containerAppEnvSubnet
-    privateEndpointSubnetAddressPrefix: containerAppPeSubnet
     tags: tags
     logAnalyticsWorkspaceName: observability.outputs.workspaceName
+    routeTableId: egressFirewall.outputs.routeTableId
   }
+  dependsOn: [
+    caeFirewallPeering
+  ]
 }
 
 module secrets '../../modules/shared/secrets.bicep' = {
@@ -140,8 +193,8 @@ module keyVaultPrivateEndpoint '../../modules/shared/key-vault-private-endpoint.
     location: location
     tags: tags
     keyVaultName: secrets.outputs.name
-    peSubnetId: containerAppEnvironment.outputs.privateEndpointSubnetId
-    vnetId: containerAppEnvironment.outputs.virtualNetworkId
+    peSubnetId: containerAppNetwork.outputs.privateEndpointSubnetId
+    vnetId: containerAppNetwork.outputs.virtualNetworkId
   }
 }
 
@@ -162,8 +215,8 @@ module createdStorage '../../modules/blob-event-processor/storage.bicep' = if (s
     environmentPrefix: environmentPrefix
     lowercaseEnvironmentName: lowercaseEnvironmentName
     tags: tags
-    peSubnetId: containerAppEnvironment.outputs.privateEndpointSubnetId
-    vnetId: containerAppEnvironment.outputs.virtualNetworkId
+    peSubnetId: containerAppNetwork.outputs.privateEndpointSubnetId
+    vnetId: containerAppNetwork.outputs.virtualNetworkId
   }
 }
 
@@ -172,8 +225,8 @@ module existingStorage '../../modules/blob-event-processor/existing-storage.bice
   params: {
     location: location
     tags: tags
-    peSubnetId: containerAppEnvironment.outputs.privateEndpointSubnetId
-    vnetId: containerAppEnvironment.outputs.virtualNetworkId
+    peSubnetId: containerAppNetwork.outputs.privateEndpointSubnetId
+    vnetId: containerAppNetwork.outputs.virtualNetworkId
     storageAccountName: existingStorageAccountName
   }
 }
@@ -256,6 +309,9 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
     tags: tags
     includeRoleAssignments: includeRoleAssignments
   }
+  dependsOn: [
+    keyVaultPrivateEndpoint
+  ]
 }
 
 output STACK_NAME string = 'blob-event-processor'
