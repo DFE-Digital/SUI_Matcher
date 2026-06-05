@@ -30,8 +30,6 @@ resource vnet1ToVnet2Peering 'Microsoft.Network/virtualNetworks/virtualNetworkPe
   properties: {
     allowVirtualNetworkAccess: true
     allowForwardedTraffic: vnet1AllowForwardedTraffic
-    allowGatewayTransit: false
-    useRemoteGateways: false
     remoteVirtualNetwork: {
       id: vnet2.id
     }
@@ -44,8 +42,6 @@ resource vnet2ToVnet1Peering 'Microsoft.Network/virtualNetworks/virtualNetworkPe
   properties: {
     allowVirtualNetworkAccess: true
     allowForwardedTraffic: vnet2AllowForwardedTraffic
-    allowGatewayTransit: false
-    useRemoteGateways: false
     remoteVirtualNetwork: {
       id: vnet1.id
     }
