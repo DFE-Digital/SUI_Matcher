@@ -36,7 +36,10 @@ param logAnalyticsWorkspaceId string
 param firewallVnetAddressPrefix string = '192.168.1.0/24'
 
 @description('The address prefix for the Azure Firewall subnet')
-param firewallSubnetAddressPrefix string = '192.168.1.0/24'
+param firewallSubnetAddressPrefix string = '192.168.1.0/26'
+
+@description('The address prefix for the Azure Firewall management subnet (required for Basic SKU)')
+param firewallManagementSubnetAddressPrefix string = '192.168.1.64/26'
 
 @description('The address spaces of the CAE virtual network (used as source address ranges in the firewall policy)')
 param caeVnetAddressPrefixes array
@@ -51,6 +54,7 @@ var firewallVnetName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackN
 var firewallName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-vnetfw-Firewall'
 var firewallPolicyName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-fwp-01'
 var publicIpName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-pib-01'
+var managementPublicIpName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-pib-mgmt-01'
 var routeTableName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-rt-01'
 var containerAppRegion = toLower(replace(location, ' ', ''))
 
@@ -139,21 +143,41 @@ resource firewallVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' =
       enforcement: 'AllowUnencrypted'
     }
     privateEndpointVNetPolicies: 'Disabled'
-    subnets: [
-      {
-        name: 'AzureFirewallSubnet'
-        properties: {
-          addressPrefix: firewallSubnetAddressPrefix
-        }
-        type: 'Microsoft.Network/virtualNetworks/subnets'
-      }
-    ]
     enableDdosProtection: false
+  }
+}
+
+resource firewallSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+  parent: firewallVirtualNetwork
+  name: 'AzureFirewallSubnet'
+  properties: {
+    addressPrefix: firewallSubnetAddressPrefix
+  }
+}
+
+resource firewallManagementSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+  parent: firewallVirtualNetwork
+  name: 'AzureFirewallManagementSubnet'
+  properties: {
+    addressPrefix: firewallManagementSubnetAddressPrefix
   }
 }
 
 resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
   name: publicIpName
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  tags: tags
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    publicIPAddressVersion: 'IPv4'
+  }
+}
+
+resource managementPublicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
+  name: managementPublicIpName
   location: location
   sku: {
     name: 'Standard'
@@ -198,11 +222,22 @@ resource firewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
             id: publicIP.id
           }
           subnet: {
-            id: '${firewallVirtualNetwork.id}/subnets/AzureFirewallSubnet'
+            id: firewallSubnet.id
           }
         }
       }
     ]
+    managementIpConfiguration: {
+      name: 'fw-mgmt-ip-config-01'
+      properties: {
+        publicIPAddress: {
+          id: managementPublicIP.id
+        }
+        subnet: {
+          id: firewallManagementSubnet.id
+        }
+      }
+    }
   }
 }
 
