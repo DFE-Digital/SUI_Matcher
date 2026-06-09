@@ -34,7 +34,9 @@ public class MatchPersonRecordOrchestratorTests
                     Result = new MatchResult { MatchStatus = MatchStatus.Match },
                 }
             );
-        _personSpecParser.Setup(x => x.Parse(It.IsAny<PersonSpecification>())).Returns<PersonSpecification>(x => x);
+        _personSpecParser
+            .Setup(x => x.Parse(It.IsAny<PersonSpecification>()))
+            .Returns<PersonSpecification>(x => x);
         var sut = CreateSut();
 
         var result = await sut.ProcessAsync(content, "test-file.csv", CancellationToken.None);
@@ -46,6 +48,8 @@ public class MatchPersonRecordOrchestratorTests
         Assert.NotNull(sentPayload);
         Assert.Equal("Jane", sentPayload!.Given);
         Assert.Equal("Doe", sentPayload.Family);
+        Assert.Equal("CustomValue1", sentPayload.OptionalProperties["CustomField1"]);
+        Assert.Equal("123", sentPayload.OptionalProperties["CustomField2"]);
         Assert.Equal(new DateOnly(2012, 5, 10), sentPayload.BirthDate);
         var processedRecord = Assert.Single(result);
         Assert.Same(content[0], processedRecord.OriginalData);
@@ -71,9 +75,12 @@ public class MatchPersonRecordOrchestratorTests
                     Result = new MatchResult { MatchStatus = MatchStatus.Match },
                 }
             );
-        _personSpecParser.Setup(x => x.Parse(It.IsAny<PersonSpecification>())).Returns<PersonSpecification>(x => x);
+        _personSpecParser
+            .Setup(x => x.Parse(It.IsAny<PersonSpecification>()))
+            .Returns<PersonSpecification>(x => x);
 
-        var result = await CreateSut().ProcessAsync(content, "test-file.csv", CancellationToken.None);
+        var result = await CreateSut()
+            .ProcessAsync(content, "test-file.csv", CancellationToken.None);
 
         Assert.NotNull(sentPayload);
         Assert.Equal(
@@ -103,7 +110,9 @@ public class MatchPersonRecordOrchestratorTests
                     Result = new MatchResult { MatchStatus = MatchStatus.Match },
                 }
             );
-        _personSpecParser.Setup(x => x.Parse(It.IsAny<PersonSpecification>())).Returns<PersonSpecification>(x => x);
+        _personSpecParser
+            .Setup(x => x.Parse(It.IsAny<PersonSpecification>()))
+            .Returns<PersonSpecification>(x => x);
         var sut = CreateSut();
 
         var result = await sut.ProcessAsync(content, "test-file.csv", CancellationToken.None);
@@ -148,5 +157,10 @@ public class MatchPersonRecordOrchestratorTests
             BirthDate = birthDate,
             RawBirthDate = [birthDate.ToString("yyyy-MM-dd")],
             AddressPostalCode = postcode,
+            OptionalProperties = new Dictionary<string, object>
+            {
+                { "CustomField1", "CustomValue1" },
+                { "CustomField2", "123" },
+            },
         };
 }

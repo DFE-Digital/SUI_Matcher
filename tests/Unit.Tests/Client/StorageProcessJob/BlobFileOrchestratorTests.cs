@@ -20,6 +20,10 @@ public class BlobFileOrchestratorTests
         Id,GivenName,FamilyName,DOB,Postcode
         1111,Jane,Doe,2012-05-10,SW1A 1AA
         """;
+    private const string ValidBlobContentExtraFields = """
+        Id,GivenName,FamilyName,DOB,Postcode,ExtraField1,ExtraField2
+        1111,Jane,Doe,2012-05-10,SW1A 1AA,ExtraValue1,ExtraValue2
+        """;
     private const string ValidBlobContentWithOptionalHeaders = """
         Id,GivenName,FamilyName,DOB,Postcode,Email,Gender,Phone
         1111,Jane,Doe,2012-05-10,SW1A 1AA,jane@example.com,F,07123456789
@@ -114,6 +118,42 @@ public class BlobFileOrchestratorTests
                 ),
             Times.Once
         );
+    }
+
+    [Fact]
+    public async Task Should_ProcessAdditionalColumns_When_AdditionalColumnsExist()
+    {
+        var queueMessage = new StorageBlobMessage("incoming", "test-file.csv");
+        IEnumerable<CsvRecordDto>? capturedRecords = null;
+
+        _blobFileReader
+            .Setup(x => x.GetBlobContents(queueMessage, CancellationToken.None))
+            .ReturnsAsync(BinaryData.FromString(ValidBlobContentExtraFields));
+        _blobPayloadProcessor
+            .Setup(x =>
+                x.ProcessAsync(
+                    It.IsAny<IEnumerable<CsvRecordDto>>(),
+                    "test-file.csv",
+                    CancellationToken.None
+                )
+            )
+            .Callback<IEnumerable<CsvRecordDto>, string, CancellationToken>(
+                (records, _, _) => capturedRecords = records.ToList()
+            )
+            .ReturnsAsync(CreateMatchedResults());
+
+        await _sut.ProcessAsync(queueMessage, CancellationToken.None);
+
+        _blobFileReader.Verify(
+            x => x.GetBlobContents(queueMessage, CancellationToken.None),
+            Times.Once
+        );
+
+        Assert.NotNull(capturedRecords);
+        var recordsList = capturedRecords.ToList();
+        var record = Assert.Single(recordsList);
+        Assert.Equal("ExtraValue1", record.Record["ExtraField1"]);
+        Assert.Equal("ExtraValue2", record.Record["ExtraField2"]);
     }
 
     [Fact]

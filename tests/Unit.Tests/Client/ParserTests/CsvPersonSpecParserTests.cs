@@ -121,4 +121,26 @@ public class CsvPersonSpecParserTests
         Assert.NotNull(result.RawBirthDate);
         Assert.Equal(["not-a-date"], result.RawBirthDate);
     }
+
+    [Fact]
+    public void Should_ParseOptionalProperties_When_AdditionalColumnsArePresent()
+    {
+        var options = CreateDefaultOptions();
+        var sut = new CsvPersonSpecParser(options);
+        var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["GivenName"] = "Jane",
+            ["FamilyName"] = "Doe",
+            ["DOB"] = "2012-05-10",
+            ["Postcode"] = "SW1A 1AA",
+            ["CustomField1"] = "CustomValue1",
+            ["CustomField2"] = "CustomValue2",
+        };
+        var csvRecord = new CsvRecordDto(record);
+
+        var result = sut.Parse(csvRecord);
+
+        Assert.Equal("CustomValue1", result.OptionalProperties["CustomField1"]);
+        Assert.Equal("CustomValue2", result.OptionalProperties["CustomField2"]);
+    }
 }
