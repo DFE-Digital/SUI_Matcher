@@ -73,6 +73,11 @@ var platformFqdnRules = [
     fqdn: '*.data.mcr.microsoft.com'
   }
   {
+    name: 'mng-data-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'management.azure.com:443'
+  }
+  {
     name: 'aks-packages-allow'
     #disable-next-line no-hardcoded-env-urls
     fqdn: 'packages.aks.azure.com'
