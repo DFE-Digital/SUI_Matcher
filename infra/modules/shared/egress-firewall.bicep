@@ -111,12 +111,12 @@ var platformFqdnRules = [
   {
     name: 'monitor-allow'
     #disable-next-line no-hardcoded-env-urls
-    fqdn: 'northeurope.livediagnostics.monitor.azure.com'
+    fqdn: '${containerAppRegion}.livediagnostics.monitor.azure.com'
   }
   {
     name: 'app-insights-allow'
     #disable-next-line no-hardcoded-env-urls
-    fqdn: 'northeurope-2.in.applicationinsights.azure.com'
+    fqdn: '${containerAppRegion}-2.in.applicationinsights.azure.com'
   }
   {
     name: 'visualstudio-allow'
