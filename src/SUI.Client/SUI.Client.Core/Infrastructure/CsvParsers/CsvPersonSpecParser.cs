@@ -35,6 +35,33 @@ public class CsvPersonSpecParser(IOptions<CsvMatchDataOptions> csvMatchDataOptio
             ]),
             Phone = record.GetFirstValueOrDefault([csvMatchDataOptions.Value.ColumnMappings.Phone]),
             RawBirthDate = [dob],
+            OptionalProperties = OptionalProperties(csvRecord),
         };
+    }
+
+    /// <summary>
+    /// Find and extract any properties from the CSV record that are not part of the standard mapped fields.
+    /// </summary>
+    /// <returns>Non-standard columns and values</returns>
+    private Dictionary<string, object> OptionalProperties(CsvRecordDto csvRecord)
+    {
+        var optionalColumns = csvRecord.Record.Where(kvp => !IsMappedColumn(kvp.Key));
+
+        var optionalProperties = optionalColumns
+            .Select(kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value))
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        return optionalProperties;
+    }
+
+    private bool IsMappedColumn(string columnName)
+    {
+        var mappedColumns = csvMatchDataOptions
+            .Value.ColumnMappings.GetType()
+            .GetProperties()
+            .Select(p => p.GetValue(csvMatchDataOptions.Value.ColumnMappings)?.ToString())
+            .Where(v => v is not null)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return mappedColumns.Contains(columnName);
     }
 }
