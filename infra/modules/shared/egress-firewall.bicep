@@ -16,6 +16,9 @@ param containerRegistryEndpoint string
 @description('The dedicated data endpoint host names for the Premium container registry to allow through the firewall')
 param containerRegistryDataEndpointHostNames array
 
+@description('The Application Insights ingestion host allowed through the firewall')
+param applicationInsightsIngestionHost string
+
 @description('The name of the shared Key Vault')
 param keyVaultName string
 
@@ -107,6 +110,20 @@ var platformFqdnRules = [
     name: 'managed-identity-allow'
     #disable-next-line no-hardcoded-env-urls
     fqdn: '*.identity.azure.net'
+  }
+  {
+    name: 'monitor-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: '${containerAppRegion}.livediagnostics.monitor.azure.com'
+  }
+  {
+    name: 'app-insights-allow'
+    fqdn: applicationInsightsIngestionHost
+  }
+  {
+    name: 'visualstudio-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'dc.services.visualstudio.com'
   }
 ]
 

@@ -123,6 +123,7 @@ module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
     stackNameSuffix: stackNameSuffix
     containerRegistryEndpoint: containerRegistry.outputs.endpoint
     containerRegistryDataEndpointHostNames: containerRegistry.outputs.dataEndpointHostNames
+    applicationInsightsIngestionHost: observability.outputs.applicationInsightsIngestionHost
     keyVaultName: secrets.outputs.name
     allowKeyVaultPublicEgress: false
     allowedNhsFqdns: allowedNhsFqdns
@@ -155,6 +156,7 @@ module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' =
     vnet1ToVnet2PeeringName: 'peering-fw-01'
     vnet2ToVnet1PeeringName: 'peering-cae-01'
     vnet1AllowForwardedTraffic: true
+    vnet2AllowForwardedTraffic: true
   }
 }
 

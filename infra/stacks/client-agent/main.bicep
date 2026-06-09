@@ -117,6 +117,7 @@ module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
     stackNameSuffix: stackNameSuffix
     containerRegistryEndpoint: containerRegistry.outputs.endpoint
     containerRegistryDataEndpointHostNames: containerRegistry.outputs.dataEndpointHostNames
+    applicationInsightsIngestionHost: observability.outputs.applicationInsightsIngestionHost
     keyVaultName: secrets.outputs.name
     allowedNhsFqdns: allowedNhsFqdns
     logAnalyticsWorkspaceId: observability.outputs.workspaceId
