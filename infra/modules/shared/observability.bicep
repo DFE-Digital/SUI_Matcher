@@ -61,6 +61,10 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
+var applicationInsightsIngestionEndpoint = split(split(applicationInsights.properties.ConnectionString, 'IngestionEndpoint=')[1], ';')[0]
+var applicationInsightsIngestionHost = split(replace(replace(applicationInsightsIngestionEndpoint, 'https://', ''), 'http://', ''), '/')[0]
+
 output workspaceName string = logAnalyticsWorkspace.name
 output workspaceId string = logAnalyticsWorkspace.id
 output applicationInsightsConnectionString string = applicationInsights.properties.ConnectionString
+output applicationInsightsIngestionHost string = applicationInsightsIngestionHost
