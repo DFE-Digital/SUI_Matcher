@@ -75,7 +75,7 @@ var platformFqdnRules = [
   {
     name: 'mng-data-allow'
     #disable-next-line no-hardcoded-env-urls
-    fqdn: 'management.azure.com:443'
+    fqdn: 'management.azure.com'
   }
   {
     name: 'aks-packages-allow'
