@@ -108,6 +108,21 @@ var platformFqdnRules = [
     #disable-next-line no-hardcoded-env-urls
     fqdn: '*.identity.azure.net'
   }
+  {
+    name: 'monitor-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'northeurope.livediagnostics.monitor.azure.com'
+  }
+  {
+    name: 'app-insights-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'northeurope-2.in.applicationinsights.azure.com'
+  }
+  {
+    name: 'visualstudio-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'dc.services.visualstudio.com'
+  }
 ]
 
 var containerRegistryDataEndpointFqdnRules = [
