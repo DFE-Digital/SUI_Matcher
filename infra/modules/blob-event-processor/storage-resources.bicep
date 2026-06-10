@@ -31,7 +31,7 @@ var queueNames = [
   poisonQueueName
 ]
 
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = {
   name: '${storageAccountName}/default'
 }
 
@@ -45,7 +45,7 @@ resource containers 'Microsoft.Storage/storageAccounts/blobServices/containers@2
   }
 ]
 
-resource queueService 'Microsoft.Storage/storageAccounts/queueServices@2023-05-01' = {
+resource queueService 'Microsoft.Storage/storageAccounts/queueServices@2023-05-01' existing = {
   name: '${storageAccountName}/default'
 }
 
