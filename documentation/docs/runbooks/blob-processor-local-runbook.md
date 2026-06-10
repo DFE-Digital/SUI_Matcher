@@ -16,23 +16,31 @@ TODO:
 
 ## Deployment steps overview
 
-1. Pick a branch, tag or commit to deploy.
-2. Run dotnet restore, build and run all tests to ensure the code is in a good state.
-3. Run the infrastructure what-if to validate the output.
-4. Run the infrastructure deployment which will first deploy the infrastructure and then deploy the application to the environment.
+1. [Pick a branch, tag or commit to deploy](#pick-a-branch-tag-or-commit-to-deploy).
+2. [Run dotnet restore, build and run all tests to ensure the code is in a good state](#run-dotnet-restore-build-and-tests).
+3. [Set the deployment environment variables](#set-the-deployment-environment-variables).
+4. [Run the infrastructure what-if to validate the output](#run-the-infrastructure-what-if-to-validate-the-output).
+5. [Run the infrastructure deployment](#run-the-infrastructure-deploy).
 
     **Note** this will fail on first run for the applications as they will not yet exist in the azure container registry,
 but this is expected. The second run will succeed as the applications will have been built and pushed to the registry by the first run.
 
-5. Run the API' and Storage processor deployment which will deploy the API and Storage processor applications to the Azure container registry.
-6. Run the infrastructure deployment again to deploy the applications to the environment.
-7. Run the smoke tests to validate the deployment. You can do this by placing a csv file in the blob storage and checking the logs of the storage processor to see if it has processed the file.
+6. Run the API' and Storage processor deployment which will deploy the API and Storage processor applications to the Azure container registry.
+7. Run the infrastructure deployment again to deploy the applications to the environment.
+
+    **Note** this will succeed as the applications will now exist in the azure container registry.
+8. Run the smoke tests to validate the deployment. You can do this by placing a csv file in the blob storage and checking the logs of the storage processor to see if it has processed the file.
 
 ## Detailed deployment steps - Follow in order
 
-### Pick a branch, tag or commit to deploy.
+### Pick a branch, tag or commit to deploy. Ensure the branch is clean of any uncommited changes. Example for main:
 
-### Run dotnet restore, build and run all tests to ensure the code is in a good state.
+```bash
+git checkout main
+git pull
+```  
+
+### Run dotnet restore, build and tests
 
 ```bash
 dotnet restore
@@ -51,53 +59,55 @@ The local command mirrors the GitHub workflow
 The GitHub workflow's `AZURE_CLIENT_ID` value is only needed for GitHub OIDC login. It is not needed when running
 the what-if locally with an interactive `az login`.
 
-This example uses Bash, matching the GitHub workflow. On Windows, run it from WSL, git bash, or see the PowerShell tip below.
+This example uses Bash, matching the GitHub workflow. On Windows, run it from WSL or Git Bash to use the `.env` file
+and Bash commands as shown.
 
-First, create a `.env` file in the root of the repository based on the template below and fill in your target values:
+First, create a `.env-blob-event-processor` file in the root of the repository based on the template below and fill in your target values:
 
-```bash
+```
 # .env file
 
 # Target values.
-export AZURE_ENV_NAME="Prod"
-export AZURE_ENV_PREFIX="<environment-prefix>"
-export AZURE_TENANT_ID="<tenant-id>"
-export AZURE_SUBSCRIPTION_ID="<subscription-id>"
-export AZURE_LOCATION="<azure-region>"
+AZURE_ENV_NAME="Prod"
+AZURE_ENV_PREFIX="<environment-prefix>"
+AZURE_TENANT_ID="<tenant-id>"
+AZURE_SUBSCRIPTION_ID="<subscription-id>"
+AZURE_LOCATION="<azure-region>"
 
 # Infrastructure values.
-export AZURE_MONITORING_ACTION_GROUP_EMAIL="<monitoring-alert-email-address>"
-export AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER="<managed-environment-number>"
-export AZURE_CONTAINER_APP_VNET="<container-app-vnet-cidr>"
-export AZURE_CONTAINER_APP_ENV_SUBNET="<container-app-environment-subnet-cidr>"
-export AZURE_CONTAINER_APP_PE_SUBNET="<private-endpoint-subnet-cidr>"
+AZURE_MONITORING_ACTION_GROUP_EMAIL="<monitoring-alert-email-address>"
+AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER="<managed-environment-number>"
+AZURE_CONTAINER_APP_VNET="<container-app-vnet-cidr>"
+AZURE_CONTAINER_APP_ENV_SUBNET="<container-app-environment-subnet-cidr>"
+AZURE_CONTAINER_APP_PE_SUBNET="<private-endpoint-subnet-cidr>"
 
 # Workflow defaults. Change these only when the target deployment requires it.
-export AZURE_INCLUDE_ROLE_ASSIGNMENTS="true"
-export AZURE_TURN_ON_ALERTS="false"
-export STORAGE_PROCESS_JOB_IMAGE_TAG="latest"
-export MATCHING_API_IMAGE_TAG="latest"
-export EXTERNAL_API_IMAGE_TAG="latest"
-export RESOURCE_GROUP_MODE="create"
-export TARGET_RESOURCE_GROUP_NAME=""
-export STORAGE_ACCOUNT_MODE="create"
-export EXISTING_STORAGE_ACCOUNT_NAME=""
+AZURE_INCLUDE_ROLE_ASSIGNMENTS="true"
+AZURE_TURN_ON_ALERTS="false"
+STORAGE_PROCESS_JOB_IMAGE_TAG="latest"
+MATCHING_API_IMAGE_TAG="latest"
+EXTERNAL_API_IMAGE_TAG="latest"
+RESOURCE_GROUP_MODE="create"
+TARGET_RESOURCE_GROUP_NAME=""
+STORAGE_ACCOUNT_MODE="create"
+EXISTING_STORAGE_ACCOUNT_NAME=""
 
 # Use an existing resource group by setting:
-# export RESOURCE_GROUP_MODE="existing"
-# export TARGET_RESOURCE_GROUP_NAME="<existing-resource-group-name>"
+# RESOURCE_GROUP_MODE="existing"
+# TARGET_RESOURCE_GROUP_NAME="<existing-resource-group-name>"
 #
 # Use an existing storage account in the target resource group by setting:
-# export STORAGE_ACCOUNT_MODE="existing"
-# export EXISTING_STORAGE_ACCOUNT_NAME="<existing-storage-account-name>"
+# STORAGE_ACCOUNT_MODE="existing"
+# EXISTING_STORAGE_ACCOUNT_NAME="<existing-storage-account-name>"
 ```
 
-Then, load the variables into your terminal session and configure the deployment variables:
+Then, load the variables into your terminal session and derive the deployment values:
+
+> **Windows PowerShell Users**: Native PowerShell does not support `source .env` or the Bash examples as written. Use WSL
+> or Git Bash, or translate the setup into PowerShell syntax before running the Azure CLI command.
 
 ```bash
 source .env
-
-set -euo pipefail
 
 STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-blob-event-processor"
 
@@ -109,13 +119,13 @@ DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-what-if"
 TEMPLATE_FILE="infra/stacks/blob-event-processor/subscription.bicep"
 ```
 
-> **Windows PowerShell Users**: Instead of a `.env` file, you can create a `vars.ps1` file using PowerShell syntax (e.g. `$env:AZURE_ENV_NAME="Prod"`) and dot-source it using `. .\vars.ps1`.
-
 ### Run the infrastructure what-if to validate the output.
 
 Check the required values before running the what-if:
 
 ```bash
+set -euo pipefail
+
 if [ -z "${AZURE_CONTAINER_APP_PE_SUBNET}" ]; then
   echo "AZURE_CONTAINER_APP_PE_SUBNET must be set for blob-event-processor infrastructure deployments."
   exit 1
