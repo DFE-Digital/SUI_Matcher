@@ -53,10 +53,12 @@ The local command mirrors the GitHub workflow
 The GitHub workflow's `AZURE_CLIENT_ID` value is only needed for GitHub OIDC login. It is not needed when running
 the what-if locally with an interactive `az login`.
 
-This example uses Bash, matching the GitHub workflow. On Windows, run it from WSL, git bash or adapt the syntax for PowerShell/CMD
+This example uses Bash, matching the GitHub workflow. On Windows, run it from WSL, git bash, or see the PowerShell tip below.
+
+First, create a `.env` file in the root of the repository based on the template below and fill in your target values:
 
 ```bash
-set -euo pipefail
+# .env file
 
 # Target values.
 export AZURE_ENV_NAME="Prod"
@@ -90,6 +92,14 @@ export EXISTING_STORAGE_ACCOUNT_NAME=""
 # Use an existing storage account in the target resource group by setting:
 # export STORAGE_ACCOUNT_MODE="existing"
 # export EXISTING_STORAGE_ACCOUNT_NAME="<existing-storage-account-name>"
+```
+
+Then, load the variables into your terminal session and configure the deployment variables:
+
+```bash
+source .env
+
+set -euo pipefail
 
 STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-blob-event-processor"
 
@@ -100,6 +110,8 @@ fi
 DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-what-if"
 TEMPLATE_FILE="infra/stacks/blob-event-processor/subscription.bicep"
 ```
+
+> **Windows PowerShell Users**: Instead of a `.env` file, you can create a `vars.ps1` file using PowerShell syntax (e.g. `$env:AZURE_ENV_NAME="Prod"`) and dot-source it using `. .\vars.ps1`.
 
 #### Step 3b: Run the what-if.
 
