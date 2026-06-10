@@ -50,6 +50,10 @@ inputs:
     description: "Optional Environment tag value override"
     required: false
     default: ""
+  additional_tags:
+    description: "Optional JSON object containing additional deployment tags"
+    required: false
+    default: ""
   stack_resource_group:
     description: "Target stack resource group"
     required: true
@@ -121,6 +125,8 @@ runs:
 
     - name: Run stack infrastructure command
       shell: bash
+      env:
+        ADDITIONAL_TAGS: ${{ inputs.additional_tags }}
       run: |
         set -euo pipefail
 
@@ -153,6 +159,11 @@ runs:
 
         if [ -n "${{ inputs.tag_environment_name }}" ]; then
           PARAMETERS+=("tagEnvironmentName=${{ inputs.tag_environment_name }}")
+        fi
+
+        if [ -n "${ADDITIONAL_TAGS}" ]; then
+          ADDITIONAL_TAGS_JSON="$(jq -nce --argjson tags "${ADDITIONAL_TAGS}" 'if ($tags | type) == "object" then $tags else error("additional_tags must be a JSON object") end')"
+          PARAMETERS+=("additionalTags=${ADDITIONAL_TAGS_JSON}")
         fi
 
         if [ -n "${{ inputs.turn_on_alerts }}" ]; then

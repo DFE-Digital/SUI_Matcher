@@ -64,6 +64,9 @@ param existingStorageAccountName string = ''
 @description('Optional value for the Environment tag when Azure Policy expects a different tag value than the deployment environment name.')
 param tagEnvironmentName string = ''
 
+@description('Optional additional tags to apply to deployed resources.')
+param additionalTags object = {}
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
 var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
@@ -74,14 +77,14 @@ var allowedNhsFqdns = isProductionEnvironment ? [
 ]
 var effectiveTagEnvironmentName = empty(tagEnvironmentName) ? environmentName : tagEnvironmentName
 
-var tags = {
+var baseTags = {
   'azd-env-name': environmentName
   Product: 'SUI'
   Environment: effectiveTagEnvironmentName
   EnvironmentPrefix: environmentPrefix
-  'Service Offering': 'SUI'
   Stack: 'blob-event-processor'
 }
+var tags = union(baseTags, additionalTags)
 
 module identity '../../modules/shared/identity.bicep' = {
   name: 'identity'
