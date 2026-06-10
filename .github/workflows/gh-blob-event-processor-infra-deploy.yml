@@ -85,6 +85,7 @@ env:
   AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
   AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
   AZURE_CONTAINER_APP_PE_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_PE_SUBNET }}
+  AZURE_TAG_ENVIRONMENT_NAME: ${{ vars.AZURE_TAG_ENVIRONMENT_NAME }}
   AZURE_INCLUDE_ROLE_ASSIGNMENTS: ${{ inputs.include_role_assignments }}
   AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
   STORAGE_PROCESS_JOB_IMAGE_TAG: ${{ inputs.storage_process_image_tag || 'latest' }}
@@ -199,6 +200,7 @@ jobs:
           azure_container_app_vnet: ${{ env.AZURE_CONTAINER_APP_VNET }}
           azure_container_app_env_subnet: ${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}
           azure_container_app_pe_subnet: ${{ env.AZURE_CONTAINER_APP_PE_SUBNET }}
+          tag_environment_name: ${{ env.AZURE_TAG_ENVIRONMENT_NAME }}
           azure_include_role_assignments: ${{ env.AZURE_INCLUDE_ROLE_ASSIGNMENTS }}
           stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
@@ -243,6 +245,7 @@ jobs:
           azure_container_app_vnet: ${{ env.AZURE_CONTAINER_APP_VNET }}
           azure_container_app_env_subnet: ${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}
           azure_container_app_pe_subnet: ${{ env.AZURE_CONTAINER_APP_PE_SUBNET }}
+          tag_environment_name: ${{ env.AZURE_TAG_ENVIRONMENT_NAME }}
           azure_include_role_assignments: ${{ env.AZURE_INCLUDE_ROLE_ASSIGNMENTS }}
           stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
           deployment_name: ${{ env.DEPLOYMENT_NAME }}

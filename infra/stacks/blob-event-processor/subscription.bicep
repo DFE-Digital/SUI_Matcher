@@ -70,13 +70,17 @@ param storageAccountMode string = 'create'
 @description('The name of the existing storage account to use when storageAccountMode is existing.')
 param existingStorageAccountName string = ''
 
+@description('Optional value for the Environment tag when Azure Policy expects a different tag value than the deployment environment name.')
+param tagEnvironmentName string = ''
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackName = 'blob-event-processor'
 var stackResourceGroupName = '${environmentPrefix}-${lowercaseEnvironmentName}-${stackName}'
 var deploymentResourceGroupName = resourceGroupMode == 'existing' ? targetResourceGroupName : stackResourceGroupName
+var effectiveTagEnvironmentName = empty(tagEnvironmentName) ? environmentName : tagEnvironmentName
 var resourceGroupTags = {
   Product: 'SUI'
-  Environment: environmentName
+  Environment: effectiveTagEnvironmentName
   EnvironmentPrefix: environmentPrefix
   'Service Offering': 'SUI'
   Stack: stackName
@@ -107,6 +111,7 @@ module stackDeployment 'main.bicep' = {
     includeRoleAssignments: includeRoleAssignments
     storageAccountMode: storageAccountMode
     existingStorageAccountName: existingStorageAccountName
+    tagEnvironmentName: tagEnvironmentName
   }
   dependsOn: [
     stackResourceGroup

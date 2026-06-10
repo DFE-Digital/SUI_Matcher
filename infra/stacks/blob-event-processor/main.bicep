@@ -61,6 +61,9 @@ param storageAccountMode string = 'create'
 @description('The name of the existing storage account to use when storageAccountMode is existing.')
 param existingStorageAccountName string = ''
 
+@description('Optional value for the Environment tag when Azure Policy expects a different tag value than the deployment environment name.')
+param tagEnvironmentName string = ''
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
 var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
@@ -69,11 +72,12 @@ var allowedNhsFqdns = isProductionEnvironment ? [
 ] : [
   'int.api.service.nhs.uk'
 ]
+var effectiveTagEnvironmentName = empty(tagEnvironmentName) ? environmentName : tagEnvironmentName
 
 var tags = {
   'azd-env-name': environmentName
   Product: 'SUI'
-  Environment: environmentName
+  Environment: effectiveTagEnvironmentName
   EnvironmentPrefix: environmentPrefix
   'Service Offering': 'SUI'
   Stack: 'blob-event-processor'
@@ -186,6 +190,7 @@ module secrets '../../modules/shared/secrets.bicep' = {
     environmentName: environmentName
     environmentPrefix: environmentPrefix
     stackNameSuffix: stackNameSuffix
+    tags: tags
   }
 }
 

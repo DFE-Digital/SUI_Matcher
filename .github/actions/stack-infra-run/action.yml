@@ -46,6 +46,10 @@ inputs:
     description: "Optional container app private endpoint subnet"
     required: false
     default: ""
+  tag_environment_name:
+    description: "Optional Environment tag value override"
+    required: false
+    default: ""
   stack_resource_group:
     description: "Target stack resource group"
     required: true
@@ -145,6 +149,10 @@ runs:
 
         if [ -n "${{ inputs.azure_container_app_pe_subnet }}" ]; then
           PARAMETERS+=("containerAppPeSubnet=${{ inputs.azure_container_app_pe_subnet }}")
+        fi
+
+        if [ -n "${{ inputs.tag_environment_name }}" ]; then
+          PARAMETERS+=("tagEnvironmentName=${{ inputs.tag_environment_name }}")
         fi
 
         if [ -n "${{ inputs.turn_on_alerts }}" ]; then
