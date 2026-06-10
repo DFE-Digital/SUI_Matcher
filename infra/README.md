@@ -12,7 +12,7 @@ Shared Bicep modules live under `infra/modules`.
 
 Each stack root under `infra/stacks` is paired with a subscription-scope wrapper that creates or updates the stack-owned resource group and then deploys the stack into it.
 
-The `blob-event-processor` wrapper also supports deploying into an existing resource group and using an existing storage account. In that mode, the stack still creates its standard blob containers and storage queues, but it does not create the storage account or private endpoints for that existing account.
+The `blob-event-processor` wrapper also supports deploying into an existing resource group and using an existing storage account. In that mode, the stack still creates its standard blob containers, storage queues, private endpoints, and private DNS wiring for the configured account, but it does not create or manage the storage account service defaults.
 
 Supported deployment roots:
 
