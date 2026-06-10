@@ -46,6 +46,13 @@ Existing storage mode expects the storage account to already exist in the target
 
 Both storage modes create blob and queue private endpoints plus private DNS wiring for the configured storage account. In existing storage mode, the private endpoints target the supplied account.
 
+## Tag configuration
+
+The stack applies a common tag set to managed resources. Two optional parameters support policy-shaped environments without hard-coding those policy tags into client infrastructure:
+
+- `tagEnvironmentName` overrides the `Environment` tag value when Azure Policy expects a value that differs from `environmentName`.
+- `additionalTags` adds environment-specific tags as a JSON object. For GitHub Actions, set the repo variable `AZURE_ADDITIONAL_TAGS` to a JSON object such as `{"Service Offering":"SUI"}`. Leave it unset for client environments that should not receive DfE-specific policy tags.
+
 ## GitHub workflow behaviour
 
 The deploy workflow wraps the same subscription-scope Bicep template and adds a small amount of shell logic:
@@ -54,6 +61,8 @@ The deploy workflow wraps the same subscription-scope Bicep template and adds a 
 - validates `containerAppPeSubnet` is configured
 - validates `targetResourceGroupName` when `resourceGroupMode=existing`
 - validates `existingStorageAccountName` when `storageAccountMode=existing`
+- passes `AZURE_TAG_ENVIRONMENT_NAME` to `tagEnvironmentName` when set
+- passes `AZURE_ADDITIONAL_TAGS` to `additionalTags` when set
 - derives the stack resource group as `${environmentPrefix}-${environmentName,,}-blob-event-processor`, unless an existing resource group is supplied
 - derives the deployment name as `${resourceGroupName}-${location,,}-${mode}`
 - runs `az deployment sub what-if` or `az deployment sub create`
@@ -86,6 +95,8 @@ az deployment sub what-if \
     matchingApiImageTag=<image-tag> \
     externalApiImageTag=<image-tag> \
     turnOnAlerts=false \
+    tagEnvironmentName=<optional-environment-tag-value> \
+    additionalTags='{"Service Offering":"SUI"}' \
     resourceGroupMode=existing \
     targetResourceGroupName=<existing-resource-group-name> \
     storageAccountMode=existing \
