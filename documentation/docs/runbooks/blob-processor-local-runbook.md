@@ -28,11 +28,11 @@ but this is expected. The second run will succeed as the applications will have 
 6. Run the infrastructure deployment again to deploy the applications to the environment.
 7. Run the smoke tests to validate the deployment. You can do this by placing a csv file in the blob storage and checking the logs of the storage processor to see if it has processed the file.
 
-## Detailed deployment steps
+## Detailed deployment steps - Follow in order
 
-### Step 1: Pick a branch, tag or commit to deploy.
+### Pick a branch, tag or commit to deploy.
 
-### Step 2: Run dotnet restore, build and run all tests to ensure the code is in a good state.
+### Run dotnet restore, build and run all tests to ensure the code is in a good state.
 
 ```bash
 dotnet restore
@@ -40,9 +40,7 @@ dotnet build --no-restore
 dotnet test
 ```
 
-### Step 3: Run the infrastructure what-if to validate the output.
-
-#### Step 3a: Set the environment variables needed for the what-if.
+### Set the deployment environment variables
 
 Run these commands from the repository root.
 
@@ -113,7 +111,7 @@ TEMPLATE_FILE="infra/stacks/blob-event-processor/subscription.bicep"
 
 > **Windows PowerShell Users**: Instead of a `.env` file, you can create a `vars.ps1` file using PowerShell syntax (e.g. `$env:AZURE_ENV_NAME="Prod"`) and dot-source it using `. .\vars.ps1`.
 
-#### Step 3b: Run the what-if.
+### Run the infrastructure what-if to validate the output.
 
 Check the required values before running the what-if:
 
