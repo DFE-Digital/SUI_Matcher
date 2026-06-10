@@ -40,6 +40,8 @@ resource containers 'Microsoft.Storage/storageAccounts/blobServices/containers@2
     parent: blobService
     name: containerName
     properties: {
+      defaultEncryptionScope: '$account-encryption-key'
+      denyEncryptionScopeOverride: false
       publicAccess: 'None'
     }
   }
