@@ -73,18 +73,21 @@ param existingStorageAccountName string = ''
 @description('Optional value for the Environment tag when Azure Policy expects a different tag value than the deployment environment name.')
 param tagEnvironmentName string = ''
 
+@description('Optional additional tags to apply to deployed resources.')
+param additionalTags object = {}
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackName = 'blob-event-processor'
 var stackResourceGroupName = '${environmentPrefix}-${lowercaseEnvironmentName}-${stackName}'
 var deploymentResourceGroupName = resourceGroupMode == 'existing' ? targetResourceGroupName : stackResourceGroupName
 var effectiveTagEnvironmentName = empty(tagEnvironmentName) ? environmentName : tagEnvironmentName
-var resourceGroupTags = {
+var baseResourceGroupTags = {
   Product: 'SUI'
   Environment: effectiveTagEnvironmentName
   EnvironmentPrefix: environmentPrefix
-  'Service Offering': 'SUI'
   Stack: stackName
 }
+var resourceGroupTags = union(baseResourceGroupTags, additionalTags)
 
 resource stackResourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = if (resourceGroupMode == 'create') {
   name: stackResourceGroupName
@@ -112,6 +115,7 @@ module stackDeployment 'main.bicep' = {
     storageAccountMode: storageAccountMode
     existingStorageAccountName: existingStorageAccountName
     tagEnvironmentName: tagEnvironmentName
+    additionalTags: additionalTags
   }
   dependsOn: [
     stackResourceGroup
