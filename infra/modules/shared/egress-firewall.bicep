@@ -73,6 +73,13 @@ var platformFqdnRules = [
     fqdn: '*.data.mcr.microsoft.com'
   }
   {
+    // if using firewalls, this is recommended for manfiests and diagnostics
+    // https://learn.microsoft.com/en-us/azure/api-management/virtual-network-reference - Internal infrastructure and diagnostics
+    name: 'mcr-nsg-edge-allow'
+    #disable-next-line no-hardcoded-env-urls
+    fqdn: 'shavamanifestcdnprod1.azureedge.net'
+  }
+  {
     name: 'mng-data-allow'
     #disable-next-line no-hardcoded-env-urls
     fqdn: 'management.azure.com'
