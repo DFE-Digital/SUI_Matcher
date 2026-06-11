@@ -144,9 +144,9 @@ az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
 echo "Target stack resource group: ${STACK_RESOURCE_GROUP}"
 echo "Deployment name: ${DEPLOYMENT_NAME}"
 
-az deployment sub what-if \
+az deployment group what-if \
   --name "${DEPLOYMENT_NAME}" \
-  --location "${AZURE_LOCATION}" \
+  --resource-group "${TARGET_RESOURCE_GROUP_NAME}" \
   --subscription "${AZURE_SUBSCRIPTION_ID}" \
   --template-file "${TEMPLATE_FILE}" \
   --parameters \
@@ -167,4 +167,5 @@ az deployment sub what-if \
     targetResourceGroupName="${TARGET_RESOURCE_GROUP_NAME}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
+
 ```
