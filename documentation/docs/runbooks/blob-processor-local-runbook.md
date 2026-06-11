@@ -90,15 +90,8 @@ EXTERNAL_API_IMAGE_TAG="latest"
 RESOURCE_GROUP_MODE="create" # "create" or "existing"
 TARGET_RESOURCE_GROUP_NAME=""
 STORAGE_ACCOUNT_MODE="create" # "create" or "existing"
-EXISTING_STORAGE_ACCOUNT_NAME=""
+EXISTING_STORAGE_ACCOUNT_NAME="" # Leave blank if it does not exist
 
-# Use an existing resource group by setting:
-# RESOURCE_GROUP_MODE="existing"
-# TARGET_RESOURCE_GROUP_NAME="<existing-resource-group-name>"
-#
-# Use an existing storage account in the target resource group by setting:
-# STORAGE_ACCOUNT_MODE="existing"
-# EXISTING_STORAGE_ACCOUNT_NAME="<existing-storage-account-name>"
 ```
 
 Then, load the variables into your terminal session and derive the deployment values:
@@ -109,7 +102,7 @@ Then, load the variables into your terminal session and derive the deployment va
 ```bash
 source .env
 
-STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-blob-event-processor"
+STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME:l}-blob-event-processor"
 
 if [ "${RESOURCE_GROUP_MODE}" = "existing" ]; then
   STACK_RESOURCE_GROUP="${TARGET_RESOURCE_GROUP_NAME}"
