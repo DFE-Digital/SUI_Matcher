@@ -109,7 +109,6 @@ if [ "${RESOURCE_GROUP_MODE}" = "existing" ]; then
 fi
 
 DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-$(printf '%s' "$AZURE_LOCATION" | tr '[:upper:]' '[:lower:]')-what-if"
-TEMPLATE_FILE="infra/stacks/blob-event-processor/subscription.bicep"
 ```
 
 ### Run the infrastructure what-if to validate the output
@@ -141,8 +140,48 @@ Sign in, select the subscription, and run the what-if:
 az login --tenant "${AZURE_TENANT_ID}"
 az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
 
+```
+
+#### Use for existing resource group
+
+```bash
+
+TEMPLATE_FILE="infra/stacks/blob-event-processor/main.bicep"
+
 echo "Target stack resource group: ${STACK_RESOURCE_GROUP}"
 echo "Deployment name: ${DEPLOYMENT_NAME}"
+
+az deployment group what-if \
+  --name "${DEPLOYMENT_NAME}" \
+  --resource-group "${TARGET_RESOURCE_GROUP_NAME}" \
+  --subscription "${AZURE_SUBSCRIPTION_ID}" \
+  --template-file "${TEMPLATE_FILE}" \
+  --parameters \
+    environmentName="${AZURE_ENV_NAME}" \
+    environmentPrefix="${AZURE_ENV_PREFIX}" \
+    location="${AZURE_LOCATION}" \
+    monitoringActionGroupEmail="${AZURE_MONITORING_ACTION_GROUP_EMAIL}" \
+    containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" \
+    containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
+    containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
+    containerAppPeSubnet="${AZURE_CONTAINER_APP_PE_SUBNET}" \
+    includeRoleAssignments="${AZURE_INCLUDE_ROLE_ASSIGNMENTS}" \
+    turnOnAlerts="${AZURE_TURN_ON_ALERTS}" \
+    storageProcessJobImageTag="${STORAGE_PROCESS_JOB_IMAGE_TAG}" \
+    matchingApiImageTag="${MATCHING_API_IMAGE_TAG}" \
+    externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
+    storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
+    existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
+
+
+
+```
+
+#### use for new resource group
+
+```bash
+
+TEMPLATE_FILE="infra/stacks/blob-event-processor/subscription.bicep"
 
 az deployment group what-if \
   --name "${DEPLOYMENT_NAME}" \
@@ -167,5 +206,4 @@ az deployment group what-if \
     targetResourceGroupName="${TARGET_RESOURCE_GROUP_NAME}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
-
 ```
