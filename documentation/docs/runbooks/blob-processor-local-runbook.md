@@ -94,7 +94,7 @@ EXISTING_STORAGE_ACCOUNT_NAME="" # Leave blank if it does not exist
 
 ```
 
-Then, load the variables into your terminal session and derive the deployment values:
+Then, load the variables into your terminal session and derive the deployment values. Existing check overrides
 
 > **Windows PowerShell Users**: Native PowerShell does not support `source .env` or the Bash examples as written. Use WSL
 > or Git Bash, or translate the setup into PowerShell syntax before running the Azure CLI command.
@@ -102,13 +102,13 @@ Then, load the variables into your terminal session and derive the deployment va
 ```bash
 source .env
 
-STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME:l}-blob-event-processor"
+STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-$(printf '%s' "$AZURE_ENV_NAME" | tr '[:upper:]' '[:lower:]')-blob-event-processor"
 
 if [ "${RESOURCE_GROUP_MODE}" = "existing" ]; then
   STACK_RESOURCE_GROUP="${TARGET_RESOURCE_GROUP_NAME}"
 fi
 
-DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-what-if"
+DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-$(printf '%s' "$AZURE_LOCATION" | tr '[:upper:]' '[:lower:]')-what-if"
 TEMPLATE_FILE="infra/stacks/blob-event-processor/subscription.bicep"
 ```
 
