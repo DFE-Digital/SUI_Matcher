@@ -5,10 +5,6 @@
 The purpose of this run book is to provide instructions for deployment to a azure cloud environment for the blob processor
 application. This run book is intended for using azure CLI from your local machine.
 
-## Quick reference - A short “at a glance” section for people who already understand the process
-
-TODO:
-
 ## Prerequisites
 
 - Azure CLI (az) installed and logged in to the correct subscription and tenant.
@@ -21,14 +17,8 @@ TODO:
 3. [Set the deployment environment variables](#set-the-deployment-environment-variables).
 4. [Run the infrastructure what-if to validate the output](#run-the-infrastructure-what-if-to-validate-the-output).
 5. [Run the infrastructure deployment](#run-the-infrastructure-deploy).
-
-    **Note** this will fail on first run for the applications as they will not yet exist in the azure container registry,
-but this is expected. The second run will succeed as the applications will have been built and pushed to the registry by the first run.
-
-6. Run the API' and Storage processor deployment which will deploy the API and Storage processor applications to the Azure container registry.
-7. Run the infrastructure deployment again to deploy the applications to the environment.
-
-    **Note** this will succeed as the applications will now exist in the azure container registry.
+6. TODO: Run the API' and Storage processor deployment which will deploy the API and Storage processor applications to the Azure container registry.
+7. TODO: Run the infrastructure deployment again to deploy the applications to the environment.
 8. Run the smoke tests to validate the deployment. You can do this by placing a CSV file in the blob storage and checking the logs of the storage processor to see if it has processed the file.
 
 ## Detailed deployment steps - Follow in order
@@ -204,6 +194,44 @@ az deployment group what-if \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
     resourceGroupMode="${RESOURCE_GROUP_MODE}" \
     targetResourceGroupName="${TARGET_RESOURCE_GROUP_NAME}" \
+    storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
+    existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
+```
+
+### Run the infrastructure deploy
+
+Review the what-if output before running the deployment. This command follows the existing resource group path and deploys
+`infra/stacks/blob-event-processor/main.bicep` directly into the target resource group.
+
+> **Note**: this deployment can fail on the first run if the container app images do not exist in the Azure Container Registry yet.
+> Publish the API and storage processor images, then run this infrastructure deployment again.
+
+```bash
+TEMPLATE_FILE="infra/stacks/blob-event-processor/main.bicep"
+DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-$(printf '%s' "$AZURE_LOCATION" | tr '[:upper:]' '[:lower:]')-deploy"
+
+echo "Target stack resource group: ${STACK_RESOURCE_GROUP}"
+echo "Deployment name: ${DEPLOYMENT_NAME}"
+
+az deployment group create \
+  --name "${DEPLOYMENT_NAME}" \
+  --resource-group "${TARGET_RESOURCE_GROUP_NAME}" \
+  --subscription "${AZURE_SUBSCRIPTION_ID}" \
+  --template-file "${TEMPLATE_FILE}" \
+  --parameters \
+    environmentName="${AZURE_ENV_NAME}" \
+    environmentPrefix="${AZURE_ENV_PREFIX}" \
+    location="${AZURE_LOCATION}" \
+    monitoringActionGroupEmail="${AZURE_MONITORING_ACTION_GROUP_EMAIL}" \
+    containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" \
+    containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
+    containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
+    containerAppPeSubnet="${AZURE_CONTAINER_APP_PE_SUBNET}" \
+    includeRoleAssignments="${AZURE_INCLUDE_ROLE_ASSIGNMENTS}" \
+    turnOnAlerts="${AZURE_TURN_ON_ALERTS}" \
+    storageProcessJobImageTag="${STORAGE_PROCESS_JOB_IMAGE_TAG}" \
+    matchingApiImageTag="${MATCHING_API_IMAGE_TAG}" \
+    externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
 ```
