@@ -1,11 +1,11 @@
-# Blob processor local runbook
+# Blob processor local run book
 
 ## Purpose
 
-The pupose of this runbook is to provide instructions for deployment to a azure cloud environment for the blob processor
-application. This runbook is intended for using azure cli from your local machine.
+The purpose of this run book is to provide instructions for deployment to a azure cloud environment for the blob processor
+application. This run book is intended for using azure CLI from your local machine.
 
-## Quick reference - A short “at a glance” section for people who already understand the process.
+## Quick reference - A short “at a glance” section for people who already understand the process
 
 TODO:
 
@@ -29,11 +29,11 @@ but this is expected. The second run will succeed as the applications will have 
 7. Run the infrastructure deployment again to deploy the applications to the environment.
 
     **Note** this will succeed as the applications will now exist in the azure container registry.
-8. Run the smoke tests to validate the deployment. You can do this by placing a csv file in the blob storage and checking the logs of the storage processor to see if it has processed the file.
+8. Run the smoke tests to validate the deployment. You can do this by placing a CSV file in the blob storage and checking the logs of the storage processor to see if it has processed the file.
 
 ## Detailed deployment steps - Follow in order
 
-### Pick a branch, tag or commit to deploy. Ensure the branch is clean of any uncommited changes. Example for main:
+### Pick a branch, tag or commit to deploy. Ensure the branch is clean of any uncommitted changes. Example for main
 
 ```bash
 git checkout main
@@ -87,9 +87,9 @@ AZURE_TURN_ON_ALERTS="false"
 STORAGE_PROCESS_JOB_IMAGE_TAG="latest"
 MATCHING_API_IMAGE_TAG="latest"
 EXTERNAL_API_IMAGE_TAG="latest"
-RESOURCE_GROUP_MODE="create"
+RESOURCE_GROUP_MODE="create" # "create" or "existing"
 TARGET_RESOURCE_GROUP_NAME=""
-STORAGE_ACCOUNT_MODE="create"
+STORAGE_ACCOUNT_MODE="create" # "create" or "existing"
 EXISTING_STORAGE_ACCOUNT_NAME=""
 
 # Use an existing resource group by setting:
@@ -119,7 +119,7 @@ DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-what-if"
 TEMPLATE_FILE="infra/stacks/blob-event-processor/subscription.bicep"
 ```
 
-### Run the infrastructure what-if to validate the output.
+### Run the infrastructure what-if to validate the output
 
 Check the required values before running the what-if:
 
