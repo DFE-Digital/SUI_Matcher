@@ -132,7 +132,7 @@ resource ErrorLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-previ
   location: location
   properties: {
     displayName: 'Error Log Alert'
-    description: 'Log alert for errors'
+    description: 'Log alert for errors in containers'
     enabled: true
     criteria: {
       allOf: [
@@ -140,6 +140,7 @@ resource ErrorLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-previ
           query: '''
             ContainerAppConsoleLogs_CL
             | where Log_s contains "Error"
+            | project TimeGenerated, _timestamp_d, ContainerAppName_s
           '''
           timeAggregation: 'Count'
           operator: 'GreaterThan'
@@ -164,7 +165,7 @@ resource WarningLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-pre
   location: location
   properties: {
     displayName: 'Warning Log Alert'
-    description: 'Log alert for warnings'
+    description: 'Log alert for warnings in containers'
     enabled: true
     criteria: {
       allOf: [
@@ -172,6 +173,7 @@ resource WarningLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-pre
           query: '''
             ContainerAppConsoleLogs_CL
             | where Log_s contains "Warning"
+            | project TimeGenerated, _timestamp_d, ContainerAppName_s
           '''
           timeAggregation: 'Count'
           operator: 'GreaterThan'
@@ -196,7 +198,7 @@ resource ContainerTerminated 'Microsoft.Insights/scheduledQueryRules@2023-03-15-
   location: location
   properties: {
     displayName: 'Warning Log Alert'
-    description: 'Log alert for warnings'
+    description: 'Log alert for warnings for containers'
     enabled: true
     criteria: {
       allOf: [
@@ -205,7 +207,7 @@ resource ContainerTerminated 'Microsoft.Insights/scheduledQueryRules@2023-03-15-
             ContainerAppSystemLogs_CL
             | where Log_s contains "readiness probe failed: connection refused" 
             | where TimeGenerated > ago(5m) 
-            | project TimeGenerated, ContainerAppName_s, Log_s
+            | project TimeGenerated, _timestamp_d, ContainerAppName_s
           '''
           timeAggregation: 'Count'
           operator: 'GreaterThan'
