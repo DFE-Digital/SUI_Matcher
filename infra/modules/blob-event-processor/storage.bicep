@@ -16,7 +16,8 @@ param peSubnetId string
 @description('The resource ID of the virtual network for private DNS zone links')
 param vnetId string
 
-var storageAccountName = toLower('${take(environmentPrefix, 8)}${take(lowercaseEnvironmentName, 8)}bep${take(uniqueString(resourceGroup().id, environmentPrefix, lowercaseEnvironmentName), 5)}')
+var noHyphensEnvironmentPrefix = replace(environmentPrefix, '-', '')
+var storageAccountName = toLower('${take(noHyphensEnvironmentPrefix, 8)}${take(lowercaseEnvironmentName, 8)}bep${take(uniqueString(resourceGroup().id, noHyphensEnvironmentPrefix, lowercaseEnvironmentName), 5)}')
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
