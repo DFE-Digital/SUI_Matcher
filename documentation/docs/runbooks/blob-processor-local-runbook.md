@@ -17,9 +17,10 @@ application. This run book is intended for using azure CLI from your local machi
 3. [Set the deployment environment variables](#set-the-deployment-environment-variables).
 4. [Run the infrastructure what-if to validate the output](#run-the-infrastructure-what-if-to-validate-the-output).
 5. [Run the infrastructure deployment](#run-the-infrastructure-deploy).
-6. TODO: Run the API' and Storage processor deployment which will deploy the API and Storage processor applications to the Azure container registry.
-7. TODO: Run the infrastructure deployment again to deploy the applications to the environment.
-8. Run the smoke tests to validate the deployment. You can do this by placing a CSV file in the blob storage and checking the logs of the storage processor to see if it has processed the file.
+6. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
+7. [Publish the Storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
+8. TODO: Run the infrastructure deployment again to deploy the applications to the environment.
+9. Run the smoke tests to validate the deployment. You can do this by placing a CSV file in the blob storage and checking the logs of the storage processor to see if it has processed the file.
 
 ## Detailed deployment steps - Follow in order
 
@@ -167,37 +168,6 @@ az deployment group what-if \
 
 ```
 
-#### use for new resource group
-
-```bash
-
-TEMPLATE_FILE="infra/stacks/blob-event-processor/subscription.bicep"
-
-az deployment group what-if \
-  --name "${DEPLOYMENT_NAME}" \
-  --resource-group "${TARGET_RESOURCE_GROUP_NAME}" \
-  --subscription "${AZURE_SUBSCRIPTION_ID}" \
-  --template-file "${TEMPLATE_FILE}" \
-  --parameters \
-    environmentName="${AZURE_ENV_NAME}" \
-    environmentPrefix="${AZURE_ENV_PREFIX}" \
-    location="${AZURE_LOCATION}" \
-    monitoringActionGroupEmail="${AZURE_MONITORING_ACTION_GROUP_EMAIL}" \
-    containerAppManagedEnvironmentNumber="${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}" \
-    containerAppVnet="${AZURE_CONTAINER_APP_VNET}" \
-    containerAppEnvSubnet="${AZURE_CONTAINER_APP_ENV_SUBNET}" \
-    containerAppPeSubnet="${AZURE_CONTAINER_APP_PE_SUBNET}" \
-    includeRoleAssignments="${AZURE_INCLUDE_ROLE_ASSIGNMENTS}" \
-    turnOnAlerts="${AZURE_TURN_ON_ALERTS}" \
-    storageProcessJobImageTag="${STORAGE_PROCESS_JOB_IMAGE_TAG}" \
-    matchingApiImageTag="${MATCHING_API_IMAGE_TAG}" \
-    externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
-    resourceGroupMode="${RESOURCE_GROUP_MODE}" \
-    targetResourceGroupName="${TARGET_RESOURCE_GROUP_NAME}" \
-    storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
-    existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
-```
-
 ### Run the infrastructure deploy
 
 Review the what-if output before running the deployment. This command follows the existing resource group path and deploys
@@ -234,4 +204,159 @@ az deployment group create \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
+```
+
+### Publish the API images to Azure Container Registry
+
+Run these commands from the repository root after the infrastructure deployment has created the Azure Container Registry
+and Container Apps environment.
+
+This mirrors `.github/workflows/gh-blob-event-processor-api-images.yml`. The images are built in Azure Container
+Registry using `az acr build`, and each API image is tagged with the current Git commit hash and `latest`.
+
+```bash
+set -euo pipefail
+
+LOWERCASE_ENVIRONMENT_NAME="$(printf '%s' "$AZURE_ENV_NAME" | tr '[:upper:]' '[:lower:]')"
+ACR_NAME="${AZURE_ENV_PREFIX}${LOWERCASE_ENVIRONMENT_NAME}bepacr01"
+CONTAINER_APPS_ENVIRONMENT_NAME="${AZURE_ENV_PREFIX}-${LOWERCASE_ENVIRONMENT_NAME}-bep-cae-${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}"
+IMAGE_TAG="$(git rev-parse --short=12 HEAD)"
+EXTERNAL_API_IMAGE_REPOSITORY="external-api"
+MATCHING_API_IMAGE_REPOSITORY="matching-api"
+
+az config set extension.use_dynamic_install=yes_without_prompt
+
+# Remove any hyphens from the ACR name
+ACR_NAME="$(printf '%s' "$ACR_NAME" | tr -d '-')"
+
+ACR_LOGIN_SERVER="$(az acr show \
+  --name "${ACR_NAME}" \
+  --resource-group "${STACK_RESOURCE_GROUP}" \
+  --query loginServer \
+  --output tsv)"
+
+CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN="$(az containerapp env show \
+  --name "${CONTAINER_APPS_ENVIRONMENT_NAME}" \
+  --resource-group "${STACK_RESOURCE_GROUP}" \
+  --query properties.defaultDomain \
+  --output tsv)"
+
+EXTERNAL_API_HTTP_ENDPOINT="http://external-api.internal.${CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}"
+EXTERNAL_API_HTTPS_ENDPOINT="https://external-api.internal.${CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}"
+
+echo "ACR: ${ACR_LOGIN_SERVER}"
+echo "External API image tag: ${IMAGE_TAG}"
+echo "Matching API image tag: ${IMAGE_TAG}"
+echo "External API endpoint for matching API: ${EXTERNAL_API_HTTPS_ENDPOINT}"
+```
+
+Build the external API image in Azure Container Registry:
+
+```bash
+az acr build \
+  --registry "${ACR_NAME}" \
+  --image "${EXTERNAL_API_IMAGE_REPOSITORY}:${IMAGE_TAG}" \
+  --image "${EXTERNAL_API_IMAGE_REPOSITORY}:latest" \
+  --file src/external-api/Dockerfile \
+  --build-arg ASPNETCORE_ENVIRONMENT="${AZURE_ENV_NAME}" \
+  .
+```
+
+Build the matching API image in Azure Container Registry:
+
+```bash
+az acr build \
+  --registry "${ACR_NAME}" \
+  --image "${MATCHING_API_IMAGE_REPOSITORY}:${IMAGE_TAG}" \
+  --image "${MATCHING_API_IMAGE_REPOSITORY}:latest" \
+  --file src/matching-api/Dockerfile \
+  --build-arg ASPNETCORE_ENVIRONMENT="${AZURE_ENV_NAME}" \
+  --build-arg EXTERNAL_API_HTTP_ENDPOINT="${EXTERNAL_API_HTTP_ENDPOINT}" \
+  --build-arg EXTERNAL_API_HTTPS_ENDPOINT="${EXTERNAL_API_HTTPS_ENDPOINT}" \
+  .
+```
+
+Check that both repositories contain the current Git commit hash and `latest` tags:
+
+```bash
+az acr repository show-tags \
+  --name "${ACR_NAME}" \
+  --repository "${EXTERNAL_API_IMAGE_REPOSITORY}" \
+  --output table
+
+az acr repository show-tags \
+  --name "${ACR_NAME}" \
+  --repository "${MATCHING_API_IMAGE_REPOSITORY}" \
+  --output table
+```
+
+### Publish the Storage processor image to Azure Container Registry
+
+Run these commands from the repository root after the API images have been published.
+
+This mirrors `.github/workflows/gh-blob-event-processor-storage-job-image.yml`. The image is built in Azure Container
+Registry using `az acr build`, and the storage processor image is tagged with the current Git commit hash and `latest`.
+
+```bash
+set -euo pipefail
+
+LOWERCASE_ENVIRONMENT_NAME="$(printf '%s' "$AZURE_ENV_NAME" | tr '[:upper:]' '[:lower:]')"
+ACR_NAME="${AZURE_ENV_PREFIX}${LOWERCASE_ENVIRONMENT_NAME}bepacr01"
+CONTAINER_APPS_ENVIRONMENT_NAME="${AZURE_ENV_PREFIX}-${LOWERCASE_ENVIRONMENT_NAME}-bep-cae-${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}"
+IMAGE_TAG="$(git rev-parse --short=12 HEAD)"
+IMAGE_REPOSITORY="sui-client-storage-process-job"
+
+az config set extension.use_dynamic_install=yes_without_prompt
+
+# Remove any hyphens from the ACR name
+ACR_NAME="$(printf '%s' "$ACR_NAME" | tr -d '-')"
+
+ACR_LOGIN_SERVER="$(az acr show \
+  --name "${ACR_NAME}" \
+  --resource-group "${STACK_RESOURCE_GROUP}" \
+  --query loginServer \
+  --output tsv)"
+
+CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN="$(az containerapp env show \
+  --name "${CONTAINER_APPS_ENVIRONMENT_NAME}" \
+  --resource-group "${STACK_RESOURCE_GROUP}" \
+  --query properties.defaultDomain \
+  --output tsv)"
+
+MATCH_API_BASE_ADDRESS="https://matching-api.internal.${CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}"
+
+echo "ACR: ${ACR_LOGIN_SERVER}"
+echo "Storage processor image tag: ${IMAGE_TAG}"
+echo "Matching API base address: ${MATCH_API_BASE_ADDRESS}"
+```
+
+Build the storage processor image in Azure Container Registry:
+
+```bash
+az acr build \
+  --registry "${ACR_NAME}" \
+  --image "${IMAGE_REPOSITORY}:${IMAGE_TAG}" \
+  --image "${IMAGE_REPOSITORY}:latest" \
+  --file src/SUI.Client/SUI.Client.StorageProcessJob/Dockerfile \
+  --build-arg MATCH_API_BASE_ADDRESS="${MATCH_API_BASE_ADDRESS}" \
+  --build-arg CSV_DATE_FORMAT=yyyy-MM-dd \
+  --build-arg CSV_COLUMN_ID=Id \
+  --build-arg CSV_COLUMN_GIVEN=GivenName \
+  --build-arg CSV_COLUMN_FAMILY=FamilyName \
+  --build-arg CSV_COLUMN_BIRTH_DATE=DOB \
+  --build-arg CSV_COLUMN_EMAIL=EMAIL \
+  --build-arg CSV_COLUMN_POSTCODE=POSTCODE \
+  --build-arg CSV_COLUMN_GENDER=GENDER \
+  --build-arg CSV_COLUMN_PHONE=PHONE \
+  --build-arg CSV_COLUMN_NHS_NUMBER=NHS_NUMBER \
+  .
+```
+
+Check that the repository contains the current Git commit hash and `latest` tags:
+
+```bash
+az acr repository show-tags \
+  --name "${ACR_NAME}" \
+  --repository "${IMAGE_REPOSITORY}" \
+  --output table
 ```
