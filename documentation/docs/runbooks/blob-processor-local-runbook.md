@@ -90,7 +90,7 @@ Then, load the variables into your terminal session and derive the deployment va
 > or Git Bash, or translate the setup into PowerShell syntax before running the Azure CLI command.
 
 ```bash
-source .env
+source .env-blob-event-processor
 
 STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-$(printf '%s' "$AZURE_ENV_NAME" | tr '[:upper:]' '[:lower:]')-blob-event-processor"
 
