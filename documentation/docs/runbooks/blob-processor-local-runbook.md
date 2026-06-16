@@ -35,10 +35,11 @@ or the storage processor event job image.
 4. [Infrastructure deployment variables](#infrastructure-deployment-variables).
 5. [Run the infrastructure what-if](#run-the-infrastructure-what-if).
 6. [Run the infrastructure deploy](#run-the-infrastructure-deploy).
-7. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
-8. [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
-9. [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
-10. [Smoke test the deployment](#smoke-test-the-deployment).
+7. [Add the NHS Digital secrets to Key Vault](#add-the-nhs-digital-secrets-to-key-vault).
+8. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
+9. [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
+10. [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
+11. [Smoke test the deployment](#smoke-test-the-deployment).
 
 ## Pick a branch, tag or commit to deploy
 
@@ -268,6 +269,20 @@ az deployment group create \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
 ```
+
+## Add the NHS Digital secrets to Key Vault
+
+After the infrastructure deployment has created the Key Vault, manually add the NHS Digital secrets used by the external
+API.
+
+The deployment output includes `SECRETS_VAULT_NAME`. Add these secrets to that Key Vault:
+
+- `nhs-digital-client-id`: the NHS Digital API key value.
+- `nhs-digital-private-key`: the private key PEM that matches the public key uploaded to the NHS Digital application.
+- `nhs-digital-kid`: the key ID for the uploaded NHS Digital public key.
+
+These secrets can be added later if needed, but the external API app will not start successfully until all three secrets
+exist in Key Vault.
 
 ## Publish the API images to Azure Container Registry
 
