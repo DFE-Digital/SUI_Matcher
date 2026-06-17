@@ -53,12 +53,8 @@ public class JwtHandler : IJwtHandler
 
     private static SigningCredentials FromPrivateKey(string privateKey, string kid)
     {
-        privateKey = privateKey.Replace("-----BEGIN RSA PRIVATE KEY-----", "");
-        privateKey = privateKey.Replace("-----END RSA PRIVATE KEY-----", "");
-        var keyBytes = Convert.FromBase64String(privateKey);
-
         var rsa = RSA.Create();
-        rsa.ImportRSAPrivateKey(keyBytes, out _);
+        rsa.ImportFromPem(privateKey.ToCharArray());
 
         var rsaSecurityKey = new RsaSecurityKey(rsa) { KeyId = kid };
 

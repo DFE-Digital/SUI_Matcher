@@ -30,7 +30,7 @@ public class StubTokenService(
                 if (string.IsNullOrEmpty(privateKey))
                 {
                     using var rsa = RSA.Create(2048);
-                    privateKey = Convert.ToBase64String(rsa.ExportRSAPrivateKey());
+                    privateKey = rsa.ExportRSAPrivateKeyPem();
                 }
                 else if (privateKey.StartsWith("file:"))
                 {
