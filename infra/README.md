@@ -6,13 +6,15 @@ Current structure:
 
 - `client-agent`: the full DfE-hosted test architecture, composed from shared modules and client-agent-specific resources
 - `blob-event-processor`: initial deployable event-driven stack foundation, composed from shared modules plus blob/queue storage resources
-- `api-batch-processor`: placeholder isolated stack root for the future batch-oriented architecture
+- `api-batch-processor`: isolated stack root for the future batch-oriented architecture, currently provisioning blob storage for low-confidence match output
 
 Shared Bicep modules live under `infra/modules`.
 
+Reusable storage modules under `infra/modules/shared` separate storage account creation, blob containers, queues, and storage private endpoint/DNS wiring so new stacks can compose only the storage resources they need.
+
 Each stack root under `infra/stacks` is paired with a subscription-scope wrapper that creates or updates the stack-owned resource group and then deploys the stack into it.
 
-The `blob-event-processor` wrapper also supports deploying into an existing resource group and using an existing storage account. In that mode, the stack still creates its standard blob containers, storage queues, private endpoints, and private DNS wiring for the configured account, but it does not create or manage the storage account service defaults.
+The `blob-event-processor` wrapper also supports deploying into an existing resource group and using an existing storage account. In that mode, the stack still creates its standard blob containers, storage queues, private endpoints, and private DNS wiring for the configured account, but it does not create or manage the storage account service defaults. Its deployed storage, queue, Event Grid, private endpoint, and DNS resource set is intentionally preserved.
 
 Supported deployment roots:
 

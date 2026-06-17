@@ -29,6 +29,8 @@ It can also deploy into an existing resource group by setting:
 
 The default storage mode is `storageAccountMode=create`. In this mode the stack creates the storage account, the blob/queue containers, and the blob/queue private endpoints and private DNS wiring.
 
+The storage implementation uses shared composable modules internally, but the deployed resource set for this stack remains the full event-driven storage surface: storage account, containers, queues, Event Grid, blob and queue private endpoints, and blob and queue private DNS.
+
 Created storage accounts use Standard LRS hot storage, disable blob public access, require TLS 1.2, and deny network access except for trusted Azure services.
 
 For client-provided storage, set:
