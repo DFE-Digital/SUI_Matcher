@@ -19,25 +19,12 @@ param vnetId string
 var noHyphensEnvironmentPrefix = replace(environmentPrefix, '-', '')
 var storageAccountName = toLower('${take(noHyphensEnvironmentPrefix, 8)}${take(lowercaseEnvironmentName, 8)}bep${take(uniqueString(resourceGroup().id, noHyphensEnvironmentPrefix, lowercaseEnvironmentName), 5)}')
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: storageAccountName
-  location: location
-  kind: 'StorageV2'
-  sku: {
-    name: 'Standard_LRS'
-  }
-  tags: tags
-  properties: {
-    accessTier: 'Hot'
-    allowBlobPublicAccess: false
-    allowSharedKeyAccess: true
-    minimumTlsVersion: 'TLS1_2'
-    publicNetworkAccess: 'Enabled' // Must be Enabled to allow Trusted Microsoft Services when networkAcls are used
-    supportsHttpsTrafficOnly: true
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Deny'
-    }
+module storageAccount '../shared/storage-account.bicep' = {
+  name: 'blob-event-processor-storage-account'
+  params: {
+    location: location
+    storageAccountName: storageAccountName
+    tags: tags
   }
 }
 
@@ -46,17 +33,17 @@ module storageResources './storage-resources.bicep' = {
   params: {
     location: location
     tags: tags
-    storageAccountName: storageAccount.name
-    storageAccountId: storageAccount.id
+    storageAccountName: storageAccount.outputs.accountName
+    storageAccountId: storageAccount.outputs.accountId
     peSubnetId: peSubnetId
     vnetId: vnetId
   }
 }
 
-output accountName string = storageAccount.name
-output accountId string = storageAccount.id
-output blobEndpoint string = storageAccount.properties.primaryEndpoints.blob
-output queueEndpoint string = storageAccount.properties.primaryEndpoints.queue
+output accountName string = storageAccount.outputs.accountName
+output accountId string = storageAccount.outputs.accountId
+output blobEndpoint string = storageAccount.outputs.blobEndpoint
+output queueEndpoint string = storageAccount.outputs.queueEndpoint
 output incomingContainerName string = storageResources.outputs.incomingContainerName
 output processedContainerName string = storageResources.outputs.processedContainerName
 output successContainerName string = storageResources.outputs.successContainerName

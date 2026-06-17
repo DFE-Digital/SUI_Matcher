@@ -26,7 +26,7 @@ Today the repo contains:
 
 This has been workable for the current deployment shape, but it is not a good fit for the next set of environments.
 
-The next deployment target needs a different architecture from the current VM/client shape. A future deployment is also expected to diverge further, with batch-oriented Eclipse integration as the current baseline. If we continue extending the existing single-root deployment model with more flags and conditionals, the IaC will get harder to reason about, harder to validate, and more likely to break the current deployment path.
+The next deployment target needs a different architecture from the current VM/client shape. A future deployment is also expected to diverge further, with batch-oriented GraphQL API integration as the current baseline. If we continue extending the existing single-root deployment model with more flags and conditionals, the IaC will get harder to reason about, harder to validate, and more likely to break the current deployment path.
 
 The proposed direction is to restructure deployment IaC around **separate deployment stacks by architecture pattern**, while keeping genuinely shared Azure resources in reusable modules.
 
@@ -160,7 +160,7 @@ Good candidates for shared modules:
 Poor candidates for shared modules:
 
 - anything that exists only because one deployment architecture has a different topology
-- pilot-specific VM, function, eventing, or Eclipse integration concerns
+- pilot-specific VM, function, eventing, or GraphQL API integration concerns
 - modules that only stay "shared" by introducing many boolean switches
 
 If a resource exists because one deployment architecture needs it, it should stay in that architecture's stack root.
@@ -219,7 +219,7 @@ Preserving deployability in this note means keeping the deployment path usable a
 The following assumptions are treated as current working direction:
 
 - the next environment architecture to support is the `blob-event-processor` stack
-- future Eclipse integration should be planned around the current batch model
+- future GraphQL API integration should be planned around the current batch model
 - the current deployment path must remain deployable throughout the refactor
 - Aspire should remain focused on local development rather than deployment modelling
 - generic naming should be enforced for new stacks and resources
