@@ -103,6 +103,8 @@ MATCHING_API_IMAGE_TAG="latest"
 EXTERNAL_API_IMAGE_TAG="latest"
 STORAGE_ACCOUNT_MODE="create" # "create" or "existing"
 EXISTING_STORAGE_ACCOUNT_NAME="" # Leave blank if it does not exist.
+AZURE_TAG_ENVIRONMENT_NAME="" # Optional override for the Environment tag.
+AZURE_ADDITIONAL_TAGS="{}" # Optional additional tags as a JSON object string.
 ```
 
 Load the variables into your terminal session, derive the common deployment values, and select the Azure subscription:
@@ -173,6 +175,10 @@ Required variables:
 - `STORAGE_ACCOUNT_MODE`
 - `EXISTING_STORAGE_ACCOUNT_NAME` when `STORAGE_ACCOUNT_MODE` is `existing`
 
+Optional variables:
+
+- `AZURE_TAG_ENVIRONMENT_NAME`
+- `AZURE_ADDITIONAL_TAGS` 
 ```bash
 if [ "${RESOURCE_GROUP_MODE}" != "existing" ]; then
   echo "This run book targets an existing resource group. Set RESOURCE_GROUP_MODE to existing."
@@ -226,7 +232,9 @@ az deployment group what-if \
     matchingApiImageTag="${MATCHING_API_IMAGE_TAG}" \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
-    existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
+    existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}" \
+    tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME:-}" \
+    additionalTags="${AZURE_ADDITIONAL_TAGS:-{}}"
 ```
 
 ## Run the infrastructure deploy
@@ -267,7 +275,9 @@ az deployment group create \
     matchingApiImageTag="${MATCHING_API_IMAGE_TAG}" \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
-    existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}"
+    existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}" \
+    tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME:-}" \
+    additionalTags="${AZURE_ADDITIONAL_TAGS:-{}}"
 ```
 
 ## Add the NHS Digital secrets to Key Vault
