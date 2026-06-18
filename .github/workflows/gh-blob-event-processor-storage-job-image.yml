@@ -9,19 +9,19 @@ on:
       environment:
         description: The environment target for the image
         required: true
-        default: 'Integration'
+        default: "Integration"
       version:
         description: The version, tag, branch, or SHA to build
         required: true
         type: string
       environment_prefix:
         description: The prefix for the environment
-        default: 's215d01'
+        default: "s215d01"
         type: string
       image_tag:
         description: Optional image tag. Defaults to the checked-out commit SHA.
         required: false
-        default: ''
+        default: ""
         type: string
 
 permissions:
@@ -74,6 +74,7 @@ jobs:
           LOWERCASE_ENVIRONMENT_NAME="${AZURE_ENV_NAME,,}"
           STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${LOWERCASE_ENVIRONMENT_NAME}-blob-event-processor"
           ACR_NAME="${AZURE_ENV_PREFIX}${LOWERCASE_ENVIRONMENT_NAME}bepacr01"
+          ACR_NAME="$(printf '%s' "$ACR_NAME" | tr -d '-')"
           CONTAINER_APPS_ENVIRONMENT_NAME="${AZURE_ENV_PREFIX}-${LOWERCASE_ENVIRONMENT_NAME}-bep-cae-${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}"
           IMAGE_TAG="${INPUT_IMAGE_TAG}"
 

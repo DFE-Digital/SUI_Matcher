@@ -36,15 +36,18 @@ param routeTableId string = ''
 param logAnalyticsWorkspaceName string
 
 var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
-var dashboardComponentName = '${empty(stackNameSuffix) ? 'aspire' : toLower(stackNameSuffix)}-dashboard-01'
-var caeVnetName = empty(virtualNetworkName) ? '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-vnet-cae-01' : virtualNetworkName
+var caeVnetName = empty(virtualNetworkName)
+  ? '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-vnet-cae-01'
+  : virtualNetworkName
 var containerAppEnvironmentSubnetName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-subnet-cae-01'
 var privateEndpointSubnetName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-subnet-pe-01'
-var caeSubnetRouteTable = empty(routeTableId) ? {} : {
-  routeTable: {
-    id: routeTableId
-  }
-}
+var caeSubnetRouteTable = empty(routeTableId)
+  ? {}
+  : {
+      routeTable: {
+        id: routeTableId
+      }
+    }
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logAnalyticsWorkspaceName
@@ -65,17 +68,20 @@ resource caeVnet 'Microsoft.Network/virtualNetworks@2024-05-01' = if (empty(virt
 resource containerAppEnvironmentSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
   #disable-next-line use-parent-property
   name: '${caeVnetName}/${containerAppEnvironmentSubnetName}'
-  properties: union({
-    addressPrefix: containerAppEnvSubnet
-    delegations: [
-      {
-        name: 'Microsoft.App.environments'
-        properties: {
-          serviceName: 'Microsoft.App/environments'
+  properties: union(
+    {
+      addressPrefix: containerAppEnvSubnet
+      delegations: [
+        {
+          name: 'Microsoft.App.environments'
+          properties: {
+            serviceName: 'Microsoft.App/environments'
+          }
         }
-      }
-    ]
-  }, caeSubnetRouteTable)
+      ]
+    },
+    caeSubnetRouteTable
+  )
   dependsOn: [
     caeVnet
   ]
@@ -123,13 +129,6 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
       internal: true
     }
   }
-
-  resource aspireDashboard 'dotNetComponents' = {
-    name: dashboardComponentName
-    properties: {
-      componentType: 'AspireDashboard'
-    }
-  }
 }
 
 output name string = containerAppEnvironment.name
@@ -137,4 +136,6 @@ output id string = containerAppEnvironment.id
 output defaultDomain string = containerAppEnvironment.properties.defaultDomain
 output virtualNetworkName string = caeVnetName
 output virtualNetworkId string = resourceId('Microsoft.Network/virtualNetworks', caeVnetName)
-output privateEndpointSubnetId string = empty(privateEndpointSubnetAddressPrefix) ? '' : resourceId('Microsoft.Network/virtualNetworks/subnets', caeVnetName, privateEndpointSubnetName)
+output privateEndpointSubnetId string = empty(privateEndpointSubnetAddressPrefix)
+  ? ''
+  : resourceId('Microsoft.Network/virtualNetworks/subnets', caeVnetName, privateEndpointSubnetName)

@@ -14,10 +14,11 @@ param stackNameSuffix string = ''
 param tags object = {}
 
 var stackNameToken = empty(stackNameSuffix) ? '' : toLower(stackNameSuffix)
+var noHypenEnvironment = replace(environmentPrefix, '-', '')
 
 // The resource name can only contain alphanumeric characters.
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: '${environmentPrefix}${lowercaseEnvironmentName}${stackNameToken}acr01'
+  name: '${noHypenEnvironment}${lowercaseEnvironmentName}${stackNameToken}acr01'
   location: location
   sku: {
     name: 'Premium'
