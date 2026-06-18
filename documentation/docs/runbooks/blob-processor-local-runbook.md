@@ -178,7 +178,8 @@ Required variables:
 Optional variables:
 
 - `AZURE_TAG_ENVIRONMENT_NAME`
-- `AZURE_ADDITIONAL_TAGS` 
+- `AZURE_ADDITIONAL_TAGS`
+
 ```bash
 if [ "${RESOURCE_GROUP_MODE}" != "existing" ]; then
   echo "This run book targets an existing resource group. Set RESOURCE_GROUP_MODE to existing."
@@ -233,8 +234,8 @@ az deployment group what-if \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}" \
-    tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME:-}" \
-    additionalTags="${AZURE_ADDITIONAL_TAGS:-{}}"
+    tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME}" \
+    additionalTags="${AZURE_ADDITIONAL_TAGS}"
 ```
 
 ## Run the infrastructure deploy
@@ -276,8 +277,8 @@ az deployment group create \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}" \
-    tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME:-}" \
-    additionalTags="${AZURE_ADDITIONAL_TAGS:-{}}"
+    tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME}" \
+    additionalTags="${AZURE_ADDITIONAL_TAGS}"
 ```
 
 ## Add the NHS Digital secrets to Key Vault
