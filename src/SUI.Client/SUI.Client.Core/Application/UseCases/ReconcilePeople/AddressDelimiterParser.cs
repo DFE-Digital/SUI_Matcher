@@ -50,6 +50,11 @@ public static class AddressParser
             return new AddressHistory([]);
         }
 
+        if (!historyString.Contains('~'))
+        {
+            return ParseNewestFirstCommaSeparatedHistory(historyString, primaryPostcode);
+        }
+
         var parts = historyString.Split(
             MultipleAddressDelimiter,
             StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
@@ -64,6 +69,48 @@ public static class AddressParser
         );
 
         return new AddressHistory(addresses, primaryAddress);
+    }
+
+    private static AddressHistory ParseNewestFirstCommaSeparatedHistory(
+        string historyString,
+        string primaryPostcode
+    )
+    {
+        var addresses = historyString
+            .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select(ParseCommaSeparatedAddress)
+            .OfType<AddressMinimal>()
+            .ToList();
+        var normalizedPostcode = NormalizePostcode(primaryPostcode);
+        var primaryAddress = addresses.FirstOrDefault(address =>
+            address.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase)
+        );
+
+        return new AddressHistory(addresses, primaryAddress);
+    }
+
+    private static AddressMinimal? ParseCommaSeparatedAddress(string value)
+    {
+        var parts = value.Split(
+            ',',
+            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
+        );
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
+        var postcode = NormalizePostcode(parts[^1]);
+        if (string.IsNullOrWhiteSpace(postcode))
+        {
+            return null;
+        }
+
+        return new AddressMinimal(
+            ExtractHouseNumber(parts[0]),
+            parts.Length > 2 ? ExtractHouseNumber(parts[1]) : null,
+            postcode
+        );
     }
 
     /// <summary>

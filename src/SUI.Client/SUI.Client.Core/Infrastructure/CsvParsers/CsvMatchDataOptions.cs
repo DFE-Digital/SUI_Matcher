@@ -39,5 +39,6 @@ public record CsvMatchDataOptions
         [Required]
         public string Phone { get; init; } = "Phone";
         public string? NhsNumber { get; init; }
+        public string? Address { get; init; }
     }
 }
