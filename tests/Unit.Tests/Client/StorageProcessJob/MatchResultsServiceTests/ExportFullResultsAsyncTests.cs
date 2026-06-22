@@ -5,6 +5,7 @@ using Moq;
 using Shared.Models;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.StorageProcessJob;
 using SUI.Client.StorageProcessJob.Application;
@@ -178,6 +179,89 @@ public class ExportFullResultsAsyncTests
                     "processed",
                     "20260120120000_test-file/test-file_full-results.csv",
                     It.Is<BinaryData>(data => data.ToString() == FullResultsCsvWithErrorRow),
+                    "text/csv",
+                    CancellationToken.None
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Should_WriteDerivedFields_When_ReconciliationModeIsEnabled()
+    {
+        var blobStorageClient = new Mock<IBlobStorageClient>();
+        var sut = new MatchResultsService(
+            _logger.Object,
+            blobStorageClient.Object,
+            Options.Create(
+                new StorageProcessJobOptions
+                {
+                    ProcessedContainerName = "processed",
+                    ProcessingMode = ProcessingModes.Reconciliation,
+                }
+            ),
+            Options.Create(
+                new CsvMatchDataOptions
+                {
+                    DateFormat = "yyyy-MM-dd",
+                    ColumnMappings = new CsvMatchDataOptions.Headers
+                    {
+                        Id = "Id",
+                        Given = "GivenName",
+                        Family = "FamilyName",
+                        BirthDate = "DOB",
+                        Postcode = "Postcode",
+                    },
+                }
+            )
+        );
+        var record = CreateMatchedRecord(
+            new Dictionary<string, string> { ["Id"] = "1111" },
+            true,
+            MatchStatus.Match,
+            0.96m,
+            "9999999993",
+            "search-id-1"
+        );
+        record.ReconciliationResult = new ReconciliationResponse
+        {
+            Status = ReconciliationStatus.NoDifferences,
+        };
+        record.SourceBirthDate = new DateOnly(2000, 1, 1);
+        record.SourceNhsNumber = "9999999993";
+        record.AddressComparisonResults = new AddressComparisonResults
+        {
+            PrimaryAddressSame = new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Matched
+            ),
+            AddressHistoriesIntersect = new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Unmatched
+            ),
+            PrimaryCMSAddressInPDSHistory = new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Uncertain,
+                AddressComparisonResult.AddressMatchReason.FlatMissing
+            ),
+            PrimaryPDSAddressInCMSHistory = new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Matched
+            ),
+        };
+        var expected =
+            $"Id,SUI_Status,SUI_Score,SUI_NHSNo,SUI_SearchId,SUI_AgeGroup,SUI_PrimaryAddressSame,SUI_AddressHistoriesIntersect,SUI_PrimarySourceAddressInPDSHistory,SUI_PrimaryPDSAddressInSourceHistory,SUI_SourceNhsNumberPresent,SUI_SourceNhsNumberEqualsMatchedNhsNumber{Environment.NewLine}"
+            + $"1111,NoDifferences,0.96,9999999993,search-id-1,Over 18 years,Matched,Unmatched,Uncertain-FlatMissing,Matched,Yes,Yes{Environment.NewLine}";
+
+        await sut.ExportFullResultsAsync(
+            BlobNames,
+            "test-file.csv",
+            [record],
+            CancellationToken.None
+        );
+
+        blobStorageClient.Verify(
+            client =>
+                client.UploadBlobAsync(
+                    "processed",
+                    BlobNames.FullResultsBlobName,
+                    It.Is<BinaryData>(data => data.ToString() == expected),
                     "text/csv",
                     CancellationToken.None
                 ),

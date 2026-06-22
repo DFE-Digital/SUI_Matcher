@@ -5,6 +5,7 @@ using CsvHelper.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Models;
+using Shared.Util;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
 using SUI.Client.Core.Infrastructure.CsvParsers;
@@ -20,6 +21,8 @@ public sealed class MatchResultsService(
 ) : IMatchResultsService
 {
     private const string CsvContentType = "text/csv";
+    private const string Yes = "Yes";
+    private const string No = "No";
 
     public async Task ExportSuccessResultsAsync(
         MatchResultsBlobNames blobNames,
@@ -82,7 +85,13 @@ public sealed class MatchResultsService(
             return;
         }
 
-        var csvContent = BuildFullResultsCsv(matchedResults);
+        var csvContent = BuildFullResultsCsv(
+            matchedResults,
+            storageOptions.Value.ProcessingMode.Equals(
+                ProcessingModes.Reconciliation,
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
 
         await blobStorageClient.UploadBlobAsync(
             storageOptions.Value.ProcessedContainerName,
@@ -164,13 +173,24 @@ public sealed class MatchResultsService(
     }
 
     private static string BuildFullResultsCsv(
-        IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults
+        IReadOnlyCollection<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
+        bool includeReconciliationFields
     )
     {
         const string fullStatusHeader = "SUI_Status";
         const string fullScoreHeader = "SUI_Score";
         const string fullNhsNumberHeader = "SUI_NHSNo";
         const string fullSearchIdHeader = "SUI_SearchId";
+        const string ageGroupHeader = "SUI_AgeGroup";
+        const string primaryAddressSameHeader = "SUI_PrimaryAddressSame";
+        const string addressHistoriesIntersectHeader = "SUI_AddressHistoriesIntersect";
+        const string primarySourceAddressInPdsHistoryHeader =
+            "SUI_PrimarySourceAddressInPDSHistory";
+        const string primaryPdsAddressInSourceHistoryHeader =
+            "SUI_PrimaryPDSAddressInSourceHistory";
+        const string sourceNhsNumberPresentHeader = "SUI_SourceNhsNumberPresent";
+        const string sourceNhsNumberEqualsMatchedHeader =
+            "SUI_SourceNhsNumberEqualsMatchedNhsNumber";
 
         var originalHeaders =
             matchedResults.FirstOrDefault()?.OriginalData.Record.Keys.ToList() ?? [];
@@ -191,6 +211,16 @@ public sealed class MatchResultsService(
         csvWriter.WriteField(fullScoreHeader);
         csvWriter.WriteField(fullNhsNumberHeader);
         csvWriter.WriteField(fullSearchIdHeader);
+        if (includeReconciliationFields)
+        {
+            csvWriter.WriteField(ageGroupHeader);
+            csvWriter.WriteField(primaryAddressSameHeader);
+            csvWriter.WriteField(addressHistoriesIntersectHeader);
+            csvWriter.WriteField(primarySourceAddressInPdsHistoryHeader);
+            csvWriter.WriteField(primaryPdsAddressInSourceHistoryHeader);
+            csvWriter.WriteField(sourceNhsNumberPresentHeader);
+            csvWriter.WriteField(sourceNhsNumberEqualsMatchedHeader);
+        }
         csvWriter.NextRecord();
 
         foreach (var matchedResult in matchedResults)
@@ -208,6 +238,45 @@ public sealed class MatchResultsService(
             );
             csvWriter.WriteField(matchedResult.ApiResult?.Result?.NhsNumber ?? "-");
             csvWriter.WriteField(matchedResult.ApiResult?.SearchId ?? "-");
+            if (includeReconciliationFields)
+            {
+                var addressComparison = matchedResult.AddressComparisonResults;
+                csvWriter.WriteField(
+                    matchedResult.SourceBirthDate.HasValue
+                        ? PersonSpecificationUtils.GetAgeGroup(
+                            matchedResult.SourceBirthDate.Value
+                        )
+                        : "Unknown"
+                );
+                csvWriter.WriteField(
+                    addressComparison?.PrimaryAddressSame.GetResultMessage() ?? "NoComparison"
+                );
+                csvWriter.WriteField(
+                    addressComparison?.AddressHistoriesIntersect.GetResultMessage()
+                        ?? "NoComparison"
+                );
+                csvWriter.WriteField(
+                    addressComparison?.PrimaryCMSAddressInPDSHistory.GetResultMessage()
+                        ?? "NoComparison"
+                );
+                csvWriter.WriteField(
+                    addressComparison?.PrimaryPDSAddressInCMSHistory.GetResultMessage()
+                        ?? "NoComparison"
+                );
+                csvWriter.WriteField(
+                    string.IsNullOrWhiteSpace(matchedResult.SourceNhsNumber) ? No : Yes
+                );
+                csvWriter.WriteField(
+                    !string.IsNullOrWhiteSpace(matchedResult.SourceNhsNumber)
+                    && string.Equals(
+                        matchedResult.SourceNhsNumber,
+                        matchedResult.ApiResult?.Result?.NhsNumber,
+                        StringComparison.Ordinal
+                    )
+                        ? Yes
+                        : No
+                );
+            }
             csvWriter.NextRecord();
         }
 
@@ -216,6 +285,11 @@ public sealed class MatchResultsService(
 
     private static string MapStatus(ProcessedMatchRecord<CsvRecordDto> matchedResult)
     {
+        if (matchedResult.ReconciliationResult is not null)
+        {
+            return matchedResult.ReconciliationResult.Status.ToString();
+        }
+
         if (matchedResult.ApiResult?.Result is not null)
         {
             return matchedResult.ApiResult.Result.MatchStatus.ToString();
