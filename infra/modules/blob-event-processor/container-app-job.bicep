@@ -43,6 +43,10 @@ param imageTag string
 @description('The base address of the matching API')
 param matchApiBaseAddress string
 
+@secure()
+@description('Optional runtime configuration values for the storage process job.')
+param storageProcessJobConfiguration object = {}
+
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
@@ -54,6 +58,10 @@ param includeRoleAssignments bool = true
 var jobName = toLower('${take(environmentPrefix, 8)}-${take(lowercaseEnvironmentName, 3)}-storage-process-job')
 var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 var storageQueueDataContributorRoleId = '974c5e8b-45b9-4653-ba55-5f855dd0fb88'
+var storageProcessJobConfigurationEnvironment = [for setting in items(storageProcessJobConfiguration): {
+  name: setting.key
+  value: string(setting.value)
+}]
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
@@ -133,28 +141,31 @@ resource storageProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
             cpu: json('2.0')
             memory: '4Gi'
           }
-          env: [
-            {
-              name: 'StorageProcessJob__BlobServiceUri'
-              value: blobServiceUri
-            }
-            {
-              name: 'StorageProcessJob__QueueServiceUri'
-              value: queueServiceUri
-            }
-            {
-              name: 'StorageProcessJob__MatchApiBaseAddress'
-              value: matchApiBaseAddress
-            }
-            {
-              name: 'StorageProcessJob__MaxDequeueCount'
-              value: '1'
-            }
-            {
-              name: 'AZURE_CLIENT_ID'
-              value: managedIdentityClientId
-            }
-          ]
+          env: concat(
+            [
+              {
+                name: 'StorageProcessJob__BlobServiceUri'
+                value: blobServiceUri
+              }
+              {
+                name: 'StorageProcessJob__QueueServiceUri'
+                value: queueServiceUri
+              }
+              {
+                name: 'StorageProcessJob__MatchApiBaseAddress'
+                value: matchApiBaseAddress
+              }
+              {
+                name: 'StorageProcessJob__MaxDequeueCount'
+                value: '1'
+              }
+              {
+                name: 'AZURE_CLIENT_ID'
+                value: managedIdentityClientId
+              }
+            ],
+            storageProcessJobConfigurationEnvironment
+          )
         }
       ]
     }

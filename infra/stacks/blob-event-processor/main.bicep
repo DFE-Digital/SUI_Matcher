@@ -67,6 +67,10 @@ param tagEnvironmentName string = ''
 @description('Optional additional tags to apply to deployed resources.')
 param additionalTags object = {}
 
+@secure()
+@description('Optional runtime configuration values for the storage process job.')
+param storageProcessJobConfiguration object = {}
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
 var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
@@ -281,6 +285,7 @@ module storageProcessJob '../../modules/blob-event-processor/container-app-job.b
     containerRegistryServer: containerRegistry.outputs.endpoint
     imageTag: storageProcessJobImageTag
     matchApiBaseAddress: 'https://matching-api.internal.${containerAppEnvironment.outputs.defaultDomain}'
+    storageProcessJobConfiguration: storageProcessJobConfiguration
     tags: tags
     includeRoleAssignments: includeRoleAssignments
   }

@@ -76,6 +76,10 @@ param tagEnvironmentName string = ''
 @description('Optional additional tags to apply to deployed resources.')
 param additionalTags object = {}
 
+@secure()
+@description('Optional runtime configuration values for the storage process job.')
+param storageProcessJobConfiguration object = {}
+
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackName = 'blob-event-processor'
 var stackResourceGroupName = '${environmentPrefix}-${lowercaseEnvironmentName}-${stackName}'
@@ -116,6 +120,7 @@ module stackDeployment 'main.bicep' = {
     existingStorageAccountName: existingStorageAccountName
     tagEnvironmentName: tagEnvironmentName
     additionalTags: additionalTags
+    storageProcessJobConfiguration: storageProcessJobConfiguration
   }
   dependsOn: [
     stackResourceGroup

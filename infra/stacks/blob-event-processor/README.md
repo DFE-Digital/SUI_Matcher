@@ -119,6 +119,8 @@ It uses the shared managed identity, pulls `sui-client-storage-process-job:<tag>
 
 The job is configured with 2 vCPU, 4Gi memory, a 6 hour replica timeout, no automatic replica retries, and `StorageProcessJob__MaxDequeueCount=1`.
 
+CSV mappings and processing mode are supplied as a protected JSON object through the `STORAGE_PROCESS_JOB_CONFIGURATION` GitHub environment secret. The object keys are .NET environment-variable configuration names. Do not put deployment-specific schemas or mapping values in repository files, workflow inputs, or workflow summaries.
+
 ### Azure Storage blob and queues
 
 Setup of azure storage blob for file upload for processing.
