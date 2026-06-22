@@ -96,6 +96,7 @@ env:
   TARGET_RESOURCE_GROUP_NAME: ${{ inputs.target_resource_group_name }}
   STORAGE_ACCOUNT_MODE: ${{ inputs.storage_account_mode || 'create' }}
   EXISTING_STORAGE_ACCOUNT_NAME: ${{ inputs.existing_storage_account_name }}
+  STORAGE_PROCESS_JOB_CONFIGURATION: ${{ secrets.STORAGE_PROCESS_JOB_CONFIGURATION }}
 
 concurrency:
   group: blob-event-processor-${{ inputs.environment_prefix }}-${{ inputs.environment }}
@@ -214,6 +215,7 @@ jobs:
           target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
           storage_account_mode: ${{ env.STORAGE_ACCOUNT_MODE }}
           existing_storage_account_name: ${{ env.EXISTING_STORAGE_ACCOUNT_NAME }}
+          storage_process_job_configuration: ${{ env.STORAGE_PROCESS_JOB_CONFIGURATION }}
 
   deploy:
     name: Deploy blob-event-processor infrastructure
@@ -260,6 +262,7 @@ jobs:
           target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
           storage_account_mode: ${{ env.STORAGE_ACCOUNT_MODE }}
           existing_storage_account_name: ${{ env.EXISTING_STORAGE_ACCOUNT_NAME }}
+          storage_process_job_configuration: ${{ env.STORAGE_PROCESS_JOB_CONFIGURATION }}
 
   summarize:
     name: Summarize blob-event-processor run

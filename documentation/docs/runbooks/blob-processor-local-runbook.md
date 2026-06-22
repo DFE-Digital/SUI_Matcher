@@ -105,6 +105,8 @@ STORAGE_ACCOUNT_MODE="create" # "create" or "existing"
 EXISTING_STORAGE_ACCOUNT_NAME="" # Leave blank if it does not exist.
 AZURE_TAG_ENVIRONMENT_NAME="" # Optional override for the Environment tag.
 AZURE_ADDITIONAL_TAGS="{}" # Optional additional tags as a JSON object string.
+# Obtain this protected JSON object from the approved external runbook.
+STORAGE_PROCESS_JOB_CONFIGURATION="{}"
 ```
 
 Load the variables into your terminal session, derive the common deployment values, and select the Azure subscription:
@@ -174,6 +176,7 @@ Required variables:
 - `EXTERNAL_API_IMAGE_TAG`
 - `STORAGE_ACCOUNT_MODE`
 - `EXISTING_STORAGE_ACCOUNT_NAME` when `STORAGE_ACCOUNT_MODE` is `existing`
+- `STORAGE_PROCESS_JOB_CONFIGURATION`
 
 Optional variables:
 
@@ -234,6 +237,7 @@ az deployment group what-if \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}" \
+    storageProcessJobConfiguration="${STORAGE_PROCESS_JOB_CONFIGURATION}" \
     tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME}" \
     additionalTags="${AZURE_ADDITIONAL_TAGS}"
 ```
@@ -277,6 +281,7 @@ az deployment group create \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}" \
+    storageProcessJobConfiguration="${STORAGE_PROCESS_JOB_CONFIGURATION}" \
     tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME}" \
     additionalTags="${AZURE_ADDITIONAL_TAGS}"
 ```
@@ -457,18 +462,10 @@ az acr build \
   --image "${IMAGE_REPOSITORY}:latest" \
   --file src/SUI.Client/SUI.Client.StorageProcessJob/Dockerfile \
   --build-arg MATCH_API_BASE_ADDRESS="${MATCH_API_BASE_ADDRESS}" \
-  --build-arg CSV_DATE_FORMAT=yyyy-MM-dd \
-  --build-arg CSV_COLUMN_ID=Id \
-  --build-arg CSV_COLUMN_GIVEN=GivenName \
-  --build-arg CSV_COLUMN_FAMILY=FamilyName \
-  --build-arg CSV_COLUMN_BIRTH_DATE=DOB \
-  --build-arg CSV_COLUMN_EMAIL=EMAIL \
-  --build-arg CSV_COLUMN_POSTCODE=POSTCODE \
-  --build-arg CSV_COLUMN_GENDER=GENDER \
-  --build-arg CSV_COLUMN_PHONE=PHONE \
-  --build-arg CSV_COLUMN_NHS_NUMBER=NHS_NUMBER \
   .
 ```
+
+CSV mappings and processing mode are runtime deployment configuration. Obtain the protected configuration from the approved external runbook; do not add its values to this repository or image build command.
 
 Check that the repository contains the current Git commit hash and `latest` tags:
 
@@ -504,6 +501,7 @@ Required variables for this task:
 - `AZURE_TURN_ON_ALERTS`
 - `STORAGE_ACCOUNT_MODE`
 - `EXISTING_STORAGE_ACCOUNT_NAME` when `STORAGE_ACCOUNT_MODE` is `existing`
+- `STORAGE_PROCESS_JOB_CONFIGURATION`
 - `EXTERNAL_API_IMAGE_TAG`
 - `MATCHING_API_IMAGE_TAG`
 - `STORAGE_PROCESS_JOB_IMAGE_TAG`
