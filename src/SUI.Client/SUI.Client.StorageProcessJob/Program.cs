@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.Core.Infrastructure.Http;
 using SUI.Client.StorageProcessJob;
@@ -32,6 +33,18 @@ builder
             && options.MessageVisibilityRenewalIntervalMinutes
                 < options.MessageVisibilityTimeoutMinutes,
         "MaxDequeueCount must be positive, and the message visibility renewal interval must be positive and less than the visibility timeout."
+    )
+    .Validate(
+        options =>
+            options.ProcessingMode.Equals(
+                ProcessingModes.Matching,
+                StringComparison.OrdinalIgnoreCase
+            )
+            || options.ProcessingMode.Equals(
+                ProcessingModes.Reconciliation,
+                StringComparison.OrdinalIgnoreCase
+            ),
+        $"ProcessingMode must be {ProcessingModes.Matching} or {ProcessingModes.Reconciliation}."
     )
     .ValidateOnStart();
 
@@ -109,11 +122,27 @@ builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
     }
 );
 
-builder.Services.AddSingleton(
-    typeof(IMatchPersonRecordOrchestrator<>),
-    typeof(MatchPersonRecordOrchestrator<>)
+builder.Services.AddSingleton<MatchPersonRecordOrchestrator<CsvRecordDto>>();
+builder.Services.AddSingleton<ReconcilePersonRecordOrchestrator<CsvRecordDto>>();
+builder.Services.AddSingleton<IMatchPersonRecordOrchestrator<CsvRecordDto>>(serviceProvider =>
+{
+    var storageOptions = serviceProvider
+        .GetRequiredService<IOptions<StorageProcessJobOptions>>()
+        .Value;
+    return storageOptions.ProcessingMode.Equals(
+        ProcessingModes.Reconciliation,
+        StringComparison.OrdinalIgnoreCase
+    )
+        ? serviceProvider.GetRequiredService<ReconcilePersonRecordOrchestrator<CsvRecordDto>>()
+        : serviceProvider.GetRequiredService<MatchPersonRecordOrchestrator<CsvRecordDto>>();
+});
+builder.Services.AddSingleton<CsvPersonSpecParser>();
+builder.Services.AddSingleton<IPersonSpecParser<CsvRecordDto>>(serviceProvider =>
+    serviceProvider.GetRequiredService<CsvPersonSpecParser>()
 );
-builder.Services.AddSingleton<IPersonSpecParser<CsvRecordDto>, CsvPersonSpecParser>();
+builder.Services.AddSingleton<IReconciliationDataParser<CsvRecordDto>>(serviceProvider =>
+    serviceProvider.GetRequiredService<CsvPersonSpecParser>()
+);
 builder.Services.AddSingleton<ICsvHeadersProvider, CsvMatchingHeadersProvider>();
 
 builder.Services.AddHttpClient();

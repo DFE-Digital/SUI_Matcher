@@ -1,4 +1,5 @@
 using Shared.Models;
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 namespace SUI.Client.Core.Application.UseCases.MatchPeople;
 
@@ -9,6 +10,10 @@ public class ProcessedMatchRecord<TSource>
 
     // The result from the API
     public PersonMatchResponse? ApiResult { get; set; }
+    public ReconciliationResponse? ReconciliationResult { get; set; }
+    public DateOnly? SourceBirthDate { get; set; }
+    public string? SourceNhsNumber { get; set; }
+    public AddressComparisonResults? AddressComparisonResults { get; set; }
 
     // Metadata for the edges to know how to handle this row
     public bool IsSuccess { get; set; }
