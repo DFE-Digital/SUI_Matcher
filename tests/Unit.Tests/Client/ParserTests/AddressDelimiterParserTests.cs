@@ -6,6 +6,20 @@ namespace Unit.Tests.Client.ParserTests;
 public class AddressDelimiterParserTests
 {
     [Fact]
+    public void ParseHistory_ParsesNewestFirstCommaSeparatedAddresses()
+    {
+        var result = AddressParser.ParseHistory(
+            "10 Example Road, Exampletown, AA1 1AA; 20 Previous Street, Othertown, BB2 2BB",
+            "AA1 1AA"
+        );
+
+        Assert.Equal(2, result.Addresses.Count);
+        Assert.NotNull(result.PrimaryAddress);
+        Assert.Equal("10", result.PrimaryAddress!.AddressLineOne);
+        Assert.Equal("AA11AA", result.PrimaryAddress.Postcode);
+    }
+
+    [Fact]
     public void ParseRecord_ParsesHouseFromSecondSegment_AndPostcodeFromLast()
     {
         const string historyString = "1~2 bob lane~Somewhere~YO1 6GA";

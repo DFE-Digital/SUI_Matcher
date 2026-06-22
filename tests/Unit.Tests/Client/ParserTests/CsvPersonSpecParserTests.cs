@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Shared.Models;
+using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Infrastructure.CsvParsers;
 
@@ -23,7 +24,8 @@ public class CsvPersonSpecParserTests
                     Postcode = "Postcode",
                     Gender = "Gender",
                     Phone = "Phone",
-                    NhsNumber = "NhsNumber",
+                    NhsNumber = "SourceNumber",
+                    Address = "AddressHistory",
                 },
             }
         );
@@ -142,5 +144,34 @@ public class CsvPersonSpecParserTests
 
         Assert.Equal("CustomValue1", result.OptionalProperties["CustomField1"]);
         Assert.Equal("CustomValue2", result.OptionalProperties["CustomField2"]);
+    }
+
+    [Fact]
+    public void Should_ExcludeMappedReconciliationFieldsFromOptionalProperties()
+    {
+        var sut = new CsvPersonSpecParser(CreateDefaultOptions());
+        var csvRecord = new CsvRecordDto(
+            new Dictionary<string, string>
+            {
+                ["GivenName"] = "Jane",
+                ["FamilyName"] = "Doe",
+                ["DOB"] = "2012-05-10",
+                ["SourceNumber"] = "9999999993",
+                ["AddressHistory"] = "10 Example Road, Exampletown, AA1 1AA",
+                ["AnalysisField"] = "Value",
+            }
+        );
+
+        var person = sut.Parse(csvRecord);
+        var reconciliationData = ((IReconciliationDataParser<CsvRecordDto>)sut).Parse(csvRecord);
+
+        Assert.DoesNotContain("SourceNumber", person.OptionalProperties.Keys);
+        Assert.DoesNotContain("AddressHistory", person.OptionalProperties.Keys);
+        Assert.Equal("Value", person.OptionalProperties["AnalysisField"]);
+        Assert.Equal("9999999993", reconciliationData.NhsNumber);
+        Assert.Equal(
+            "10 Example Road, Exampletown, AA1 1AA",
+            reconciliationData.AddressHistory
+        );
     }
 }

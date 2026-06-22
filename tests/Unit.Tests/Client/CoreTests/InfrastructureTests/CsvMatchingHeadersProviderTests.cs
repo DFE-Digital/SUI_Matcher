@@ -64,7 +64,7 @@ public class CsvMatchingHeadersProviderTests
 
         var result = sut.GetOptionalHeaders();
 
-        Assert.Equal(["EmailAddress", "Gender", "Telephone"], result);
+        Assert.Equal(["EmailAddress", "Gender", "Telephone", "NhsNumber"], result);
         Assert.DoesNotContain("PersonId", result);
         Assert.DoesNotContain("Forename", result);
         Assert.DoesNotContain("Surname", result);

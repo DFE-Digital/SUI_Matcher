@@ -8,7 +8,8 @@ using SUI.Client.Core.Infrastructure.FileSystem;
 namespace SUI.Client.Core.Infrastructure.CsvParsers;
 
 public class CsvPersonSpecParser(IOptions<CsvMatchDataOptions> csvMatchDataOptions)
-    : IPersonSpecParser<CsvRecordDto>
+    : IPersonSpecParser<CsvRecordDto>,
+        IReconciliationDataParser<CsvRecordDto>
 {
     public PersonSpecification Parse(CsvRecordDto csvRecord)
     {
@@ -39,6 +40,17 @@ public class CsvPersonSpecParser(IOptions<CsvMatchDataOptions> csvMatchDataOptio
         };
     }
 
+    ReconciliationSourceData IReconciliationDataParser<CsvRecordDto>.Parse(
+        CsvRecordDto csvRecord
+    )
+    {
+        var mappings = csvMatchDataOptions.Value.ColumnMappings;
+        return new ReconciliationSourceData(
+            GetMappedValue(csvRecord.Record, mappings.NhsNumber),
+            GetMappedValue(csvRecord.Record, mappings.Address)
+        );
+    }
+
     /// <summary>
     /// Find and extract any properties from the CSV record that are not part of the standard mapped fields.
     /// </summary>
@@ -64,4 +76,12 @@ public class CsvPersonSpecParser(IOptions<CsvMatchDataOptions> csvMatchDataOptio
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         return mappedColumns.Contains(columnName);
     }
+
+    private static string? GetMappedValue(
+        Dictionary<string, string> record,
+        string? mappedColumn
+    ) =>
+        string.IsNullOrWhiteSpace(mappedColumn)
+            ? null
+            : record.GetFirstValueOrDefault([mappedColumn]);
 }
