@@ -15,4 +15,11 @@ public sealed class StorageProcessJobOptions
     public int MessageVisibilityTimeoutMinutes { get; init; } = 10;
     public int MessageVisibilityRenewalIntervalMinutes { get; init; } = 5;
     public string? MatchApiBaseAddress { get; init; }
+    public string ProcessingMode { get; init; } = ProcessingModes.Matching;
+}
+
+public static class ProcessingModes
+{
+    public const string Matching = "Matching";
+    public const string Reconciliation = "Reconciliation";
 }
