@@ -3,10 +3,12 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Shared.Models;
+using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
 using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 using SUI.Client.Core.Infrastructure.CsvParsers;
+using SUI.Client.Core.Infrastructure.FileSystem;
 using SUI.Client.StorageProcessJob;
 using SUI.Client.StorageProcessJob.Application;
 using SUI.Client.StorageProcessJob.Application.Interfaces;
@@ -267,6 +269,159 @@ public class ExportFullResultsAsyncTests
                 ),
             Times.Once
         );
+    }
+
+    [Fact]
+    public async Task Should_ProcessAndPreserveCompleteGenericSourceSchema()
+    {
+        var columnMappings = new CsvMatchDataOptions.Headers
+        {
+            Id = "RecordKey",
+            Given = "FirstName",
+            Family = "LastName",
+            BirthDate = "BirthDate",
+            Postcode = "PostalCode",
+            Gender = "Sex",
+            Email = "Email",
+            Phone = "Phone",
+            NhsNumber = "SourceHealthNumber",
+            Address = "ResidenceHistory",
+        };
+        var csvOptions = Options.Create(
+            new CsvMatchDataOptions
+            {
+                DateFormat = "yyyy-MM-dd",
+                ColumnMappings = columnMappings,
+            }
+        );
+        var originalFields = new Dictionary<string, string>
+        {
+            [columnMappings.Id] = "record-001",
+            [columnMappings.NhsNumber!] = "9999999993",
+            [columnMappings.Given] = "Jamie",
+            [columnMappings.Family] = "Taylor",
+            [columnMappings.Postcode] = "AA1 1AA",
+            [columnMappings.BirthDate] = "2000-01-01",
+            [columnMappings.Gender] = "female",
+            [columnMappings.Address!] =
+                "10 Example Road, Exampletown, AA1 1AA; 20 Previous Street, Othertown, BB2 2BB",
+        };
+        foreach (var index in Enumerable.Range(1, 27))
+        {
+            originalFields[$"AnalysisField{index:00}"] = $"AnalysisValue{index:00}";
+        }
+        Assert.Equal(35, originalFields.Count);
+
+        var source = new CsvRecordDto(originalFields);
+        var parser = new CsvPersonSpecParser(csvOptions);
+        var person = parser.Parse(source);
+        var reconciliationData = ((IReconciliationDataParser<CsvRecordDto>)parser).Parse(source);
+
+        Assert.Equal("Jamie", person.Given);
+        Assert.Equal("Taylor", person.Family);
+        Assert.Equal(new DateOnly(2000, 1, 1), person.BirthDate);
+        Assert.Equal("AA1 1AA", person.AddressPostalCode);
+        Assert.Equal("female", person.Gender);
+        Assert.Equal(27, person.OptionalProperties.Count);
+        Assert.All(
+            Enumerable.Range(1, 27),
+            index =>
+                Assert.Equal(
+                    $"AnalysisValue{index:00}",
+                    person.OptionalProperties[$"AnalysisField{index:00}"]
+                )
+        );
+        Assert.DoesNotContain(columnMappings.NhsNumber!, person.OptionalProperties.Keys);
+        Assert.DoesNotContain(columnMappings.Address!, person.OptionalProperties.Keys);
+        Assert.Equal("9999999993", reconciliationData.NhsNumber);
+        Assert.Equal(originalFields[columnMappings.Address!], reconciliationData.AddressHistory);
+
+        BinaryData? uploadedContent = null;
+        var blobStorageClient = new Mock<IBlobStorageClient>();
+        blobStorageClient
+            .Setup(client =>
+                client.UploadBlobAsync(
+                    "processed",
+                    BlobNames.FullResultsBlobName,
+                    It.IsAny<BinaryData>(),
+                    "text/csv",
+                    CancellationToken.None
+                )
+            )
+            .Callback<string, string, BinaryData, string, CancellationToken>(
+                (_, _, content, _, _) => uploadedContent = content
+            )
+            .Returns(Task.CompletedTask);
+        var sut = new MatchResultsService(
+            _logger.Object,
+            blobStorageClient.Object,
+            Options.Create(
+                new StorageProcessJobOptions
+                {
+                    ProcessedContainerName = "processed",
+                    ProcessingMode = ProcessingModes.Reconciliation,
+                }
+            ),
+            csvOptions
+        );
+        var processedRecord = CreateMatchedRecord(
+            originalFields,
+            true,
+            MatchStatus.Match,
+            0.96m,
+            "9999999993",
+            "search-id-1"
+        );
+        processedRecord.ReconciliationResult = new ReconciliationResponse
+        {
+            Status = ReconciliationStatus.NoDifferences,
+        };
+        processedRecord.SourceBirthDate = person.BirthDate;
+        processedRecord.SourceNhsNumber = reconciliationData.NhsNumber;
+        processedRecord.AddressComparisonResults = new AddressComparisonResults
+        {
+            PrimaryAddressSame = new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Matched
+            ),
+            AddressHistoriesIntersect = new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Matched
+            ),
+            PrimaryCMSAddressInPDSHistory = new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Matched
+            ),
+            PrimaryPDSAddressInCMSHistory = new AddressComparisonResult(
+                AddressComparisonResult.AddressMatchStatus.Matched
+            ),
+        };
+
+        await sut.ExportFullResultsAsync(
+            BlobNames,
+            "generic-source.csv",
+            [processedRecord],
+            CancellationToken.None
+        );
+
+        Assert.NotNull(uploadedContent);
+        using var outputReader = new StringReader(uploadedContent!.ToString());
+        var (outputHeaders, outputRecords) = await CsvRecordReader.ReadCsvTextAsync(outputReader);
+        var outputRecord = Assert.Single(outputRecords);
+
+        Assert.Equal(46, outputHeaders.Count);
+        Assert.All(
+            originalFields,
+            field => Assert.Equal(field.Value, outputRecord[field.Key])
+        );
+        Assert.Equal("NoDifferences", outputRecord["SUI_Status"]);
+        Assert.Equal("0.96", outputRecord["SUI_Score"]);
+        Assert.Equal("9999999993", outputRecord["SUI_NHSNo"]);
+        Assert.Equal("search-id-1", outputRecord["SUI_SearchId"]);
+        Assert.Equal("Over 18 years", outputRecord["SUI_AgeGroup"]);
+        Assert.Equal("Matched", outputRecord["SUI_PrimaryAddressSame"]);
+        Assert.Equal("Matched", outputRecord["SUI_AddressHistoriesIntersect"]);
+        Assert.Equal("Matched", outputRecord["SUI_PrimarySourceAddressInPDSHistory"]);
+        Assert.Equal("Matched", outputRecord["SUI_PrimaryPDSAddressInSourceHistory"]);
+        Assert.Equal("Yes", outputRecord["SUI_SourceNhsNumberPresent"]);
+        Assert.Equal("Yes", outputRecord["SUI_SourceNhsNumberEqualsMatchedNhsNumber"]);
     }
 
     private static ProcessedMatchRecord<CsvRecordDto> CreateMatchedRecord(
