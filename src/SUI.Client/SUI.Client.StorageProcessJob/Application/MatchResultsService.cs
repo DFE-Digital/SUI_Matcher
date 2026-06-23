@@ -23,6 +23,7 @@ public sealed class MatchResultsService(
     private const string CsvContentType = "text/csv";
     private const string Yes = "Yes";
     private const string No = "No";
+    private const string NoComparison = "NoComparison";
 
     public async Task ExportSuccessResultsAsync(
         MatchResultsBlobNames blobNames,
@@ -202,85 +203,123 @@ public sealed class MatchResultsService(
             new CsvConfiguration(CultureInfo.InvariantCulture) { NewLine = Environment.NewLine }
         );
 
-        foreach (var header in originalHeaders)
-        {
-            csvWriter.WriteField(header);
-        }
-
-        csvWriter.WriteField(fullStatusHeader);
-        csvWriter.WriteField(fullScoreHeader);
-        csvWriter.WriteField(fullNhsNumberHeader);
-        csvWriter.WriteField(fullSearchIdHeader);
-        if (includeReconciliationFields)
-        {
-            csvWriter.WriteField(ageGroupHeader);
-            csvWriter.WriteField(primaryAddressSameHeader);
-            csvWriter.WriteField(addressHistoriesIntersectHeader);
-            csvWriter.WriteField(primarySourceAddressInPdsHistoryHeader);
-            csvWriter.WriteField(primaryPdsAddressInSourceHistoryHeader);
-            csvWriter.WriteField(sourceNhsNumberPresentHeader);
-            csvWriter.WriteField(sourceNhsNumberEqualsMatchedHeader);
-        }
+        WriteHeaders(
+            csvWriter,
+            originalHeaders,
+            includeReconciliationFields,
+            [
+                fullStatusHeader,
+                fullScoreHeader,
+                fullNhsNumberHeader,
+                fullSearchIdHeader,
+            ],
+            [
+                ageGroupHeader,
+                primaryAddressSameHeader,
+                addressHistoriesIntersectHeader,
+                primarySourceAddressInPdsHistoryHeader,
+                primaryPdsAddressInSourceHistoryHeader,
+                sourceNhsNumberPresentHeader,
+                sourceNhsNumberEqualsMatchedHeader,
+            ]
+        );
         csvWriter.NextRecord();
 
         foreach (var matchedResult in matchedResults)
         {
-            foreach (var header in originalHeaders)
-            {
-                matchedResult.OriginalData.Record.TryGetValue(header, out var value);
-                csvWriter.WriteField(value);
-            }
+            WriteFullResult(csvWriter, originalHeaders, matchedResult);
 
-            csvWriter.WriteField(MapStatus(matchedResult));
-            csvWriter.WriteField(
-                matchedResult.ApiResult?.Result?.Score?.ToString(CultureInfo.InvariantCulture)
-                    ?? "-"
-            );
-            csvWriter.WriteField(matchedResult.ApiResult?.Result?.NhsNumber ?? "-");
-            csvWriter.WriteField(matchedResult.ApiResult?.SearchId ?? "-");
             if (includeReconciliationFields)
             {
-                var addressComparison = matchedResult.AddressComparisonResults;
-                csvWriter.WriteField(
-                    matchedResult.SourceBirthDate.HasValue
-                        ? PersonSpecificationUtils.GetAgeGroup(
-                            matchedResult.SourceBirthDate.Value
-                        )
-                        : "Unknown"
-                );
-                csvWriter.WriteField(
-                    addressComparison?.PrimaryAddressSame.GetResultMessage() ?? "NoComparison"
-                );
-                csvWriter.WriteField(
-                    addressComparison?.AddressHistoriesIntersect.GetResultMessage()
-                        ?? "NoComparison"
-                );
-                csvWriter.WriteField(
-                    addressComparison?.PrimaryCMSAddressInPDSHistory.GetResultMessage()
-                        ?? "NoComparison"
-                );
-                csvWriter.WriteField(
-                    addressComparison?.PrimaryPDSAddressInCMSHistory.GetResultMessage()
-                        ?? "NoComparison"
-                );
-                csvWriter.WriteField(
-                    string.IsNullOrWhiteSpace(matchedResult.SourceNhsNumber) ? No : Yes
-                );
-                csvWriter.WriteField(
-                    !string.IsNullOrWhiteSpace(matchedResult.SourceNhsNumber)
-                    && string.Equals(
-                        matchedResult.SourceNhsNumber,
-                        matchedResult.ApiResult?.Result?.NhsNumber,
-                        StringComparison.Ordinal
-                    )
-                        ? Yes
-                        : No
-                );
+                WriteReconciliationFields(csvWriter, matchedResult);
             }
+
             csvWriter.NextRecord();
         }
 
         return builder.ToString();
+    }
+
+    private static void WriteHeaders(
+        CsvWriter csvWriter,
+        IReadOnlyCollection<string> originalHeaders,
+        bool includeReconciliationFields,
+        IReadOnlyCollection<string> resultHeaders,
+        IReadOnlyCollection<string> reconciliationHeaders
+    )
+    {
+        foreach (var header in originalHeaders.Concat(resultHeaders))
+        {
+            csvWriter.WriteField(header);
+        }
+
+        if (!includeReconciliationFields)
+        {
+            return;
+        }
+
+        foreach (var header in reconciliationHeaders)
+        {
+            csvWriter.WriteField(header);
+        }
+    }
+
+    private static void WriteFullResult(
+        CsvWriter csvWriter,
+        IReadOnlyCollection<string> originalHeaders,
+        ProcessedMatchRecord<CsvRecordDto> matchedResult
+    )
+    {
+        foreach (var header in originalHeaders)
+        {
+            matchedResult.OriginalData.Record.TryGetValue(header, out var value);
+            csvWriter.WriteField(value);
+        }
+
+        csvWriter.WriteField(MapStatus(matchedResult));
+        csvWriter.WriteField(
+            matchedResult.ApiResult?.Result?.Score?.ToString(CultureInfo.InvariantCulture) ?? "-"
+        );
+        csvWriter.WriteField(matchedResult.ApiResult?.Result?.NhsNumber ?? "-");
+        csvWriter.WriteField(matchedResult.ApiResult?.SearchId ?? "-");
+    }
+
+    private static void WriteReconciliationFields(
+        CsvWriter csvWriter,
+        ProcessedMatchRecord<CsvRecordDto> matchedResult
+    )
+    {
+        var addressComparison = matchedResult.AddressComparisonResults;
+        csvWriter.WriteField(
+            matchedResult.SourceBirthDate.HasValue
+                ? PersonSpecificationUtils.GetAgeGroup(matchedResult.SourceBirthDate.Value)
+                : "Unknown"
+        );
+        csvWriter.WriteField(
+            addressComparison?.PrimaryAddressSame.GetResultMessage() ?? NoComparison
+        );
+        csvWriter.WriteField(
+            addressComparison?.AddressHistoriesIntersect.GetResultMessage() ?? NoComparison
+        );
+        csvWriter.WriteField(
+            addressComparison?.PrimaryCMSAddressInPDSHistory.GetResultMessage() ?? NoComparison
+        );
+        csvWriter.WriteField(
+            addressComparison?.PrimaryPDSAddressInCMSHistory.GetResultMessage() ?? NoComparison
+        );
+        csvWriter.WriteField(
+            string.IsNullOrWhiteSpace(matchedResult.SourceNhsNumber) ? No : Yes
+        );
+        csvWriter.WriteField(
+            !string.IsNullOrWhiteSpace(matchedResult.SourceNhsNumber)
+            && string.Equals(
+                matchedResult.SourceNhsNumber,
+                matchedResult.ApiResult?.Result?.NhsNumber,
+                StringComparison.Ordinal
+            )
+                ? Yes
+                : No
+        );
     }
 
     private static string MapStatus(ProcessedMatchRecord<CsvRecordDto> matchedResult)
