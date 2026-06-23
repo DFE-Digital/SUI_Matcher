@@ -1,6 +1,6 @@
 namespace SUI.Client.Core.Application.Interfaces;
 
-public interface IReconciliationDataParser<TSource>
+public interface IReconciliationDataParser<in TSource>
 {
     ReconciliationSourceData Parse(TSource record);
 }

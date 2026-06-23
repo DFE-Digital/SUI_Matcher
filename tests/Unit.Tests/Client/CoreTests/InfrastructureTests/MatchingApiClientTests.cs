@@ -202,9 +202,11 @@ public class MatchingApiClientTests
                 ItExpr.IsAny<CancellationToken>()
             )
             .Returns<HttpRequestMessage, CancellationToken>(
-                async (request, _) =>
+                async (request, cancellationToken) =>
                 {
-                    sentPayload = await request.Content!.ReadFromJsonAsync<ReconciliationRequest>();
+                    sentPayload = await request.Content!.ReadFromJsonAsync<ReconciliationRequest>(
+                        cancellationToken
+                    );
                     return new HttpResponseMessage
                     {
                         StatusCode = HttpStatusCode.OK,

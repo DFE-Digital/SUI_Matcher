@@ -272,6 +272,77 @@ public class ExportFullResultsAsyncTests
     }
 
     [Fact]
+    public async Task Should_WriteFallbackDerivedFields_When_ReconciliationDataIsUnavailable()
+    {
+        var blobStorageClient = new Mock<IBlobStorageClient>();
+        var sut = new MatchResultsService(
+            _logger.Object,
+            blobStorageClient.Object,
+            Options.Create(
+                new StorageProcessJobOptions
+                {
+                    ProcessedContainerName = "processed",
+                    ProcessingMode = ProcessingModes.Reconciliation,
+                }
+            ),
+            Options.Create(
+                new CsvMatchDataOptions
+                {
+                    DateFormat = "yyyy-MM-dd",
+                    ColumnMappings = new CsvMatchDataOptions.Headers
+                    {
+                        Id = "Id",
+                        Given = "GivenName",
+                        Family = "FamilyName",
+                        BirthDate = "DOB",
+                        Postcode = "Postcode",
+                    },
+                }
+            )
+        );
+        var missingSourceData = CreateMatchedRecord(
+            new Dictionary<string, string> { ["Id"] = "1111" },
+            true,
+            MatchStatus.Match,
+            0.96m,
+            "9999999993",
+            "search-id-1"
+        );
+        var differentSourceNhsNumber = CreateMatchedRecord(
+            new Dictionary<string, string> { ["Id"] = "2222" },
+            true,
+            MatchStatus.Match,
+            0.95m,
+            "9999999993",
+            "search-id-2"
+        );
+        differentSourceNhsNumber.SourceNhsNumber = "1111111111";
+        var expected =
+            $"Id,SUI_Status,SUI_Score,SUI_NHSNo,SUI_SearchId,SUI_AgeGroup,SUI_PrimaryAddressSame,SUI_AddressHistoriesIntersect,SUI_PrimarySourceAddressInPDSHistory,SUI_PrimaryPDSAddressInSourceHistory,SUI_SourceNhsNumberPresent,SUI_SourceNhsNumberEqualsMatchedNhsNumber{Environment.NewLine}"
+            + $"1111,Match,0.96,9999999993,search-id-1,Unknown,NoComparison,NoComparison,NoComparison,NoComparison,No,No{Environment.NewLine}"
+            + $"2222,Match,0.95,9999999993,search-id-2,Unknown,NoComparison,NoComparison,NoComparison,NoComparison,Yes,No{Environment.NewLine}";
+
+        await sut.ExportFullResultsAsync(
+            BlobNames,
+            "test-file.csv",
+            [missingSourceData, differentSourceNhsNumber],
+            CancellationToken.None
+        );
+
+        blobStorageClient.Verify(
+            client =>
+                client.UploadBlobAsync(
+                    "processed",
+                    BlobNames.FullResultsBlobName,
+                    It.Is<BinaryData>(data => data.ToString() == expected),
+                    "text/csv",
+                    CancellationToken.None
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
     public async Task Should_ProcessAndPreserveCompleteGenericSourceSchema()
     {
         var columnMappings = new CsvMatchDataOptions.Headers
