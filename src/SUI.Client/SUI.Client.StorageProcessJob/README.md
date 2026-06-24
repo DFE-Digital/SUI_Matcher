@@ -11,7 +11,7 @@ docker build \
   .
 ```
 
-The matching API base address can be baked into the image for local use. CSV mappings and processing mode must be provided at runtime so deployment-specific schemas are not stored in the image or repository.
+The Dockerfile only accepts the matching API base address as a build argument. CSV mappings and processing mode must be provided at runtime so deployment-specific schemas are not stored in the image or repository.
 
 ```bash
 docker build \
@@ -21,7 +21,7 @@ docker build \
   .
 ```
 
-`MATCH_API_BASE_ADDRESS` has no Dockerfile default. Supply it as a build arg when baking it into the image, or provide `StorageProcessJob__MatchApiBaseAddress` as a runtime environment variable.
+`MATCH_API_BASE_ADDRESS` has no Dockerfile default. Supply it as a build argument when baking it into the image, or provide `StorageProcessJob__MatchApiBaseAddress` as a runtime environment variable.
 
 Use `StorageProcessJob__ProcessingMode=Matching` for the existing flow or `StorageProcessJob__ProcessingMode=Reconciliation` when demographic and address-derived output is required.
 
@@ -39,15 +39,11 @@ docker compose up -d azurite
 > **For Linux users:** `host.docker.internal` is not automatically mapped on Linux. Add `--add-host=host.docker.internal:host-gateway` to the `docker run` command to enable it.
 
 
-If the CSV mapping and matching API base address were supplied as build args, run the job with only the local Azurite connection:
+The production image cannot process a CSV with only the Azurite connection string. At minimum it needs the matching API base address, CSV date format, and source column mappings.
 
-```bash
-docker run --rm \
-  -e 'AzureWebJobsStorage=UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://host.docker.internal' \
-  sui-client-storage-process-job:local
-```
+If `MATCH_API_BASE_ADDRESS` was supplied as a build argument, you can omit `StorageProcessJob__MatchApiBaseAddress` from the runtime environment. CSV mappings and processing mode still need to be supplied at runtime.
 
-Runtime environment variables override values baked into the image. To test overrides locally, pass the .NET configuration keys with `-e`:
+Pass runtime settings with the .NET configuration keys:
 
 ```bash
 docker run --rm \
@@ -67,6 +63,8 @@ docker run --rm \
   -e CsvMatchData__ColumnMappings__Address="${ADDRESS_HISTORY_COLUMN}" \
   sui-client-storage-process-job:local
 ```
+
+Runtime environment variables override values from `appsettings.json` and the baked matching API base address.
 
 `host.docker.internal` lets the job container reach services exposed by the host machine. `UseDevelopmentStorage=true` without `DevelopmentStorageProxyUri` points to `127.0.0.1` inside the job container and will not reach Azurite running outside that container.
 
