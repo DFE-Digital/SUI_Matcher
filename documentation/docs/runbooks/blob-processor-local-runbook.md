@@ -106,8 +106,10 @@ EXISTING_STORAGE_ACCOUNT_NAME="" # Leave blank if it does not exist.
 AZURE_TAG_ENVIRONMENT_NAME="" # Optional override for the Environment tag.
 AZURE_ADDITIONAL_TAGS="{}" # Optional additional tags as a JSON object string.
 # Obtain this protected JSON object from the approved external runbook.
-STORAGE_PROCESS_JOB_CONFIGURATION="{}"
+STORAGE_PROCESS_JOB_CONFIGURATION='<protected-storage-process-job-configuration-json>'
 ```
+
+`STORAGE_PROCESS_JOB_CONFIGURATION` is passed to the ACA job as runtime environment configuration. It must include the storage job processing mode and CSV mapping keys before the storage processor can process files. Keep deployment-specific source column names in the approved external runbook, not in this repository.
 
 Load the variables into your terminal session, derive the common deployment values, and select the Azure subscription:
 
@@ -466,6 +468,8 @@ az acr build \
 ```
 
 CSV mappings and processing mode are runtime deployment configuration. Obtain the protected configuration from the approved external runbook; do not add its values to this repository or image build command.
+
+Do not smoke test a newly published storage processor image until `STORAGE_PROCESS_JOB_CONFIGURATION` has been set for the target environment. The image no longer contains default source column mappings.
 
 Check that the repository contains the current Git commit hash and `latest` tags:
 
