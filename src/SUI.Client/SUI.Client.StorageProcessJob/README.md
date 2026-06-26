@@ -51,6 +51,7 @@ docker run --rm \
   -e StorageProcessJob__MatchApiBaseAddress=http://host.docker.internal:5000 \
   -e StorageProcessJob__ProcessingMode=Matching \
   -e CsvMatchData__DateFormat=yyyy-MM-dd \
+  -e CsvMatchData__AddressHistoryFormat=TildePipeChronological \
   -e CsvMatchData__ColumnMappings__Id="${SOURCE_ID_COLUMN}" \
   -e CsvMatchData__ColumnMappings__Given="${GIVEN_NAME_COLUMN}" \
   -e CsvMatchData__ColumnMappings__Family="${FAMILY_NAME_COLUMN}" \
@@ -65,6 +66,8 @@ docker run --rm \
 ```
 
 Runtime environment variables override values from `appsettings.json` and the baked matching API base address.
+
+Set `CsvMatchData__AddressHistoryFormat=SemicolonCommaNewestFirst` when the mapped source address column contains semicolon-separated addresses in newest-first order, with each address represented as comma-separated address lines. The default `TildePipeChronological` format keeps the existing `|`-separated records with `~`-separated fields.
 
 `host.docker.internal` lets the job container reach services exposed by the host machine. `UseDevelopmentStorage=true` without `DevelopmentStorageProxyUri` points to `127.0.0.1` inside the job container and will not reach Azurite running outside that container.
 

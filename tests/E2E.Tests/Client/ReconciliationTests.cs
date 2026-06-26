@@ -66,7 +66,8 @@ public class ReconciliationTests(AppHostFixture fixture, TempDirectoryFixture te
             logger,
             mappingConfig,
             matchPersonApiService,
-            watcherConfig
+            watcherConfig,
+            new AddressComparisonOrchestrator(new TildePipeChronologicalAddressHistoryParser())
         );
 
         var monitor = new CsvFileMonitor(

@@ -17,7 +17,8 @@ public class ReconciliationCsvFileProcessor(
     ILogger<ReconciliationCsvFileProcessor> logger,
     CsvMappingConfig mapping,
     IMatchingService matching,
-    IOptions<CsvWatcherConfig> watcherConfig
+    IOptions<CsvWatcherConfig> watcherConfig,
+    AddressComparisonOrchestrator addressComparisonOrchestrator
 ) : ICsvFileProcessor
 {
     private readonly ReconciliationProcessStats _stats = new();
@@ -104,7 +105,7 @@ public class ReconciliationCsvFileProcessor(
 
         var response = await matching.ReconcilePersonAsync(payload);
 
-        var addressComparisonResult = AddressComparisonOrchestrator.GetAddressComparisonResult(
+        var addressComparisonResult = addressComparisonOrchestrator.GetAddressComparisonResult(
             payload,
             response,
             record.GetFirstValueOrDefault(
