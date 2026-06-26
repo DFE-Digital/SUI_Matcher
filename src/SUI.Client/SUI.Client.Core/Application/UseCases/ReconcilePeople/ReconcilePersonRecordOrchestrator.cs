@@ -11,6 +11,7 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
     IMatchingApiClient matchingApiClient,
     IPersonSpecParser<TSource> personSpecParser,
     IReconciliationDataParser<TSource> reconciliationDataParser,
+    AddressComparisonOrchestrator addressComparisonOrchestrator,
     IOptions<PersonMatchingOptions> options
 ) : IMatchPersonRecordOrchestrator<TSource>
 {
@@ -55,12 +56,11 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
                         Result = response.MatchingResult,
                         SearchId = response.SearchId,
                     };
-                var addressComparison =
-                    AddressComparisonOrchestrator.GetAddressComparisonResult(
-                        payload,
-                        response,
-                        sourceData.AddressHistory
-                    );
+                var addressComparison = addressComparisonOrchestrator.GetAddressComparisonResult(
+                    payload,
+                    response,
+                    sourceData.AddressHistory
+                );
 
                 processedBatch.Add(
                     new ProcessedMatchRecord<TSource>

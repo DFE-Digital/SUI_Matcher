@@ -55,6 +55,10 @@ builder
     .Services.AddOptions<CsvMatchDataOptions>()
     .Bind(builder.Configuration.GetSection(CsvMatchDataOptions.SectionName))
     .ValidateDataAnnotations()
+    .Validate(
+        options => Enum.IsDefined(options.AddressHistoryFormat),
+        $"AddressHistoryFormat must be {SourceAddressHistoryFormat.TildePipeChronological} or {SourceAddressHistoryFormat.SemicolonCommaNewestFirst}."
+    )
     .ValidateOnStart();
 
 builder.Services.AddSingleton(TimeProvider.System);
@@ -101,6 +105,23 @@ builder.Services.AddSingleton<IStorageQueueMessageParser, EventGridMessageParser
 builder.Services.AddSingleton<IBlobFileOrchestrator, BlobFileOrchestrator>();
 builder.Services.AddSingleton<MatchResultsBlobNameBuilder>();
 builder.Services.AddSingleton<IMatchResultsService, MatchResultsService>();
+builder.Services.AddSingleton<TildePipeChronologicalAddressHistoryParser>();
+builder.Services.AddSingleton<SemicolonCommaNewestFirstAddressHistoryParser>();
+builder.Services.AddSingleton<ISourceAddressHistoryParser>(serviceProvider =>
+{
+    var options = serviceProvider.GetRequiredService<IOptions<CsvMatchDataOptions>>().Value;
+    return options.AddressHistoryFormat switch
+    {
+        SourceAddressHistoryFormat.TildePipeChronological =>
+            serviceProvider.GetRequiredService<TildePipeChronologicalAddressHistoryParser>(),
+        SourceAddressHistoryFormat.SemicolonCommaNewestFirst =>
+            serviceProvider.GetRequiredService<SemicolonCommaNewestFirstAddressHistoryParser>(),
+        _ => throw new InvalidOperationException(
+            $"Unsupported address history format '{options.AddressHistoryFormat}'."
+        ),
+    };
+});
+builder.Services.AddSingleton<AddressComparisonOrchestrator>();
 builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
     (serviceProvider, client) =>
     {

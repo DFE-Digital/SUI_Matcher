@@ -8,8 +8,26 @@ public class AddressDelimiterParserTests
     [Fact]
     public void ParseHistory_ParsesNewestFirstCommaSeparatedAddresses()
     {
-        var result = AddressParser.ParseHistory(
+        var parser = new SemicolonCommaNewestFirstAddressHistoryParser();
+
+        var result = parser.Parse(
             "10 Example Road, Exampletown, AA1 1AA; 20 Previous Street, Othertown, BB2 2BB",
+            "AA1 1AA"
+        );
+
+        Assert.Equal(2, result.Addresses.Count);
+        Assert.NotNull(result.PrimaryAddress);
+        Assert.Equal("10", result.PrimaryAddress!.AddressLineOne);
+        Assert.Equal("AA11AA", result.PrimaryAddress.Postcode);
+    }
+
+    [Fact]
+    public void ParseHistory_UsesConfiguredFormat_WhenCommaSeparatedAddressContainsTilde()
+    {
+        var parser = new SemicolonCommaNewestFirstAddressHistoryParser();
+
+        var result = parser.Parse(
+            "10 Example~ Road, Exampletown, AA1 1AA; 20 Previous Street, Othertown, BB2 2BB",
             "AA1 1AA"
         );
 
@@ -100,11 +118,12 @@ public class AddressDelimiterParserTests
     [Fact]
     public void ParseHistory_ParsesMultipleRecords_DelimitedByPipe()
     {
+        var parser = new TildePipeChronologicalAddressHistoryParser();
         const string primaryPostcode = "YO2 7GB";
         const string historyString =
             "1~2 bob lane~Somewhere~YO1 6GA|2~3 alice road~Elsewhere~YO2 7GB";
 
-        var result = AddressParser.ParseHistory(historyString, primaryPostcode);
+        var result = parser.Parse(historyString, primaryPostcode);
 
         Assert.NotNull(result);
         Assert.Equal(2, result.Addresses.Count);
@@ -124,7 +143,9 @@ public class AddressDelimiterParserTests
         int expectedCount
     )
     {
-        var result = AddressParser.ParseHistory(historyString, primaryPostcode);
+        var parser = new TildePipeChronologicalAddressHistoryParser();
+
+        var result = parser.Parse(historyString, primaryPostcode);
 
         Assert.NotNull(result);
         Assert.Equal(expectedCount, result.Addresses.Count);
@@ -150,7 +171,9 @@ public class AddressDelimiterParserTests
         string expectedPostcode
     )
     {
-        var result = AddressParser.ParseHistory(historyString, primaryPostcode);
+        var parser = new TildePipeChronologicalAddressHistoryParser();
+
+        var result = parser.Parse(historyString, primaryPostcode);
 
         Assert.NotNull(result);
         Assert.NotNull(result.PrimaryAddress);

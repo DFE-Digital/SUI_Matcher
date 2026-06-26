@@ -6,8 +6,6 @@ namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 public static class AddressParser
 {
-    private const string MultipleAddressDelimiter = "|";
-
     /// <summary>
     /// Parses an address record delimited by "~" into its components, specifically extracting the house number and postcode.
     /// </summary>
@@ -39,81 +37,6 @@ public static class AddressParser
     }
 
     /// <summary>
-    /// Parses a history of address records delimited by "|" into an AddressHistory object.
-    /// Each record in the history is delimited by "~".
-    /// <para>The order of the history string is preserved</para>
-    /// </summary>
-    public static AddressHistory ParseHistory(string? historyString, string? primaryPostcode)
-    {
-        if (string.IsNullOrWhiteSpace(historyString) || string.IsNullOrWhiteSpace(primaryPostcode))
-        {
-            return new AddressHistory([]);
-        }
-
-        if (!historyString.Contains('~'))
-        {
-            return ParseNewestFirstCommaSeparatedHistory(historyString, primaryPostcode);
-        }
-
-        var parts = historyString.Split(
-            MultipleAddressDelimiter,
-            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
-        );
-        var addresses = ParseToAddressMinimalList(parts);
-
-        // Primary address is identified by matching the provided primary postcode to the postcode of the parsed addresses and selecting the latest.
-        // Addresses 'should' be in chronological order, but we will select the last match as a fallback in case of duplicates or ordering issues.
-        var normalizedPostcode = NormalizePostcode(primaryPostcode);
-        AddressMinimal? primaryAddress = addresses.LastOrDefault(a =>
-            a.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase)
-        );
-
-        return new AddressHistory(addresses, primaryAddress);
-    }
-
-    private static AddressHistory ParseNewestFirstCommaSeparatedHistory(
-        string historyString,
-        string primaryPostcode
-    )
-    {
-        var addresses = historyString
-            .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Select(ParseCommaSeparatedAddress)
-            .OfType<AddressMinimal>()
-            .ToList();
-        var normalizedPostcode = NormalizePostcode(primaryPostcode);
-        var primaryAddress = addresses.FirstOrDefault(address =>
-            address.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase)
-        );
-
-        return new AddressHistory(addresses, primaryAddress);
-    }
-
-    private static AddressMinimal? ParseCommaSeparatedAddress(string value)
-    {
-        var parts = value.Split(
-            ',',
-            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
-        );
-        if (parts.Length < 2)
-        {
-            return null;
-        }
-
-        var postcode = NormalizePostcode(parts[^1]);
-        if (string.IsNullOrWhiteSpace(postcode))
-        {
-            return null;
-        }
-
-        return new AddressMinimal(
-            ExtractHouseNumber(parts[0]),
-            parts.Length > 2 ? ExtractHouseNumber(parts[1]) : null,
-            postcode
-        );
-    }
-
-    /// <summary>
     /// Creates an AddressHistory from an NhsPerson's address history.
     /// </summary>
     public static AddressHistory FromNhsPerson(NhsPerson person)
@@ -142,7 +65,7 @@ public static class AddressParser
         return parts.Select(ParseRecord).OfType<AddressMinimal>().ToList();
     }
 
-    private static string? ExtractHouseNumber(string addressLine)
+    internal static string? ExtractHouseNumber(string addressLine)
     {
         if (string.IsNullOrWhiteSpace(addressLine))
             return null;
@@ -172,7 +95,7 @@ public static class AddressParser
         return true;
     }
 
-    private static string NormalizePostcode(string postcode)
+    internal static string NormalizePostcode(string postcode)
     {
         return new string(postcode.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
     }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Shared.Logging;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 using SUI.Client.Core.Infrastructure.FileSystem;
 using SUI.Client.Core.Infrastructure.Http;
 
@@ -38,6 +39,8 @@ public static class ServiceCollectionExtensions
             configuration.GetSection("CsvMapping").Get<CsvMappingConfig>()
             ?? new CsvMappingConfig();
         services.AddSingleton(mapping);
+        services.AddSingleton<ISourceAddressHistoryParser, TildePipeChronologicalAddressHistoryParser>();
+        services.AddSingleton<AddressComparisonOrchestrator>();
         if (enableReconciliationMode)
         {
             services.AddSingleton<ICsvFileProcessor, ReconciliationCsvFileProcessor>();

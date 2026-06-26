@@ -67,6 +67,9 @@ public class ReconcilePersonRecordOrchestratorTests
             apiClient.Object,
             personParser.Object,
             reconciliationParser.Object,
+            new AddressComparisonOrchestrator(
+                new SemicolonCommaNewestFirstAddressHistoryParser()
+            ),
             Options.Create(
                 new PersonMatchingOptions
                 {
