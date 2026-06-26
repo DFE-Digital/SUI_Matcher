@@ -19,7 +19,7 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v6     
+        uses: actions/checkout@v7     
 
       - name: Run Trivy file scan
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
