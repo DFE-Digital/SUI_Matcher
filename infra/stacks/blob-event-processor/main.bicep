@@ -68,8 +68,8 @@ param tagEnvironmentName string = ''
 param additionalTags object = {}
 
 @secure()
-@description('Optional runtime configuration values for the storage process job.')
-param storageProcessJobConfiguration object = {}
+@description('Runtime configuration values for the storage process job.')
+param storageProcessJobConfiguration object
 
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'bep'
