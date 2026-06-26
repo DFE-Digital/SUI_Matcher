@@ -96,6 +96,7 @@ env:
   TARGET_RESOURCE_GROUP_NAME: ${{ inputs.target_resource_group_name }}
   STORAGE_ACCOUNT_MODE: ${{ inputs.storage_account_mode || 'create' }}
   EXISTING_STORAGE_ACCOUNT_NAME: ${{ inputs.existing_storage_account_name }}
+  # Column mappings may identify a specific deployment, so keep them in secrets to avoid leaking them in workflow logs.
   STORAGE_PROCESS_JOB_CONFIGURATION: ${{ secrets.STORAGE_PROCESS_JOB_CONFIGURATION }}
 
 concurrency:
@@ -124,6 +125,15 @@ jobs:
 
           if [ -z "${AZURE_CONTAINER_APP_PE_SUBNET}" ]; then
             echo "::error::AZURE_CONTAINER_APP_PE_SUBNET secret must be configured for blob-event-processor infrastructure deployments."
+            exit 1
+          fi
+
+      - name: Validate storage process job configuration
+        run: |
+          set -euo pipefail
+
+          if [ -z "${STORAGE_PROCESS_JOB_CONFIGURATION}" ]; then
+            echo "::error::STORAGE_PROCESS_JOB_CONFIGURATION secret must be configured for blob-event-processor infrastructure deployments."
             exit 1
           fi
 
