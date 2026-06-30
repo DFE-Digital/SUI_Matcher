@@ -1,0 +1,1342 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../waysof/">
+      
+      
+        <link rel="next" href="../infra-stack-segregation/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+    
+    
+      
+        <title>SUI-1838: Azure Deployment Stacks Spike - SUI Matcher Public Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8608ea7d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sui-1838-azure-deployment-stacks-spike" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SUI Matcher Public Documentation" class="md-header__button md-logo" aria-label="SUI Matcher Public Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SUI Matcher Public Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SUI-1838: Azure Deployment Stacks Spike
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SUI Matcher Public Documentation" class="md-nav__button md-logo" aria-label="SUI Matcher Public Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SUI Matcher Public Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adrs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Decision Records
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cicd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clientarchitecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Client Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gettingstarted/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../waysof/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Ways of Working
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Design
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Design
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    SUI-1838: Azure Deployment Stacks Spike
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    SUI-1838: Azure Deployment Stacks Spike
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-sui-matcher-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current SUI Matcher Model
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-azure-deployment-stacks-add" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Azure Deployment Stacks Add
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits-for-sui-matcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benefits For SUI Matcher
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#costs-and-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Costs And Risks
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Costs And Risks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#limited-operational-payback" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limited Operational Payback
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-what-if-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      No What-If Support
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-group-teardown-is-optional-not-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resource Group Teardown Is Optional, Not Required
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#existing-resource-modes-do-not-match-full-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      Existing Resource Modes Do Not Match Full Ownership
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protection-is-not-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Protection Is Not Complete
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operational-complexity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operational Complexity
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#option-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option Comparison
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recommendation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-criteria-for-revisit" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision Criteria For Revisit
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sources
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../infra-stack-segregation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deployment IaC Stack Strategy
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Matching algorithm
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Matching algorithm
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matching-algorithm/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matching-algorithm/rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    List of rules
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matching-algorithm/strategies/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    List of strategies
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matching-algorithm/strategy3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Strategy 3 Full Version History
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Reconciliation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            Reconciliation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reconciliation/address_parsing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Address Parsing &amp; Comparison Rules
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reconciliation/reconciliation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Reconciliation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/blob-processor-local-runbook/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Blob processor local run book
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-sui-matcher-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current SUI Matcher Model
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-azure-deployment-stacks-add" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Azure Deployment Stacks Add
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits-for-sui-matcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benefits For SUI Matcher
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#costs-and-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Costs And Risks
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Costs And Risks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#limited-operational-payback" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limited Operational Payback
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-what-if-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      No What-If Support
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-group-teardown-is-optional-not-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resource Group Teardown Is Optional, Not Required
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#existing-resource-modes-do-not-match-full-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      Existing Resource Modes Do Not Match Full Ownership
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protection-is-not-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Protection Is Not Complete
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operational-complexity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operational Complexity
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#option-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option Comparison
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recommendation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-criteria-for-revisit" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision Criteria For Revisit
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sources
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="sui-1838-azure-deployment-stacks-spike">SUI-1838: Azure Deployment Stacks Spike</h1>
+<p><strong>Date:</strong> <code>2026-06-26</code></p>
+<p><strong>Status:</strong> Findings and recommendation</p>
+<p><strong>Scope:</strong> Whether SUI Matcher should use Azure Deployment Stacks for the Bicep infrastructure under <code>infra/stacks</code>.</p>
+<p>This note is about the Azure Resource Manager feature named <strong>Deployment Stacks</strong>. It is separate from the repo's existing use of "stack" to mean an architecture-specific deployment root such as <code>client-agent</code>, <code>blob-event-processor</code>, or <code>api-batch-processor</code>.</p>
+<h2 id="summary">Summary</h2>
+<p>Azure Deployment Stacks would be useful for SUI Matcher, particularly for tracking and selectively removing SUI-owned resources from a client-owned resource group. However, given the nature of this project and the current delivery timelines, they are unlikely to add enough value to justify the implementation and operational effort now.</p>
+<p>The feature provides managed resource tracking, controlled cleanup, and optional deny settings. Those are real benefits, but this project does not create and tear down environments frequently. Most infrastructure lifecycle operations are occasional, so the value of automating selective cleanup is correspondingly limited.</p>
+<p>Adoption would also need to cater safely for two materially different deployment shapes:</p>
+<ul>
+<li>SUI creates and owns the resource group in the SUI Azure tenant, where deleting the resource group remains a simple and effective teardown</li>
+<li>SUI deploys into an existing resource group in a client tenant, where client-owned resources may coexist with SUI-owned resources and teardown must be selective</li>
+</ul>
+<p>Supporting both shapes would require workflow changes, ownership rules, safeguards, testing, and operator guidance. The main trade-offs are:</p>
+<ul>
+<li>for stack-owned environments, the current <code>infra/stacks</code> model already gives each architecture a deterministic resource group boundary</li>
+<li>teardown is resource-group based only for stack-owned environments; it is not suitable where SUI resources live alongside client-owned resources</li>
+<li>existing workflows rely on <code>az deployment sub what-if</code>, but Azure Deployment Stacks do not currently support what-if</li>
+<li><code>blob-event-processor</code> supports existing resource-group and existing storage-account modes, which means any deployment-stack adoption must separate SUI-owned resources from externally owned resources very carefully</li>
+<li>some Azure Deployment Stack protections do not cover implicit resources, Key Vault secrets, resource-group deletion, or moved resources</li>
+<li>the migration and ongoing operational complexity would be incurred now, while the selective teardown benefit would be used only occasionally</li>
+</ul>
+<p>The recommendation is therefore not to adopt Azure Deployment Stacks within the current timelines. Keep normal subscription-scope Bicep deployments as the default, retain resource-group deletion for fully SUI-owned environments, and handle shared client resource groups through an explicit selective teardown process when required. Deployment Stacks should remain a credible future option if shared-resource-group deployments or selective teardowns become frequent enough to justify the investment.</p>
+<h2 id="current-sui-matcher-model">Current SUI Matcher Model</h2>
+<p>The current infrastructure structure is:</p>
+<ul>
+<li><code>infra/stacks/client-agent/subscription.bicep</code></li>
+<li><code>infra/stacks/blob-event-processor/subscription.bicep</code></li>
+<li><code>infra/stacks/api-batch-processor/subscription.bicep</code></li>
+</ul>
+<p>Each subscription-scope wrapper creates or targets a resource group and then deploys the resource-group-scoped <code>main.bicep</code> for that architecture.</p>
+<p>For stack-owned environments, the operational boundary is the whole resource group. Decommissioning means inspecting and then deleting the stack-owned resource group through <code>.github/workflows/gh-stack-decommission.yml</code>.</p>
+<p>That is not the only deployment shape. <code>blob-event-processor</code> can deploy into an existing resource group and can use an existing storage account:</p>
+<ul>
+<li><code>resourceGroupMode=existing</code></li>
+<li><code>storageAccountMode=existing</code></li>
+</ul>
+<p>In that shape, the resource group can contain client-owned resources alongside the SUI-owned resources. We cannot safely use the current resource-group deletion model there. Teardown needs to become selective.</p>
+<p>These are lifecycle operations rather than routine deployment operations. Environments are not currently being created and destroyed often enough for teardown automation alone to provide a strong return on the adoption effort.</p>
+<p>The current deployment workflows also support a what-if-first path before deployment:</p>
+<ul>
+<li><code>.github/workflows/gh-client-agent-infra-deploy.yml</code></li>
+<li><code>.github/workflows/gh-blob-event-processor-infra-deploy.yml</code></li>
+<li><code>.github/actions/stack-infra-run/action.yml</code></li>
+</ul>
+<p>For stack-owned environments, this is a simple model: Bicep defines the topology, <code>az deployment sub what-if</code> previews changes, <code>az deployment sub create</code> applies them, and resource-group deletion is the explicit teardown path.</p>
+<h2 id="what-azure-deployment-stacks-add">What Azure Deployment Stacks Add</h2>
+<p>Azure Deployment Stacks are ARM resources of type <code>Microsoft.Resources/deploymentStacks</code>. A deployment stack is created from a Bicep file or ARM template and records the Azure resources it manages.</p>
+<p>The main added capabilities are:</p>
+<ul>
+<li><strong>Managed resource tracking:</strong> Azure keeps a list of resources associated with the deployment stack.</li>
+<li><strong>Cleanup behavior:</strong> when a resource is removed from the template, <code>actionOnUnmanage</code> can detach it or delete it.</li>
+<li><strong>Deny settings:</strong> managed resources can be protected from delete or write/delete operations, with explicit exclusions for selected principals or actions.</li>
+<li><strong>Cross-scope management:</strong> stacks can exist at resource group, subscription, or management group scope and deploy resources at appropriate child scopes.</li>
+</ul>
+<p>These capabilities are most valuable when resource lifecycle is more granular than "delete the environment resource group", or where accidental manual changes/deletes are a recurring risk.</p>
+<h2 id="benefits-for-sui-matcher">Benefits For SUI Matcher</h2>
+<p>Azure Deployment Stacks could help in these cases:</p>
+<ul>
+<li><strong>Safer selective cleanup:</strong> resources removed from Bicep could be deleted as part of a stack update instead of left behind.</li>
+<li><strong>Stronger drift resistance:</strong> deny settings could prevent accidental resource deletes or writes outside the deployment path.</li>
+<li><strong>Clearer ownership inventory:</strong> the deployment stack's managed resource list could show which resources are owned by a stack.</li>
+<li><strong>Potential future fit for shared environments:</strong> if future environments contain shared resource groups that cannot be deleted wholesale, stack-managed cleanup could be useful.</li>
+</ul>
+<p>For example, if <code>blob-event-processor</code> had to live in a client-owned resource group permanently, a deployment stack could potentially track the SUI-owned subset of resources more explicitly than today's deployment history and naming conventions.</p>
+<p>This is the strongest argument for using Azure Deployment Stacks in SUI Matcher. They could give us a cleaner teardown model for the already-supported <code>resourceGroupMode=existing</code> case:</p>
+<ul>
+<li>deploy SUI-owned resources into the client-owned resource group through a deployment stack</li>
+<li>leave client-owned resources as <code>existing</code> references rather than stack-owned resources</li>
+<li>delete or detach only the resources that the deployment stack manages</li>
+<li>avoid deleting the containing resource group</li>
+</ul>
+<p>That model has genuine value, but the project currently expects to use it only occasionally. It is not enough on its own to justify changing the deployment model during the current delivery period.</p>
+<h2 id="costs-and-risks">Costs And Risks</h2>
+<p>The current costs are more important for this repo than the benefits.</p>
+<h3 id="limited-operational-payback">Limited Operational Payback</h3>
+<p>Deployment Stacks are most compelling when environments or individual managed resources are regularly created, changed, and removed, or when manual drift is a recurring operational problem.</p>
+<p>That is not the current SUI Matcher usage pattern. Deployments are ongoing, but full environment creation and teardown are occasional. In SUI-owned environments, resource-group deletion already provides a clear teardown boundary. In client-owned environments, selective teardown is harder, but it is not currently frequent enough to justify reworking every deployment path around it.</p>
+<p>The implementation cost would include designing, testing, and maintaining the feature across both ownership models before the team receives much recurring benefit.</p>
+<h3 id="no-what-if-support">No What-If Support</h3>
+<p>Microsoft currently lists what-if as unsupported for deployment stacks.</p>
+<p>This is a material downside. The repo's deployment workflow is intentionally what-if-first, especially because infrastructure changes include networking, private endpoints, DNS, role assignments, storage, Event Grid, Container Apps, and monitoring.</p>
+<p>Replacing <code>az deployment sub what-if</code> with deployment stack update behavior would reduce deployment review quality unless we built another preview process around plain Bicep deployments. That would weaken the main reason to use deployment stacks in the first place.</p>
+<p>There are mitigations, but no exact replacement:</p>
+<ul>
+<li>run <code>az stack sub validate</code> before create/update to validate the deployment stack request, <code>actionOnUnmanage</code>, deny settings, template, and parameters</li>
+<li>run ordinary <code>az deployment sub what-if</code> against the same Bicep file and parameters to preview the ARM resource changes</li>
+<li>inspect the current deployment stack managed-resource list with <code>az stack sub show</code> before any update or teardown</li>
+<li>compare the managed-resource list with an independently generated inventory, such as expected names, tags, and <code>az resource list</code> output for the target resource group</li>
+<li>use <code>actionOnUnmanage=detachAll</code> for first deployments and updates until the managed-resource list is trusted</li>
+<li>require a separate confirmation step before any <code>deleteResources</code> teardown</li>
+</ul>
+<p>This would give us most of the deployment preview we have today, but it still would not preview Deployment Stack-specific behavior. In particular, ordinary ARM what-if would not show which previously managed resources will be detached or deleted by <code>actionOnUnmanage</code>, would not validate the safety of the managed-resource list, and would not fully model deny assignment side effects.</p>
+<p>A safe pilot should therefore treat <code>az deployment sub what-if</code> as a template-change preview, not as a Deployment Stack teardown preview.</p>
+<h3 id="resource-group-teardown-is-optional-not-required">Resource Group Teardown Is Optional, Not Required</h3>
+<p>Microsoft documents that deleting a resource group bypasses deny assignments for deployment stacks created at resource-group scope, because the parent resource group is not managed by that stack.</p>
+<p>The workaround is to deploy from subscription scope and include the resource group in the template. Our current subscription-scope wrappers already create the stack-owned resource group, so this is possible in principle.</p>
+<p>For fully stack-owned environments, this overlaps heavily with the current subscription-scope wrapper plus manual resource-group decommission workflow.</p>
+<p>For client-owned resource groups, the conclusion is different. The useful design would be a deployment stack that manages the SUI-owned resources inside the existing resource group, while leaving the resource group and client-owned dependencies outside the stack's delete scope. That could be better than either manual selective deletion or no teardown support.</p>
+<h3 id="existing-resource-modes-do-not-match-full-ownership">Existing Resource Modes Do Not Match Full Ownership</h3>
+<p><code>blob-event-processor</code> can deploy with:</p>
+<ul>
+<li><code>resourceGroupMode=existing</code></li>
+<li><code>storageAccountMode=existing</code></li>
+</ul>
+<p>Those modes are useful because some environments may need to use client-provided resources or resource groups. They also make Azure Deployment Stacks more complicated, because the stack must not treat externally owned resources as disposable.</p>
+<p>The intended shape would need to be explicit:</p>
+<ul>
+<li>client-owned resource group: referenced or targeted, not deleted</li>
+<li>existing storage account: referenced as <code>existing</code>, not deleted</li>
+<li>SUI-created resources: eligible for managed cleanup where Azure Deployment Stacks can track and delete them safely</li>
+<li>non-deletable or externally owned resources: detached rather than deleted</li>
+</ul>
+<p>This is possible in principle, but it needs a careful proof of concept. We need to confirm exactly which deployed child resources are tracked and removable by the deployment stack, especially storage containers, queues, Key Vault-related resources, private endpoints, DNS links, role assignments, and Event Grid resources.</p>
+<h3 id="protection-is-not-complete">Protection Is Not Complete</h3>
+<p>Deployment stack deny settings are not a general lock for everything related to the environment:</p>
+<ul>
+<li>implicitly created resources are not managed by the stack</li>
+<li>Key Vault secrets cannot be deleted by deployment stacks</li>
+<li>moved resources can lose stack protection</li>
+<li>deny assignments are not supported at management group scope, although a management-group stack can deploy to subscription scope</li>
+<li>deny settings apply to control-plane operations, not data-plane operations</li>
+</ul>
+<p>This matters for SUI Matcher because several important resources have child resources, private endpoints, secrets, role assignments, and data-plane behavior. Deployment stacks would not remove the need for normal review, runbooks, least-privilege CI/CD identities, and explicit teardown checks.</p>
+<h3 id="operational-complexity">Operational Complexity</h3>
+<p>Adopting deployment stacks would require changes beyond swapping one CLI command:</p>
+<ul>
+<li>change workflows from <code>az deployment sub create</code> to <code>az stack sub create</code></li>
+<li>decide <code>actionOnUnmanage</code> separately for fully owned, existing-resource, and decommission flows</li>
+<li>decide whether to use <code>denyDelete</code> or <code>denyWriteAndDelete</code></li>
+<li>manage deny-setting exclusions for CI/CD and break-glass identities</li>
+<li>handle stack-out-of-sync errors safely</li>
+<li>train operators on detach vs delete semantics</li>
+<li>update direct deployment guidance for environments where GitHub Actions is not the deployment route</li>
+</ul>
+<p>That extra surface area is only worth it if we need Azure-managed cleanup or deny protection enough to compensate for losing native stack what-if.</p>
+<h2 id="option-comparison">Option Comparison</h2>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Pros</th>
+<th>Cons</th>
+<th>Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Keep normal Bicep deployments</td>
+<td>Keeps current what-if-first workflow; simple resource-group ownership; lowest change</td>
+<td>No Azure-managed resource tracking; selective teardown stays manual in client-owned resource groups</td>
+<td>Best default now</td>
+</tr>
+<tr>
+<td>Adopt deployment stacks for all <code>infra/stacks</code> deployments</td>
+<td>Managed resource list; delete/detach semantics; deny settings</td>
+<td>No what-if; more destructive footguns; needs workflow and runbook changes; awkward with existing-resource modes</td>
+<td>Not recommended</td>
+</tr>
+<tr>
+<td>Pilot deployment stacks for one fully owned non-production stack</td>
+<td>Tests feature with limited blast radius; validates CLI, permissions, deny settings, and delete behavior</td>
+<td>Not representative of the client-owned resource-group problem; limited operational benefit</td>
+<td>Low priority</td>
+</tr>
+<tr>
+<td>Pilot deployment stacks for a client-owned resource group scenario</td>
+<td>Tests the main potential benefit: selective ownership and teardown without deleting the resource group</td>
+<td>Needs careful delete/detach guardrails; still lacks what-if; must prove externally owned resources are not managed</td>
+<td>Best pilot if the need increases</td>
+</tr>
+<tr>
+<td>Use deployment stacks only for protection, with <code>detachAll</code></td>
+<td>Deny settings without managed delete behavior</td>
+<td>Still loses what-if if used as deployment path; cleanup benefit mostly unused</td>
+<td>Weak fit</td>
+</tr>
+</tbody>
+</table>
+<h2 id="recommendation">Recommendation</h2>
+<p>Keep the current normal Bicep deployment model as the default for SUI Matcher and do not invest in adopting Azure Deployment Stacks within the current project timelines.</p>
+<p>For SUI-owned environments, continue using the resource group as the ownership and teardown boundary. For deployments into a client-owned resource group, use a deliberate selective teardown procedure that identifies and removes only SUI-owned resources. This is less automated than a Deployment Stack, but it avoids introducing a second deployment lifecycle while this remains an occasional operation.</p>
+<p>This is a prioritisation decision rather than a conclusion that Deployment Stacks have no value. If shared client deployments or selective teardowns become a regular requirement, the first proof of concept should target the environment shape where the current model is weakest: SUI-owned resources deployed into a client-owned resource group that cannot be deleted wholesale.</p>
+<p>That future pilot should include:</p>
+<ul>
+<li>a non-production client-owned or client-like resource group</li>
+<li>at least one externally owned dependency, such as an existing storage account, represented as an <code>existing</code> Bicep resource</li>
+<li>a known set of SUI-owned resources deployed by the stack</li>
+<li><code>az stack sub validate</code> and ordinary <code>az deployment sub what-if</code> as required preflight checks</li>
+<li>managed-resource inventory capture before and after each stack operation</li>
+<li><code>actionOnUnmanage=detachAll</code> for early trials</li>
+<li>a separate teardown trial using <code>deleteResources</code> only after the managed resource list has been inspected</li>
+<li>no deny settings at first, then a separate <code>denyDelete</code> trial if cleanup behavior is understood</li>
+<li>explicit verification that CI/CD and break-glass identities can still update and recover the environment</li>
+<li>a documented rollback path using stack deletion with detach behavior</li>
+</ul>
+<p>It should not use <code>deleteAll</code>, <code>deleteResources</code>, or <code>denyWriteAndDelete</code> in the first deployment trial.</p>
+<p>If the pilot proves that Azure tracks only the SUI-owned resources we expect, and that teardown can remove them without touching the resource group or client-owned resources, Deployment Stacks would be a good candidate for the shared-resource-group deployment path.</p>
+<h2 id="decision-criteria-for-revisit">Decision Criteria For Revisit</h2>
+<p>Reconsider Azure Deployment Stacks if one or more of these becomes true:</p>
+<ul>
+<li>environments can no longer be safely decommissioned by deleting stack-owned resource groups</li>
+<li>selective cleanup of removed resources becomes a recurring problem</li>
+<li>shared client resource groups become a common deployment target</li>
+<li>environment creation and teardown become frequent operational tasks</li>
+<li>accidental manual deletion/write drift becomes a recurring production risk</li>
+<li>Azure adds what-if support for deployment stacks</li>
+<li>existing-resource modes become a standard deployment path rather than an exception</li>
+<li>the team needs a formal Azure-managed ownership inventory in addition to naming and resource-group boundaries</li>
+</ul>
+<p>Until then, the current approach is clearer and safer for this repo.</p>
+<h2 id="sources">Sources</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deployment-stacks">Create and deploy Azure deployment stacks in Bicep</a>, Microsoft Learn, updated 2026-06-24</li>
+<li><a href="https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deployment-stacks-known-issues">Known issues for deployment stacks</a>, Microsoft Learn, updated 2026-06-24</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+    
+  </body>
+</html>
