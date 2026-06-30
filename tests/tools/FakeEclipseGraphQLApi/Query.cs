@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 using FakeEclipseGraphQLApi.Models;
 
 namespace FakeEclipseGraphQLApi;
 
+[ExcludeFromCodeCoverage]
 public class Query
 {
     public PersonResults GetPersonByCriteria(int? maxAge, RequestCursorInput? paging)

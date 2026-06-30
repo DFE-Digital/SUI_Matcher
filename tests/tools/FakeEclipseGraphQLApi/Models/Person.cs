@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace FakeEclipseGraphQLApi.Models;
 
+[ExcludeFromCodeCoverage]
 public class Person : IPersonByCriteria_PersonByCriteria_Results
 {
     public string Id { get; set; } = string.Empty;
