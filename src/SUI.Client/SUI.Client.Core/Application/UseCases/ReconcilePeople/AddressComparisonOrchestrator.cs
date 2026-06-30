@@ -2,9 +2,11 @@ using Shared.Models;
 
 namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
-public static class AddressComparisonOrchestrator
+public sealed class AddressComparisonOrchestrator(
+    ISourceAddressHistoryParser sourceAddressHistoryParser
+)
 {
-    public static AddressComparisonResults GetAddressComparisonResult(
+    public AddressComparisonResults GetAddressComparisonResult(
         ReconciliationRequest request,
         ReconciliationResponse? response,
         string? addressHistoryCsv
@@ -18,7 +20,7 @@ public static class AddressComparisonOrchestrator
         }
 
         var pdsAddressHistory = AddressParser.FromNhsPerson(response.Person);
-        var queryingAddressHistory = AddressParser.ParseHistory(
+        var queryingAddressHistory = sourceAddressHistoryParser.Parse(
             addressHistoryCsv,
             request.AddressPostalCode
         );

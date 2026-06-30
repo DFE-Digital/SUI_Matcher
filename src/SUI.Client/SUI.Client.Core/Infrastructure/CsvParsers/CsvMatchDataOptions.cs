@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Options;
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 namespace SUI.Client.Core.Infrastructure.CsvParsers;
 
@@ -12,6 +13,9 @@ public record CsvMatchDataOptions
 
     [ValidateObjectMembers]
     public required Headers ColumnMappings { get; init; }
+
+    public SourceAddressHistoryFormat AddressHistoryFormat { get; init; } =
+        SourceAddressHistoryFormat.TildePipeChronological;
 
     public record Headers
     {
@@ -39,5 +43,6 @@ public record CsvMatchDataOptions
         [Required]
         public string Phone { get; init; } = "Phone";
         public string? NhsNumber { get; init; }
+        public string? Address { get; init; }
     }
 }

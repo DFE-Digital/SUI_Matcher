@@ -104,6 +104,10 @@ inputs:
     description: "Optional existing storage account name when storage_account_mode is existing"
     required: false
     default: ""
+  storage_process_job_configuration:
+    description: "Optional JSON object containing protected storage process job runtime configuration"
+    required: false
+    default: ""
 
 
 runs:
@@ -127,6 +131,7 @@ runs:
       shell: bash
       env:
         ADDITIONAL_TAGS: ${{ inputs.additional_tags }}
+        STORAGE_PROCESS_JOB_CONFIGURATION: ${{ inputs.storage_process_job_configuration }}
       run: |
         set -euo pipefail
 
@@ -164,6 +169,11 @@ runs:
         if [ -n "${ADDITIONAL_TAGS}" ]; then
           ADDITIONAL_TAGS_JSON="$(jq -nce --argjson tags "${ADDITIONAL_TAGS}" 'if ($tags | type) == "object" then $tags else error("additional_tags must be a JSON object") end')"
           PARAMETERS+=("additionalTags=${ADDITIONAL_TAGS_JSON}")
+        fi
+
+        if [ -n "${STORAGE_PROCESS_JOB_CONFIGURATION}" ]; then
+          STORAGE_PROCESS_JOB_CONFIGURATION_JSON="$(jq -nce --argjson configuration "${STORAGE_PROCESS_JOB_CONFIGURATION}" 'if ($configuration | type) == "object" then $configuration else error("storage_process_job_configuration must be a JSON object") end')"
+          PARAMETERS+=("storageProcessJobConfiguration=${STORAGE_PROCESS_JOB_CONFIGURATION_JSON}")
         fi
 
         if [ -n "${{ inputs.turn_on_alerts }}" ]; then

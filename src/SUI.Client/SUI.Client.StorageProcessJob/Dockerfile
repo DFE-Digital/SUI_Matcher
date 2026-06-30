@@ -18,30 +18,10 @@ RUN dotnet publish src/SUI.Client/SUI.Client.StorageProcessJob/SUI.Client.Storag
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-ARG CSV_DATE_FORMAT=yyyy-MM-dd
 ARG MATCH_API_BASE_ADDRESS
-ARG CSV_COLUMN_ID=Id
-ARG CSV_COLUMN_GIVEN=GivenName
-ARG CSV_COLUMN_FAMILY=FamilyName
-ARG CSV_COLUMN_BIRTH_DATE=DOB
-ARG CSV_COLUMN_EMAIL=EMAIL
-ARG CSV_COLUMN_POSTCODE=POSTCODE
-ARG CSV_COLUMN_GENDER=GENDER
-ARG CSV_COLUMN_PHONE=PHONE
-ARG CSV_COLUMN_NHS_NUMBER=NHS_NUMBER
 
 ENV DOTNET_ENVIRONMENT=Production \
-    StorageProcessJob__MatchApiBaseAddress=${MATCH_API_BASE_ADDRESS} \
-    CsvMatchData__DateFormat=${CSV_DATE_FORMAT} \
-    CsvMatchData__ColumnMappings__Id=${CSV_COLUMN_ID} \
-    CsvMatchData__ColumnMappings__Given=${CSV_COLUMN_GIVEN} \
-    CsvMatchData__ColumnMappings__Family=${CSV_COLUMN_FAMILY} \
-    CsvMatchData__ColumnMappings__BirthDate=${CSV_COLUMN_BIRTH_DATE} \
-    CsvMatchData__ColumnMappings__Email=${CSV_COLUMN_EMAIL} \
-    CsvMatchData__ColumnMappings__Postcode=${CSV_COLUMN_POSTCODE} \
-    CsvMatchData__ColumnMappings__Gender=${CSV_COLUMN_GENDER} \
-    CsvMatchData__ColumnMappings__Phone=${CSV_COLUMN_PHONE} \
-    CsvMatchData__ColumnMappings__NhsNumber=${CSV_COLUMN_NHS_NUMBER}
+    StorageProcessJob__MatchApiBaseAddress=${MATCH_API_BASE_ADDRESS}
 
 COPY --from=build /app/publish .
 USER app

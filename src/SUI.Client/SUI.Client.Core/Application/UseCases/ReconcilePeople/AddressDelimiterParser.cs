@@ -6,8 +6,6 @@ namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 public static class AddressParser
 {
-    private const string MultipleAddressDelimiter = "|";
-
     /// <summary>
     /// Parses an address record delimited by "~" into its components, specifically extracting the house number and postcode.
     /// </summary>
@@ -39,34 +37,6 @@ public static class AddressParser
     }
 
     /// <summary>
-    /// Parses a history of address records delimited by "|" into an AddressHistory object.
-    /// Each record in the history is delimited by "~".
-    /// <para>The order of the history string is preserved</para>
-    /// </summary>
-    public static AddressHistory ParseHistory(string? historyString, string? primaryPostcode)
-    {
-        if (string.IsNullOrWhiteSpace(historyString) || string.IsNullOrWhiteSpace(primaryPostcode))
-        {
-            return new AddressHistory([]);
-        }
-
-        var parts = historyString.Split(
-            MultipleAddressDelimiter,
-            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
-        );
-        var addresses = ParseToAddressMinimalList(parts);
-
-        // Primary address is identified by matching the provided primary postcode to the postcode of the parsed addresses and selecting the latest.
-        // Addresses 'should' be in chronological order, but we will select the last match as a fallback in case of duplicates or ordering issues.
-        var normalizedPostcode = NormalizePostcode(primaryPostcode);
-        AddressMinimal? primaryAddress = addresses.LastOrDefault(a =>
-            a.Postcode.Equals(normalizedPostcode, StringComparison.OrdinalIgnoreCase)
-        );
-
-        return new AddressHistory(addresses, primaryAddress);
-    }
-
-    /// <summary>
     /// Creates an AddressHistory from an NhsPerson's address history.
     /// </summary>
     public static AddressHistory FromNhsPerson(NhsPerson person)
@@ -95,7 +65,7 @@ public static class AddressParser
         return parts.Select(ParseRecord).OfType<AddressMinimal>().ToList();
     }
 
-    private static string? ExtractHouseNumber(string addressLine)
+    internal static string? ExtractHouseNumber(string addressLine)
     {
         if (string.IsNullOrWhiteSpace(addressLine))
             return null;
@@ -125,7 +95,7 @@ public static class AddressParser
         return true;
     }
 
-    private static string NormalizePostcode(string postcode)
+    internal static string NormalizePostcode(string postcode)
     {
         return new string(postcode.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
     }

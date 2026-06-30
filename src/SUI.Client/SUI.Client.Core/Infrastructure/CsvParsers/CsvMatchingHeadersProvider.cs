@@ -24,6 +24,16 @@ public sealed class CsvMatchingHeadersProvider(IOptions<CsvMatchDataOptions> csv
     {
         var columnMappings = csvMatchDataOptions.Value.ColumnMappings;
 
-        return [columnMappings.Email, columnMappings.Gender, columnMappings.Phone];
+        return
+        [
+            columnMappings.Email,
+            columnMappings.Gender,
+            columnMappings.Phone,
+            .. Optional(columnMappings.NhsNumber),
+            .. Optional(columnMappings.Address),
+        ];
     }
+
+    private static IEnumerable<string> Optional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? [] : [value];
 }

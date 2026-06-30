@@ -99,6 +99,7 @@ az deployment sub what-if \
     turnOnAlerts=false \
     tagEnvironmentName=<optional-environment-tag-value> \
     additionalTags='{"Service Offering":"SUI"}' \
+    storageProcessJobConfiguration='<protected-storage-process-job-configuration-json>' \
     resourceGroupMode=existing \
     targetResourceGroupName=<existing-resource-group-name> \
     storageAccountMode=existing \
@@ -118,6 +119,10 @@ The ACA job is the blob event driven processor that runs alongside the Matching 
 It uses the shared managed identity, pulls `sui-client-storage-process-job:<tag>` from the stack ACR, and is granted Storage Blob Data Contributor and Storage Queue Data Contributor when `includeRoleAssignments=true`.
 
 The job is configured with 2 vCPU, 4Gi memory, a 6 hour replica timeout, no automatic replica retries, and `StorageProcessJob__MaxDequeueCount=1`.
+
+CSV mappings and processing mode are supplied as a protected JSON object through the `STORAGE_PROCESS_JOB_CONFIGURATION` GitHub environment secret, or through the `storageProcessJobConfiguration` Bicep parameter for direct CLI deployments. The object keys are .NET environment-variable configuration names. Do not put deployment-specific schemas or mapping values in repository files, workflow inputs, or workflow summaries.
+
+Include `CsvMatchData__AddressHistoryFormat` when source address history uses a non-default parser format, such as `SemicolonCommaNewestFirst`.
 
 ### Azure Storage blob and queues
 

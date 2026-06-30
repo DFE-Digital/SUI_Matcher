@@ -8,4 +8,9 @@ public interface IMatchingApiClient
         SearchSpecification payload,
         CancellationToken cancellationToken
     );
+
+    Task<ReconciliationResponse?> ReconcilePersonAsync(
+        ReconciliationRequest payload,
+        CancellationToken cancellationToken
+    );
 }

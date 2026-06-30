@@ -12,6 +12,7 @@ using Shared.Models;
 using Shared.Services;
 using Shared.Util;
 using SUI.Client.Core;
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 using SUI.Client.Core.Infrastructure.FileSystem;
 using Unit.Tests.Util;
 using Unit.Tests.Util.Adapters;
@@ -1502,7 +1503,8 @@ public class CsvProcessorTests(ITestOutputHelper testOutputHelper)
             new Mock<ILogger<ReconciliationCsvFileProcessor>>().Object,
             new CsvMappingConfig(),
             new Mock<IMatchingService>().Object, // All responses are null
-            Options.Create(new CsvWatcherConfig { SearchStrategy = "4" })
+            Options.Create(new CsvWatcherConfig { SearchStrategy = "4" }),
+            new AddressComparisonOrchestrator(new TildePipeChronologicalAddressHistoryParser())
         );
 
         // Write input file

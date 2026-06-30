@@ -188,4 +188,62 @@ public class MatchingApiClientTests
             sut.MatchPersonAsync(new SearchSpecification(), CancellationToken.None)
         );
     }
+
+    [Fact]
+    public async Task Should_PostReconciliationRequestToReconciliationEndpoint()
+    {
+        ReconciliationRequest? sentPayload = null;
+        var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
+        handlerMock
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .Returns<HttpRequestMessage, CancellationToken>(
+                async (request, cancellationToken) =>
+                {
+                    sentPayload = await request.Content!.ReadFromJsonAsync<ReconciliationRequest>(
+                        cancellationToken
+                    );
+                    return new HttpResponseMessage
+                    {
+                        StatusCode = HttpStatusCode.OK,
+                        Content = JsonContent.Create(
+                            new ReconciliationResponse
+                            {
+                                Status = ReconciliationStatus.NoDifferences,
+                            }
+                        ),
+                    };
+                }
+            );
+        var sut = new MatchingApiClient(
+            new HttpClient(handlerMock.Object)
+            {
+                BaseAddress = new Uri("http://localhost:5000/matching/"),
+            }
+        );
+
+        var result = await sut.ReconcilePersonAsync(
+            new ReconciliationRequest { NhsNumber = "9999999993", Given = "Jane" },
+            CancellationToken.None
+        );
+
+        Assert.NotNull(sentPayload);
+        Assert.Equal("9999999993", sentPayload!.NhsNumber);
+        Assert.Equal(ReconciliationStatus.NoDifferences, result!.Status);
+        handlerMock
+            .Protected()
+            .Verify(
+                "SendAsync",
+                Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(request =>
+                    request.RequestUri!.ToString()
+                    == "http://localhost:5000/matching/api/v1/reconciliation"
+                ),
+                ItExpr.IsAny<CancellationToken>()
+            );
+    }
 }
