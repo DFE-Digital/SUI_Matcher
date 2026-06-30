@@ -34,6 +34,11 @@ CI/CD:
 
 The intent is that stack roots define environment topology, while application deployment consumes outputs from the selected stack.
 
+Related design notes:
+
+- [Deployment IaC Stack Strategy](../documentation/docs/design/infra-stack-segregation.md)
+- [SUI-1838: Azure Deployment Stacks Spike](../documentation/docs/design/azure-deployment-stacks-spike.md)
+
 Decommissioning:
 
 - Stack decommissioning for `infra/stacks` means deleting the entire stack-owned resource group.
