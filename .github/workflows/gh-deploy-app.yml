@@ -48,7 +48,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         
       - name: Use version inputted or find latest tag
         if: ${{ !inputs.use_current_branch }}
@@ -67,7 +67,7 @@ jobs:
 
       - name: Checkout
         if: ${{ !inputs.use_current_branch }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.APPLICATION_VERSION }}
 
