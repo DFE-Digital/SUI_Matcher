@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Azure.Core;
+using Azure.Identity;
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -22,7 +25,20 @@ builder
 
 builder.Services.AddSingleton(TimeProvider.System);
 
-builder.Services.AddHttpClient("AzureAdTokenClient");
+builder.Services.AddSingleton<TokenCredential>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<GraphQlProcessJobOptions>>().Value;
+
+    if (string.IsNullOrEmpty(options.TenantId) ||
+        string.IsNullOrEmpty(options.ClientId) ||
+        string.IsNullOrEmpty(options.ClientSecret))
+    {
+        throw new InvalidOperationException("Azure AD configuration is incomplete. TenantId, ClientId, and ClientSecret are required.");
+    }
+
+    return new ClientSecretCredential(options.TenantId, options.ClientId, options.ClientSecret);
+});
+
 builder.Services.AddTransient<AzureAdAuthHandler>();
 
 var eclipseClientBuilder = builder.Services.AddHttpClient("EclipseClient")
