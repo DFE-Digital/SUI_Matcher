@@ -70,14 +70,16 @@ public class GraphQlProcessorTests
         operationResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
 
         _personByCriteriaQueryMock
-            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 10), It.IsAny<CancellationToken>()))
+            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 10),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock.Object);
 
         // Act
         await sut.RunAsync(CancellationToken.None);
 
         // Assert
-        _personByCriteriaQueryMock.Verify(q => q.ExecuteAsync(25, It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()), Times.Once);
+        _personByCriteriaQueryMock.Verify(
+            q => q.ExecuteAsync(25, It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()), Times.Once);
 
         // Check that logging occurred for John Doe
         _loggerMock.Verify(
@@ -159,19 +161,25 @@ public class GraphQlProcessorTests
 
         // Setup query mock to return Page 1 first, then Page 2
         _personByCriteriaQueryMock
-            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 10), It.IsAny<CancellationToken>()))
+            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 10),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock1.Object);
 
         _personByCriteriaQueryMock
-            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 2 && r.PageSize == 10), It.IsAny<CancellationToken>()))
+            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 2 && r.PageSize == 10),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock2.Object);
 
         // Act
         await sut.RunAsync(CancellationToken.None);
 
         // Assert
-        _personByCriteriaQueryMock.Verify(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1), It.IsAny<CancellationToken>()), Times.Once);
-        _personByCriteriaQueryMock.Verify(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 2), It.IsAny<CancellationToken>()), Times.Once);
+        _personByCriteriaQueryMock.Verify(
+            q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _personByCriteriaQueryMock.Verify(
+            q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 2), It.IsAny<CancellationToken>()),
+            Times.Once);
 
         // Check that logging occurred for both John Doe and Jane Smith
         _loggerMock.Verify(
@@ -191,5 +199,62 @@ public class GraphQlProcessorTests
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldSkipResult_WhenResultIsNotPerson()
+    {
+        // Arrange
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 25 });
+        var sut = new GraphQlProcessor(
+            _loggerMock.Object,
+            _eclipseClientMock.Object,
+            options
+        );
+
+        // Create a generic results mock that is NOT a Person (e.g. RedactedResult)
+        var redactedResultMock = new Mock<IPersonByCriteria_PersonByCriteria_Results>();
+
+        var resultsList = new List<IPersonByCriteria_PersonByCriteria_Results> { redactedResultMock.Object };
+
+        // Cursor Setup
+        var cursorMock = new Mock<IPersonByCriteria_PersonByCriteria_Cursor>();
+        cursorMock.Setup(c => c.Offset).Returns(0);
+        cursorMock.Setup(c => c.Returned).Returns(1);
+        cursorMock.Setup(c => c.TotalSize).Returns(1);
+
+        // Result Struct Setup
+        var personByCriteriaMock = new Mock<IPersonByCriteria_PersonByCriteria>();
+        personByCriteriaMock.Setup(p => p.Results).Returns(resultsList.AsReadOnly());
+        personByCriteriaMock.Setup(p => p.Cursor).Returns(cursorMock.Object);
+
+        var operationResultDataMock = new Mock<IPersonByCriteriaResult>();
+        operationResultDataMock.Setup(o => o.PersonByCriteria).Returns(personByCriteriaMock.Object);
+
+        var operationResultMock = new Mock<IOperationResult<IPersonByCriteriaResult>>();
+        operationResultMock.Setup(r => r.Data).Returns(operationResultDataMock.Object);
+        operationResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
+
+        _personByCriteriaQueryMock
+            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 10),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(operationResultMock.Object);
+
+        // Act
+        await sut.RunAsync(CancellationToken.None);
+
+        // Assert
+        _personByCriteriaQueryMock.Verify(
+            q => q.ExecuteAsync(25, It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()), Times.Once);
+
+        // Verify that we did NOT attempt to log any Person Name or details
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Name:")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Never);
     }
 }
