@@ -1,0 +1,155 @@
+{
+  "Cursor": {
+    "Offset": 0,
+    "PageNumber": 1,
+    "PageSize": 10,
+    "Returned": 6,
+    "TotalSize": 6
+  },
+  "Results": [
+    {
+      "Id": "12345678",
+      "Age": 17,
+      "Forename": "OCTAVIA",
+      "Surname": "CHISLETT",
+      "Gender": "FEMALE",
+      "NhsNumber": "9449305552",
+      "DateOfBirth": {
+        "Lower": "2008-09-20",
+        "Upper": "2008-09-20",
+        "Mask": "DAY"
+      },
+      "Addresses": [
+        {
+          "Id": "addr-12345678",
+          "Location": {
+            "Postcode": "KT19 0ST"
+          }
+        }
+      ],
+      "PreferredAddress": {
+        "Id": "addr-12345678"
+      }
+    },
+    {
+      "Id": "12323232",
+      "Age": 21,
+      "Forename": "Dave",
+      "Surname": "FORMBY",
+      "Gender": "MALE",
+      "NhsNumber": "9691914913",
+      "DateOfBirth": {
+        "Lower": "2005-06-03",
+        "Upper": "2005-06-03",
+        "Mask": "DAY"
+      },
+      "Addresses": [
+        {
+          "Id": "addr-12323232",
+          "Location": {
+            "Postcode": "DN20 8LP"
+          }
+        }
+      ],
+      "PreferredAddress": {
+        "Id": "addr-12323232"
+      }
+    },
+    {
+      "Id": "12323232",
+      "Age": 21,
+      "Forename": "Fred",
+      "Surname": "FORMBY",
+      "Gender": "MALE",
+      "NhsNumber": "9691914913",
+      "DateOfBirth": {
+        "Lower": "2005-06-03",
+        "Upper": "2005-06-03",
+        "Mask": "DAY"
+      },
+      "Addresses": [
+        {
+          "Id": "addr-12323232-2",
+          "Location": {
+            "Postcode": "DN20 8LP"
+          }
+        }
+      ],
+      "PreferredAddress": {
+        "Id": "addr-12323232-2"
+      }
+    },
+    {
+      "Id": "34556655",
+      "Age": 17,
+      "Forename": "test",
+      "Surname": "chislett",
+      "Gender": "MALE",
+      "NhsNumber": "9449310424",
+      "DateOfBirth": {
+        "Lower": "2008-09-20",
+        "Upper": "2008-09-20",
+        "Mask": "DAY"
+      },
+      "Addresses": [
+        {
+          "Id": "addr-34556655",
+          "Location": {
+            "Postcode": "NR33 1XH"
+          }
+        }
+      ],
+      "PreferredAddress": {
+        "Id": "addr-34556655"
+      }
+    },
+    {
+      "Id": "34567655",
+      "Age": 17,
+      "Forename": "test",
+      "Surname": "chislett",
+      "Gender": "MALE",
+      "NhsNumber": "0449310999",
+      "DateOfBirth": {
+        "Lower": "2008-09-20",
+        "Upper": "2008-09-20",
+        "Mask": "DAY"
+      },
+      "Addresses": [
+        {
+          "Id": "addr-34567655",
+          "Location": {
+            "Postcode": "NR33 1XH"
+          }
+        }
+      ],
+      "PreferredAddress": {
+        "Id": "addr-34567655"
+      }
+    },
+    {
+      "Id": "34568855",
+      "Age": 17,
+      "Forename": "test",
+      "Surname": "Missing MHS Number",
+      "Gender": "MALE",
+      "NhsNumber": "",
+      "DateOfBirth": {
+        "Lower": "2008-09-20",
+        "Upper": "2008-09-20",
+        "Mask": "DAY"
+      },
+      "Addresses": [
+        {
+          "Id": "addr-34568855",
+          "Location": {
+            "Postcode": "NR33 1XH"
+          }
+        }
+      ],
+      "PreferredAddress": {
+        "Id": "addr-34568855"
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "schema.graphql",
+  "documents": "**/*.graphql",
+  "extensions": {
+    "strawberryShake": {
+      "name": "EclipseClient",
+      "namespace": "Eclipse.GraphQL",
+      "url": "https://olm-daisy-ecm.olmapps.com/integration",
+      "dependencyInjection": true,
+      "strictSchemaValidation": true,
+      "emitGeneratedCode": true,
+      "records": {
+        "inputs": false,
+        "entities": false
+      },
+      "transportProfiles": [
+        {
+          "default": "Http",
+          "subscription": "WebSocket"
+        }
+      ]
+    }
+  }
+}

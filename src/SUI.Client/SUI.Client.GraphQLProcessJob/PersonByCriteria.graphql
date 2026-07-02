@@ -1,0 +1,35 @@
+query PersonByCriteria($maxAge: Int, $paging: RequestCursorInput) {
+    personByCriteria(maxAge: $maxAge, paging: $paging) {
+        cursor {
+            offset
+            pageNumber
+            pageSize
+            returned
+            totalSize
+        },
+        results {
+            ... on Person {
+                age
+                addresses {
+                    id
+                    location {
+                        postcode
+                    }
+                }
+                dateOfBirth {
+                    lower
+                    upper
+                    mask
+                }
+                id
+                forename
+                surname
+                gender
+                nhsNumber
+                preferredAddress {
+                    id
+                }
+            }
+        }
+    }
+}
