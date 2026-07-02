@@ -1,6 +1,0 @@
-schema: schema.graphql
-extensions:
-  endpoints:
-    production:
-      url: https://olm-daisy-ecm.olmapps.com/integration
-documents: '**/*.graphql'
