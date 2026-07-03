@@ -2,6 +2,7 @@ using MatchingApi.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Shared;
 using Shared.Endpoint;
 using Shared.Models;
 
@@ -15,6 +16,65 @@ public class ReconcileAsyncTests
     public const string ValidNhsNumber = "9449305552";
     private const string InvalidNhsNumber = "1234567890";
     private const string SearchId = "test-search-id";
+
+    [Fact]
+    public async Task Should_SendEmptyOptionalPropertiesToMatchingService_WhenRequestContainsOptionalProperties()
+    {
+        // Arrange
+        var request = new ReconciliationRequest
+        {
+            NhsNumber = ValidNhsNumber,
+            AddressPostalCode = "AA11 2BB",
+            Family = "Hamilton",
+            Given = "David",
+            Gender = "Male",
+            Phone = "123454321",
+            BirthDate = new DateOnly(1990, 01, 02),
+            RawBirthDate = ["1990-01-02"],
+            Email = "david.hamilton@example.com",
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy2,
+            StrategyVersion = 2,
+            OptionalProperties = new Dictionary<string, object> { ["CustomField"] = "CustomValue" },
+        };
+        SearchSpecification? matchingRequest = null;
+
+        _matchingService
+            .Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
+            .Callback<SearchSpecification, bool>((sentRequest, _) => matchingRequest = sentRequest)
+            .ReturnsAsync(
+                new PersonMatchResponse
+                {
+                    SearchId = SearchId,
+                    Result = new MatchResult { MatchStatus = MatchStatus.NoMatch, NhsNumber = "" },
+                }
+            );
+
+        var sut = new ReconciliationService(
+            _matchingService.Object,
+            NullLogger<ReconciliationService>.Instance,
+            _nhsFhirClient.Object
+        );
+
+        // Act
+        await sut.ReconcileAsync(request);
+
+        // Assert
+        Assert.NotNull(matchingRequest);
+        Assert.NotSame(request, matchingRequest);
+        Assert.Empty(matchingRequest.OptionalProperties);
+        Assert.Equal("CustomValue", request.OptionalProperties["CustomField"]);
+        Assert.Equal(request.NhsNumber, ((ReconciliationRequest)matchingRequest).NhsNumber);
+        Assert.Equal(request.AddressPostalCode, matchingRequest.AddressPostalCode);
+        Assert.Equal(request.Family, matchingRequest.Family);
+        Assert.Equal(request.Given, matchingRequest.Given);
+        Assert.Equal(request.Gender, matchingRequest.Gender);
+        Assert.Equal(request.Phone, matchingRequest.Phone);
+        Assert.Equal(request.BirthDate, matchingRequest.BirthDate);
+        Assert.Equal(request.RawBirthDate, matchingRequest.RawBirthDate);
+        Assert.Equal(request.Email, matchingRequest.Email);
+        Assert.Equal(request.SearchStrategy, matchingRequest.SearchStrategy);
+        Assert.Equal(request.StrategyVersion, matchingRequest.StrategyVersion);
+    }
 
     [Fact]
     public async Task ReconcileAsync_WhenLocalDemographicsDidNotMatch_ReturnCorrectStatusAndNoDifferences()
