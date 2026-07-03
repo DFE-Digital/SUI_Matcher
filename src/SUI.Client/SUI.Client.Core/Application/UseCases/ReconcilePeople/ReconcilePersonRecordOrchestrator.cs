@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Models;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
 
 namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
@@ -12,7 +13,8 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
     IPersonSpecParser<TSource> personSpecParser,
     IReconciliationDataParser<TSource> reconciliationDataParser,
     AddressComparisonOrchestrator addressComparisonOrchestrator,
-    IOptions<PersonMatchingOptions> options
+    IOptions<PersonMatchingOptions> options,
+    IOptions<OptionalPropertiesLog> optionalPropertiesLogOptions
 ) : IMatchPersonRecordOrchestrator<TSource>
 {
     public async Task<List<ProcessedMatchRecord<TSource>>> ProcessAsync(
@@ -40,7 +42,7 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
                     Phone = person.Phone,
                     Email = person.Email,
                     AddressPostalCode = person.AddressPostalCode,
-                    OptionalProperties = person.OptionalProperties,
+                    OptionalProperties = GetLoggableOptionalProperties(person.OptionalProperties),
                     SearchStrategy = options.Value.SearchStrategy,
                     StrategyVersion = options.Value.StrategyVersion,
                 };
@@ -96,5 +98,27 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
         }
 
         return processedBatch;
+    }
+
+    private Dictionary<string, object> GetLoggableOptionalProperties(
+        Dictionary<string, object> optionalProperties
+    )
+    {
+        if (optionalProperties.Count == 0 || optionalPropertiesLogOptions.Value.Fields.Count == 0)
+        {
+            return new Dictionary<string, object>();
+        }
+
+        var allowedFields = new HashSet<string>(
+            optionalPropertiesLogOptions.Value.Fields.Keys,
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        return optionalProperties
+            .Where(optionalProperty => allowedFields.Contains(optionalProperty.Key))
+            .ToDictionary(
+                optionalProperty => optionalProperty.Key,
+                optionalProperty => optionalProperty.Value
+            );
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Shared.Models;
 using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
 using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
@@ -26,15 +27,17 @@ public class ReconcilePersonRecordOrchestratorTests
                     BirthDate = new DateOnly(2012, 5, 10),
                     RawBirthDate = ["2012-05-10"],
                     AddressPostalCode = "AA1 1AA",
+                    OptionalProperties = new Dictionary<string, object>
+                    {
+                        ["CustomField1"] = "CustomValue1",
+                        ["CustomField2"] = "CustomValue2",
+                    },
                 }
             );
         reconciliationParser
             .Setup(parser => parser.Parse("record"))
             .Returns(
-                new ReconciliationSourceData(
-                    "9999999993",
-                    "10 Example Road, Exampletown, AA1 1AA"
-                )
+                new ReconciliationSourceData("9999999993", "10 Example Road, Exampletown, AA1 1AA")
             );
         apiClient
             .Setup(client =>
@@ -67,14 +70,18 @@ public class ReconcilePersonRecordOrchestratorTests
             apiClient.Object,
             personParser.Object,
             reconciliationParser.Object,
-            new AddressComparisonOrchestrator(
-                new SemicolonCommaNewestFirstAddressHistoryParser()
-            ),
+            new AddressComparisonOrchestrator(new SemicolonCommaNewestFirstAddressHistoryParser()),
             Options.Create(
                 new PersonMatchingOptions
                 {
                     SearchStrategy = Shared.SharedConstants.SearchStrategy.Strategies.Strategy4,
                     StrategyVersion = 2,
+                }
+            ),
+            Options.Create(
+                new OptionalPropertiesLog
+                {
+                    Fields = new Dictionary<string, string> { ["customfield1"] = string.Empty },
                 }
             )
         );
@@ -90,6 +97,8 @@ public class ReconcilePersonRecordOrchestratorTests
                         request.NhsNumber == "9999999993"
                         && request.SearchStrategy
                             == Shared.SharedConstants.SearchStrategy.Strategies.Strategy4
+                        && request.OptionalProperties.Count == 1
+                        && request.OptionalProperties["CustomField1"].Equals("CustomValue1")
                     ),
                     CancellationToken.None
                 ),

@@ -61,6 +61,12 @@ builder
     )
     .ValidateOnStart();
 
+builder
+    .Services.AddOptions<OptionalPropertiesLog>()
+    .Bind(builder.Configuration.GetSection(OptionalPropertiesLog.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddSingleton(serviceProvider =>
