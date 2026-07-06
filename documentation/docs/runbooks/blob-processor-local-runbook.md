@@ -25,6 +25,8 @@ or the storage processor event job image.
   [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
 - Final application deployment after publishing images: follow
   [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
+- Add optional reconciliation properties to logs: follow
+  [Add optional properties to storage processor logs](#add-optional-properties-to-storage-processor-logs).
 - Smoke test: follow [Smoke test the deployment](#smoke-test-the-deployment).
 
 ## Full deployment flow
@@ -32,14 +34,15 @@ or the storage processor event job image.
 1. [Pick a branch, tag or commit to deploy](#pick-a-branch-tag-or-commit-to-deploy).
 2. [Run dotnet restore, build and tests](#run-dotnet-restore-build-and-tests).
 3. [Common setup](#common-setup).
-4. [Infrastructure deployment variables](#infrastructure-deployment-variables).
-5. [Run the infrastructure what-if](#run-the-infrastructure-what-if).
-6. [Run the infrastructure deploy](#run-the-infrastructure-deploy).
-7. [Add the NHS Digital secrets to Key Vault](#add-the-nhs-digital-secrets-to-key-vault).
-8. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
-9. [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
-10. [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
-11. [Smoke test the deployment](#smoke-test-the-deployment).
+4. [Add optional properties to storage processor logs](#add-optional-properties-to-storage-processor-logs), if required.
+5. [Infrastructure deployment variables](#infrastructure-deployment-variables).
+6. [Run the infrastructure what-if](#run-the-infrastructure-what-if).
+7. [Run the infrastructure deploy](#run-the-infrastructure-deploy).
+8. [Add the NHS Digital secrets to Key Vault](#add-the-nhs-digital-secrets-to-key-vault).
+9. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
+10. [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
+11. [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
+12. [Smoke test the deployment](#smoke-test-the-deployment).
 
 ## Pick a branch, tag or commit to deploy
 
@@ -110,6 +113,31 @@ STORAGE_PROCESS_JOB_CONFIGURATION='<protected-storage-process-job-configuration-
 ```
 
 `STORAGE_PROCESS_JOB_CONFIGURATION` is passed to the ACA job as runtime environment configuration. It must include the storage job processing mode and CSV mapping keys before the storage processor can process files. Keep deployment-specific source column names in the approved external runbook, not in this repository.
+
+## Add optional properties to storage processor logs
+
+Use this section when the reconciliation processor must include selected optional CSV fields in its structured logs.
+
+`OptionalPropertiesLog` is configured through the same protected `STORAGE_PROCESS_JOB_CONFIGURATION` JSON object as the
+storage job processing mode and CSV mappings. Add one indexed `OptionalPropertiesLog__Fields__<index>` entry for each
+optional CSV column that can be logged.
+
+Example shape:
+
+```bash
+STORAGE_PROCESS_JOB_CONFIGURATION='{
+  "StorageProcessJob__ProcessingMode": "Reconciliation",
+  "OptionalPropertiesLog__Fields__0": "free_school_meals",
+  "OptionalPropertiesLog__Fields__1": "case_status"
+}'
+```
+
+The field names must match the source CSV column names after excluding columns already mapped under
+`CsvMatchData__ColumnMappings`. Matching is case-insensitive. If they do not match, then they will not be logged.
+
+When configured, the reconciliation processor writes the selected values to the
+`RECONCILIATION_OPTIONAL_PROPERTIES` log entry and adds them to the logging scope with an `Optional_` prefix. Fields not
+listed in `OptionalPropertiesLog__Fields` are not included in that optional-properties log entry.
 
 Load the variables into your terminal session, derive the common deployment values, and select the Azure subscription:
 
