@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Shared.Models;
@@ -17,6 +17,7 @@ public class ReconcilePersonRecordOrchestratorTests
         var apiClient = new Mock<IMatchingApiClient>();
         var personParser = new Mock<IPersonSpecParser<string>>();
         var reconciliationParser = new Mock<IReconciliationDataParser<string>>();
+        var logger = new Mock<ILogger<ReconcilePersonRecordOrchestrator<string>>>();
         personParser
             .Setup(parser => parser.Parse("record"))
             .Returns(
@@ -66,7 +67,7 @@ public class ReconcilePersonRecordOrchestratorTests
                 }
             );
         var sut = new ReconcilePersonRecordOrchestrator<string>(
-            NullLogger<ReconcilePersonRecordOrchestrator<string>>.Instance,
+            logger.Object,
             apiClient.Object,
             personParser.Object,
             reconciliationParser.Object,
@@ -107,5 +108,41 @@ public class ReconcilePersonRecordOrchestratorTests
             AddressComparisonResult.AddressMatchStatus.Matched,
             result.AddressComparisonResults!.PrimaryAddressSame.Status
         );
+        VerifyAddressComparisonLogged(logger);
+    }
+
+    private static void VerifyAddressComparisonLogged(
+        Mock<ILogger<ReconcilePersonRecordOrchestrator<string>>> logger
+    )
+    {
+        logger.Verify(
+            x =>
+                x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>(
+                        (state, _) => ContainsAddressComparisonLog(state.ToString()!)
+                    ),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.Once
+        );
+    }
+
+    private static bool ContainsAddressComparisonLog(string logMessage)
+    {
+        return logMessage.Contains("[ADDRESS_COMPARISON_COMPLETED]", StringComparison.Ordinal)
+            && logMessage.Contains("SearchId: search-id", StringComparison.Ordinal)
+            && logMessage.Contains("PrimaryAddressSame: Matched", StringComparison.Ordinal)
+            && logMessage.Contains("AddressHistoriesIntersect: Matched", StringComparison.Ordinal)
+            && logMessage.Contains(
+                "PrimarySourceAddressInPDSHistory: Matched",
+                StringComparison.Ordinal
+            )
+            && logMessage.Contains(
+                "PrimaryPDSAddressInSourceHistory: Matched",
+                StringComparison.Ordinal
+            );
     }
 }

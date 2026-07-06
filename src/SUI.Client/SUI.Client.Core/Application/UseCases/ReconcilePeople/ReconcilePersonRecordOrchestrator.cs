@@ -63,6 +63,7 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
                     response,
                     sourceData.AddressHistory
                 );
+                LogAddressComparisonResult(response?.SearchId, addressComparison);
 
                 processedBatch.Add(
                     new ProcessedMatchRecord<TSource>
@@ -98,6 +99,21 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
         }
 
         return processedBatch;
+    }
+
+    private void LogAddressComparisonResult(
+        string? searchId,
+        AddressComparisonResults addressComparison
+    )
+    {
+        logger.LogInformation(
+            "[ADDRESS_COMPARISON_COMPLETED] SearchId: {SearchId}, PrimaryAddressSame: {PrimaryAddressSame}, AddressHistoriesIntersect: {AddressHistoriesIntersect}, PrimarySourceAddressInPDSHistory: {PrimarySourceAddressInPDSHistory}, PrimaryPDSAddressInSourceHistory: {PrimaryPDSAddressInSourceHistory}",
+            searchId ?? "Unknown",
+            addressComparison.PrimaryAddressSame.GetResultMessage(),
+            addressComparison.AddressHistoriesIntersect.GetResultMessage(),
+            addressComparison.PrimaryCMSAddressInPDSHistory.GetResultMessage(),
+            addressComparison.PrimaryPDSAddressInCMSHistory.GetResultMessage()
+        );
     }
 
     private Dictionary<string, object> GetLoggableOptionalProperties(
