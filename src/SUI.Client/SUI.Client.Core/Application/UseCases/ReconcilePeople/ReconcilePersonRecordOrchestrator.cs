@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Models;
@@ -17,6 +18,16 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
     IOptions<OptionalPropertiesLog> optionalPropertiesLogOptions
 ) : IMatchPersonRecordOrchestrator<TSource>
 {
+    private const string OptionalPropertiesEventName = "RECONCILIATION_OPTIONAL_PROPERTIES";
+    private const string OptionalPropertyPrefix = "Optional_";
+    private const string OptionalPropertiesPresent = "Present";
+    private const string OptionalPropertiesNone = "None";
+    private const string OptionalPropertiesNoneMessage = "No optional properties";
+    private static readonly EventId OptionalPropertiesLoggedEvent = new(
+        1001,
+        OptionalPropertiesEventName
+    );
+
     public async Task<List<ProcessedMatchRecord<TSource>>> ProcessAsync(
         IEnumerable<TSource> content,
         string fileName,
@@ -31,6 +42,9 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
             {
                 var person = personSpecParser.Parse(record);
                 var sourceData = reconciliationDataParser.Parse(record);
+                var loggableOptionalProperties = GetLoggableOptionalProperties(
+                    person.OptionalProperties
+                );
                 var payload = new ReconciliationRequest
                 {
                     NhsNumber = sourceData.NhsNumber,
@@ -42,7 +56,7 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
                     Phone = person.Phone,
                     Email = person.Email,
                     AddressPostalCode = person.AddressPostalCode,
-                    OptionalProperties = GetLoggableOptionalProperties(person.OptionalProperties),
+                    OptionalProperties = new Dictionary<string, object>(),
                     SearchStrategy = options.Value.SearchStrategy,
                     StrategyVersion = options.Value.StrategyVersion,
                 };
@@ -51,6 +65,9 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
                     payload,
                     cancellationToken
                 );
+
+                LogOptionalProperties(response?.SearchId, loggableOptionalProperties);
+
                 var matchingResponse = response is null
                     ? null
                     : new PersonMatchResponse
@@ -100,6 +117,44 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
 
         return processedBatch;
     }
+
+    private void LogOptionalProperties(
+        string? searchId,
+        Dictionary<string, object> optionalProperties
+    )
+    {
+        using var optionalPropertiesScope = BeginOptionalPropertiesScope(optionalProperties);
+
+        logger.LogInformation(
+            OptionalPropertiesLoggedEvent,
+            "[{EventName}] SearchId: {SearchId}, OptionalPropertiesStatus: {OptionalPropertiesStatus}, OptionalPropertiesCount: {OptionalPropertiesCount}, OptionalProperties: {OptionalProperties}",
+            OptionalPropertiesEventName,
+            searchId ?? "Unknown",
+            optionalProperties.Count == 0 ? OptionalPropertiesNone : OptionalPropertiesPresent,
+            optionalProperties.Count,
+            FormatOptionalProperties(optionalProperties)
+        );
+    }
+
+    private IDisposable? BeginOptionalPropertiesScope(Dictionary<string, object> optionalProperties)
+    {
+        if (optionalProperties.Count == 0)
+        {
+            return null;
+        }
+
+        return logger.BeginScope(
+            optionalProperties.ToDictionary(
+                optionalProperty => $"{OptionalPropertyPrefix}{optionalProperty.Key}",
+                optionalProperty => (object?)optionalProperty.Value.ToString()
+            )
+        );
+    }
+
+    private static string FormatOptionalProperties(Dictionary<string, object> optionalProperties) =>
+        optionalProperties.Count == 0
+            ? OptionalPropertiesNoneMessage
+            : JsonSerializer.Serialize(optionalProperties);
 
     private void LogAddressComparisonResult(
         string? searchId,
