@@ -16,8 +16,11 @@ public class ReconciliationService(
         // Check which local fields are missing
         var localMissingFields = BuildLocalMissingFields(request);
 
+        // Build a specific request for Matching. Removing non-required fields.
+        var matchingRequest = BuildMatchingRequest(request);
+
         // Match the request's demographics to an NHS number
-        var matchingResponse = await matchingService.SearchAsync(request, false);
+        var matchingResponse = await matchingService.SearchAsync(matchingRequest, false);
 
         if (string.IsNullOrWhiteSpace(matchingResponse.Result?.NhsNumber))
         {
@@ -137,6 +140,23 @@ public class ReconciliationService(
 
     private static string GetAgeGroup(DateOnly? birthDate) =>
         !birthDate.HasValue ? "Unknown" : PersonSpecificationUtils.GetAgeGroup(birthDate.Value);
+
+    private static ReconciliationRequest BuildMatchingRequest(ReconciliationRequest request) =>
+        new()
+        {
+            NhsNumber = request.NhsNumber,
+            Given = request.Given,
+            Family = request.Family,
+            BirthDate = request.BirthDate,
+            RawBirthDate = request.RawBirthDate,
+            Gender = request.Gender,
+            Phone = request.Phone,
+            Email = request.Email,
+            AddressPostalCode = request.AddressPostalCode,
+            SearchStrategy = request.SearchStrategy,
+            StrategyVersion = request.StrategyVersion,
+            OptionalProperties = new Dictionary<string, object>(),
+        };
 
     private void LogReconciliationCompleted(
         ReconciliationRequest request,

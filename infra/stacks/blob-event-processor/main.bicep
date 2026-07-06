@@ -285,6 +285,7 @@ module storageProcessJob '../../modules/blob-event-processor/container-app-job.b
     containerRegistryServer: containerRegistry.outputs.endpoint
     imageTag: storageProcessJobImageTag
     matchApiBaseAddress: 'https://matching-api.internal.${containerAppEnvironment.outputs.defaultDomain}'
+    applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
     storageProcessJobConfiguration: storageProcessJobConfiguration
     tags: tags
     includeRoleAssignments: includeRoleAssignments
