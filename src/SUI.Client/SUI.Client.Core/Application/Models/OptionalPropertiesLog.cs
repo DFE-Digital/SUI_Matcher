@@ -4,5 +4,5 @@ public sealed class OptionalPropertiesLog
 {
     public const string SectionName = "OptionalPropertiesLog";
 
-    public Dictionary<string, string> Fields { get; init; } = new();
+    public List<string> Fields { get; init; } = [];
 }

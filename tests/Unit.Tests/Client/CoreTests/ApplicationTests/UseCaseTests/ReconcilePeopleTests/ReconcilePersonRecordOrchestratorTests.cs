@@ -78,12 +78,7 @@ public class ReconcilePersonRecordOrchestratorTests
                     StrategyVersion = 2,
                 }
             ),
-            Options.Create(
-                new OptionalPropertiesLog
-                {
-                    Fields = new Dictionary<string, string> { ["customfield1"] = string.Empty },
-                }
-            )
+            Options.Create(new OptionalPropertiesLog { Fields = ["customfield1"] })
         );
 
         var result = Assert.Single(

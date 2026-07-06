@@ -110,7 +110,7 @@ public sealed class ReconcilePersonRecordOrchestrator<TSource>(
         }
 
         var allowedFields = new HashSet<string>(
-            optionalPropertiesLogOptions.Value.Fields.Keys,
+            optionalPropertiesLogOptions.Value.Fields,
             StringComparer.OrdinalIgnoreCase
         );
 
