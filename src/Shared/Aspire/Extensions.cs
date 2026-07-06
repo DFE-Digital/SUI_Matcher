@@ -35,15 +35,22 @@ public static class Extensions
 
     public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
     {
-        builder.ConfigureOpenTelemetry();
+        builder.AddTelemetryDefaults();
         builder.AddDefaultHealthChecks();
-        builder.Services.AddHttpContextAccessor();
         builder.Services.AddServiceDiscovery();
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
             http.AddServiceDiscovery();
             http.AddStandardResilienceHandler();
         });
+
+        return builder;
+    }
+
+    public static IHostApplicationBuilder AddTelemetryDefaults(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddHttpContextAccessor();
+        builder.ConfigureOpenTelemetry();
 
         return builder;
     }

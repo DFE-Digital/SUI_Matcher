@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Shared.Aspire;
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
@@ -21,6 +22,8 @@ using SUI.Client.StorageProcessJob.Infrastructure;
 using SUI.Client.StorageProcessJob.Infrastructure.Azure;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+builder.AddTelemetryDefaults();
 
 builder
     .Services.AddOptions<StorageProcessJobOptions>()

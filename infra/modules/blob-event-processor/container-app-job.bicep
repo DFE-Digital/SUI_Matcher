@@ -44,6 +44,10 @@ param imageTag string
 param matchApiBaseAddress string
 
 @secure()
+@description('The Application Insights connection string')
+param applicationInsightsConnectionString string
+
+@secure()
 @description('Runtime configuration values for the storage process job.')
 param storageProcessJobConfiguration object
 
@@ -110,6 +114,12 @@ resource storageProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
           identity: managedIdentityId
         }
       ]
+      secrets: [
+        {
+          name: 'app-insights-connection-string'
+          value: applicationInsightsConnectionString
+        }
+      ]
       eventTriggerConfig: {
         replicaCompletionCount: 1
         parallelism: 1
@@ -162,6 +172,22 @@ resource storageProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
               {
                 name: 'AZURE_CLIENT_ID'
                 value: managedIdentityClientId
+              }
+              {
+                name: 'OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES'
+                value: 'true'
+              }
+              {
+                name: 'OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES'
+                value: 'true'
+              }
+              {
+                name: 'OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY'
+                value: 'in_memory'
+              }
+              {
+                name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+                secretRef: 'app-insights-connection-string'
               }
             ],
             storageProcessJobConfigurationEnvironment
