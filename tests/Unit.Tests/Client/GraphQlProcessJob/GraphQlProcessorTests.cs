@@ -7,6 +7,10 @@ using Moq;
 
 using StrawberryShake;
 
+using SUI.Client.Core.Application.Interfaces;
+using SUI.Client.Core.Application.Models;
+using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.GraphQLProcessJob;
 using SUI.Client.GraphQLProcessJob.Infrastructure;
 
@@ -17,15 +21,33 @@ public class GraphQlProcessorTests
     private readonly Mock<IEclipseClient> _eclipseClientMock;
     private readonly Mock<IPersonByCriteriaQuery> _personByCriteriaQueryMock;
     private readonly Mock<ILogger<GraphQlProcessor>> _loggerMock;
+    private readonly Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>> _matchPersonRecordOrchestratorMock;
+    private readonly IOptions<CsvMatchDataOptions> _csvMatchOptions;
 
     public GraphQlProcessorTests()
     {
         _eclipseClientMock = new Mock<IEclipseClient>();
         _personByCriteriaQueryMock = new Mock<IPersonByCriteriaQuery>();
         _loggerMock = new Mock<ILogger<GraphQlProcessor>>();
+        _matchPersonRecordOrchestratorMock = new Mock<IMatchPersonRecordOrchestrator<CsvRecordDto>>();
 
         _eclipseClientMock.Setup(x => x.PersonByCriteria).Returns(_personByCriteriaQueryMock.Object);
         _loggerMock.Setup(l => l.IsEnabled(LogLevel.Information)).Returns(true);
+
+        _csvMatchOptions = Options.Create(new CsvMatchDataOptions
+        {
+            DateFormat = "dd/MM/yyyy",
+            ColumnMappings = new CsvMatchDataOptions.Headers
+            {
+                Id = "SourceID",
+                Given = "Forename",
+                Family = "Surname",
+                BirthDate = "DOB",
+                Postcode = "PostCode",
+                NhsNumber = "NHSNumber",
+                Gender = "Gender"
+            }
+        });
     }
 
     [Fact]
@@ -36,7 +58,9 @@ public class GraphQlProcessorTests
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
-            options
+            _matchPersonRecordOrchestratorMock.Object,
+            options,
+            _csvMatchOptions
         );
 
         // Person 1 Setup
@@ -44,6 +68,7 @@ public class GraphQlProcessorTests
         dobMock.Setup(d => d.Lower).Returns(new DateOnly(1990, 5, 20));
 
         var personMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Person>();
+        personMock.Setup(p => p.Id).Returns("person-123");
         personMock.Setup(p => p.Forename).Returns("John");
         personMock.Setup(p => p.Surname).Returns("Doe");
         personMock.Setup(p => p.DateOfBirth).Returns(dobMock.Object);
@@ -74,22 +99,30 @@ public class GraphQlProcessorTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock.Object);
 
+        IEnumerable<CsvRecordDto>? capturedRecords = null;
+        _matchPersonRecordOrchestratorMock
+            .Setup(o => o.ProcessAsync(It.IsAny<IEnumerable<CsvRecordDto>>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<CsvRecordDto>, string, CancellationToken>((records, _, _) =>
+                capturedRecords = records.ToList())
+            .ReturnsAsync(new List<ProcessedMatchRecord<CsvRecordDto>>());
+
         // Act
         await sut.RunAsync(CancellationToken.None);
 
         // Assert
         _personByCriteriaQueryMock.Verify(
             q => q.ExecuteAsync(25, It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()), Times.Once);
+        _matchPersonRecordOrchestratorMock.Verify(
+            o => o.ProcessAsync(It.IsAny<IEnumerable<CsvRecordDto>>(), "graphql_extract",
+                It.IsAny<CancellationToken>()), Times.Once);
 
-        // Check that logging occurred for John Doe
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Name: John Doe")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        Assert.NotNull(capturedRecords);
+        var record = Assert.Single(capturedRecords);
+        Assert.Equal("person-123", record.Record["SourceID"]);
+        Assert.Equal("John", record.Record["Forename"]);
+        Assert.Equal("Doe", record.Record["Surname"]);
+        Assert.Equal("20/05/1990", record.Record["DOB"]);
     }
 
     [Fact]
@@ -100,7 +133,9 @@ public class GraphQlProcessorTests
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
-            options
+            _matchPersonRecordOrchestratorMock.Object,
+            options,
+            _csvMatchOptions
         );
 
         // Page 1 Setup (John Doe)
@@ -108,6 +143,7 @@ public class GraphQlProcessorTests
         dobMock1.Setup(d => d.Lower).Returns(new DateOnly(1990, 5, 20));
 
         var personMock1 = new Mock<IPersonByCriteria_PersonByCriteria_Results_Person>();
+        personMock1.Setup(p => p.Id).Returns("john-123");
         personMock1.Setup(p => p.Forename).Returns("John");
         personMock1.Setup(p => p.Surname).Returns("Doe");
         personMock1.Setup(p => p.DateOfBirth).Returns(dobMock1.Object);
@@ -136,6 +172,7 @@ public class GraphQlProcessorTests
         dobMock2.Setup(d => d.Lower).Returns(new DateOnly(1995, 8, 15));
 
         var personMock2 = new Mock<IPersonByCriteria_PersonByCriteria_Results_Person>();
+        personMock2.Setup(p => p.Id).Returns("jane-456");
         personMock2.Setup(p => p.Forename).Returns("Jane");
         personMock2.Setup(p => p.Surname).Returns("Smith");
         personMock2.Setup(p => p.DateOfBirth).Returns(dobMock2.Object);
@@ -170,6 +207,14 @@ public class GraphQlProcessorTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock2.Object);
 
+        IEnumerable<CsvRecordDto>? capturedRecords = null;
+        _matchPersonRecordOrchestratorMock
+            .Setup(o => o.ProcessAsync(It.IsAny<IEnumerable<CsvRecordDto>>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<CsvRecordDto>, string, CancellationToken>((records, _, _) =>
+                capturedRecords = records.ToList())
+            .ReturnsAsync(new List<ProcessedMatchRecord<CsvRecordDto>>());
+
         // Act
         await sut.RunAsync(CancellationToken.None);
 
@@ -181,24 +226,19 @@ public class GraphQlProcessorTests
             q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 2), It.IsAny<CancellationToken>()),
             Times.Once);
 
-        // Check that logging occurred for both John Doe and Jane Smith
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Name: John Doe")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        Assert.NotNull(capturedRecords);
+        var recordsList = capturedRecords.ToList();
+        Assert.Equal(2, recordsList.Count);
 
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Name: Jane Smith")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        Assert.Equal("john-123", recordsList[0].Record["SourceID"]);
+        Assert.Equal("John", recordsList[0].Record["Forename"]);
+        Assert.Equal("Doe", recordsList[0].Record["Surname"]);
+        Assert.Equal("20/05/1990", recordsList[0].Record["DOB"]);
+
+        Assert.Equal("jane-456", recordsList[1].Record["SourceID"]);
+        Assert.Equal("Jane", recordsList[1].Record["Forename"]);
+        Assert.Equal("Smith", recordsList[1].Record["Surname"]);
+        Assert.Equal("15/08/1995", recordsList[1].Record["DOB"]);
     }
 
     [Fact]
@@ -209,7 +249,9 @@ public class GraphQlProcessorTests
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
-            options
+            _matchPersonRecordOrchestratorMock.Object,
+            options,
+            _csvMatchOptions
         );
 
         // Create a generic results mock that is NOT a Person (e.g. RedactedResult)
@@ -240,6 +282,14 @@ public class GraphQlProcessorTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock.Object);
 
+        IEnumerable<CsvRecordDto>? capturedRecords = null;
+        _matchPersonRecordOrchestratorMock
+            .Setup(o => o.ProcessAsync(It.IsAny<IEnumerable<CsvRecordDto>>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<CsvRecordDto>, string, CancellationToken>((records, _, _) =>
+                capturedRecords = records.ToList())
+            .ReturnsAsync(new List<ProcessedMatchRecord<CsvRecordDto>>());
+
         // Act
         await sut.RunAsync(CancellationToken.None);
 
@@ -247,14 +297,8 @@ public class GraphQlProcessorTests
         _personByCriteriaQueryMock.Verify(
             q => q.ExecuteAsync(25, It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()), Times.Once);
 
-        // Verify that we did NOT attempt to log any Person Name or details
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Name:")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Never);
+        // Verify that we did NOT pass any records to the orchestrator (since the redacted result was skipped)
+        Assert.NotNull(capturedRecords);
+        Assert.Empty(capturedRecords);
     }
 }
