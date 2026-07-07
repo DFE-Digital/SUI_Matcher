@@ -166,14 +166,25 @@ public class ReconciliationService(
     {
         var ageGroup = GetAgeGroup(reconciliationResponse.Person?.BirthDate);
         decimal score = personMatchResponse.Result?.Score ?? 0;
+        var sourceNhsNumberPresent = !string.IsNullOrWhiteSpace(request.NhsNumber);
+        var sourceNhsNumberEqualsMatchedNhsNumber =
+            sourceNhsNumberPresent
+            && string.Equals(
+                request.NhsNumber,
+                personMatchResponse.Result?.NhsNumber,
+                StringComparison.Ordinal
+            );
+
         logger.LogInformation(
-            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, LocalMissing: {LocalMissing}, NhsMissing: {NhsMissing} Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {Score}",
+            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, LocalMissing: {LocalMissing}, NhsMissing: {NhsMissing}, SourceNhsNumberPresent: {SourceNhsNumberPresent}, SourceNhsNumberEqualsMatchedNhsNumber: {SourceNhsNumberEqualsMatchedNhsNumber}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {Score}",
             ageGroup,
             request.Gender ?? "Unknown",
             request.AddressPostalCode ?? "Unknown",
             JsonConvert.SerializeObject(reconciliationResponse.DifferenceFields),
             JsonConvert.SerializeObject(reconciliationResponse.MissingLocalFields),
             JsonConvert.SerializeObject(reconciliationResponse.MissingNhsFields),
+            sourceNhsNumberPresent,
+            sourceNhsNumberEqualsMatchedNhsNumber,
             reconciliationResponse.Status,
             personMatchResponse.Result?.MatchStatus,
             personMatchResponse.Result?.ProcessStage,
