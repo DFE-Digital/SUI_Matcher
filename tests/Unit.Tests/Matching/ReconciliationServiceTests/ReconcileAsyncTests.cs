@@ -485,8 +485,16 @@ public class ReconcileAsyncTests
         Assert.Equal(result.Person, nhsNoBPerson);
     }
 
-    [Fact]
-    public async Task ReconcileAsync_ShouldLogCompleted_WhenInvalidNhsNumber()
+    [Theory]
+    [InlineData(ValidNhsNumber, true, true)]
+    [InlineData(InvalidNhsNumber, true, false)]
+    [InlineData(null, false, false)]
+    [InlineData("   ", false, false)]
+    public async Task Should_LogSourceNhsNumberDerivedValues_When_ReconciliationCompletes(
+        string? sourceNhsNumber,
+        bool expectedSourceNhsNumberPresent,
+        bool expectedSourceNhsNumberEqualsMatchedNhsNumber
+    )
     {
         // Arrange
         _matchingService
@@ -494,14 +502,24 @@ public class ReconcileAsyncTests
             .ReturnsAsync(
                 new PersonMatchResponse
                 {
-                    Result = new MatchResult { MatchStatus = MatchStatus.Match },
+                    Result = new MatchResult
+                    {
+                        MatchStatus = MatchStatus.Match,
+                        NhsNumber = ValidNhsNumber,
+                    },
                 }
             );
+        _nhsFhirClient
+            .Setup(x => x.PerformSearchByNhsId(ValidNhsNumber))
+            .ReturnsAsync(
+                new DemographicResult { Result = new NhsPerson { NhsNumber = ValidNhsNumber } }
+            );
+
         var logger = Mock.Of<ILogger<ReconciliationService>>();
         var sut = new ReconciliationService(_matchingService.Object, logger, _nhsFhirClient.Object);
 
         // Act
-        await sut.ReconcileAsync(new ReconciliationRequest() { NhsNumber = InvalidNhsNumber });
+        await sut.ReconcileAsync(new ReconciliationRequest { NhsNumber = sourceNhsNumber });
 
         // Assert
         Mock.Get(logger)
@@ -511,7 +529,12 @@ public class ReconcileAsyncTests
                         LogLevel.Information,
                         It.IsAny<EventId>(),
                         It.Is<It.IsAnyType>(
-                            (v, t) => v.ToString()!.Contains("[RECONCILIATION_COMPLETED]")
+                            (v, t) =>
+                                ContainsReconciliationCompletedLogState(
+                                    v,
+                                    expectedSourceNhsNumberPresent,
+                                    expectedSourceNhsNumberEqualsMatchedNhsNumber
+                                )
                         ),
                         It.IsAny<Exception>(),
                         It.IsAny<Func<It.IsAnyType, Exception?, string>>()
@@ -520,43 +543,39 @@ public class ReconcileAsyncTests
             );
     }
 
-    [Fact]
-    public async Task ReconcileAsync_ShouldLogCompleted_WhenNhsNumberValid()
+    private static bool ContainsReconciliationCompletedLogState(
+        object state,
+        bool expectedSourceNhsNumberPresent,
+        bool expectedSourceNhsNumberEqualsMatchedNhsNumber
+    )
     {
-        // Arrange
-        _matchingService
-            .Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
-            .ReturnsAsync(
-                new PersonMatchResponse
-                {
-                    Result = new MatchResult { MatchStatus = MatchStatus.Match },
-                }
-            );
-        _nhsFhirClient
-            .Setup(x => x.PerformSearchByNhsId(ValidNhsNumber))
-            .ReturnsAsync(
-                new DemographicResult { Result = new NhsPerson { NhsNumber = ValidNhsNumber } }
-            );
-        var logger = Mock.Of<ILogger<ReconciliationService>>();
-        var sut = new ReconciliationService(_matchingService.Object, logger, _nhsFhirClient.Object);
+        if (state is not IEnumerable<KeyValuePair<string, object?>> logProperties)
+        {
+            return false;
+        }
 
-        // Act
-        await sut.ReconcileAsync(new ReconciliationRequest() { NhsNumber = ValidNhsNumber });
+        var properties = logProperties.ToDictionary(
+            logProperty => logProperty.Key,
+            logProperty => logProperty.Value
+        );
 
-        // Assert
-        Mock.Get(logger)
-            .Verify(
-                x =>
-                    x.Log(
-                        LogLevel.Information,
-                        It.IsAny<EventId>(),
-                        It.Is<It.IsAnyType>(
-                            (v, t) => v.ToString()!.Contains("[RECONCILIATION_COMPLETED]")
-                        ),
-                        It.IsAny<Exception>(),
-                        It.IsAny<Func<It.IsAnyType, Exception?, string>>()
-                    ),
-                Times.Once
+        return state.ToString()!.Contains("[RECONCILIATION_COMPLETED]", StringComparison.Ordinal)
+            && HasLogProperty(properties, "SourceNhsNumberPresent", expectedSourceNhsNumberPresent)
+            && HasLogProperty(
+                properties,
+                "SourceNhsNumberEqualsMatchedNhsNumber",
+                expectedSourceNhsNumberEqualsMatchedNhsNumber
             );
+    }
+
+    private static bool HasLogProperty(
+        IReadOnlyDictionary<string, object?> properties,
+        string key,
+        bool expectedValue
+    )
+    {
+        return properties.TryGetValue(key, out var actualValue)
+            && actualValue is bool actualBoolean
+            && actualBoolean == expectedValue;
     }
 }
