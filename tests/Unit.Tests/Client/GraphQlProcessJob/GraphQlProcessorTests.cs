@@ -771,7 +771,7 @@ public class GraphQlProcessorTests
         Assert.NotNull(capturedRecords);
         var record = Assert.Single(capturedRecords);
         Assert.Equal("1234567890", record.Record["NHSNumber"]);
-        Assert.Equal(Gender.Male.ToString(), record.Record["Gender"]);
+        Assert.Equal(Gender.Male.ToString().ToLower(), record.Record["Gender"]);
     }
 
     [Fact]

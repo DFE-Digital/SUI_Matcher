@@ -47,7 +47,7 @@ public class GraphQlProcessor(
                         { mappings.Id, person.Id },
                         { mappings.Given, person.Forename ?? "" },
                         { mappings.Family, person.Surname ?? "" },
-                        { mappings.BirthDate, person.DateOfBirth?.Lower?.ToString("dd/MM/yyyy") ?? "" },
+                        { mappings.BirthDate, person.DateOfBirth?.Lower?.ToString(csvMatchDataOptions.Value.DateFormat) ?? "" },
                         {
                             mappings.Postcode,
                             person.Addresses.FirstOrDefault(a => a.Id == person.PreferredAddress?.Id)?.Location
@@ -62,7 +62,7 @@ public class GraphQlProcessor(
 
                     if (!string.IsNullOrEmpty(mappings.Gender))
                     {
-                        personDictionary[mappings.Gender] = person.Gender?.ToString() ?? "";
+                        personDictionary[mappings.Gender] = person.Gender?.ToString().ToLower() ?? "";
                     }
 
                     csvRecords.Add(new CsvRecordDto(personDictionary));
