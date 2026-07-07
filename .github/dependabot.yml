@@ -8,3 +8,8 @@ updates:
     labels:
       - github-actions
       - dependabot
+    cooldown:
+      semver-major-days: 30
+      semver-minor-days: 7
+      semvar-patch-days: 2
+      
