@@ -33,7 +33,7 @@ public class GraphQlProcessor(
                 new RequestCursorInput { PageNumber = pageNumber, PageSize = pageSize }, cancellationToken);
             results.EnsureNoErrors();
 
-            if (results.Data?.PersonByCriteria.Results is { Count: > 0 } resultsList)
+            if (results.Data?.PersonByCriteria?.Results is { Count: > 0 } resultsList)
             {
                 foreach (var result in resultsList)
                 {
@@ -68,7 +68,7 @@ public class GraphQlProcessor(
                     csvRecords.Add(new CsvRecordDto(personDictionary));
                 }
 
-                var cursor = results.Data?.PersonByCriteria.Cursor;
+                var cursor = results.Data?.PersonByCriteria?.Cursor;
                 if (cursor != null && cursor.Offset + cursor.Returned < cursor.TotalSize)
                 {
                     pageNumber++;
