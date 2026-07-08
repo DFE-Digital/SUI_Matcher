@@ -7,13 +7,16 @@ using StrawberryShake;
 
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.Models;
+using SUI.Client.Core.Infrastructure.CsvParsers;
 
 namespace SUI.Client.GraphQLProcessJob.Infrastructure;
 
 public class GraphQlProcessor(
     ILogger<GraphQlProcessor> logger,
     IEclipseClient eclipseClient,
-    IOptions<GraphQlProcessJobOptions> options)
+    IMatchPersonRecordOrchestrator<CsvRecordDto> matchPersonRecordOrchestrator,
+    IOptions<GraphQlProcessJobOptions> options,
+    IOptions<CsvMatchDataOptions> csvMatchDataOptions)
 {
     public async Task RunAsync(CancellationToken cancellationToken)
     {
@@ -21,6 +24,8 @@ public class GraphQlProcessor(
         int pageNumber = 1;
         const int pageSize = 10;
         bool hasMoreResults = true;
+        var csvRecords = new List<CsvRecordDto>();
+        var mappings = csvMatchDataOptions.Value.ColumnMappings;
 
         while (hasMoreResults && !cancellationToken.IsCancellationRequested)
         {
@@ -28,7 +33,7 @@ public class GraphQlProcessor(
                 new RequestCursorInput { PageNumber = pageNumber, PageSize = pageSize }, cancellationToken);
             results.EnsureNoErrors();
 
-            if (results.Data?.PersonByCriteria.Results is { Count: > 0 } resultsList)
+            if (results.Data?.PersonByCriteria?.Results is { Count: > 0 } resultsList)
             {
                 foreach (var result in resultsList)
                 {
@@ -37,18 +42,33 @@ public class GraphQlProcessor(
                         continue;
                     }
 
-                    if (logger.IsEnabled(LogLevel.Information))
+                    var personDictionary = new Dictionary<string, string>
                     {
-                        logger.LogInformation(
-                            "Person Id: {ID}, Name: {Forename} {Surname}, DOB: {DateOfBirth}, Gender: {Gender}, NHS No: {NHSNumber}, Postcode: {Postcode}",
-                            person.Id, person.Forename, person.Surname, person.DateOfBirth?.Lower, person.Gender,
-                            person.NhsNumber,
+                        { mappings.Id, person.Id },
+                        { mappings.Given, person.Forename ?? "" },
+                        { mappings.Family, person.Surname ?? "" },
+                        { mappings.BirthDate, person.DateOfBirth?.Lower?.ToString(csvMatchDataOptions.Value.DateFormat) ?? "" },
+                        {
+                            mappings.Postcode,
                             person.Addresses.FirstOrDefault(a => a.Id == person.PreferredAddress?.Id)?.Location
-                                ?.Postcode);
+                                ?.Postcode ?? ""
+                        }
+                    };
+
+                    if (!string.IsNullOrEmpty(mappings.NhsNumber))
+                    {
+                        personDictionary[mappings.NhsNumber] = person.NhsNumber ?? "";
                     }
+
+                    if (!string.IsNullOrEmpty(mappings.Gender))
+                    {
+                        personDictionary[mappings.Gender] = person.Gender?.ToString().ToLower() ?? "";
+                    }
+
+                    csvRecords.Add(new CsvRecordDto(personDictionary));
                 }
 
-                var cursor = results.Data?.PersonByCriteria.Cursor;
+                var cursor = results.Data?.PersonByCriteria?.Cursor;
                 if (cursor != null && cursor.Offset + cursor.Returned < cursor.TotalSize)
                 {
                     pageNumber++;
@@ -64,6 +84,20 @@ public class GraphQlProcessor(
             }
         }
 
-        logger.LogInformation("Finished processing all data.");
+        logger.LogInformation("Completed compiling GraphQL records. Total records retrieved: {Count}.",
+            csvRecords.Count);
+
+        var matchedResults = await matchPersonRecordOrchestrator.ProcessAsync(
+            csvRecords,
+            "graphql_extract",
+            cancellationToken
+        );
+
+        logger.LogInformation(
+            "Finished processing matching with orchestrator. Result count: {Count}. Matches: {MatchCount}",
+            matchedResults.Count, matchedResults.Count(x => x.ApiResult is
+            {
+                Result.IsHighConfidenceMatch: true
+            }));
     }
 }

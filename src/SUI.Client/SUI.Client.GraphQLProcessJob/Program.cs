@@ -23,6 +23,12 @@ builder
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder
+    .Services.AddOptions<CsvMatchDataOptions>()
+    .Bind(builder.Configuration.GetSection(CsvMatchDataOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddSingleton<TokenCredential>(sp =>
