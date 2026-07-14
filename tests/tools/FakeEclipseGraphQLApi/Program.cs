@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<Query>()
+    .AddMutationType<Mutation>()
     .AddUnionType<IPersonByCriteria_PersonByCriteria_Results>()
     .AddType<Person>();
 

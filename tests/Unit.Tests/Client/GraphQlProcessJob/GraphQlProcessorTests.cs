@@ -852,4 +852,96 @@ public class GraphQlProcessorTests
         Assert.False(record.Record.ContainsKey("NHSNumber"));
         Assert.False(record.Record.ContainsKey("Gender"));
     }
+
+    [Fact]
+    public async Task RunAsync_ShouldCallUpdatePersonMutation_WhenHighConfidenceMatchIsReturned()
+    {
+        // Arrange
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 25 });
+
+        var updatePersonResultMock = new Mock<IUpdatePersonResult>();
+        var operationUpdateResultMock = new Mock<IOperationResult<IUpdatePersonResult>>();
+        operationUpdateResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
+        operationUpdateResultMock.Setup(r => r.Data).Returns(updatePersonResultMock.Object);
+
+        var updatePersonMutationMock = new Mock<IUpdatePersonMutation>();
+        updatePersonMutationMock
+            .Setup(m => m.ExecuteAsync(It.IsAny<global::Eclipse.GraphQL.UpdatePerson>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(operationUpdateResultMock.Object);
+
+        _eclipseClientMock.Setup(c => c.UpdatePerson).Returns(updatePersonMutationMock.Object);
+
+        var sut = new GraphQlProcessor(
+            _loggerMock.Object,
+            _eclipseClientMock.Object,
+            _matchPersonRecordOrchestratorMock.Object,
+            options,
+            _csvMatchOptions
+        );
+
+        var personMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Person>();
+        personMock.Setup(p => p.Id).Returns("person-123");
+        personMock.Setup(p => p.ObjectVersion).Returns(5);
+        personMock.Setup(p => p.Forename).Returns("John");
+        personMock.Setup(p => p.Surname).Returns("Doe");
+        personMock.Setup(p => p.DateOfBirth).Returns((IPersonByCriteria_PersonByCriteria_Results_DateOfBirth?)null);
+        personMock.Setup(p => p.Addresses).Returns(new List<IPersonByCriteria_PersonByCriteria_Results_Addresses>());
+        personMock.Setup(p => p.PreferredAddress)
+            .Returns((IPersonByCriteria_PersonByCriteria_Results_PreferredAddress?)null);
+
+        var resultsList = new List<IPersonByCriteria_PersonByCriteria_Results> { personMock.Object };
+
+        var cursorMock = new Mock<IPersonByCriteria_PersonByCriteria_Cursor>();
+        cursorMock.Setup(c => c.Offset).Returns(0);
+        cursorMock.Setup(c => c.Returned).Returns(1);
+        cursorMock.Setup(c => c.TotalSize).Returns(1);
+
+        var personByCriteriaMock = new Mock<IPersonByCriteria_PersonByCriteria>();
+        personByCriteriaMock.Setup(p => p.Results).Returns(resultsList.AsReadOnly());
+        personByCriteriaMock.Setup(p => p.Cursor).Returns(cursorMock.Object);
+
+        var operationResultDataMock = new Mock<IPersonByCriteriaResult>();
+        operationResultDataMock.Setup(o => o.PersonByCriteria).Returns(personByCriteriaMock.Object);
+
+        var operationResultMock = new Mock<IOperationResult<IPersonByCriteriaResult>>();
+        operationResultMock.Setup(r => r.Data).Returns(operationResultDataMock.Object);
+        operationResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
+
+        _personByCriteriaQueryMock
+            .Setup(q => q.ExecuteAsync(It.IsAny<int>(), It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(operationResultMock.Object);
+
+        var matchResult = new Shared.Models.MatchResult
+        {
+            MatchStatus = Shared.Models.MatchStatus.Match,
+            NhsNumber = "9999999999",
+            Score = 1.0m
+        };
+        var apiResult = new Shared.Models.PersonMatchResponse { Result = matchResult };
+
+        var matchedRecord = new ProcessedMatchRecord<CsvRecordDto>
+        {
+            OriginalData = new CsvRecordDto(new Dictionary<string, string> { { "SourceID", "person-123" } }),
+            ApiResult = apiResult,
+            IsSuccess = true
+        };
+
+        _matchPersonRecordOrchestratorMock
+            .Setup(o => o.ProcessAsync(It.IsAny<IEnumerable<CsvRecordDto>>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ProcessedMatchRecord<CsvRecordDto>> { matchedRecord });
+
+        // Act
+        await sut.RunAsync(CancellationToken.None);
+
+        // Assert
+        updatePersonMutationMock.Verify(
+            m => m.ExecuteAsync(
+                It.Is<global::Eclipse.GraphQL.UpdatePerson>(input =>
+                    input.Id == "person-123" &&
+                    input.NhsNumber == "9999999999" &&
+                    input.ObjectVersion == 5),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }
