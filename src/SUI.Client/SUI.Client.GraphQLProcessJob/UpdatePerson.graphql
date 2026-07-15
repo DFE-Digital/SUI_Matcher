@@ -1,0 +1,7 @@
+mutation UpdatePerson($input: UpdatePerson!) {
+    updatePerson(input: $input) {
+        id
+        objectVersion
+        nhsNumber
+    }
+}
