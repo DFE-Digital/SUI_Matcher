@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Eclipse.GraphQL;
 
 using Microsoft.Extensions.Logging;
@@ -19,15 +21,18 @@ public class GraphQlProcessor(
     IOptions<GraphQlProcessJobOptions> options,
     IOptions<CsvMatchDataOptions> csvMatchDataOptions)
 {
+    private record PersonMetadata(int ObjectVersion, string? NhsNumber, IReadOnlyList<PersonType> PersonTypes);
+
     public async Task RunAsync(CancellationToken cancellationToken)
     {
+        var timer = Stopwatch.StartNew();
         logger.LogInformation("Running Graph QL Process Job.");
         var mappings = csvMatchDataOptions.Value.ColumnMappings;
 
-        var (csvRecords, personObjectVersions) = await FetchAndCompilePersonRecordsAsync(mappings, cancellationToken);
+        (List<CsvRecordDto> csvRecords, Dictionary<string, PersonMetadata> personMetadata) = await FetchAndCompilePersonRecordsAsync(mappings, cancellationToken);
 
-        logger.LogInformation("Completed compiling GraphQL records. Total records retrieved: {Count}.",
-            csvRecords.Count);
+        logger.LogInformation("Completed compiling GraphQL records. Total records retrieved: {Count}. Elapsed Time: {ElapsedTime}",
+            csvRecords.Count, timer.Elapsed.ToString("g"));
 
         var matchedResults = await matchPersonRecordOrchestrator.ProcessAsync(
             csvRecords,
@@ -36,23 +41,25 @@ public class GraphQlProcessor(
         );
 
         logger.LogInformation(
-            "Finished processing matching with orchestrator. Result count: {Count}. Matches: {MatchCount}",
+            "Finished processing matching. Result count: {Count}. Matches: {MatchCount}. Elapsed time: {ElapsedTime}",
             matchedResults.Count, matchedResults.Count(x => x.ApiResult is
             {
                 Result.IsHighConfidenceMatch: true
-            }));
+            }), timer.Elapsed.ToString("g"));
 
-        await SaveMatchedNhsNumbersAsync(matchedResults, personObjectVersions, mappings, cancellationToken);
+        await SaveMatchedNhsNumbersAsync(matchedResults, personMetadata, mappings, cancellationToken);
+
+        logger.LogInformation("GraphQL Job Complete. Total time: {ElapsedTime}", timer.Elapsed.ToString("g"));
     }
 
-    private async Task<(List<CsvRecordDto> CsvRecords, Dictionary<string, int> PersonObjectVersions)> FetchAndCompilePersonRecordsAsync(
+    private async Task<(List<CsvRecordDto> CsvRecords, Dictionary<string, PersonMetadata> PersonMetadata)> FetchAndCompilePersonRecordsAsync(
         CsvMatchDataOptions.Headers mappings,
         CancellationToken cancellationToken)
     {
         int pageNumber = 1;
-        const int pageSize = 10;
+        const int pageSize = 100;
         var csvRecords = new List<CsvRecordDto>();
-        var personObjectVersions = new Dictionary<string, int>();
+        var personMetadata = new Dictionary<string, PersonMetadata>();
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -70,12 +77,23 @@ public class GraphQlProcessor(
             {
                 if (result is IPersonByCriteria_PersonByCriteria_Results_Person person)
                 {
-                    personObjectVersions[person.Id] = person.ObjectVersion;
+                    personMetadata[person.Id] = new PersonMetadata(
+                        person.ObjectVersion,
+                        person.NhsNumber,
+                        person.PersonTypes ?? []
+                    );
                     csvRecords.Add(new CsvRecordDto(MapPersonToDictionary(person, mappings)));
                 }
             }
 
             var cursor = results.Data?.PersonByCriteria?.Cursor;
+            if (cursor != null && logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Processed Page: {Page}. Page size: {PageSize}. Total Records: {TotalRecords}",
+                    cursor.PageNumber, cursor.PageSize, cursor.TotalSize);
+            }
+
             if (cursor == null || cursor.Offset + cursor.Returned >= cursor.TotalSize)
             {
                 break;
@@ -84,7 +102,7 @@ public class GraphQlProcessor(
             pageNumber++;
         }
 
-        return (csvRecords, personObjectVersions);
+        return (csvRecords, personMetadata);
     }
 
     private Dictionary<string, string> MapPersonToDictionary(
@@ -118,7 +136,7 @@ public class GraphQlProcessor(
 
     private async Task SaveMatchedNhsNumbersAsync(
         IEnumerable<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
-        Dictionary<string, int> personObjectVersions,
+        Dictionary<string, PersonMetadata> personMetadata,
         CsvMatchDataOptions.Headers mappings,
         CancellationToken cancellationToken)
     {
@@ -127,20 +145,28 @@ public class GraphQlProcessor(
             if (result.ApiResult is not { Result.IsHighConfidenceMatch: true } ||
                 string.IsNullOrEmpty(result.ApiResult.Result.NhsNumber))
             {
+                logger.LogInformation("Match is low confidence, Skipping update.");
                 continue;
             }
 
             var personId = result.OriginalData.Record[mappings.Id];
             var matchedNhsNumber = result.ApiResult.Result.NhsNumber;
 
-            if (!personObjectVersions.TryGetValue(personId, out var objectVersion))
+            if (!personMetadata.TryGetValue(personId, out var metadata))
             {
-                logger.LogWarning("Could not find ObjectVersion for Person {PersonId}. Skipping NHS number update.", personId);
+                logger.LogWarning("Could not find metadata for Person {PersonId}. Skipping NHS number update.", personId);
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(metadata.NhsNumber))
+            {
+                logger.LogInformation("Person {PersonId} already has NHS number {ExistingNhsNumber}. Skipping update.",
+                    personId, metadata.NhsNumber);
                 continue;
             }
 
             logger.LogInformation("Saving matched NHS number {NhsNumber} for Person {PersonId} with ObjectVersion {ObjectVersion}.",
-                matchedNhsNumber, personId, objectVersion);
+                matchedNhsNumber, personId, metadata.ObjectVersion);
 
             try
             {
@@ -148,7 +174,8 @@ public class GraphQlProcessor(
                 {
                     Id = personId,
                     NhsNumber = matchedNhsNumber,
-                    ObjectVersion = objectVersion
+                    ObjectVersion = metadata.ObjectVersion,
+                    PersonTypes = metadata.PersonTypes
                 };
 
                 var updateResult = await eclipseClient.UpdatePerson.ExecuteAsync(updateInput, cancellationToken);

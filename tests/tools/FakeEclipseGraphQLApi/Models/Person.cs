@@ -12,6 +12,7 @@ public class Person : IPersonByCriteria_PersonByCriteria_Results
     public string? Gender { get; set; }
     public string? NhsNumber { get; set; }
     public int ObjectVersion { get; set; } = 1;
+    public List<PersonType> PersonTypes { get; set; } = new() { PersonType.CLIENT };
     public DateRange? DateOfBirth { get; set; }
     public List<Address> Addresses { get; set; } = new();
     public Address? PreferredAddress { get; set; }

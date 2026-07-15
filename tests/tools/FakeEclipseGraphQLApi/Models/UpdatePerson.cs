@@ -14,4 +14,6 @@ public class UpdatePerson
     public string? NhsNumber { get; set; }
 
     public int ObjectVersion { get; set; }
+
+    public List<PersonType>? PersonTypes { get; set; }
 }

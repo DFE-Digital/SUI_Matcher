@@ -23,6 +23,7 @@ query PersonByCriteria($maxAge: Int, $paging: RequestCursorInput) {
                 }
                 id
                 objectVersion
+                personTypes
                 forename
                 surname
                 gender
