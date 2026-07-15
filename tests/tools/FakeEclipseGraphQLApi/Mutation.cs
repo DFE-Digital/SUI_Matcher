@@ -41,6 +41,8 @@ public class Mutation
         }
 
         person.NhsNumber = input.NhsNumber;
+        var updatedObjectVersion = person.ObjectVersion + 1;
+        person.ObjectVersion = updatedObjectVersion;
 
         var updatedJson = JsonSerializer.Serialize(response, options);
 

@@ -922,7 +922,13 @@ public class GraphQlProcessorTests
 
         var matchedRecord = new ProcessedMatchRecord<CsvRecordDto>
         {
-            OriginalData = new CsvRecordDto(new Dictionary<string, string> { { "SourceID", "person-123" } }),
+            OriginalData = new CsvRecordDto(new Dictionary<string, string>
+            {
+                { "SourceID", "person-123" },
+                { "__ObjectVersion", "5" },
+                { "NHSNumber", "" },
+                { "__PersonTypes", "Client" }
+            }),
             ApiResult = apiResult,
             IsSuccess = true
         };
@@ -1021,7 +1027,13 @@ public class GraphQlProcessorTests
 
         var matchedRecord = new ProcessedMatchRecord<CsvRecordDto>
         {
-            OriginalData = new CsvRecordDto(new Dictionary<string, string> { { "SourceID", "person-123" } }),
+            OriginalData = new CsvRecordDto(new Dictionary<string, string>
+            {
+                { "SourceID", "person-123" },
+                { "__ObjectVersion", "5" },
+                { "NHSNumber", "1111111111" },
+                { "__PersonTypes", "Client" }
+            }),
             ApiResult = apiResult,
             IsSuccess = true
         };

@@ -13,7 +13,11 @@
       "Forename": "OCTAVIA",
       "Surname": "CHISLETT",
       "Gender": "FEMALE",
-      "NhsNumber": "9449305552",
+      "NhsNumber": "9691292211",
+      "ObjectVersion": 3,
+      "PersonTypes": [
+        1
+      ],
       "DateOfBirth": {
         "Lower": "2008-09-20",
         "Upper": "2008-09-20",
@@ -28,7 +32,8 @@
         }
       ],
       "PreferredAddress": {
-        "Id": "addr-12345678"
+        "Id": "addr-12345678",
+        "Location": null
       }
     },
     {
@@ -38,6 +43,10 @@
       "Surname": "FORMBY",
       "Gender": "MALE",
       "NhsNumber": "9691914913",
+      "ObjectVersion": 1,
+      "PersonTypes": [
+        1
+      ],
       "DateOfBirth": {
         "Lower": "2005-06-03",
         "Upper": "2005-06-03",
@@ -52,7 +61,8 @@
         }
       ],
       "PreferredAddress": {
-        "Id": "addr-12323232"
+        "Id": "addr-12323232",
+        "Location": null
       }
     },
     {
@@ -62,6 +72,10 @@
       "Surname": "FORMBY",
       "Gender": "MALE",
       "NhsNumber": "9691914913",
+      "ObjectVersion": 1,
+      "PersonTypes": [
+        1
+      ],
       "DateOfBirth": {
         "Lower": "2005-06-03",
         "Upper": "2005-06-03",
@@ -76,7 +90,8 @@
         }
       ],
       "PreferredAddress": {
-        "Id": "addr-12323232-2"
+        "Id": "addr-12323232-2",
+        "Location": null
       }
     },
     {
@@ -86,6 +101,10 @@
       "Surname": "chislett",
       "Gender": "MALE",
       "NhsNumber": "9449310424",
+      "ObjectVersion": 1,
+      "PersonTypes": [
+        1
+      ],
       "DateOfBirth": {
         "Lower": "2008-09-20",
         "Upper": "2008-09-20",
@@ -100,7 +119,8 @@
         }
       ],
       "PreferredAddress": {
-        "Id": "addr-34556655"
+        "Id": "addr-34556655",
+        "Location": null
       }
     },
     {
@@ -110,6 +130,10 @@
       "Surname": "chislett",
       "Gender": "MALE",
       "NhsNumber": "0449310999",
+      "ObjectVersion": 1,
+      "PersonTypes": [
+        1
+      ],
       "DateOfBirth": {
         "Lower": "2008-09-20",
         "Upper": "2008-09-20",
@@ -124,7 +148,8 @@
         }
       ],
       "PreferredAddress": {
-        "Id": "addr-34567655"
+        "Id": "addr-34567655",
+        "Location": null
       }
     },
     {
@@ -134,6 +159,10 @@
       "Surname": "Missing MHS Number",
       "Gender": "MALE",
       "NhsNumber": "",
+      "ObjectVersion": 1,
+      "PersonTypes": [
+        1
+      ],
       "DateOfBirth": {
         "Lower": "2008-09-20",
         "Upper": "2008-09-20",
@@ -148,7 +177,8 @@
         }
       ],
       "PreferredAddress": {
-        "Id": "addr-34568855"
+        "Id": "addr-34568855",
+        "Location": null
       }
     }
   ]

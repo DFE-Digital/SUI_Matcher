@@ -21,15 +21,13 @@ public class GraphQlProcessor(
     IOptions<GraphQlProcessJobOptions> options,
     IOptions<CsvMatchDataOptions> csvMatchDataOptions)
 {
-    private record PersonMetadata(int ObjectVersion, string? NhsNumber, IReadOnlyList<PersonType> PersonTypes);
-
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var timer = Stopwatch.StartNew();
         logger.LogInformation("Running Graph QL Process Job.");
         var mappings = csvMatchDataOptions.Value.ColumnMappings;
 
-        (List<CsvRecordDto> csvRecords, Dictionary<string, PersonMetadata> personMetadata) = await FetchAndCompilePersonRecordsAsync(mappings, cancellationToken);
+        List<CsvRecordDto> csvRecords = await FetchAndCompilePersonRecordsAsync(mappings, cancellationToken);
 
         logger.LogInformation("Completed compiling GraphQL records. Total records retrieved: {Count}. Elapsed Time: {ElapsedTime}",
             csvRecords.Count, timer.Elapsed.ToString("g"));
@@ -47,19 +45,18 @@ public class GraphQlProcessor(
                 Result.IsHighConfidenceMatch: true
             }), timer.Elapsed.ToString("g"));
 
-        await SaveMatchedNhsNumbersAsync(matchedResults, personMetadata, mappings, cancellationToken);
+        await SaveMatchedNhsNumbersAsync(matchedResults, mappings, cancellationToken);
 
         logger.LogInformation("GraphQL Job Complete. Total time: {ElapsedTime}", timer.Elapsed.ToString("g"));
     }
 
-    private async Task<(List<CsvRecordDto> CsvRecords, Dictionary<string, PersonMetadata> PersonMetadata)> FetchAndCompilePersonRecordsAsync(
+    private async Task<List<CsvRecordDto>> FetchAndCompilePersonRecordsAsync(
         CsvMatchDataOptions.Headers mappings,
         CancellationToken cancellationToken)
     {
         int pageNumber = 1;
         const int pageSize = 100;
         var csvRecords = new List<CsvRecordDto>();
-        var personMetadata = new Dictionary<string, PersonMetadata>();
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -77,11 +74,6 @@ public class GraphQlProcessor(
             {
                 if (result is IPersonByCriteria_PersonByCriteria_Results_Person person)
                 {
-                    personMetadata[person.Id] = new PersonMetadata(
-                        person.ObjectVersion,
-                        person.NhsNumber,
-                        person.PersonTypes ?? []
-                    );
                     csvRecords.Add(new CsvRecordDto(MapPersonToDictionary(person, mappings)));
                 }
             }
@@ -102,7 +94,7 @@ public class GraphQlProcessor(
             pageNumber++;
         }
 
-        return (csvRecords, personMetadata);
+        return csvRecords;
     }
 
     private Dictionary<string, string> MapPersonToDictionary(
@@ -115,7 +107,9 @@ public class GraphQlProcessor(
             { mappings.Given, person.Forename ?? "" },
             { mappings.Family, person.Surname ?? "" },
             { mappings.BirthDate, person.DateOfBirth?.Lower?.ToString(csvMatchDataOptions.Value.DateFormat) ?? "" },
-            { mappings.Postcode, GetPreferredPostcode(person) }
+            { mappings.Postcode, GetPreferredPostcode(person) },
+            { "__ObjectVersion", person.ObjectVersion.ToString() },
+            { "__PersonTypes", string.Join(",", person.PersonTypes ?? []) }
         };
 
         if (!string.IsNullOrEmpty(mappings.NhsNumber))
@@ -136,7 +130,6 @@ public class GraphQlProcessor(
 
     private async Task SaveMatchedNhsNumbersAsync(
         IEnumerable<ProcessedMatchRecord<CsvRecordDto>> matchedResults,
-        Dictionary<string, PersonMetadata> personMetadata,
         CsvMatchDataOptions.Headers mappings,
         CancellationToken cancellationToken)
     {
@@ -145,37 +138,51 @@ public class GraphQlProcessor(
             if (result.ApiResult is not { Result.IsHighConfidenceMatch: true } ||
                 string.IsNullOrEmpty(result.ApiResult.Result.NhsNumber))
             {
-                logger.LogInformation("Match is low confidence, Skipping update.");
                 continue;
             }
 
             var personId = result.OriginalData.Record[mappings.Id];
             var matchedNhsNumber = result.ApiResult.Result.NhsNumber;
 
-            if (!personMetadata.TryGetValue(personId, out var metadata))
+            var existingNhsNumber = !string.IsNullOrEmpty(mappings.NhsNumber) &&
+                                    result.OriginalData.Record.TryGetValue(mappings.NhsNumber, out var extNhs)
+                                    ? extNhs
+                                    : null;
+
+            if (!string.IsNullOrEmpty(existingNhsNumber))
             {
-                logger.LogWarning("Could not find metadata for Person {PersonId}. Skipping NHS number update.", personId);
+                logger.LogInformation("Person {PersonId} already has NHS number. Skipping update.",
+                    personId);
                 continue;
             }
 
-            if (!string.IsNullOrEmpty(metadata.NhsNumber))
+            if (!result.OriginalData.Record.TryGetValue("__ObjectVersion", out var objVerStr) ||
+                !int.TryParse(objVerStr, out var objectVersion))
             {
-                logger.LogInformation("Person {PersonId} already has NHS number {ExistingNhsNumber}. Skipping update.",
-                    personId, metadata.NhsNumber);
+                logger.LogWarning("Could not find ObjectVersion for Person {PersonId}. Skipping NHS number update.", personId);
                 continue;
             }
 
             logger.LogInformation("Saving matched NHS number {NhsNumber} for Person {PersonId} with ObjectVersion {ObjectVersion}.",
-                matchedNhsNumber, personId, metadata.ObjectVersion);
+                matchedNhsNumber, personId, objectVersion);
 
             try
             {
+                var personTypesList = new List<PersonType>();
+                if (result.OriginalData.Record.TryGetValue("__PersonTypes", out var typesStr) &&
+                    !string.IsNullOrEmpty(typesStr))
+                {
+                    personTypesList = typesStr.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(Enum.Parse<PersonType>)
+                        .ToList();
+                }
+
                 var updateInput = new UpdatePerson
                 {
                     Id = personId,
                     NhsNumber = matchedNhsNumber,
-                    ObjectVersion = metadata.ObjectVersion,
-                    PersonTypes = metadata.PersonTypes
+                    ObjectVersion = objectVersion,
+                    PersonTypes = personTypesList
                 };
 
                 var updateResult = await eclipseClient.UpdatePerson.ExecuteAsync(updateInput, cancellationToken);
