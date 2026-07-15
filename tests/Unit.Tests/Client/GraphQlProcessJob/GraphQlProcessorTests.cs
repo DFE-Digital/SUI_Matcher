@@ -95,7 +95,7 @@ public class GraphQlProcessorTests
         operationResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
 
         _personByCriteriaQueryMock
-            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 10),
+            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 100),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock.Object);
 
@@ -198,12 +198,12 @@ public class GraphQlProcessorTests
 
         // Setup query mock to return Page 1 first, then Page 2
         _personByCriteriaQueryMock
-            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 10),
+            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 100),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock1.Object);
 
         _personByCriteriaQueryMock
-            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 2 && r.PageSize == 10),
+            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 2 && r.PageSize == 100),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock2.Object);
 
@@ -278,7 +278,7 @@ public class GraphQlProcessorTests
         operationResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
 
         _personByCriteriaQueryMock
-            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 10),
+            .Setup(q => q.ExecuteAsync(25, It.Is<RequestCursorInput>(r => r.PageNumber == 1 && r.PageSize == 100),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(operationResultMock.Object);
 
