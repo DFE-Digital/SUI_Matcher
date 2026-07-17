@@ -1,0 +1,292 @@
+name: Deploy Api-Batch-Processor Infrastructure
+run-name: >-
+  Api Batch Processor / ${{ inputs.environment }} / ${{ inputs.environment_prefix }} /
+  ${{ inputs.what_if && 'what-if' || 'deploy' }} / ${{ inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: The environment target for deployment
+        required: true
+        default: 'Integration'
+      what_if:
+        description: Run bicep what-if to check for changes
+        default: true
+        type: boolean
+      version:
+        description: Deployment version, tag, branch, or SHA to deploy
+        required: true
+        type: string
+      environment_prefix:
+        description: The prefix for the environment
+        default: 's215d01'
+        type: string
+      graphql_process_image_tag:
+        description: GraphQL process job image tag
+        default: 'latest'
+        required: false
+        type: string
+      deployment_mode:
+        description: The deployment mode for the job
+        default: 'manual'
+        type: choice
+        options:
+          - automatic
+          - manual
+      cron_expression:
+        description: The cron expression for the scheduled trigger when deployment_mode is automatic
+        default: '0 9,12,15 * * 1-5'
+        required: false
+        type: string
+      turn_on_alerts:
+        description: Enable monitoring alerts
+        default: false
+        type: boolean
+      include_role_assignments:
+        description: Include role assignments?
+        default: true
+        type: boolean
+      resource_group_mode:
+        description: Resource group mode
+        default: create
+        type: choice
+        options:
+          - create
+          - existing
+      target_resource_group_name:
+        description: Existing resource group name when resource_group_mode is existing
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_ENV_NAME: ${{ inputs.environment }}
+  AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+  STACK_VERSION: ${{ inputs.version }}
+  AZURE_MONITORING_ACTION_GROUP_EMAIL: ${{ secrets.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
+  AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ vars.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
+  AZURE_CONTAINER_APP_VNET: ${{ secrets.AZURE_CONTAINER_APP_VNET }}
+  AZURE_CONTAINER_APP_ENV_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_ENV_SUBNET }}
+  AZURE_CONTAINER_APP_PE_SUBNET: ${{ secrets.AZURE_CONTAINER_APP_PE_SUBNET }}
+  AZURE_TAG_ENVIRONMENT_NAME: ${{ vars.AZURE_TAG_ENVIRONMENT_NAME }}
+  AZURE_ADDITIONAL_TAGS: ${{ vars.AZURE_ADDITIONAL_TAGS }}
+  AZURE_INCLUDE_ROLE_ASSIGNMENTS: ${{ inputs.include_role_assignments }}
+  AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
+  GRAPHQL_PROCESS_JOB_IMAGE_TAG: ${{ inputs.graphql_process_image_tag || 'latest' }}
+  DEPLOYMENT_MODE: ${{ inputs.deployment_mode || 'manual' }}
+  CRON_EXPRESSION: ${{ inputs.cron_expression || '0 9,12,15 * * 1-5' }}
+  RESOURCE_GROUP_MODE: ${{ inputs.resource_group_mode || 'create' }}
+  TARGET_RESOURCE_GROUP_NAME: ${{ inputs.target_resource_group_name }}
+  GRAPHQL_PROCESS_JOB_CONFIGURATION: ${{ secrets.GRAPHQL_PROCESS_JOB_CONFIGURATION }}
+
+concurrency:
+  group: api-batch-processor-${{ inputs.environment_prefix }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    name: Prepare api-batch-processor context
+    runs-on: ubuntu-latest
+    env:
+      STACK_NAME: api-batch-processor
+      DEPLOY_RUN_MODE: ${{ inputs.what_if && 'what-if' || 'deploy' }}
+    outputs:
+      stack_resource_group: ${{ steps.context.outputs.stack_resource_group }}
+      deployment_name: ${{ steps.context.outputs.deployment_name }}
+      deployment_mode: ${{ steps.context.outputs.deployment_mode }}
+    steps:
+      - name: Validate private endpoint subnet configuration
+        run: |
+          set -euo pipefail
+
+          if [ -z "${AZURE_CONTAINER_APP_PE_SUBNET}" ]; then
+            echo "::error::AZURE_CONTAINER_APP_PE_SUBNET secret must be configured for api-batch-processor infrastructure deployments."
+            exit 1
+          fi
+
+      - name: Validate graphql process job configuration
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GRAPHQL_PROCESS_JOB_CONFIGURATION}" ]; then
+            echo "::error::GRAPHQL_PROCESS_JOB_CONFIGURATION secret must be configured for api-batch-processor infrastructure deployments."
+            exit 1
+          fi
+
+      - name: Derive target names
+        id: context
+        run: |
+          set -euo pipefail
+          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${AZURE_ENV_NAME,,}-${STACK_NAME}"
+          if [ "${RESOURCE_GROUP_MODE}" = "existing" ]; then
+            if [ -z "${TARGET_RESOURCE_GROUP_NAME}" ]; then
+              echo "::error::target_resource_group_name must be set when resource_group_mode is existing."
+              exit 1
+            fi
+            STACK_RESOURCE_GROUP="${TARGET_RESOURCE_GROUP_NAME}"
+          fi
+
+          DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-${DEPLOY_RUN_MODE}"
+
+          {
+            echo "stack_resource_group=${STACK_RESOURCE_GROUP}"
+            echo "deployment_name=${DEPLOYMENT_NAME}"
+            echo "deployment_mode=${DEPLOY_RUN_MODE}"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Deployment context"
+            echo
+            echo "**Stack:** \`${STACK_NAME}\`"
+            echo "**Mode:** \`${DEPLOY_RUN_MODE}\`"
+            echo
+            echo "### Target"
+            echo "- Environment: \`${AZURE_ENV_NAME}\`"
+            echo "- Environment prefix: \`${AZURE_ENV_PREFIX}\`"
+            echo "- Azure location: \`${AZURE_LOCATION}\`"
+            echo "- Version/ref: \`${STACK_VERSION}\`"
+            echo "- Resource group: \`${STACK_RESOURCE_GROUP}\`"
+            echo "- Resource group mode: \`${RESOURCE_GROUP_MODE}\`"
+            echo "- Deployment name: \`${DEPLOYMENT_NAME}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  what_if:
+    name: What-if api-batch-processor infrastructure
+    if: ${{ inputs.what_if == true }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    env:
+      STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
+      DEPLOYMENT_NAME: ${{ needs.prepare.outputs.deployment_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.STACK_VERSION }}
+
+      - name: Run api-batch-processor what-if
+        uses: ./.github/actions/stack-infra-run
+        with:
+          mode: what-if
+          stack_label: api-batch-processor
+          template_file: infra/stacks/api-batch-processor/subscription.bicep
+          azure_env_name: ${{ env.AZURE_ENV_NAME }}
+          azure_env_prefix: ${{ env.AZURE_ENV_PREFIX }}
+          azure_client_id: ${{ env.AZURE_CLIENT_ID }}
+          azure_tenant_id: ${{ env.AZURE_TENANT_ID }}
+          azure_subscription_id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          azure_location: ${{ env.AZURE_LOCATION }}
+          azure_monitoring_action_group_email: ${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
+          azure_container_app_managed_environment_number: ${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
+          azure_container_app_vnet: ${{ env.AZURE_CONTAINER_APP_VNET }}
+          azure_container_app_env_subnet: ${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}
+          azure_container_app_pe_subnet: ${{ env.AZURE_CONTAINER_APP_PE_SUBNET }}
+          tag_environment_name: ${{ env.AZURE_TAG_ENVIRONMENT_NAME }}
+          additional_tags: ${{ env.AZURE_ADDITIONAL_TAGS }}
+          azure_include_role_assignments: ${{ env.AZURE_INCLUDE_ROLE_ASSIGNMENTS }}
+          stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
+          deployment_name: ${{ env.DEPLOYMENT_NAME }}
+          turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
+          graphql_process_job_image_tag: ${{ env.GRAPHQL_PROCESS_JOB_IMAGE_TAG }}
+          deployment_mode: ${{ env.DEPLOYMENT_MODE }}
+          cron_expression: ${{ env.CRON_EXPRESSION }}
+          graphql_process_job_configuration: ${{ env.GRAPHQL_PROCESS_JOB_CONFIGURATION }}
+
+  deploy:
+    name: Deploy api-batch-processor infrastructure
+    if: ${{ inputs.what_if == false }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    env:
+      STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
+      DEPLOYMENT_NAME: ${{ needs.prepare.outputs.deployment_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.STACK_VERSION }}
+
+      - name: Deploy api-batch-processor infrastructure
+        uses: ./.github/actions/stack-infra-run
+        with:
+          mode: deploy
+          stack_label: api-batch-processor
+          template_file: infra/stacks/api-batch-processor/subscription.bicep
+          azure_env_name: ${{ env.AZURE_ENV_NAME }}
+          azure_env_prefix: ${{ env.AZURE_ENV_PREFIX }}
+          azure_client_id: ${{ env.AZURE_CLIENT_ID }}
+          azure_tenant_id: ${{ env.AZURE_TENANT_ID }}
+          azure_subscription_id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          azure_location: ${{ env.AZURE_LOCATION }}
+          azure_monitoring_action_group_email: ${{ env.AZURE_MONITORING_ACTION_GROUP_EMAIL }}
+          azure_container_app_managed_environment_number: ${{ env.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
+          azure_container_app_vnet: ${{ env.AZURE_CONTAINER_APP_VNET }}
+          azure_container_app_env_subnet: ${{ env.AZURE_CONTAINER_APP_ENV_SUBNET }}
+          azure_container_app_pe_subnet: ${{ env.AZURE_CONTAINER_APP_PE_SUBNET }}
+          tag_environment_name: ${{ env.AZURE_TAG_ENVIRONMENT_NAME }}
+          additional_tags: ${{ env.AZURE_ADDITIONAL_TAGS }}
+          azure_include_role_assignments: ${{ env.AZURE_INCLUDE_ROLE_ASSIGNMENTS }}
+          stack_resource_group: ${{ env.STACK_RESOURCE_GROUP }}
+          deployment_name: ${{ env.DEPLOYMENT_NAME }}
+          turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
+          graphql_process_job_image_tag: ${{ env.GRAPHQL_PROCESS_JOB_IMAGE_TAG }}
+          deployment_mode: ${{ env.DEPLOYMENT_MODE }}
+          cron_expression: ${{ env.CRON_EXPRESSION }}
+          graphql_process_job_configuration: ${{ env.GRAPHQL_PROCESS_JOB_CONFIGURATION }}
+
+  summarize:
+    name: Summarize api-batch-processor run
+    if: always()
+    needs:
+      - prepare
+      - what_if
+      - deploy
+    runs-on: ubuntu-latest
+    env:
+      STACK_RESOURCE_GROUP: ${{ needs.prepare.outputs.stack_resource_group }}
+      DEPLOYMENT_NAME: ${{ needs.prepare.outputs.deployment_name }}
+      DEPLOY_RUN_MODE: ${{ needs.prepare.outputs.deployment_mode }}
+      PREPARE_RESULT: ${{ needs.prepare.result }}
+      WHAT_IF_RESULT: ${{ needs.what_if.result }}
+      DEPLOY_RESULT: ${{ needs.deploy.result }}
+      AZURE_ENV_NAME: ${{ inputs.environment }}
+      AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+    steps:
+      - name: Write workflow summary
+        run: |
+          set -euo pipefail
+          EXECUTION_RESULT="${DEPLOY_RESULT}"
+          if [ "${DEPLOY_RUN_MODE}" = "what-if" ]; then
+            EXECUTION_RESULT="${WHAT_IF_RESULT}"
+          fi
+
+          {
+            echo "## Workflow summary"
+            echo
+            echo "### Job results"
+            echo "- Prepare: \`${PREPARE_RESULT}\`"
+            echo "- Execution: \`${EXECUTION_RESULT}\`"
+            echo
+            echo "### Target"
+            echo "- Mode: \`${DEPLOY_RUN_MODE}\`"
+            echo "- Environment: \`${AZURE_ENV_NAME}\`"
+            echo "- Environment prefix: \`${AZURE_ENV_PREFIX}\`"
+            echo "- Azure location: \`${AZURE_LOCATION}\`"
+            echo "- Resource group: \`${STACK_RESOURCE_GROUP}\`"
+            echo "- Deployment name: \`${DEPLOYMENT_NAME}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
