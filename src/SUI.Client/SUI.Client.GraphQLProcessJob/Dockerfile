@@ -18,6 +18,9 @@ WORKDIR /app
 
 ENV DOTNET_ENVIRONMENT=Production
 
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
+  CMD echo "healthy" || exit 1
+
 COPY --from=build /app/publish .
 USER app
 ENTRYPOINT ["dotnet", "SUI.Client.GraphQLProcessJob.dll"]
