@@ -68,6 +68,9 @@ param tagEnvironmentName string = ''
 @description('Optional additional tags to apply to deployed resources.')
 param additionalTags object = {}
 
+@description('Additional FQDNs allowed through the firewall, e.g., the GraphQL endpoint host')
+param allowedGraphQLFqdns array = []
+
 @secure()
 @description('Runtime configuration values for the GraphQL process job.')
 param graphqlProcessJobConfiguration object
@@ -110,6 +113,7 @@ module stackDeployment 'main.bicep' = {
     includeRoleAssignments: includeRoleAssignments
     tagEnvironmentName: tagEnvironmentName
     additionalTags: additionalTags
+    allowedGraphQLFqdns: allowedGraphQLFqdns
     graphqlProcessJobConfiguration: graphqlProcessJobConfiguration
   }
   dependsOn: [

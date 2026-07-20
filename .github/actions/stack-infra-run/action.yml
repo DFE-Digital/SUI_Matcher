@@ -124,6 +124,10 @@ inputs:
     description: "Optional JSON object containing protected GraphQL process job runtime configuration"
     required: false
     default: ""
+  allowed_graphql_fqdns:
+    description: "Optional array of allowed GraphQL FQDNs"
+    required: false
+    default: "[]"
 
 
 runs:
@@ -224,6 +228,11 @@ runs:
         if [ -n "${GRAPHQL_PROCESS_JOB_CONFIGURATION}" ]; then
           GRAPHQL_PROCESS_JOB_CONFIGURATION_JSON="$(jq -nce --argjson configuration "${GRAPHQL_PROCESS_JOB_CONFIGURATION}" 'if ($configuration | type) == "object" then $configuration else error("graphql_process_job_configuration must be a JSON object") end')"
           PARAMETERS+=("graphqlProcessJobConfiguration=${GRAPHQL_PROCESS_JOB_CONFIGURATION_JSON}")
+        fi
+
+        if [ -n "${{ inputs.allowed_graphql_fqdns }}" ] && [ "${{ inputs.allowed_graphql_fqdns }}" != "[]" ]; then
+          ALLOWED_GRAPHQL_FQDNS_JSON="$(jq -nce --argjson fqdns "${{ inputs.allowed_graphql_fqdns }}" 'if ($fqdns | type) == "array" then $fqdns else error("allowed_graphql_fqdns must be a JSON array") end')"
+          PARAMETERS+=("allowedGraphQLFqdns=${ALLOWED_GRAPHQL_FQDNS_JSON}")
         fi
 
         if [ -n "${{ inputs.matching_api_image_tag }}" ]; then

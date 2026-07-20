@@ -59,6 +59,9 @@ param tagEnvironmentName string = ''
 @description('Optional additional tags to apply to deployed resources.')
 param additionalTags object = {}
 
+@description('Additional FQDNs allowed through the firewall, e.g., the GraphQL endpoint host')
+param allowedGraphQLFqdns array = []
+
 @secure()
 @description('Runtime configuration values for the GraphQL process job.')
 param graphqlProcessJobConfiguration object
@@ -66,11 +69,12 @@ param graphqlProcessJobConfiguration object
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'abp'
 var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
-var allowedNhsFqdns = isProductionEnvironment ? [
+var defaultNhsFqdns = isProductionEnvironment ? [
   'api.service.nhs.uk'
 ] : [
   'int.api.service.nhs.uk'
 ]
+var allowedNhsFqdns = concat(defaultNhsFqdns, allowedGraphQLFqdns)
 var effectiveTagEnvironmentName = empty(tagEnvironmentName) ? environmentName : tagEnvironmentName
 
 var baseTags = {

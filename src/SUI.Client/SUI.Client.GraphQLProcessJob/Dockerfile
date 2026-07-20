@@ -2,10 +2,12 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY global.json Directory.Build.props Directory.Packages.props NuGet.config ./
+COPY src/Shared/Shared.csproj src/Shared/
 COPY src/SUI.Client/SUI.Client.Core/SUI.Client.Core.csproj src/SUI.Client/SUI.Client.Core/
 COPY src/SUI.Client/SUI.Client.GraphQLProcessJob/SUI.Client.GraphQLProcessJob.csproj src/SUI.Client/SUI.Client.GraphQLProcessJob/
 RUN dotnet restore src/SUI.Client/SUI.Client.GraphQLProcessJob/SUI.Client.GraphQLProcessJob.csproj
 
+COPY src/Shared/ src/Shared/
 COPY src/SUI.Client/SUI.Client.Core/ src/SUI.Client/SUI.Client.Core/
 COPY src/SUI.Client/SUI.Client.GraphQLProcessJob/ src/SUI.Client/SUI.Client.GraphQLProcessJob/
 RUN dotnet publish src/SUI.Client/SUI.Client.GraphQLProcessJob/SUI.Client.GraphQLProcessJob.csproj \

@@ -39,6 +39,11 @@ on:
         default: '0 9,12,15 * * 1-5'
         required: false
         type: string
+      allowed_graphql_fqdns:
+        description: Additional allowed GraphQL FQDNs (JSON array)
+        default: '[]'
+        required: false
+        type: string
       turn_on_alerts:
         description: Enable monitoring alerts
         default: false
@@ -83,6 +88,7 @@ env:
   GRAPHQL_PROCESS_JOB_IMAGE_TAG: ${{ inputs.graphql_process_image_tag || 'latest' }}
   DEPLOYMENT_MODE: ${{ inputs.deployment_mode || 'manual' }}
   CRON_EXPRESSION: ${{ inputs.cron_expression || '0 9,12,15 * * 1-5' }}
+  ALLOWED_GRAPHQL_FQDNS: ${{ inputs.allowed_graphql_fqdns || '[]' }}
   RESOURCE_GROUP_MODE: ${{ inputs.resource_group_mode || 'create' }}
   TARGET_RESOURCE_GROUP_NAME: ${{ inputs.target_resource_group_name }}
   GRAPHQL_PROCESS_JOB_CONFIGURATION: ${{ secrets.GRAPHQL_PROCESS_JOB_CONFIGURATION }}
@@ -204,6 +210,9 @@ jobs:
           deployment_mode: ${{ env.DEPLOYMENT_MODE }}
           cron_expression: ${{ env.CRON_EXPRESSION }}
           graphql_process_job_configuration: ${{ env.GRAPHQL_PROCESS_JOB_CONFIGURATION }}
+          allowed_graphql_fqdns: ${{ env.ALLOWED_GRAPHQL_FQDNS }}
+          resource_group_mode: ${{ env.RESOURCE_GROUP_MODE }}
+          target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
 
   deploy:
     name: Deploy api-batch-processor infrastructure
@@ -247,6 +256,9 @@ jobs:
           deployment_mode: ${{ env.DEPLOYMENT_MODE }}
           cron_expression: ${{ env.CRON_EXPRESSION }}
           graphql_process_job_configuration: ${{ env.GRAPHQL_PROCESS_JOB_CONFIGURATION }}
+          allowed_graphql_fqdns: ${{ env.ALLOWED_GRAPHQL_FQDNS }}
+          resource_group_mode: ${{ env.RESOURCE_GROUP_MODE }}
+          target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
 
   summarize:
     name: Summarize api-batch-processor run
