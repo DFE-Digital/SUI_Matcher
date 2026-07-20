@@ -108,6 +108,26 @@ inputs:
     description: "Optional JSON object containing protected storage process job runtime configuration"
     required: false
     default: ""
+  graphql_process_job_image_tag:
+    description: "Optional GraphQL process job image tag"
+    required: false
+    default: ""
+  deployment_mode:
+    description: "Optional deployment mode: automatic or manual"
+    required: false
+    default: ""
+  cron_expression:
+    description: "Optional cron expression for scheduled runs"
+    required: false
+    default: ""
+  graphql_process_job_configuration:
+    description: "Optional JSON object containing protected GraphQL process job runtime configuration"
+    required: false
+    default: ""
+  allowed_graphql_fqdns:
+    description: "Optional array of allowed GraphQL FQDNs"
+    required: false
+    default: "[]"
 
 
 runs:
@@ -132,6 +152,8 @@ runs:
       env:
         ADDITIONAL_TAGS: ${{ inputs.additional_tags }}
         STORAGE_PROCESS_JOB_CONFIGURATION: ${{ inputs.storage_process_job_configuration }}
+        GRAPHQL_PROCESS_JOB_CONFIGURATION: ${{ inputs.graphql_process_job_configuration }}
+        ALLOWED_GRAPHQL_FQDNS: ${{ inputs.allowed_graphql_fqdns }}
       run: |
         set -euo pipefail
 
@@ -190,6 +212,28 @@ runs:
 
         if [ -n "${{ inputs.storage_process_job_image_tag }}" ]; then
           PARAMETERS+=("storageProcessJobImageTag=${{ inputs.storage_process_job_image_tag }}")
+        fi
+
+        if [ -n "${{ inputs.graphql_process_job_image_tag }}" ]; then
+          PARAMETERS+=("graphqlProcessJobImageTag=${{ inputs.graphql_process_job_image_tag }}")
+        fi
+
+        if [ -n "${{ inputs.deployment_mode }}" ]; then
+          PARAMETERS+=("deploymentMode=${{ inputs.deployment_mode }}")
+        fi
+
+        if [ -n "${{ inputs.cron_expression }}" ]; then
+          PARAMETERS+=("cronExpression=${{ inputs.cron_expression }}")
+        fi
+
+        if [ -n "${GRAPHQL_PROCESS_JOB_CONFIGURATION}" ]; then
+          GRAPHQL_PROCESS_JOB_CONFIGURATION_JSON="$(jq -nce --argjson configuration "${GRAPHQL_PROCESS_JOB_CONFIGURATION}" 'if ($configuration | type) == "object" then $configuration else error("graphql_process_job_configuration must be a JSON object") end')"
+          PARAMETERS+=("graphqlProcessJobConfiguration=${GRAPHQL_PROCESS_JOB_CONFIGURATION_JSON}")
+        fi
+
+        if [ -n "${ALLOWED_GRAPHQL_FQDNS}" ] && [ "${ALLOWED_GRAPHQL_FQDNS}" != "[]" ]; then
+          ALLOWED_GRAPHQL_FQDNS_JSON="$(jq -nce --argjson fqdns "${ALLOWED_GRAPHQL_FQDNS}" 'if ($fqdns | type) == "array" then $fqdns else error("allowed_graphql_fqdns must be a JSON array") end')"
+          PARAMETERS+=("allowedGraphQLFqdns=${ALLOWED_GRAPHQL_FQDNS_JSON}")
         fi
 
         if [ -n "${{ inputs.matching_api_image_tag }}" ]; then
