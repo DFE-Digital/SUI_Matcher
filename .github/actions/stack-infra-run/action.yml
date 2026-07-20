@@ -153,6 +153,7 @@ runs:
         ADDITIONAL_TAGS: ${{ inputs.additional_tags }}
         STORAGE_PROCESS_JOB_CONFIGURATION: ${{ inputs.storage_process_job_configuration }}
         GRAPHQL_PROCESS_JOB_CONFIGURATION: ${{ inputs.graphql_process_job_configuration }}
+        ALLOWED_GRAPHQL_FQDNS: ${{ inputs.allowed_graphql_fqdns }}
       run: |
         set -euo pipefail
 
@@ -230,8 +231,8 @@ runs:
           PARAMETERS+=("graphqlProcessJobConfiguration=${GRAPHQL_PROCESS_JOB_CONFIGURATION_JSON}")
         fi
 
-        if [ -n "${{ inputs.allowed_graphql_fqdns }}" ] && [ "${{ inputs.allowed_graphql_fqdns }}" != "[]" ]; then
-          ALLOWED_GRAPHQL_FQDNS_JSON="$(jq -nce --argjson fqdns "${{ inputs.allowed_graphql_fqdns }}" 'if ($fqdns | type) == "array" then $fqdns else error("allowed_graphql_fqdns must be a JSON array") end')"
+        if [ -n "${ALLOWED_GRAPHQL_FQDNS}" ] && [ "${ALLOWED_GRAPHQL_FQDNS}" != "[]" ]; then
+          ALLOWED_GRAPHQL_FQDNS_JSON="$(jq -nce --argjson fqdns "${ALLOWED_GRAPHQL_FQDNS}" 'if ($fqdns | type) == "array" then $fqdns else error("allowed_graphql_fqdns must be a JSON array") end')"
           PARAMETERS+=("allowedGraphQLFqdns=${ALLOWED_GRAPHQL_FQDNS_JSON}")
         fi
 
