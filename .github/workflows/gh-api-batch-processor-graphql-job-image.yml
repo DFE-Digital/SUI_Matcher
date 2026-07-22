@@ -119,7 +119,6 @@ jobs:
             --image "${IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
             --image "${IMAGE_REPOSITORY}:latest" \
             --file src/SUI.Client/SUI.Client.GraphQLProcessJob/Dockerfile \
-            --build-arg MATCH_API_BASE_ADDRESS="${{ steps.context.outputs.match_api_base_address }}" \
             .
 
       - name: Write workflow summary
