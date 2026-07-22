@@ -25,6 +25,9 @@ param imageName string = 'sui-client-graphql-process-job'
 @description('The container image tag to deploy')
 param imageTag string
 
+@description('The base address of the matching API')
+param matchApiBaseAddress string = ''
+
 @secure()
 @description('The Application Insights connection string')
 param applicationInsightsConnectionString string
@@ -107,6 +110,10 @@ resource graphqlProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
           }
           env: concat(
             [
+              {
+                name: 'GraphQLProcessJob__MatchApiBaseAddress'
+                value: matchApiBaseAddress
+              }
               {
                 name: 'AZURE_CLIENT_ID'
                 value: managedIdentityClientId

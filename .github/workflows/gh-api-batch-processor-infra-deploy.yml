@@ -27,6 +27,16 @@ on:
         default: 'latest'
         required: false
         type: string
+      matching_api_image_tag:
+        description: Matching API image tag
+        default: 'latest'
+        required: false
+        type: string
+      external_api_image_tag:
+        description: External API image tag
+        default: 'latest'
+        required: false
+        type: string
       deployment_mode:
         description: The deployment mode for the job
         default: 'manual'
@@ -86,6 +96,8 @@ env:
   AZURE_INCLUDE_ROLE_ASSIGNMENTS: ${{ inputs.include_role_assignments }}
   AZURE_TURN_ON_ALERTS: ${{ inputs.turn_on_alerts || 'false' }}
   GRAPHQL_PROCESS_JOB_IMAGE_TAG: ${{ inputs.graphql_process_image_tag || 'latest' }}
+  MATCHING_API_IMAGE_TAG: ${{ inputs.matching_api_image_tag || 'latest' }}
+  EXTERNAL_API_IMAGE_TAG: ${{ inputs.external_api_image_tag || 'latest' }}
   DEPLOYMENT_MODE: ${{ inputs.deployment_mode || 'manual' }}
   CRON_EXPRESSION: ${{ inputs.cron_expression || '0 9,12,15 * * 1-5' }}
   ALLOWED_GRAPHQL_FQDNS: ${{ inputs.allowed_graphql_fqdns || '[]' }}
@@ -207,6 +219,8 @@ jobs:
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
           graphql_process_job_image_tag: ${{ env.GRAPHQL_PROCESS_JOB_IMAGE_TAG }}
+          matching_api_image_tag: ${{ env.MATCHING_API_IMAGE_TAG }}
+          external_api_image_tag: ${{ env.EXTERNAL_API_IMAGE_TAG }}
           deployment_mode: ${{ env.DEPLOYMENT_MODE }}
           cron_expression: ${{ env.CRON_EXPRESSION }}
           graphql_process_job_configuration: ${{ env.GRAPHQL_PROCESS_JOB_CONFIGURATION }}
@@ -253,6 +267,8 @@ jobs:
           deployment_name: ${{ env.DEPLOYMENT_NAME }}
           turn_on_alerts: ${{ env.AZURE_TURN_ON_ALERTS }}
           graphql_process_job_image_tag: ${{ env.GRAPHQL_PROCESS_JOB_IMAGE_TAG }}
+          matching_api_image_tag: ${{ env.MATCHING_API_IMAGE_TAG }}
+          external_api_image_tag: ${{ env.EXTERNAL_API_IMAGE_TAG }}
           deployment_mode: ${{ env.DEPLOYMENT_MODE }}
           cron_expression: ${{ env.CRON_EXPRESSION }}
           graphql_process_job_configuration: ${{ env.GRAPHQL_PROCESS_JOB_CONFIGURATION }}

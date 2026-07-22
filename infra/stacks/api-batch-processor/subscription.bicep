@@ -39,6 +39,14 @@ param turnOnAlerts bool = false
 @description('Container image tag for the GraphQL process job')
 param graphqlProcessJobImageTag string = 'latest'
 
+@minLength(1)
+@description('Container image tag for the matching API')
+param matchingApiImageTag string = 'latest'
+
+@minLength(1)
+@description('Container image tag for the external API')
+param externalApiImageTag string = 'latest'
+
 @allowed([
   'automatic'
   'manual'
@@ -108,6 +116,8 @@ module stackDeployment 'main.bicep' = {
     monitoringActionGroupEmail: monitoringActionGroupEmail
     turnOnAlerts: turnOnAlerts
     graphqlProcessJobImageTag: graphqlProcessJobImageTag
+    matchingApiImageTag: matchingApiImageTag
+    externalApiImageTag: externalApiImageTag
     deploymentMode: deploymentMode
     cronExpression: cronExpression
     includeRoleAssignments: includeRoleAssignments
@@ -146,3 +156,7 @@ output STORAGE_ACCOUNT_ID string = stackDeployment.outputs.STORAGE_ACCOUNT_ID
 output STORAGE_BLOB_ENDPOINT string = stackDeployment.outputs.STORAGE_BLOB_ENDPOINT
 output GRAPHQL_PROCESS_JOB_NAME string = stackDeployment.outputs.GRAPHQL_PROCESS_JOB_NAME
 output GRAPHQL_PROCESS_JOB_ID string = stackDeployment.outputs.GRAPHQL_PROCESS_JOB_ID
+output MATCHING_API_NAME string = stackDeployment.outputs.MATCHING_API_NAME
+output MATCHING_API_ID string = stackDeployment.outputs.MATCHING_API_ID
+output EXTERNAL_API_NAME string = stackDeployment.outputs.EXTERNAL_API_NAME
+output EXTERNAL_API_ID string = stackDeployment.outputs.EXTERNAL_API_ID
