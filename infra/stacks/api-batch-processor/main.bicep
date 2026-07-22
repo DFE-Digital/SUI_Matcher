@@ -40,6 +40,14 @@ param turnOnAlerts bool = false
 @description('Container image tag for the GraphQL process job')
 param graphqlProcessJobImageTag string = 'latest'
 
+@minLength(1)
+@description('Container image tag for the matching API')
+param matchingApiImageTag string = 'latest'
+
+@minLength(1)
+@description('Container image tag for the external API')
+param externalApiImageTag string = 'latest'
+
 @allowed([
   'automatic'
   'manual'
@@ -245,6 +253,44 @@ module storagePrivateEndpoint '../../modules/shared/storage-private-endpoints.bi
   }
 }
 
+module matchingApi '../../modules/api-apps/matching-api.bicep' = {
+  name: 'matching-api'
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppEnvironment.outputs.id
+    containerAppsEnvironmentDefaultDomain: containerAppEnvironment.outputs.defaultDomain
+    containerRegistryServer: containerRegistry.outputs.endpoint
+    managedIdentityId: identity.outputs.id
+    managedIdentityClientId: identity.outputs.clientId
+    environmentName: environmentName
+    imageTag: matchingApiImageTag
+    applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
+    tags: tags
+  }
+}
+
+module externalApi '../../modules/api-apps/external-api.bicep' = {
+  name: 'external-api'
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppEnvironment.outputs.id
+    containerRegistryServer: containerRegistry.outputs.endpoint
+    managedIdentityId: identity.outputs.id
+    managedIdentityPrincipalId: identity.outputs.principalId
+    managedIdentityClientId: identity.outputs.clientId
+    environmentName: environmentName
+    imageTag: externalApiImageTag
+    keyVaultName: secrets.outputs.name
+    keyVaultUri: secrets.outputs.vaultUri
+    applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
+    tags: tags
+    includeRoleAssignments: includeRoleAssignments
+  }
+  dependsOn: [
+    keyVaultPrivateEndpoint
+  ]
+}
+
 module graphqlProcessJob '../../modules/api-batch-processor/graphql-process-job.bicep' = {
   name: 'api-batch-processor-graphql-process-job'
   params: {
@@ -256,6 +302,7 @@ module graphqlProcessJob '../../modules/api-batch-processor/graphql-process-job.
     managedIdentityClientId: identity.outputs.clientId
     containerRegistryServer: containerRegistry.outputs.endpoint
     imageTag: graphqlProcessJobImageTag
+    matchApiBaseAddress: 'https://matching-api.internal.${containerAppEnvironment.outputs.defaultDomain}'
     applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
     graphqlProcessJobConfiguration: graphqlProcessJobConfiguration
     deploymentMode: deploymentMode
@@ -287,3 +334,7 @@ output STORAGE_ACCOUNT_ID string = storage.outputs.accountId
 output STORAGE_BLOB_ENDPOINT string = storage.outputs.blobEndpoint
 output GRAPHQL_PROCESS_JOB_NAME string = graphqlProcessJob.outputs.jobName
 output GRAPHQL_PROCESS_JOB_ID string = graphqlProcessJob.outputs.jobId
+output MATCHING_API_NAME string = matchingApi.outputs.name
+output MATCHING_API_ID string = matchingApi.outputs.id
+output EXTERNAL_API_NAME string = externalApi.outputs.name
+output EXTERNAL_API_ID string = externalApi.outputs.id

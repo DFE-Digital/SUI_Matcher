@@ -1,0 +1,139 @@
+name: Publish Api-Batch-Processor GraphQL Job Image
+run-name: >-
+  Api Batch Processor GraphQL Job Image / ${{ inputs.environment }} /
+  ${{ inputs.environment_prefix }} / ${{ inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: The environment target for the image
+        required: true
+        default: "Integration"
+      version:
+        description: The version, tag, branch, or SHA to build
+        required: true
+        type: string
+      environment_prefix:
+        description: The prefix for the environment
+        default: "s215d01"
+        type: string
+      image_tag:
+        description: Optional image tag. Defaults to the checked-out commit SHA.
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_ENV_NAME: ${{ inputs.environment }}
+  AZURE_ENV_PREFIX: ${{ inputs.environment_prefix }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+  AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER: ${{ vars.AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER }}
+  STACK_VERSION: ${{ inputs.version }}
+  INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
+  IMAGE_REPOSITORY: sui-client-graphql-process-job
+
+concurrency:
+  group: api-batch-processor-graphql-job-image-${{ inputs.environment_prefix }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    name: Build GraphQL job image in ACR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.STACK_VERSION }}
+
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Derive image context
+        id: context
+        run: |
+          set -euo pipefail
+
+          LOWERCASE_ENVIRONMENT_NAME="${AZURE_ENV_NAME,,}"
+          STACK_RESOURCE_GROUP="${AZURE_ENV_PREFIX}-${LOWERCASE_ENVIRONMENT_NAME}-api-batch-processor"
+          ACR_NAME="${AZURE_ENV_PREFIX}${LOWERCASE_ENVIRONMENT_NAME}abpacr01"
+          ACR_NAME="$(printf '%s' "$ACR_NAME" | tr -d '-')"
+          CONTAINER_APPS_ENVIRONMENT_NAME="${AZURE_ENV_PREFIX}-${LOWERCASE_ENVIRONMENT_NAME}-abp-cae-${AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER}"
+          IMAGE_TAG="${INPUT_IMAGE_TAG}"
+
+          if [ -z "${IMAGE_TAG}" ]; then
+            IMAGE_TAG="$(git rev-parse --short=12 HEAD)"
+          fi
+
+          az config set extension.use_dynamic_install=yes_without_prompt
+
+          ACR_LOGIN_SERVER="$(az acr show \
+            --name "${ACR_NAME}" \
+            --resource-group "${STACK_RESOURCE_GROUP}" \
+            --query loginServer \
+            --output tsv)"
+
+          CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN="$(az containerapp env show \
+            --name "${CONTAINER_APPS_ENVIRONMENT_NAME}" \
+            --resource-group "${STACK_RESOURCE_GROUP}" \
+            --query properties.defaultDomain \
+            --output tsv)"
+
+          MATCH_API_BASE_ADDRESS="https://matching-api.internal.${CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}"
+          IMAGE_NAME="${ACR_LOGIN_SERVER}/${IMAGE_REPOSITORY}:${IMAGE_TAG}"
+
+          {
+            echo "stack_resource_group=${STACK_RESOURCE_GROUP}"
+            echo "acr_name=${ACR_NAME}"
+            echo "acr_login_server=${ACR_LOGIN_SERVER}"
+            echo "container_apps_environment_name=${CONTAINER_APPS_ENVIRONMENT_NAME}"
+            echo "container_apps_environment_default_domain=${CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}"
+            echo "match_api_base_address=${MATCH_API_BASE_ADDRESS}"
+            echo "image_name=${IMAGE_NAME}"
+            echo "image_tag=${IMAGE_TAG}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build GraphQL process job image in ACR
+        run: |
+          set -euo pipefail
+
+          az acr build \
+            --registry "${{ steps.context.outputs.acr_name }}" \
+            --image "${IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
+            --image "${IMAGE_REPOSITORY}:latest" \
+            --file src/SUI.Client/SUI.Client.GraphQLProcessJob/Dockerfile \
+            .
+
+      - name: Write workflow summary
+        run: |
+          set -euo pipefail
+
+          {
+            echo "## GraphQL process job image"
+            echo
+            echo "- Environment: \`${AZURE_ENV_NAME}\`"
+            echo "- Environment prefix: \`${AZURE_ENV_PREFIX}\`"
+            echo "- Version/ref: \`${STACK_VERSION}\`"
+            echo "- Resource group: \`${{ steps.context.outputs.stack_resource_group }}\`"
+            echo "- ACR: \`${{ steps.context.outputs.acr_login_server }}\`"
+            echo "- Container Apps environment: \`${{ steps.context.outputs.container_apps_environment_name }}\`"
+            echo "- Matching API base address: \`${{ steps.context.outputs.match_api_base_address }}\`"
+            echo "- Image: \`${{ steps.context.outputs.image_name }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
