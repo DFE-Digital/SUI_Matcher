@@ -1,15 +1,35 @@
 version: 2
 updates:
-
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: 'daily'
-    labels:
-      - github-actions
-      - dependabot
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+    commit-message:
+      prefix: "[gha]-"
+    groups:
+      github-actions-updates:
+        patterns:
+          - "*"
     cooldown:
       semver-major-days: 30
       semver-minor-days: 7
-      semvar-patch-days: 2
-      
+      semver-patch-days: 7
+
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+    commit-message:
+      prefix: "[nuget][SUI_Matcher]-"
+    groups:
+      SUI-package-updates:
+        patterns:
+          - "*"
+    cooldown:
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 7
