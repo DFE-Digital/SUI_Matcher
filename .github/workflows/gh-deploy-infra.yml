@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 'Get latest tag if no version provided'
         if: ${{ !inputs.use_current_branch }}
@@ -72,12 +72,12 @@ jobs:
 
       - name: Checkout (version)
         if: ${{ !inputs.use_current_branch }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.infra_version }}
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
