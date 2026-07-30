@@ -31,6 +31,11 @@ query PersonByCriteria($maxAge: Int, $paging: RequestCursorInput) {
                 preferredAddress {
                     id
                 }
+                worklistInstances {
+                    worklistDefinition {
+                        id
+                    }
+                }
             }
         }
     }

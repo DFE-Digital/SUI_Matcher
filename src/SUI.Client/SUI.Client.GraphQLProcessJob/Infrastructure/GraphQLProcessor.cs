@@ -74,7 +74,14 @@ public class GraphQlProcessor(
             {
                 if (result is IPersonByCriteria_PersonByCriteria_Results_Person person)
                 {
-                    csvRecords.Add(new CsvRecordDto(MapPersonToDictionary(person, mappings)));
+                    bool shouldProcess = string.IsNullOrEmpty(options.Value.KnownSafeguardingConcernId) ||
+                        (person.WorklistInstances != null &&
+                         person.WorklistInstances.Any(w => w.WorklistDefinition?.Id == options.Value.KnownSafeguardingConcernId));
+
+                    if (shouldProcess)
+                    {
+                        csvRecords.Add(new CsvRecordDto(MapPersonToDictionary(person, mappings)));
+                    }
                 }
             }
 
@@ -109,7 +116,7 @@ public class GraphQlProcessor(
             { mappings.BirthDate, person.DateOfBirth?.Lower?.ToString(csvMatchDataOptions.Value.DateFormat) ?? "" },
             { mappings.Postcode, GetPreferredPostcode(person) },
             { "__ObjectVersion", person.ObjectVersion.ToString() },
-            { "__PersonTypes", string.Join(",", person.PersonTypes ?? []) }
+            { "__PersonTypes", string.Join(",", person.PersonTypes ?? []) },
         };
 
         if (!string.IsNullOrEmpty(mappings.NhsNumber))
