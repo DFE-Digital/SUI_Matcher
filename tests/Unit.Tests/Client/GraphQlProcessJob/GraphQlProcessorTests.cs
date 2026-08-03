@@ -68,7 +68,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldProcessSinglePage_WhenNoMoreResultsExist()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -144,7 +144,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldProcessMultiplePages_WhenMoreResultsExist()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -262,7 +262,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldSkipResult_WhenResultIsNotPerson()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -323,7 +323,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldReturnEarly_WhenCancellationTokenIsCancelled()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -357,7 +357,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldThrowException_WhenGraphQLResultHasErrors()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -390,7 +390,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldProcessEmptyList_WhenDataOrResultsAreNull()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -431,7 +431,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldProcessEmptyList_WhenPersonByCriteriaIsNull()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -471,7 +471,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldProcessEmptyList_WhenResultsListIsEmpty()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -515,7 +515,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldMapNullFieldsToEmptyString_WhenPersonDataIsMissing()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -581,7 +581,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldCorrectlyParsePostcodeAndDob_WhenPresent()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -667,7 +667,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldUseEmptyPostcode_WhenAddressLocationIsNull()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -734,7 +734,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldMapNhsNumberAndGender_WhenPresentInConfig()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -814,7 +814,7 @@ public class GraphQlProcessorTests
             }
         });
 
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -879,7 +879,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldCallUpdatePersonMutation_WhenHighConfidenceMatchIsReturned()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
 
         var updatePersonResultMock = new Mock<IUpdatePersonResult>();
         var operationUpdateResultMock = new Mock<IOperationResult<IUpdatePersonResult>>();
@@ -982,7 +982,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldNotCallUpdatePersonMutation_WhenPersonAlreadyHasNhsNumber()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
 
         var updatePersonResultMock = new Mock<IUpdatePersonResult>();
         var operationUpdateResultMock = new Mock<IOperationResult<IUpdatePersonResult>>();
@@ -1079,7 +1079,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldProcessRecord_WhenSafeguardingConcernIdMatches()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -1141,7 +1141,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldSkipRecord_WhenSafeguardingConcernIdDoesNotMatch()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -1202,7 +1202,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldSkipRecord_WhenNoSafeguardingConcernIsAssigned()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -1264,7 +1264,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldProcessRecord_WhenSafeguardingConcernIdIsNotConfigured()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernId = null });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = null });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
