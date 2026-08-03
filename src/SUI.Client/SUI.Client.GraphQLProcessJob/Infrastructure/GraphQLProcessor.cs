@@ -72,16 +72,14 @@ public class GraphQlProcessor(
 
             foreach (var result in resultsList)
             {
-                if (result is IPersonByCriteria_PersonByCriteria_Results_Person person)
+                if (result is not IPersonByCriteria_PersonByCriteria_Results_Person person)
                 {
-                    bool shouldProcess = string.IsNullOrEmpty(options.Value.KnownSafeguardingConcernId) ||
-                        (person.WorklistInstances != null &&
-                         person.WorklistInstances.Any(w => w.WorklistDefinition?.Id == options.Value.KnownSafeguardingConcernId));
+                    continue;
+                }
 
-                    if (shouldProcess)
-                    {
-                        csvRecords.Add(new CsvRecordDto(MapPersonToDictionary(person, mappings)));
-                    }
+                if (ShouldProcessRecord(person))
+                {
+                    csvRecords.Add(new CsvRecordDto(MapPersonToDictionary(person, mappings)));
                 }
             }
 
@@ -102,6 +100,13 @@ public class GraphQlProcessor(
         }
 
         return csvRecords;
+    }
+
+    private bool ShouldProcessRecord(IPersonByCriteria_PersonByCriteria_Results_Person person)
+    {
+        bool shouldProcess = string.IsNullOrEmpty(options.Value.KnownSafeguardingConcernWorklistDefinitionId) ||
+                             (person.WorklistInstances.Any(w => w.WorklistDefinition?.Id == options.Value.KnownSafeguardingConcernWorklistDefinitionId));
+        return shouldProcess;
     }
 
     private Dictionary<string, string> MapPersonToDictionary(

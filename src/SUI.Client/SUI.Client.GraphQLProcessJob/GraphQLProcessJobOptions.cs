@@ -12,5 +12,5 @@ public sealed class GraphQlProcessJobOptions
     public int? MaxAge { get; init; }
     public bool UseAuth { get; init; }
     public string? MatchApiBaseAddress { get; set; }
-    public string? KnownSafeguardingConcernId { get; init; }
+    public string? KnownSafeguardingConcernWorklistDefinitionId { get; init; }
 }
