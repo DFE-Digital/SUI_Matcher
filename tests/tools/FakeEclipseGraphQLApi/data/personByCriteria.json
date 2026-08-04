@@ -34,7 +34,14 @@
       "PreferredAddress": {
         "Id": "addr-12345678",
         "Location": null
-      }
+      },
+      "WorklistInstances": [
+        {
+          "WorklistDefinition": {
+            "Id": "51D2D445-AFF8-40D8-913F-148479653AA6"
+          }
+        }
+      ]
     },
     {
       "Id": "12323232",
@@ -121,7 +128,14 @@
       "PreferredAddress": {
         "Id": "addr-34556655",
         "Location": null
-      }
+      },
+      "WorklistInstances": [
+        {
+          "WorklistDefinition": {
+            "Id": "51D2D445-AFF8-40D8-913F-148479653AA6"
+          }
+        }
+      ]
     },
     {
       "Id": "34567655",
