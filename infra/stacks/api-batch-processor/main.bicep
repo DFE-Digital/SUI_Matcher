@@ -303,6 +303,7 @@ module graphqlProcessJob '../../modules/api-batch-processor/graphql-process-job.
     containerRegistryServer: containerRegistry.outputs.endpoint
     imageTag: graphqlProcessJobImageTag
     matchApiBaseAddress: 'https://matching-api.internal.${containerAppEnvironment.outputs.defaultDomain}'
+    keyVaultUri: secrets.outputs.vaultUri
     applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
     graphqlProcessJobConfiguration: graphqlProcessJobConfiguration
     deploymentMode: deploymentMode
