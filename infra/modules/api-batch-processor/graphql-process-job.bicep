@@ -179,7 +179,7 @@ resource graphqlProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
                 secretRef: 'graphql-scope'
               }
               {
-                name: 'GraphQLProcessJob__KnownSafeguardingConcernId'
+                name: 'GraphQLProcessJob__KnownSafeguardingConcernWorklistDefinitionId'
                 secretRef: 'graphql-safeguarding-id'
               }
             ],
