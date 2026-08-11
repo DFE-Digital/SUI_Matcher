@@ -127,8 +127,8 @@ C4Container
 
     Container_Boundary(c1, "Sui Matching Service") {
         Container(reverse_proxy, "Gateway", "C#, .NET 8, YARP", "The reverse proxy/API gateway of the SUI matcher.")
-        Container(matching_api, "Matching APIs", "C#, .NET 8, MassTransit", "The barista service.")
-        Container(auth_api, "Auth APIs", "C#, .NET 8, MassTransit", "The authentication service.")
+        Container(matching_api, "Matching APIs", "C#, .NET 10, ASP.NET Core", "The barista service.")
+        Container(auth_api, "Auth APIs", "C#, .NET 10, ASP.NET Core", "The authentication service.")
         Container(external_api, "External Services", "C#, .NET 8, Marten", "Makes the outbound connections for other services")
 
         Boundary(b1, "Docker containers", "boundary") {

@@ -6,7 +6,6 @@
     <AspireVersion>13.1.2</AspireVersion>
     <OpenTelemetryVersion>1.14.0</OpenTelemetryVersion>
     <AspVersioningVersion>10.0.0</AspVersioningVersion>
-    <MassTransitVersion>9.1.2</MassTransitVersion>
     <MartenVersion>8.8.1</MartenVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -89,7 +88,6 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
   <ItemGroup>
-    <PackageVersion Include="MassTransit" Version="$(MassTransitVersion)" />
     <PackageVersion Include="Marten.AspNetCore" Version="$(MartenVersion)" />
     <PackageVersion Include="Marten" Version="$(MartenVersion)" />
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
