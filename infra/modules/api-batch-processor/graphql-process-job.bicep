@@ -28,6 +28,9 @@ param imageTag string
 @description('The base address of the matching API')
 param matchApiBaseAddress string = ''
 
+@description('The Key Vault URI')
+param keyVaultUri string
+
 @secure()
 @description('The Application Insights connection string')
 param applicationInsightsConnectionString string
@@ -75,7 +78,7 @@ resource graphqlProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
     workloadProfileName: 'default'
     configuration: {
       triggerType: triggerType
-      replicaTimeout: 1800 // 30 minutes, ample time for GraphQL sync
+      replicaTimeout: 21600
       replicaRetryLimit: 0
       registries: [
         {
@@ -87,6 +90,31 @@ resource graphqlProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
         {
           name: 'app-insights-connection-string'
           value: applicationInsightsConnectionString
+        }
+        {
+          name: 'graphql-tenant-id'
+          keyVaultUrl: '${keyVaultUri}secrets/GraphQLProcessJob--TenantId'
+          identity: managedIdentityId
+        }
+        {
+          name: 'graphql-client-id'
+          keyVaultUrl: '${keyVaultUri}secrets/GraphQLProcessJob--ClientId'
+          identity: managedIdentityId
+        }
+        {
+          name: 'graphql-client-secret'
+          keyVaultUrl: '${keyVaultUri}secrets/GraphQLProcessJob--ClientSecret'
+          identity: managedIdentityId
+        }
+        {
+          name: 'graphql-scope'
+          keyVaultUrl: '${keyVaultUri}secrets/GraphQLProcessJob--Scope'
+          identity: managedIdentityId
+        }
+        {
+          name: 'graphql-safeguarding-id'
+          keyVaultUrl: '${keyVaultUri}secrets/GraphQLProcessJob--KnownSafeguardingConcernWorklistDefinitionId'
+          identity: managedIdentityId
         }
       ]
       scheduleTriggerConfig: triggerType == 'Schedule' ? {
@@ -133,6 +161,26 @@ resource graphqlProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
               {
                 name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
                 secretRef: 'app-insights-connection-string'
+              }
+              {
+                name: 'GraphQLProcessJob__TenantId'
+                secretRef: 'graphql-tenant-id'
+              }
+              {
+                name: 'GraphQLProcessJob__ClientId'
+                secretRef: 'graphql-client-id'
+              }
+              {
+                name: 'GraphQLProcessJob__ClientSecret'
+                secretRef: 'graphql-client-secret'
+              }
+              {
+                name: 'GraphQLProcessJob__Scope'
+                secretRef: 'graphql-scope'
+              }
+              {
+                name: 'GraphQLProcessJob__KnownSafeguardingConcernWorklistDefinitionId'
+                secretRef: 'graphql-safeguarding-id'
               }
             ],
             graphqlProcessJobConfigurationEnvironment
