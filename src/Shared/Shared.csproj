@@ -4,7 +4,6 @@
     <PackageReference Include="Aspire.Azure.Data.Tables" />
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
     <PackageReference Include="DotNetEnv" />
-    <PackageReference Include="MassTransit" />
     <PackageReference Include="Microsoft.FeatureManagement" />
   </ItemGroup>
 
