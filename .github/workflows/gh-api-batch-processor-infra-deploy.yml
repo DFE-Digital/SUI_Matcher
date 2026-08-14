@@ -98,6 +98,7 @@ env:
   GRAPHQL_PROCESS_JOB_IMAGE_TAG: ${{ inputs.graphql_process_image_tag || 'latest' }}
   MATCHING_API_IMAGE_TAG: ${{ inputs.matching_api_image_tag || 'latest' }}
   EXTERNAL_API_IMAGE_TAG: ${{ inputs.external_api_image_tag || 'latest' }}
+  ODS_CODE: ${{ vars.ODS_CODE }}
   DEPLOYMENT_MODE: ${{ inputs.deployment_mode || 'manual' }}
   CRON_EXPRESSION: ${{ inputs.cron_expression || '0 9,12,15 * * 1-5' }}
   ALLOWED_GRAPHQL_FQDNS: ${{ inputs.allowed_graphql_fqdns || '[]' }}
@@ -221,6 +222,7 @@ jobs:
           graphql_process_job_image_tag: ${{ env.GRAPHQL_PROCESS_JOB_IMAGE_TAG }}
           matching_api_image_tag: ${{ env.MATCHING_API_IMAGE_TAG }}
           external_api_image_tag: ${{ env.EXTERNAL_API_IMAGE_TAG }}
+          ods_code: ${{ env.ODS_CODE }}
           deployment_mode: ${{ env.DEPLOYMENT_MODE }}
           cron_expression: ${{ env.CRON_EXPRESSION }}
           graphql_process_job_configuration: ${{ env.GRAPHQL_PROCESS_JOB_CONFIGURATION }}
@@ -269,6 +271,7 @@ jobs:
           graphql_process_job_image_tag: ${{ env.GRAPHQL_PROCESS_JOB_IMAGE_TAG }}
           matching_api_image_tag: ${{ env.MATCHING_API_IMAGE_TAG }}
           external_api_image_tag: ${{ env.EXTERNAL_API_IMAGE_TAG }}
+          ods_code: ${{ env.ODS_CODE }}
           deployment_mode: ${{ env.DEPLOYMENT_MODE }}
           cron_expression: ${{ env.CRON_EXPRESSION }}
           graphql_process_job_configuration: ${{ env.GRAPHQL_PROCESS_JOB_CONFIGURATION }}
