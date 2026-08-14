@@ -17,7 +17,9 @@ public class FhirClientFactoryTests
         var fhirClient = factory.CreateFhirClient();
 
         Assert.NotNull(fhirClient.RequestHeaders);
-        Assert.True(fhirClient.RequestHeaders.TryGetValues("odsCode", out var values));
+        Assert.True(
+            fhirClient.RequestHeaders.TryGetValues("NHSD-End-User-Organisation-ODS", out var values)
+        );
         Assert.Equal("A313", Assert.Single(values));
     }
 
@@ -32,7 +34,7 @@ public class FhirClientFactoryTests
         var fhirClient = factory.CreateFhirClient();
 
         Assert.NotNull(fhirClient.RequestHeaders);
-        Assert.False(fhirClient.RequestHeaders.Contains("odsCode"));
+        Assert.False(fhirClient.RequestHeaders.Contains("NHSD-End-User-Organisation-ODS"));
     }
 
     [Fact]

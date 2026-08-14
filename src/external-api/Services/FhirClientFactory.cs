@@ -44,7 +44,7 @@ public class FhirClientFactory(
             var odsCode = options.Value.OdsCode;
             if (!string.IsNullOrWhiteSpace(odsCode))
             {
-                fhirClient.RequestHeaders.Add("odsCode", odsCode);
+                fhirClient.RequestHeaders.Add("NHSD-End-User-Organisation-ODS", odsCode);
             }
         }
 
