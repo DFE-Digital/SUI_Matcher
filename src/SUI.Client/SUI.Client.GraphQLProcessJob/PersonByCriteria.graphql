@@ -36,6 +36,11 @@ query PersonByCriteria($maxAge: Int, $paging: RequestCursorInput) {
                         id
                     }
                 }
+                chronology {
+                    chronologyEntries {
+                        entryType
+                    }
+                }
             }
         }
     }

@@ -1,0 +1,25 @@
+namespace FakeEclipseGraphQLApi.Models;
+
+public enum Chronology_EntryType
+{
+    BEHAVIOURS,
+    CHILD_DECISIONS,
+    CP,
+    CPREFERRALCONCERN,
+    CP_NEGLECT,
+    CRIMINAL,
+    DATAMIGRATION,
+    EDUCATION,
+    ENTRY_TYPE_1,
+    ENTRY_TYPE_2,
+    ENTRY_TYPE_3,
+    ENTRY_TYPE_4,
+    FAMILY,
+    FAMILY_EVENT,
+    HEALTH,
+    HEALTH_EDU,
+    HEALTH_LIFESTYLE,
+    LIFEEVENT,
+    PUBLIC_LAW_OUTLINE,
+    SOCIALSERV
+}

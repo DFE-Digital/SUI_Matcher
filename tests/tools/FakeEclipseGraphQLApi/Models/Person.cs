@@ -17,4 +17,5 @@ public class Person : IPersonByCriteria_PersonByCriteria_Results
     public List<Address> Addresses { get; set; } = new();
     public Address? PreferredAddress { get; set; }
     public List<WorklistInstance> WorklistInstances { get; set; } = new();
+    public Chronology? Chronology { get; set; }
 }

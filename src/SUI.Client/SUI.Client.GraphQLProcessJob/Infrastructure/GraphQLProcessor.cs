@@ -124,6 +124,12 @@ public class GraphQlProcessor(
             { "__PersonTypes", string.Join(",", person.PersonTypes ?? []) },
         };
 
+        var chronologyEntryTypes = person.Chronology?.ChronologyEntries?
+            .Select(e => e.EntryType.ToString())
+            .ToList() ?? new List<string>();
+
+        personDictionary["classificationNames"] = string.Join(",", chronologyEntryTypes);
+
         if (!string.IsNullOrEmpty(mappings.NhsNumber))
         {
             personDictionary[mappings.NhsNumber] = person.NhsNumber ?? "";

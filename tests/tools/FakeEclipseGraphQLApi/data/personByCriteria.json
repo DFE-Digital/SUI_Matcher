@@ -41,7 +41,17 @@
             "Id": "51D2D445-AFF8-40D8-913F-148479653AA6"
           }
         }
-      ]
+      ],
+      "Chronology": {
+        "ChronologyEntries": [
+          {
+            "EntryType": "CP"
+          },
+          {
+            "EntryType": "BEHAVIOURS"
+          }
+        ]
+      }
     },
     {
       "Id": "12323232",

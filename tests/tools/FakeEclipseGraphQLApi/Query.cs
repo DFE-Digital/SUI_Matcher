@@ -44,6 +44,7 @@ public class Query
         {
             PropertyNameCaseInsensitive = true
         };
+        options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         var response = JsonSerializer.Deserialize<PersonResults>(json, options);
         return response;
     }

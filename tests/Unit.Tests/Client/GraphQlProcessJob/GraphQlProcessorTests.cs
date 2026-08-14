@@ -1320,4 +1320,81 @@ public class GraphQlProcessorTests
         var record = Assert.Single(capturedRecords);
         Assert.Equal("unfiltered-child-123", record.Record["SourceID"]);
     }
+
+    [Fact]
+    public async Task RunAsync_ShouldMapChronologyEntryTypes_WhenChronologyIsPresent()
+    {
+        // Arrange
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
+        var sut = new GraphQlProcessor(
+            _loggerMock.Object,
+            _eclipseClientMock.Object,
+            _matchPersonRecordOrchestratorMock.Object,
+            options,
+            _csvMatchOptions
+        );
+
+        // Person Setup
+        var dobMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_DateOfBirth>();
+        dobMock.Setup(d => d.Lower).Returns(new DateOnly(1990, 5, 20));
+
+        var entry1 = new Mock<IPersonByCriteria_PersonByCriteria_Results_Chronology_ChronologyEntries>();
+        entry1.Setup(e => e.EntryType).Returns(Chronology_EntryType.Cp);
+
+        var entry2 = new Mock<IPersonByCriteria_PersonByCriteria_Results_Chronology_ChronologyEntries>();
+        entry2.Setup(e => e.EntryType).Returns(Chronology_EntryType.Behaviours);
+
+        var chronologyMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Chronology>();
+        chronologyMock.Setup(c => c.ChronologyEntries)
+            .Returns(new List<IPersonByCriteria_PersonByCriteria_Results_Chronology_ChronologyEntries> { entry1.Object, entry2.Object }.AsReadOnly());
+
+        var personMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Person>();
+        personMock.Setup(p => p.Id).Returns("person-123");
+        personMock.Setup(p => p.Forename).Returns("John");
+        personMock.Setup(p => p.Surname).Returns("Doe");
+        personMock.Setup(p => p.DateOfBirth).Returns(dobMock.Object);
+        personMock.Setup(p => p.Addresses).Returns(new List<IPersonByCriteria_PersonByCriteria_Results_Addresses>());
+        personMock.Setup(p => p.Chronology).Returns(chronologyMock.Object);
+        SetupSafeguardingConcern(personMock);
+
+        var resultsList = new List<IPersonByCriteria_PersonByCriteria_Results> { personMock.Object };
+
+        // Cursor Setup
+        var cursorMock = new Mock<IPersonByCriteria_PersonByCriteria_Cursor>();
+        cursorMock.Setup(c => c.Offset).Returns(0);
+        cursorMock.Setup(c => c.Returned).Returns(1);
+        cursorMock.Setup(c => c.TotalSize).Returns(1);
+
+        // Result Struct Setup
+        var personByCriteriaMock = new Mock<IPersonByCriteria_PersonByCriteria>();
+        personByCriteriaMock.Setup(p => p.Results).Returns(resultsList.AsReadOnly());
+        personByCriteriaMock.Setup(p => p.Cursor).Returns(cursorMock.Object);
+
+        var operationResultDataMock = new Mock<IPersonByCriteriaResult>();
+        operationResultDataMock.Setup(o => o.PersonByCriteria).Returns(personByCriteriaMock.Object);
+
+        var operationResultMock = new Mock<IOperationResult<IPersonByCriteriaResult>>();
+        operationResultMock.Setup(r => r.Data).Returns(operationResultDataMock.Object);
+        operationResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
+
+        _personByCriteriaQueryMock
+            .Setup(q => q.ExecuteAsync(17, It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(operationResultMock.Object);
+
+        IEnumerable<CsvRecordDto>? capturedRecords = null;
+        _matchPersonRecordOrchestratorMock
+            .Setup(o => o.ProcessAsync(It.IsAny<IEnumerable<CsvRecordDto>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<CsvRecordDto>, string, CancellationToken>((records, _, _) =>
+                capturedRecords = records.ToList())
+            .ReturnsAsync(new List<ProcessedMatchRecord<CsvRecordDto>>());
+
+        // Act
+        await sut.RunAsync(CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(capturedRecords);
+        var record = Assert.Single(capturedRecords);
+        Assert.Equal("person-123", record.Record["SourceID"]);
+        Assert.Equal("Cp,Behaviours", record.Record["classificationNames"]);
+    }
 }
