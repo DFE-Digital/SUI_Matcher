@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
-using MassTransit.Logging;
-using MassTransit.Monitoring;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,7 +78,6 @@ public static class Extensions
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
-                    .AddMeter(InstrumentationOptions.MeterName)
                     .AddMeter("Marten");
             })
             .WithTracing(tracing =>
@@ -88,7 +85,6 @@ public static class Extensions
                 tracing
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddSource(DiagnosticHeaders.DefaultListenerName)
                     .AddSource("Marten")
                     .AddSource("Yarp.ReverseProxy");
             });
