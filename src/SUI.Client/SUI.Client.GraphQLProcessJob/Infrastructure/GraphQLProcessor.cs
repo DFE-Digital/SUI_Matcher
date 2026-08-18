@@ -29,7 +29,8 @@ public class GraphQlProcessor(
 
         List<CsvRecordDto> csvRecords = await FetchAndCompilePersonRecordsAsync(mappings, cancellationToken);
 
-        logger.LogInformation("Completed compiling GraphQL records. Total records retrieved: {Count}. Elapsed Time: {ElapsedTime}",
+        logger.LogInformation(
+            "Completed compiling GraphQL records. Total records retrieved: {Count}. Elapsed Time: {ElapsedTime}",
             csvRecords.Count, timer.Elapsed.ToString("g"));
 
         var matchedResults = await matchPersonRecordOrchestrator.ProcessAsync(
@@ -105,7 +106,9 @@ public class GraphQlProcessor(
     private bool ShouldProcessRecord(IPersonByCriteria_PersonByCriteria_Results_Person person)
     {
         bool shouldProcess = string.IsNullOrEmpty(options.Value.KnownSafeguardingConcernWorklistDefinitionId) ||
-                             (person.WorklistInstances.Any(w => w.WorklistDefinition?.Id == options.Value.KnownSafeguardingConcernWorklistDefinitionId));
+                             (person.WorklistInstances.Any(w =>
+                                 w.WorklistDefinition?.Id ==
+                                 options.Value.KnownSafeguardingConcernWorklistDefinitionId));
         return shouldProcess;
     }
 
@@ -139,7 +142,8 @@ public class GraphQlProcessor(
         if (!string.IsNullOrEmpty(mappings.Address))
         {
             var addressParts = person.Addresses
-                .Select(address => $"{(address.Preferred == true ? "current" : "previous")}~{address.Location?.PrimaryNameOrNumber ?? ""}~{address.Location?.Street ?? ""}~{address.Location?.Town ?? ""}~{address.Location?.Postcode ?? ""}")
+                .Select(address =>
+                    $"{(address.Preferred == true ? "current" : "previous")}~{address.Location?.PrimaryNameOrNumber ?? ""}~{address.Location?.Street ?? ""}~{address.Location?.Town ?? ""}~{address.Location?.Postcode ?? ""}")
                 .ToList();
 
             personDictionary[mappings.Address] = string.Join("|", addressParts);
@@ -174,8 +178,8 @@ public class GraphQlProcessor(
 
             var existingNhsNumber = !string.IsNullOrEmpty(mappings.NhsNumber) &&
                                     result.OriginalData.Record.TryGetValue(mappings.NhsNumber, out var extNhs)
-                                    ? extNhs
-                                    : null;
+                ? extNhs
+                : null;
 
             if (!string.IsNullOrEmpty(existingNhsNumber))
             {
@@ -187,11 +191,13 @@ public class GraphQlProcessor(
             if (!result.OriginalData.Record.TryGetValue("__ObjectVersion", out var objVerStr) ||
                 !int.TryParse(objVerStr, out var objectVersion))
             {
-                logger.LogWarning("Could not find ObjectVersion for Person {PersonId}. Skipping NHS number update.", personId);
+                logger.LogWarning("Could not find ObjectVersion for Person {PersonId}. Skipping NHS number update.",
+                    personId);
                 continue;
             }
 
-            logger.LogInformation("Saving matched NHS number {NhsNumber} for Person {PersonId} with ObjectVersion {ObjectVersion}.",
+            logger.LogInformation(
+                "Saving matched NHS number {NhsNumber} for Person {PersonId} with ObjectVersion {ObjectVersion}.",
                 matchedNhsNumber, personId, objectVersion);
 
             try
