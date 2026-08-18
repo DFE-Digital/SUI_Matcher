@@ -12,7 +12,11 @@ query PersonByCriteria($maxAge: Int, $paging: RequestCursorInput) {
                 age
                 addresses {
                     id
+                    preferred
                     location {
+                        primaryNameOrNumber
+                        street
+                        town
                         postcode
                     }
                 }
@@ -27,6 +31,8 @@ query PersonByCriteria($maxAge: Int, $paging: RequestCursorInput) {
                 forename
                 surname
                 gender
+                ethnicity
+                countryOfBirth
                 nhsNumber
                 preferredAddress {
                     id

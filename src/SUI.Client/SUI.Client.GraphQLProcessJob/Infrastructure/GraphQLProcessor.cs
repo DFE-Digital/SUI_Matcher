@@ -113,6 +113,10 @@ public class GraphQlProcessor(
         IPersonByCriteria_PersonByCriteria_Results_Person person,
         CsvMatchDataOptions.Headers mappings)
     {
+        var chronologyEntryTypes = person.Chronology?.ChronologyEntries?
+            .Select(e => e.EntryType.ToString())
+            .ToList() ?? new List<string>();
+
         var personDictionary = new Dictionary<string, string>
         {
             { mappings.Id, person.Id },
@@ -122,17 +126,23 @@ public class GraphQlProcessor(
             { mappings.Postcode, GetPreferredPostcode(person) },
             { "__ObjectVersion", person.ObjectVersion.ToString() },
             { "__PersonTypes", string.Join(",", person.PersonTypes ?? []) },
+            { "ethnicity", person.Ethnicity?.ToString() ?? "" },
+            { "countryOfBirth", person.CountryOfBirth?.ToString() ?? "" },
+            { "classificationNames", string.Join(",", chronologyEntryTypes) }
         };
-
-        var chronologyEntryTypes = person.Chronology?.ChronologyEntries?
-            .Select(e => e.EntryType.ToString())
-            .ToList() ?? new List<string>();
-
-        personDictionary["classificationNames"] = string.Join(",", chronologyEntryTypes);
 
         if (!string.IsNullOrEmpty(mappings.NhsNumber))
         {
             personDictionary[mappings.NhsNumber] = person.NhsNumber ?? "";
+        }
+
+        if (!string.IsNullOrEmpty(mappings.Address))
+        {
+            var addressParts = person.Addresses
+                .Select(address => $"{(address.Preferred == true ? "current" : "previous")}~{address.Location?.PrimaryNameOrNumber ?? ""}~{address.Location?.Street ?? ""}~{address.Location?.Town ?? ""}~{address.Location?.Postcode ?? ""}")
+                .ToList();
+
+            personDictionary[mappings.Address] = string.Join("|", addressParts);
         }
 
         if (!string.IsNullOrEmpty(mappings.Gender))

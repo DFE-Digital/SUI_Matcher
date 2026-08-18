@@ -6,5 +6,6 @@ namespace FakeEclipseGraphQLApi.Models;
 public class Address
 {
     public string Id { get; set; } = string.Empty;
+    public bool? Preferred { get; set; }
     public Location? Location { get; set; }
 }

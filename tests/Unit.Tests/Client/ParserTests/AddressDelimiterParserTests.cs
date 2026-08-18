@@ -1,4 +1,5 @@
 using Shared.Models;
+
 using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 
 namespace Unit.Tests.Client.ParserTests;
@@ -79,13 +80,25 @@ public class AddressDelimiterParserTests
     [Theory]
     [InlineData("1~2 bob lane")] // missing postcode segment
     [InlineData("1~YO1 6GA")] // missing address line segment
-    [InlineData("1~bob lane~Somewhere~YO1 6GA")] // no leading house number in segment 1
     public void ParseRecord_ReturnsNull_WhenContractNotMet(string historyString)
     {
         var result = AddressParser.ParseRecord(historyString);
 
         Assert.Null(result?.AddressLineOne);
         Assert.Null(result?.AddressLineTwo);
+    }
+
+    [Fact]
+    public void ParseRecord_UsesWholeLine_WhenNoHouseNumberCanBeExtracted()
+    {
+        const string historyString = "1~Green Gables~Rose Lane~Somewhere~YO1 6GA";
+
+        var result = AddressParser.ParseRecord(historyString);
+
+        Assert.NotNull(result);
+        Assert.Equal("Green Gables", result.AddressLineOne);
+        Assert.Equal("Rose Lane", result.AddressLineTwo);
+        Assert.Equal("YO16GA", result.Postcode);
     }
 
     [Theory]

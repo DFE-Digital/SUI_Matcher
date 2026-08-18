@@ -1397,4 +1397,242 @@ public class GraphQlProcessorTests
         Assert.Equal("person-123", record.Record["SourceID"]);
         Assert.Equal("Cp,Behaviours", record.Record["classificationNames"]);
     }
+
+    [Fact]
+    public async Task RunAsync_ShouldMapAddressHistory_WhenAddressesArePresent()
+    {
+        // Arrange
+        var testCsvOptions = Options.Create(new CsvMatchDataOptions
+        {
+            DateFormat = "dd/MM/yyyy",
+            ColumnMappings = new CsvMatchDataOptions.Headers
+            {
+                Id = "SourceID",
+                Given = "Forename",
+                Family = "Surname",
+                BirthDate = "DOB",
+                Postcode = "PostCode",
+                NhsNumber = "NHSNumber",
+                Gender = "Gender",
+                Address = "Address"
+            }
+        });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
+        var sut = new GraphQlProcessor(
+            _loggerMock.Object,
+            _eclipseClientMock.Object,
+            _matchPersonRecordOrchestratorMock.Object,
+            options,
+            testCsvOptions
+        );
+
+        // Person Setup
+        var dobMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_DateOfBirth>();
+        dobMock.Setup(d => d.Lower).Returns(new DateOnly(1990, 5, 20));
+
+        // Mock addresses
+        var location1Mock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Addresses_Location>();
+        location1Mock.Setup(l => l.PrimaryNameOrNumber).Returns("20");
+        location1Mock.Setup(l => l.Street).Returns("New Street");
+        location1Mock.Setup(l => l.Town).Returns("Manchester");
+        location1Mock.Setup(l => l.Postcode).Returns("M12BB");
+
+        var addr1Mock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Addresses>();
+        addr1Mock.Setup(a => a.Preferred).Returns(true);
+        addr1Mock.Setup(a => a.Location).Returns(location1Mock.Object);
+
+        var location2Mock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Addresses_Location>();
+        location2Mock.Setup(l => l.PrimaryNameOrNumber).Returns("15");
+        location2Mock.Setup(l => l.Street).Returns("Old Road");
+        location2Mock.Setup(l => l.Town).Returns("Manchester");
+        location2Mock.Setup(l => l.Postcode).Returns("M11AA");
+
+        var addr2Mock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Addresses>();
+        addr2Mock.Setup(a => a.Preferred).Returns(false);
+        addr2Mock.Setup(a => a.Location).Returns(location2Mock.Object);
+
+        var addresses = new List<IPersonByCriteria_PersonByCriteria_Results_Addresses> { addr1Mock.Object, addr2Mock.Object };
+
+        var personMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Person>();
+        personMock.Setup(p => p.Id).Returns("person-123");
+        personMock.Setup(p => p.Forename).Returns("John");
+        personMock.Setup(p => p.Surname).Returns("Doe");
+        personMock.Setup(p => p.DateOfBirth).Returns(dobMock.Object);
+        personMock.Setup(p => p.Addresses).Returns(addresses.AsReadOnly());
+        SetupSafeguardingConcern(personMock);
+
+        var resultsList = new List<IPersonByCriteria_PersonByCriteria_Results> { personMock.Object };
+
+        // Cursor Setup
+        var cursorMock = new Mock<IPersonByCriteria_PersonByCriteria_Cursor>();
+        cursorMock.Setup(c => c.Offset).Returns(0);
+        cursorMock.Setup(c => c.Returned).Returns(1);
+        cursorMock.Setup(c => c.TotalSize).Returns(1);
+
+        // Result Struct Setup
+        var personByCriteriaMock = new Mock<IPersonByCriteria_PersonByCriteria>();
+        personByCriteriaMock.Setup(p => p.Results).Returns(resultsList.AsReadOnly());
+        personByCriteriaMock.Setup(p => p.Cursor).Returns(cursorMock.Object);
+
+        var operationResultDataMock = new Mock<IPersonByCriteriaResult>();
+        operationResultDataMock.Setup(o => o.PersonByCriteria).Returns(personByCriteriaMock.Object);
+
+        var operationResultMock = new Mock<IOperationResult<IPersonByCriteriaResult>>();
+        operationResultMock.Setup(r => r.Data).Returns(operationResultDataMock.Object);
+        operationResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
+
+        _personByCriteriaQueryMock
+            .Setup(q => q.ExecuteAsync(17, It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(operationResultMock.Object);
+
+        IEnumerable<CsvRecordDto>? capturedRecords = null;
+        _matchPersonRecordOrchestratorMock
+            .Setup(o => o.ProcessAsync(It.IsAny<IEnumerable<CsvRecordDto>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<CsvRecordDto>, string, CancellationToken>((records, _, _) =>
+                capturedRecords = records.ToList())
+            .ReturnsAsync(new List<ProcessedMatchRecord<CsvRecordDto>>());
+
+        // Act
+        await sut.RunAsync(CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(capturedRecords);
+        var record = Assert.Single(capturedRecords);
+        Assert.Equal("person-123", record.Record["SourceID"]);
+        Assert.Equal("current~20~New Street~Manchester~M12BB|previous~15~Old Road~Manchester~M11AA", record.Record["Address"]);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldMapEthnicity_WhenEthnicityIsPresent()
+    {
+        // Arrange
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
+        var sut = new GraphQlProcessor(
+            _loggerMock.Object,
+            _eclipseClientMock.Object,
+            _matchPersonRecordOrchestratorMock.Object,
+            options,
+            _csvMatchOptions
+        );
+
+        // Person Setup
+        var dobMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_DateOfBirth>();
+        dobMock.Setup(d => d.Lower).Returns(new DateOnly(1990, 5, 20));
+
+        var personMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Person>();
+        personMock.Setup(p => p.Id).Returns("person-123");
+        personMock.Setup(p => p.Forename).Returns("John");
+        personMock.Setup(p => p.Surname).Returns("Doe");
+        personMock.Setup(p => p.DateOfBirth).Returns(dobMock.Object);
+        personMock.Setup(p => p.Addresses).Returns(new List<IPersonByCriteria_PersonByCriteria_Results_Addresses>());
+        personMock.Setup(p => p.Ethnicity).Returns(Ethnicity.African);
+        SetupSafeguardingConcern(personMock);
+
+        var resultsList = new List<IPersonByCriteria_PersonByCriteria_Results> { personMock.Object };
+
+        // Cursor Setup
+        var cursorMock = new Mock<IPersonByCriteria_PersonByCriteria_Cursor>();
+        cursorMock.Setup(c => c.Offset).Returns(0);
+        cursorMock.Setup(c => c.Returned).Returns(1);
+        cursorMock.Setup(c => c.TotalSize).Returns(1);
+
+        // Result Struct Setup
+        var personByCriteriaMock = new Mock<IPersonByCriteria_PersonByCriteria>();
+        personByCriteriaMock.Setup(p => p.Results).Returns(resultsList.AsReadOnly());
+        personByCriteriaMock.Setup(p => p.Cursor).Returns(cursorMock.Object);
+
+        var operationResultDataMock = new Mock<IPersonByCriteriaResult>();
+        operationResultDataMock.Setup(o => o.PersonByCriteria).Returns(personByCriteriaMock.Object);
+
+        var operationResultMock = new Mock<IOperationResult<IPersonByCriteriaResult>>();
+        operationResultMock.Setup(r => r.Data).Returns(operationResultDataMock.Object);
+        operationResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
+
+        _personByCriteriaQueryMock
+            .Setup(q => q.ExecuteAsync(17, It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(operationResultMock.Object);
+
+        IEnumerable<CsvRecordDto>? capturedRecords = null;
+        _matchPersonRecordOrchestratorMock
+            .Setup(o => o.ProcessAsync(It.IsAny<IEnumerable<CsvRecordDto>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<CsvRecordDto>, string, CancellationToken>((records, _, _) =>
+                capturedRecords = records.ToList())
+            .ReturnsAsync(new List<ProcessedMatchRecord<CsvRecordDto>>());
+
+        // Act
+        await sut.RunAsync(CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(capturedRecords);
+        var record = Assert.Single(capturedRecords);
+        Assert.Equal("person-123", record.Record["SourceID"]);
+        Assert.Equal("African", record.Record["ethnicity"]);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldMapCountryOfBirth_WhenCountryOfBirthIsPresent()
+    {
+        // Arrange
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
+        var sut = new GraphQlProcessor(
+            _loggerMock.Object,
+            _eclipseClientMock.Object,
+            _matchPersonRecordOrchestratorMock.Object,
+            options,
+            _csvMatchOptions
+        );
+
+        // Person Setup
+        var dobMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_DateOfBirth>();
+        dobMock.Setup(d => d.Lower).Returns(new DateOnly(1990, 5, 20));
+
+        var personMock = new Mock<IPersonByCriteria_PersonByCriteria_Results_Person>();
+        personMock.Setup(p => p.Id).Returns("person-123");
+        personMock.Setup(p => p.Forename).Returns("John");
+        personMock.Setup(p => p.Surname).Returns("Doe");
+        personMock.Setup(p => p.DateOfBirth).Returns(dobMock.Object);
+        personMock.Setup(p => p.Addresses).Returns(new List<IPersonByCriteria_PersonByCriteria_Results_Addresses>());
+        personMock.Setup(p => p.CountryOfBirth).Returns(Country.Gbr);
+        SetupSafeguardingConcern(personMock);
+
+        var resultsList = new List<IPersonByCriteria_PersonByCriteria_Results> { personMock.Object };
+
+        // Cursor Setup
+        var cursorMock = new Mock<IPersonByCriteria_PersonByCriteria_Cursor>();
+        cursorMock.Setup(c => c.Offset).Returns(0);
+        cursorMock.Setup(c => c.Returned).Returns(1);
+        cursorMock.Setup(c => c.TotalSize).Returns(1);
+
+        // Result Struct Setup
+        var personByCriteriaMock = new Mock<IPersonByCriteria_PersonByCriteria>();
+        personByCriteriaMock.Setup(p => p.Results).Returns(resultsList.AsReadOnly());
+        personByCriteriaMock.Setup(p => p.Cursor).Returns(cursorMock.Object);
+
+        var operationResultDataMock = new Mock<IPersonByCriteriaResult>();
+        operationResultDataMock.Setup(o => o.PersonByCriteria).Returns(personByCriteriaMock.Object);
+
+        var operationResultMock = new Mock<IOperationResult<IPersonByCriteriaResult>>();
+        operationResultMock.Setup(r => r.Data).Returns(operationResultDataMock.Object);
+        operationResultMock.Setup(r => r.Errors).Returns(new List<IClientError>());
+
+        _personByCriteriaQueryMock
+            .Setup(q => q.ExecuteAsync(17, It.IsAny<RequestCursorInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(operationResultMock.Object);
+
+        IEnumerable<CsvRecordDto>? capturedRecords = null;
+        _matchPersonRecordOrchestratorMock
+            .Setup(o => o.ProcessAsync(It.IsAny<IEnumerable<CsvRecordDto>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<CsvRecordDto>, string, CancellationToken>((records, _, _) =>
+                capturedRecords = records.ToList())
+            .ReturnsAsync(new List<ProcessedMatchRecord<CsvRecordDto>>());
+
+        // Act
+        await sut.RunAsync(CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(capturedRecords);
+        var record = Assert.Single(capturedRecords);
+        Assert.Equal("person-123", record.Record["SourceID"]);
+        Assert.Equal("Gbr", record.Record["countryOfBirth"]);
+    }
 }

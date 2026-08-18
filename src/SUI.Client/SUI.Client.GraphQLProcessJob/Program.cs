@@ -46,6 +46,12 @@ builder
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder
+    .Services.AddOptions<OptionalPropertiesLog>()
+    .Bind(builder.Configuration.GetSection(OptionalPropertiesLog.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddSingleton<TokenCredential>(sp =>
@@ -56,7 +62,8 @@ builder.Services.AddSingleton<TokenCredential>(sp =>
         string.IsNullOrEmpty(options.ClientId) ||
         string.IsNullOrEmpty(options.ClientSecret))
     {
-        throw new InvalidOperationException("Azure AD configuration is incomplete. TenantId, ClientId, and ClientSecret are required.");
+        throw new InvalidOperationException(
+            "Azure AD configuration is incomplete. TenantId, ClientId, and ClientSecret are required.");
     }
 
     return new ClientSecretCredential(options.TenantId, options.ClientId, options.ClientSecret);
@@ -79,8 +86,7 @@ if (useAuth)
 
 builder.Services.AddEclipseClient();
 
-builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
-    (serviceProvider, client) =>
+builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>((serviceProvider, client) =>
     {
         var options = serviceProvider
             .GetRequiredService<IOptions<GraphQlProcessJobOptions>>()

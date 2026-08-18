@@ -10,6 +10,8 @@ public class Person : IPersonByCriteria_PersonByCriteria_Results
     public string? Forename { get; set; }
     public string? Surname { get; set; }
     public string? Gender { get; set; }
+    public Ethnicity? Ethnicity { get; set; }
+    public Country? CountryOfBirth { get; set; }
     public string? NhsNumber { get; set; }
     public int ObjectVersion { get; set; } = 1;
     public List<PersonType> PersonTypes { get; set; } = new() { PersonType.CLIENT };

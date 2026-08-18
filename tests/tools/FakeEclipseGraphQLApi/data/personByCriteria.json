@@ -13,6 +13,8 @@
       "Forename": "OCTAVIA",
       "Surname": "CHISLETT",
       "Gender": "FEMALE",
+      "Ethnicity": "WHITE_BRITISH",
+      "CountryOfBirth": "GBR",
       "NhsNumber": "9691292211",
       "ObjectVersion": 3,
       "PersonTypes": [
@@ -26,8 +28,22 @@
       "Addresses": [
         {
           "Id": "addr-12345678",
+          "Preferred": false,
           "Location": {
+            "PrimaryNameOrNumber": "1",
+            "Street": "Ravenshaw Gardens",
+            "Town": "Epsom",
             "Postcode": "KT19 0ST"
+          }
+        },
+        {
+          "Id": "addr-12323232",
+          "Preferred": true,
+          "Location": {
+            "PrimaryNameOrNumber": "Broga Farm Lane",
+            "Street": "ASHTEAD",
+            "Town": "Surrey",
+            "Postcode": "NR331XU"
           }
         }
       ],
@@ -72,7 +88,11 @@
       "Addresses": [
         {
           "Id": "addr-12323232",
+          "Preferred": true,
           "Location": {
+            "PrimaryNameOrNumber": "15",
+            "Street": "Bridge Street",
+            "Town": "Brigg",
             "Postcode": "DN20 8LP"
           }
         }
@@ -101,7 +121,11 @@
       "Addresses": [
         {
           "Id": "addr-12323232-2",
+          "Preferred": true,
           "Location": {
+            "PrimaryNameOrNumber": "15",
+            "Street": "Bridge Street",
+            "Town": "Brigg",
             "Postcode": "DN20 8LP"
           }
         }
@@ -130,7 +154,11 @@
       "Addresses": [
         {
           "Id": "addr-34556655",
+          "Preferred": true,
           "Location": {
+            "PrimaryNameOrNumber": "42",
+            "Street": "London Road",
+            "Town": "Lowestoft",
             "Postcode": "NR33 1XH"
           }
         }
@@ -166,7 +194,11 @@
       "Addresses": [
         {
           "Id": "addr-34567655",
+          "Preferred": true,
           "Location": {
+            "PrimaryNameOrNumber": "42",
+            "Street": "London Road",
+            "Town": "Lowestoft",
             "Postcode": "NR33 1XH"
           }
         }
@@ -195,7 +227,11 @@
       "Addresses": [
         {
           "Id": "addr-34568855",
+          "Preferred": true,
           "Location": {
+            "PrimaryNameOrNumber": "42",
+            "Street": "London Road",
+            "Town": "Lowestoft",
             "Postcode": "NR33 1XH"
           }
         }
