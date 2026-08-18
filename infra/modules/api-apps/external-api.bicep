@@ -39,6 +39,9 @@ param tags object = {}
 @description('Whether or not to include role assignments')
 param includeRoleAssignments bool = true
 
+@description('Optional ODS code sent with PDS FHIR requests')
+param odsCode string = ''
+
 var appName = 'external-api'
 var targetPort = 8080
 
@@ -97,7 +100,7 @@ resource externalApi 'Microsoft.App/containerApps@2024-10-02-preview' = {
         {
           name: appName
           image: '${containerRegistryServer}/${appName}:${imageTag}'
-          env: [
+          env: concat([
             {
               name: 'AZURE_CLIENT_ID'
               value: managedIdentityClientId
@@ -134,7 +137,12 @@ resource externalApi 'Microsoft.App/containerApps@2024-10-02-preview' = {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               secretRef: 'app-insights-connection-string'
             }
-          ]
+          ], empty(odsCode) ? [] : [
+            {
+              name: 'NhsFhirConfig__OdsCode'
+              value: odsCode
+            }
+          ])
         }
       ]
       scale: {

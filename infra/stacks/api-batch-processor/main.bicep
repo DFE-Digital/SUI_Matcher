@@ -61,6 +61,9 @@ param cronExpression string = '0 9,12,15 * * 1-5'
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
+@description('Optional ODS code sent with PDS FHIR requests')
+param odsCode string = ''
+
 @description('Optional value for the Environment tag when Azure Policy expects a different tag value than the deployment environment name.')
 param tagEnvironmentName string = ''
 
@@ -285,6 +288,7 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
     applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
     tags: tags
     includeRoleAssignments: includeRoleAssignments
+    odsCode: odsCode
   }
   dependsOn: [
     keyVaultPrivateEndpoint

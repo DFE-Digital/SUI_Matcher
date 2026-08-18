@@ -29,6 +29,7 @@ builder.Services.AddSingleton<IJwtHandler, JwtHandler>();
 builder.Services.AddTransient<IFhirClientFactory, FhirClientFactory>();
 
 builder.Services.Configure<NhsAuthConfigOptions>(builder.Configuration.GetSection("NhsAuthConfig"));
+builder.Services.Configure<NhsFhirConfigOptions>(builder.Configuration.GetSection("NhsFhirConfig"));
 
 // Setup client factory for external API calls
 builder

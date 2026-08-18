@@ -84,6 +84,10 @@ inputs:
     description: "Optional external API image tag"
     required: false
     default: ""
+  ods_code:
+    description: "Optional ODS code sent with PDS FHIR requests"
+    required: false
+    default: ""
   azure_include_role_assignments:
     description: Whether or not to include role assignments, since some environments may restrict these. 
     default: true
@@ -242,6 +246,10 @@ runs:
 
         if [ -n "${{ inputs.external_api_image_tag }}" ]; then
           PARAMETERS+=("externalApiImageTag=${{ inputs.external_api_image_tag }}")
+        fi
+
+        if [ -n "${{ inputs.ods_code }}" ]; then
+          PARAMETERS+=("odsCode=${{ inputs.ods_code }}")
         fi
 
         if [ -n "${{ inputs.resource_group_mode }}" ]; then

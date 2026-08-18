@@ -60,6 +60,9 @@ param cronExpression string = '0 9,12,15 * * 1-5'
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
+@description('Optional ODS code sent with PDS FHIR requests')
+param odsCode string = ''
+
 @allowed([
   'create'
   'existing'
@@ -121,6 +124,7 @@ module stackDeployment 'main.bicep' = {
     deploymentMode: deploymentMode
     cronExpression: cronExpression
     includeRoleAssignments: includeRoleAssignments
+    odsCode: odsCode
     tagEnvironmentName: tagEnvironmentName
     additionalTags: additionalTags
     allowedGraphQLFqdns: allowedGraphQLFqdns
