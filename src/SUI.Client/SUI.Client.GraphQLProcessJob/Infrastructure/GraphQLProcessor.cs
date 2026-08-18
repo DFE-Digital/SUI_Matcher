@@ -143,7 +143,7 @@ public class GraphQlProcessor(
         {
             var addressParts = person.Addresses
                 .Select(address =>
-                    $"{(address.Preferred == true ? "current" : "previous")}~{address.Location?.PrimaryNameOrNumber ?? ""}~{address.Location?.Street ?? ""}~{address.Location?.Town ?? ""}~{address.Location?.Postcode ?? ""}")
+                    $"{(address.Preferred == true ? "current" : "previous")}~{address.Location?.PrimaryNameOrNumber ?? ""} {address.Location?.Street ?? ""}~{address.Location?.Town ?? ""}~{address.Location?.Postcode ?? ""}")
                 .ToList();
 
             personDictionary[mappings.Address] = string.Join("|", addressParts);
@@ -196,9 +196,12 @@ public class GraphQlProcessor(
                 continue;
             }
 
-            logger.LogInformation(
-                "Saving matched NHS number {NhsNumber} for Person {PersonId} with ObjectVersion {ObjectVersion}.",
-                matchedNhsNumber, personId, objectVersion);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Saving matched NHS number {NhsNumber} for Person {PersonId} with ObjectVersion {ObjectVersion}.",
+                    matchedNhsNumber, personId, objectVersion);
+            }
 
             try
             {
