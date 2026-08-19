@@ -7,9 +7,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using Shared.Aspire;
+
 using SUI.Client.Core.Application.Interfaces;
 using SUI.Client.Core.Application.Models;
 using SUI.Client.Core.Application.UseCases.MatchPeople;
+using SUI.Client.Core.Application.UseCases.ReconcilePeople;
 using SUI.Client.Core.Infrastructure.CsvParsers;
 using SUI.Client.Core.Infrastructure.Http;
 using SUI.Client.GraphQLProcessJob;
@@ -17,15 +20,35 @@ using SUI.Client.GraphQLProcessJob.Infrastructure;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.AddTelemetryDefaults();
+
 builder
     .Services.AddOptions<GraphQlProcessJobOptions>()
     .Bind(builder.Configuration.GetSection(GraphQlProcessJobOptions.SectionName))
     .ValidateDataAnnotations()
+    .Validate(
+        options =>
+            options.ProcessingMode.Equals(
+                ProcessingModes.Matching,
+                StringComparison.OrdinalIgnoreCase
+            )
+            || options.ProcessingMode.Equals(
+                ProcessingModes.Reconciliation,
+                StringComparison.OrdinalIgnoreCase
+            ),
+        $"ProcessingMode must be {ProcessingModes.Matching} or {ProcessingModes.Reconciliation}."
+    )
     .ValidateOnStart();
 
 builder
     .Services.AddOptions<CsvMatchDataOptions>()
     .Bind(builder.Configuration.GetSection(CsvMatchDataOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder
+    .Services.AddOptions<OptionalPropertiesLog>()
+    .Bind(builder.Configuration.GetSection(OptionalPropertiesLog.SectionName))
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
@@ -39,7 +62,8 @@ builder.Services.AddSingleton<TokenCredential>(sp =>
         string.IsNullOrEmpty(options.ClientId) ||
         string.IsNullOrEmpty(options.ClientSecret))
     {
-        throw new InvalidOperationException("Azure AD configuration is incomplete. TenantId, ClientId, and ClientSecret are required.");
+        throw new InvalidOperationException(
+            "Azure AD configuration is incomplete. TenantId, ClientId, and ClientSecret are required.");
     }
 
     return new ClientSecretCredential(options.TenantId, options.ClientId, options.ClientSecret);
@@ -62,8 +86,7 @@ if (useAuth)
 
 builder.Services.AddEclipseClient();
 
-builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
-    (serviceProvider, client) =>
+builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>((serviceProvider, client) =>
     {
         var options = serviceProvider
             .GetRequiredService<IOptions<GraphQlProcessJobOptions>>()
@@ -83,13 +106,46 @@ builder.Services.AddHttpClient<IMatchingApiClient, MatchingApiClient>(
     }
 );
 
-builder.Services.AddSingleton(
-    typeof(IMatchPersonRecordOrchestrator<>),
-    typeof(MatchPersonRecordOrchestrator<>)
+builder.Services.AddSingleton<MatchPersonRecordOrchestrator<CsvRecordDto>>();
+builder.Services.AddSingleton<ReconcilePersonRecordOrchestrator<CsvRecordDto>>();
+builder.Services.AddSingleton<IMatchPersonRecordOrchestrator<CsvRecordDto>>(serviceProvider =>
+{
+    var storageOptions = serviceProvider
+        .GetRequiredService<IOptions<GraphQlProcessJobOptions>>()
+        .Value;
+    return storageOptions.ProcessingMode.Equals(
+        ProcessingModes.Reconciliation,
+        StringComparison.OrdinalIgnoreCase
+    )
+        ? serviceProvider.GetRequiredService<ReconcilePersonRecordOrchestrator<CsvRecordDto>>()
+        : serviceProvider.GetRequiredService<MatchPersonRecordOrchestrator<CsvRecordDto>>();
+});
+builder.Services.AddSingleton<CsvPersonSpecParser>();
+builder.Services.AddSingleton<IPersonSpecParser<CsvRecordDto>>(serviceProvider =>
+    serviceProvider.GetRequiredService<CsvPersonSpecParser>()
+);
+builder.Services.AddSingleton<IReconciliationDataParser<CsvRecordDto>>(serviceProvider =>
+    serviceProvider.GetRequiredService<CsvPersonSpecParser>()
 );
 builder.Services.AddSingleton<IPersonSpecParser<CsvRecordDto>, CsvPersonSpecParser>();
 builder.Services.AddSingleton<ICsvHeadersProvider, CsvMatchingHeadersProvider>();
-
+builder.Services.AddSingleton<TildePipeChronologicalAddressHistoryParser>();
+builder.Services.AddSingleton<SemicolonCommaNewestFirstAddressHistoryParser>();
+builder.Services.AddSingleton<ISourceAddressHistoryParser>(serviceProvider =>
+{
+    var options = serviceProvider.GetRequiredService<IOptions<CsvMatchDataOptions>>().Value;
+    return options.AddressHistoryFormat switch
+    {
+        SourceAddressHistoryFormat.TildePipeChronological =>
+            serviceProvider.GetRequiredService<TildePipeChronologicalAddressHistoryParser>(),
+        SourceAddressHistoryFormat.SemicolonCommaNewestFirst =>
+            serviceProvider.GetRequiredService<SemicolonCommaNewestFirstAddressHistoryParser>(),
+        _ => throw new InvalidOperationException(
+            $"Unsupported address history format '{options.AddressHistoryFormat}'."
+        ),
+    };
+});
+builder.Services.AddSingleton<AddressComparisonOrchestrator>();
 builder.Services.AddSingleton<GraphQlProcessor>();
 
 using var host = builder.Build();

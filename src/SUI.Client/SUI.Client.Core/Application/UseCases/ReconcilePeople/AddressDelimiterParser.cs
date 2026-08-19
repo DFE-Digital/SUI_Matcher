@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
+
 using Shared.Models;
+
 using SUI.Client.Core.Domain.Models;
 
 namespace SUI.Client.Core.Application.UseCases.ReconcilePeople;
@@ -27,6 +29,12 @@ public static class AddressParser
         // Extract line 2 - assumes address line 2
         var addressLine2 = parts[2];
         var addressLine2Number = ExtractHouseNumber(addressLine2);
+
+        if (addressLine1Number == null && addressLine2Number == null)
+        {
+            addressLine1Number = addressLine1;
+            addressLine2Number = addressLine2;
+        }
 
         var postcode = NormalizePostcode(parts[^1]);
 
