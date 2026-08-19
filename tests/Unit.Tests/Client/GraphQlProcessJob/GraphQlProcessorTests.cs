@@ -1501,7 +1501,7 @@ public class GraphQlProcessorTests
         Assert.NotNull(capturedRecords);
         var record = Assert.Single(capturedRecords);
         Assert.Equal("person-123", record.Record["SourceID"]);
-        Assert.Equal("current~20~New Street~Manchester~M12BB|previous~15~Old Road~Manchester~M11AA", record.Record["Address"]);
+        Assert.Equal("current~20 New Street~Manchester~M12BB|previous~15 Old Road~Manchester~M11AA", record.Record["Address"]);
     }
 
     [Fact]
