@@ -50,6 +50,9 @@ param externalApiImageTag string = 'latest'
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
+@description('Optional ODS code sent with PDS FHIR requests')
+param odsCode string = ''
+
 @allowed([
   'create'
   'existing'
@@ -116,6 +119,7 @@ module stackDeployment 'main.bicep' = {
     matchingApiImageTag: matchingApiImageTag
     externalApiImageTag: externalApiImageTag
     includeRoleAssignments: includeRoleAssignments
+    odsCode: odsCode
     storageAccountMode: storageAccountMode
     existingStorageAccountName: existingStorageAccountName
     tagEnvironmentName: tagEnvironmentName

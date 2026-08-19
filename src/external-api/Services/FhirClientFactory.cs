@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using Hl7.Fhir.Rest;
+using Microsoft.Extensions.Options;
 
 namespace ExternalApi.Services;
 
@@ -10,11 +10,11 @@ public interface IFhirClientFactory
     FhirClient CreateFhirClient();
 }
 
-[ExcludeFromCodeCoverage(Justification = "Cannot test third party library")]
 public class FhirClientFactory(
     ILogger<FhirClientFactory> logger,
     ITokenService tokenService,
-    IConfiguration config
+    IConfiguration config,
+    IOptions<NhsFhirConfigOptions> options
 ) : IFhirClientFactory
 {
     public FhirClient CreateFhirClient()
@@ -40,6 +40,12 @@ public class FhirClientFactory(
             // This will show on dependency logs in Application Insights and can be used to correlate requests between us and PDS
             Activity.Current?.AddTag("PdsTraceRequestId", pdsTraceRequestId);
             fhirClient.RequestHeaders.Add("X-Request-ID", pdsTraceRequestId);
+
+            var odsCode = options.Value.OdsCode;
+            if (!string.IsNullOrWhiteSpace(odsCode))
+            {
+                fhirClient.RequestHeaders.Add("NHSD-End-User-Organisation-ODS", odsCode);
+            }
         }
 
         return fhirClient;

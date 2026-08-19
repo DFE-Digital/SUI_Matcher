@@ -51,6 +51,9 @@ param externalApiImageTag string = 'latest'
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
+@description('Optional ODS code sent with PDS FHIR requests')
+param odsCode string = ''
+
 @allowed([
   'create'
   'existing'
@@ -324,6 +327,7 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
     applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
     tags: tags
     includeRoleAssignments: includeRoleAssignments
+    odsCode: odsCode
   }
   dependsOn: [
     keyVaultPrivateEndpoint
