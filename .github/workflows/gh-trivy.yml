@@ -8,6 +8,7 @@ on:
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch:
+
 jobs:
   build:
     name: Trivy File Scan
@@ -17,24 +18,59 @@ jobs:
       actions: write
       security-events: write
     steps:
-
       - name: Checkout code
-        uses: actions/checkout@v7     
+        uses: actions/checkout@v7
 
       - name: Run Trivy file scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
-          scan-type: 'fs'
-          scan-ref: '.'          
+          scan-type: fs
+          scan-ref: .
           ignore-unfixed: false
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH,MEDIUM,LOW
           exit-code: 0
           vuln-type: os,library
-          scanners: vuln,secret,misconfig,license
+          scanners: vuln,secret,misconfig
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4.37.1
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-results.sarif
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies for licence scanning
+        run: dotnet restore sui-matching.sln --packages .trivy-packages -p:RestoreUseStaticGraphEvaluation=true
+
+      - name: Print all detected licences
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: fs
+          scan-ref: .trivy-packages
+          scanners: license
+          skip-files: "**/*.deps.json"
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          format: table
+          exit-code: 0
+          skip-setup-trivy: true
+        env:
+          TRIVY_LICENSE_FULL: "true"
+
+      - name: Fail on restricted or forbidden licences
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: fs
+          scan-ref: .trivy-packages
+          scanners: license
+          skip-files: "**/*.deps.json"
+          severity: HIGH,CRITICAL
+          format: table
+          exit-code: 1
+          skip-setup-trivy: true
+        env:
+          TRIVY_LICENSE_FULL: "true"
