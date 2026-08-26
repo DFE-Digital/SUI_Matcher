@@ -48,6 +48,10 @@ param matchingApiImageTag string = 'latest'
 @description('Container image tag for the external API')
 param externalApiImageTag string = 'latest'
 
+@minLength(1)
+@description('Container image tag for the PDS Emulator')
+param pdsEmulatorImageTag string = 'latest'
+
 @allowed([
   'automatic'
   'manual'
@@ -295,6 +299,28 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
   ]
 }
 
+module pdsEmulator '../../modules/api-apps/pds-emulator.bicep' = {
+  name: 'pds-emulator'
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppEnvironment.outputs.id
+    containerRegistryServer: containerRegistry.outputs.endpoint
+    managedIdentityId: identity.outputs.id
+    managedIdentityPrincipalId: identity.outputs.principalId
+    managedIdentityClientId: identity.outputs.clientId
+    environmentName: environmentName
+    imageTag: pdsEmulatorImageTag
+    keyVaultName: secrets.outputs.name
+    keyVaultUri: secrets.outputs.vaultUri
+    applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
+    tags: tags
+    includeRoleAssignments: includeRoleAssignments
+  }
+  dependsOn: [
+    keyVaultPrivateEndpoint
+  ]
+}
+
 module graphqlProcessJob '../../modules/api-batch-processor/graphql-process-job.bicep' = {
   name: 'api-batch-processor-graphql-process-job'
   params: {
@@ -343,3 +369,5 @@ output MATCHING_API_NAME string = matchingApi.outputs.name
 output MATCHING_API_ID string = matchingApi.outputs.id
 output EXTERNAL_API_NAME string = externalApi.outputs.name
 output EXTERNAL_API_ID string = externalApi.outputs.id
+output PDS_EMULATOR_NAME string = pdsEmulator.outputs.name
+output PDS_EMULATOR_ID string = pdsEmulator.outputs.id

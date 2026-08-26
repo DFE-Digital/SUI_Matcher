@@ -1,0 +1,37 @@
+@FakeEclipseGraphQLApi_HostAddress = http://localhost:5050
+
+### Check Server Is Running
+GET {{FakeEclipseGraphQLApi_HostAddress}}/
+Accept: text/plain
+
+### Query PersonByCriteria (Basic)
+POST {{FakeEclipseGraphQLApi_HostAddress}}/integration
+Content-Type: application/json
+
+{
+  "query": "query { personByCriteria { cursor { offset pageNumber pageSize returned totalSize } results { ... on Person { id age forename surname gender nhsNumber objectVersion } } } }"
+}
+
+### Query PersonByCriteria (With Paging and Max Age)
+POST {{FakeEclipseGraphQLApi_HostAddress}}/integration
+Content-Type: application/json
+
+{
+  "query": "query GetSpecificPage($maxAge: Int, $paging: RequestCursorInput) { personByCriteria(maxAge: $maxAge, paging: $paging) { results { ... on Person { id age forename surname gender nhsNumber objectVersion } } } }",
+  "variables": {
+    "maxAge": 18,
+    "paging": {
+      "pageNumber": 1,
+      "pageSize": 5
+    }
+  }
+}
+
+### Mutation UpdatePerson (Updates NHS Number and Increments ObjectVersion)
+# Note: You can change the ID to point to one of the newly added GraphQL records (e.g., "-109908")
+POST {{FakeEclipseGraphQLApi_HostAddress}}/integration
+Content-Type: application/json
+
+{
+  "query": "mutation UpdateNhsNumber { updatePerson(input: { id: \"12345678\", nhsNumber: \"1112223334\", objectVersion: 3 }) { id nhsNumber objectVersion } }"
+}
