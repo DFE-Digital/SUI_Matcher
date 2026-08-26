@@ -78,9 +78,6 @@
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
     <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
-    <PackageVersion Include="OxyPlot.Core" Version="2.2.0" />
-    <PackageVersion Include="OxyPlot.SkiaSharp" Version="2.2.0" />
-    <PackageVersion Include="QuestPDF" Version="2026.6.1" />
     <PackageVersion Include="ScottPlot" Version="5.0.55" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
     <PackageVersion Include="Net.Json.Serializer" Version="6.0.0" />
