@@ -13,7 +13,7 @@ GET {{PdsEmulator_HostAddress}}/personal-demographics/FHIR/R4/Patient/9691292211
 Accept: application/json
 
 ### Get Patient by ID (Record added from GraphQL Temp)
-GET {{PdsEmulator_HostAddress}}/personal-demographics/FHIR/R4/Patient/PDS_109908
+GET {{PdsEmulator_HostAddress}}/personal-demographics/FHIR/R4/Patient/9000000025
 Accept: application/json
 
 ### Get Patient by ID (Error test case)
