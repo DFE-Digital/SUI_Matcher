@@ -84,6 +84,7 @@ param graphqlProcessJobConfiguration object
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'abp'
 var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
+var usePdsEmulator = !isProductionEnvironment
 var defaultNhsFqdns = isProductionEnvironment ? [
   'api.service.nhs.uk'
 ] : [
@@ -91,6 +92,7 @@ var defaultNhsFqdns = isProductionEnvironment ? [
 ]
 var allowedNhsFqdns = concat(defaultNhsFqdns, allowedGraphQLFqdns)
 var effectiveTagEnvironmentName = empty(tagEnvironmentName) ? environmentName : tagEnvironmentName
+var pdsEmulatorBaseAddress = 'https://pds-emulator.internal.${containerAppEnvironment.outputs.defaultDomain}'
 
 var baseTags = {
   'azd-env-name': environmentName
@@ -293,32 +295,25 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
     tags: tags
     includeRoleAssignments: includeRoleAssignments
     odsCode: odsCode
+    nhsDigitalTokenUrl: usePdsEmulator ? '${pdsEmulatorBaseAddress}/oauth2/token' : ''
+    nhsDigitalFhirEndpoint: usePdsEmulator ? '${pdsEmulatorBaseAddress}/personal-demographics/FHIR/R4/' : ''
   }
   dependsOn: [
     keyVaultPrivateEndpoint
   ]
 }
 
-module pdsEmulator '../../modules/api-apps/pds-emulator.bicep' = {
+module pdsEmulator '../../modules/api-apps/pds-emulator.bicep' = if (usePdsEmulator) {
   name: 'pds-emulator'
   params: {
     location: location
     containerAppsEnvironmentId: containerAppEnvironment.outputs.id
     containerRegistryServer: containerRegistry.outputs.endpoint
     managedIdentityId: identity.outputs.id
-    managedIdentityPrincipalId: identity.outputs.principalId
-    managedIdentityClientId: identity.outputs.clientId
     environmentName: environmentName
     imageTag: pdsEmulatorImageTag
-    keyVaultName: secrets.outputs.name
-    keyVaultUri: secrets.outputs.vaultUri
-    applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
     tags: tags
-    includeRoleAssignments: includeRoleAssignments
   }
-  dependsOn: [
-    keyVaultPrivateEndpoint
-  ]
 }
 
 module graphqlProcessJob '../../modules/api-batch-processor/graphql-process-job.bicep' = {
@@ -369,5 +364,5 @@ output MATCHING_API_NAME string = matchingApi.outputs.name
 output MATCHING_API_ID string = matchingApi.outputs.id
 output EXTERNAL_API_NAME string = externalApi.outputs.name
 output EXTERNAL_API_ID string = externalApi.outputs.id
-output PDS_EMULATOR_NAME string = pdsEmulator.outputs.name
-output PDS_EMULATOR_ID string = pdsEmulator.outputs.id
+output PDS_EMULATOR_NAME string = pdsEmulator.?outputs.?name ?? ''
+output PDS_EMULATOR_ID string = pdsEmulator.?outputs.?id ?? ''

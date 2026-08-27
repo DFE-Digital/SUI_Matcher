@@ -84,6 +84,10 @@ inputs:
     description: "Optional external API image tag"
     required: false
     default: ""
+  pds_emulator_image_tag:
+    description: "Optional PDS emulator image tag"
+    required: false
+    default: ""
   ods_code:
     description: "Optional ODS code sent with PDS FHIR requests"
     required: false
@@ -246,6 +250,10 @@ runs:
 
         if [ -n "${{ inputs.external_api_image_tag }}" ]; then
           PARAMETERS+=("externalApiImageTag=${{ inputs.external_api_image_tag }}")
+        fi
+
+        if [ -n "${{ inputs.pds_emulator_image_tag }}" ]; then
+          PARAMETERS+=("pdsEmulatorImageTag=${{ inputs.pds_emulator_image_tag }}")
         fi
 
         if [ -n "${{ inputs.ods_code }}" ]; then

@@ -42,6 +42,7 @@ env:
   INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
   EXTERNAL_API_IMAGE_REPOSITORY: external-api
   MATCHING_API_IMAGE_REPOSITORY: matching-api
+  PDS_EMULATOR_IMAGE_REPOSITORY: pds-emulator
 
 concurrency:
   group: api-batch-processor-api-images-${{ inputs.environment_prefix }}-${{ inputs.environment }}
@@ -103,6 +104,7 @@ jobs:
           EXTERNAL_API_HTTPS_ENDPOINT="https://external-api.internal.${CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN}"
           EXTERNAL_API_IMAGE_NAME="${ACR_LOGIN_SERVER}/${EXTERNAL_API_IMAGE_REPOSITORY}:${IMAGE_TAG}"
           MATCHING_API_IMAGE_NAME="${ACR_LOGIN_SERVER}/${MATCHING_API_IMAGE_REPOSITORY}:${IMAGE_TAG}"
+          PDS_EMULATOR_IMAGE_NAME="${ACR_LOGIN_SERVER}/${PDS_EMULATOR_IMAGE_REPOSITORY}:${IMAGE_TAG}"
 
           {
             echo "stack_resource_group=${STACK_RESOURCE_GROUP}"
@@ -114,6 +116,7 @@ jobs:
             echo "external_api_https_endpoint=${EXTERNAL_API_HTTPS_ENDPOINT}"
             echo "external_api_image_name=${EXTERNAL_API_IMAGE_NAME}"
             echo "matching_api_image_name=${MATCHING_API_IMAGE_NAME}"
+            echo "pds_emulator_image_name=${PDS_EMULATOR_IMAGE_NAME}"
             echo "image_tag=${IMAGE_TAG}"
           } >> "$GITHUB_OUTPUT"
 
@@ -143,6 +146,18 @@ jobs:
             --build-arg EXTERNAL_API_HTTPS_ENDPOINT="${{ steps.context.outputs.external_api_https_endpoint }}" \
             .
 
+      - name: Build PDS emulator image in ACR
+        run: |
+          set -euo pipefail
+
+          az acr build \
+            --registry "${{ steps.context.outputs.acr_name }}" \
+            --image "${PDS_EMULATOR_IMAGE_REPOSITORY}:${{ steps.context.outputs.image_tag }}" \
+            --image "${PDS_EMULATOR_IMAGE_REPOSITORY}:latest" \
+            --file src/tools/pds-emulator/Dockerfile \
+            --build-arg ASPNETCORE_ENVIRONMENT="${AZURE_ENV_NAME}" \
+            .
+
       - name: Write workflow summary
         run: |
           set -euo pipefail
@@ -159,4 +174,5 @@ jobs:
             echo "- External API endpoint for matching API: \`${{ steps.context.outputs.external_api_https_endpoint }}\`"
             echo "- External API image: \`${{ steps.context.outputs.external_api_image_name }}\`"
             echo "- Matching API image: \`${{ steps.context.outputs.matching_api_image_name }}\`"
+            echo "- PDS emulator image: \`${{ steps.context.outputs.pds_emulator_image_name }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
