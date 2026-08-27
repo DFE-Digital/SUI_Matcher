@@ -29,6 +29,20 @@ public class PdsEmulatorEndpointTests
     }
 
     [Fact]
+    public async Task Search_WhenOptionalRepeatingFieldIsMissing_OmitsNullProperty()
+    {
+        await using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
+
+        using var response = await GetJson(
+            client,
+            $"{PatientSearchPath}?given=Jakub&family=Stedos&birthdate=eq2016-08-30"
+        );
+
+        Assert.False(GetOnlyPatient(response).TryGetProperty("telecom", out _));
+    }
+
+    [Fact]
     public async Task Search_WithRepeatedGivenNames_RequiresEveryGivenName()
     {
         await using var factory = new WebApplicationFactory<Program>();

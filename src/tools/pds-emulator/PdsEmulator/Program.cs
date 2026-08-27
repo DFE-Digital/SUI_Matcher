@@ -1,8 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 using PdsEmulator;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+);
 
 // Add context/datastore
 builder.Services.AddSingleton(
