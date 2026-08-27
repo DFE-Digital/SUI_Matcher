@@ -26,9 +26,19 @@ var secrets = builder.ExecutionContext.IsPublishMode
         )
     : builder.AddConnectionString("secrets");
 
+var pdsEmulator = builder.AddProject<Projects.PdsEmulator>("pds-emulator");
+
 var externalApi = builder
     .AddProject<Projects.External>("external-api")
     .WithReference(secrets)
+    .WithEnvironment(ctx =>
+    {
+        ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_FHIR_ENDPOINT"] =
+            $"{pdsEmulator.GetEndpoint("http").Url}/personal-demographics/FHIR/R4/";
+        ctx.EnvironmentVariables["NhsAuthConfig:NHS_DIGITAL_TOKEN_URL"] =
+            $"{pdsEmulator.GetEndpoint("http").Url}/oauth2/token";
+    })
+    .WaitFor(pdsEmulator)
     .WithUrlForEndpoint(
         "http",
         ep => new ResourceUrlAnnotation { Url = "/swagger", DisplayText = "Swagger UI" }
