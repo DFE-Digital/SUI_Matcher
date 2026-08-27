@@ -165,7 +165,7 @@ catch (OperationCanceledException e) when (lifetime.ApplicationStopping.IsCancel
 }
 catch (Exception e)
 {
-    logger.LogError(e, "GraphQL job failed." + e.Message);
+    logger.LogError(e, "GraphQL job failed.");
     Environment.ExitCode = 1;
 }
 finally
