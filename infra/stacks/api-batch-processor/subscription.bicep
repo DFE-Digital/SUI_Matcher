@@ -47,6 +47,10 @@ param matchingApiImageTag string = 'latest'
 @description('Container image tag for the external API')
 param externalApiImageTag string = 'latest'
 
+@minLength(1)
+@description('Container image tag for the PDS Emulator')
+param pdsEmulatorImageTag string = 'latest'
+
 @allowed([
   'automatic'
   'manual'
@@ -121,6 +125,7 @@ module stackDeployment 'main.bicep' = {
     graphqlProcessJobImageTag: graphqlProcessJobImageTag
     matchingApiImageTag: matchingApiImageTag
     externalApiImageTag: externalApiImageTag
+    pdsEmulatorImageTag: pdsEmulatorImageTag
     deploymentMode: deploymentMode
     cronExpression: cronExpression
     includeRoleAssignments: includeRoleAssignments
@@ -164,3 +169,5 @@ output MATCHING_API_NAME string = stackDeployment.outputs.MATCHING_API_NAME
 output MATCHING_API_ID string = stackDeployment.outputs.MATCHING_API_ID
 output EXTERNAL_API_NAME string = stackDeployment.outputs.EXTERNAL_API_NAME
 output EXTERNAL_API_ID string = stackDeployment.outputs.EXTERNAL_API_ID
+output PDS_EMULATOR_NAME string = stackDeployment.outputs.PDS_EMULATOR_NAME
+output PDS_EMULATOR_ID string = stackDeployment.outputs.PDS_EMULATOR_ID

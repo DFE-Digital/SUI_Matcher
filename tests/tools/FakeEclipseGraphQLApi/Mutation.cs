@@ -27,6 +27,7 @@ public class Mutation
             PropertyNameCaseInsensitive = true,
             WriteIndented = true
         };
+        options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         var response = JsonSerializer.Deserialize<PersonResults>(json, options);
 
         if (response == null || response.Results == null)

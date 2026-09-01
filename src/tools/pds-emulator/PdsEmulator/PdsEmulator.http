@@ -1,0 +1,29 @@
+@PdsEmulator_HostAddress = http://localhost:5054
+
+### Get Token
+POST {{PdsEmulator_HostAddress}}/oauth2/token
+Accept: application/json
+
+### Health Check
+GET {{PdsEmulator_HostAddress}}/health
+Accept: application/json
+
+### Get Patient by ID (Existing Record)
+GET {{PdsEmulator_HostAddress}}/personal-demographics/FHIR/R4/Patient/9691292211
+Accept: application/json
+
+### Get Patient by ID (Record added from GraphQL Temp)
+GET {{PdsEmulator_HostAddress}}/personal-demographics/FHIR/R4/Patient/9000000025
+Accept: application/json
+
+### Get Patient by ID (Error test case)
+GET {{PdsEmulator_HostAddress}}/personal-demographics/FHIR/R4/Patient/9000000012
+Accept: application/json
+
+### Search Patient by Demographics
+GET {{PdsEmulator_HostAddress}}/personal-demographics/FHIR/R4/Patient?given=octavia&family=chislett&birthdate=eq2008-09-20
+Accept: application/json
+
+### Search Patient by Demographics (GraphQL Record)
+GET {{PdsEmulator_HostAddress}}/personal-demographics/FHIR/R4/Patient?given=jakub&family=stedos&birthdate=eq2016-08-30
+Accept: application/json
