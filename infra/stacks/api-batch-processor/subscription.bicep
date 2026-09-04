@@ -51,6 +51,9 @@ param externalApiImageTag string = 'latest'
 @description('Container image tag for the PDS Emulator')
 param pdsEmulatorImageTag string = 'latest'
 
+@description('Toggle to use the PDS Emulator in the stack.')
+param usePdsEmulator bool = false
+
 @allowed([
   'automatic'
   'manual'
@@ -126,6 +129,7 @@ module stackDeployment 'main.bicep' = {
     matchingApiImageTag: matchingApiImageTag
     externalApiImageTag: externalApiImageTag
     pdsEmulatorImageTag: pdsEmulatorImageTag
+    usePdsEmulator: usePdsEmulator
     deploymentMode: deploymentMode
     cronExpression: cronExpression
     includeRoleAssignments: includeRoleAssignments
