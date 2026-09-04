@@ -91,7 +91,7 @@ inputs:
   use_pds_emulator:
     description: "Toggle to use the PDS Emulator in the stack"
     required: false
-    default: "false"
+    default: ""
   ods_code:
     description: "Optional ODS code sent with PDS FHIR requests"
     required: false
