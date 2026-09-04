@@ -96,3 +96,5 @@ resource pdsEmulator 'Microsoft.App/containerApps@2024-10-02-preview' = {
 
 output name string = pdsEmulator.name
 output id string = pdsEmulator.id
+output tokenUrl string = 'https://${pdsEmulator.properties.configuration.ingress.fqdn}/oauth2/token'
+output fhirEndpoint string = 'https://${pdsEmulator.properties.configuration.ingress.fqdn}/personal-demographics/FHIR/R4/'

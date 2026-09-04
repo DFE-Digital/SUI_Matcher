@@ -88,6 +88,10 @@ inputs:
     description: "Optional PDS emulator image tag"
     required: false
     default: ""
+  use_pds_emulator:
+    description: "Toggle to use the PDS Emulator in the stack"
+    required: false
+    default: ""
   ods_code:
     description: "Optional ODS code sent with PDS FHIR requests"
     required: false
@@ -254,6 +258,10 @@ runs:
 
         if [ -n "${{ inputs.pds_emulator_image_tag }}" ]; then
           PARAMETERS+=("pdsEmulatorImageTag=${{ inputs.pds_emulator_image_tag }}")
+        fi
+
+        if [ -n "${{ inputs.use_pds_emulator }}" ]; then
+          PARAMETERS+=("usePdsEmulator=${{ inputs.use_pds_emulator }}")
         fi
 
         if [ -n "${{ inputs.ods_code }}" ]; then

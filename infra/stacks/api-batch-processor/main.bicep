@@ -84,7 +84,8 @@ param graphqlProcessJobConfiguration object
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'abp'
 var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
-var usePdsEmulator = !isProductionEnvironment
+@description('Toggle to use the PDS Emulator in the stack.')
+param usePdsEmulator bool = false
 var defaultNhsFqdns = isProductionEnvironment ? [
   'api.service.nhs.uk'
 ] : [
@@ -92,7 +93,6 @@ var defaultNhsFqdns = isProductionEnvironment ? [
 ]
 var allowedNhsFqdns = concat(defaultNhsFqdns, allowedGraphQLFqdns)
 var effectiveTagEnvironmentName = empty(tagEnvironmentName) ? environmentName : tagEnvironmentName
-var pdsEmulatorBaseAddress = 'https://pds-emulator.internal.${containerAppEnvironment.outputs.defaultDomain}'
 
 var baseTags = {
   'azd-env-name': environmentName
@@ -295,8 +295,8 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
     tags: tags
     includeRoleAssignments: includeRoleAssignments
     odsCode: odsCode
-    nhsDigitalTokenUrl: usePdsEmulator ? '${pdsEmulatorBaseAddress}/oauth2/token' : ''
-    nhsDigitalFhirEndpoint: usePdsEmulator ? '${pdsEmulatorBaseAddress}/personal-demographics/FHIR/R4/' : ''
+    nhsDigitalTokenUrl: usePdsEmulator ? (pdsEmulator.?outputs.?tokenUrl ?? '') : ''
+    nhsDigitalFhirEndpoint: usePdsEmulator ? (pdsEmulator.?outputs.?fhirEndpoint ?? '') : ''
   }
   dependsOn: [
     keyVaultPrivateEndpoint
