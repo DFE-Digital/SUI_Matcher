@@ -203,9 +203,8 @@ public class MatchingService(
             ExactMatch = model.ExactMatch,
         };
 
-        try
+        using (activityHashService.BeginQueryScope(SimpleQueryNameForNoLogic))
         {
-            activityHashService.StoreQueryName(SimpleQueryNameForNoLogic);
             var matchStatus = MatchStatus.Error;
             var searchResult = await nhsFhirClient.PerformSearch(query);
 
@@ -241,10 +240,6 @@ public class MatchingService(
                 String.Empty
             );
         }
-        finally
-        {
-            activityHashService.StoreQueryName(null);
-        }
     }
 
     private async Task<MatchResult2> MatchAsync(SearchSpecification model, ISearchStrategy strategy)
@@ -254,15 +249,13 @@ public class MatchingService(
         MatchResult2? firstMatchedQueryResult = null;
         MatchResult2? logicalManyMatch = null;
 
-        try
+        foreach (var queryEntry in queries)
         {
-            foreach (var queryEntry in queries)
+            var queryCode = queryEntry.Key;
+            var query = queryEntry.Value;
+
+            using (activityHashService.BeginQueryScope(queryCode))
             {
-                var queryCode = queryEntry.Key;
-                var query = queryEntry.Value;
-
-                activityHashService.StoreQueryName(queryCode);
-
                 logger.LogInformation(
                     "Performing search query ({Query}) against Nhs Fhir API",
                     queryCode
@@ -327,50 +320,46 @@ public class MatchingService(
                     );
                 }
             }
-
-            // Logical many match takes precedence over any other match result due to it finding 2 confident matches with different Ids.
-            if (logicalManyMatch is not null)
-            {
-                return logicalManyMatch;
-            }
-
-            // Match
-            if (firstMatchedQueryResult != null)
-            {
-                logger.LogInformation(
-                    "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
-                    firstMatchedQueryResult.ProcessStage,
-                    firstMatchedQueryResult.Status.ToString(),
-                    firstMatchedQueryResult.Score
-                );
-                return firstMatchedQueryResult;
-            }
-
-            // Next best match that is not a 'Match'
-            if (bestQueryResult.CurrentSearchResult != null)
-            {
-                logger.LogInformation(
-                    "Search query ({Query}) resulted in status '{Status}'",
-                    bestQueryResult.CurrentQueryCode,
-                    bestQueryResult.CurrentStatus
-                );
-
-                return new MatchResult2(
-                    bestQueryResult.CurrentSearchResult,
-                    bestQueryResult.CurrentStatus,
-                    bestQueryResult.CurrentScore,
-                    bestQueryResult.CurrentQueryCode
-                );
-            }
-
-            logger.LogInformation("Search algorithm resulted in status 'NoMatch'");
-
-            return new MatchResult2(MatchStatus.NoMatch);
         }
-        finally
+
+        // Logical many match takes precedence over any other match result due to it finding 2 confident matches with different Ids.
+        if (logicalManyMatch is not null)
         {
-            activityHashService.StoreQueryName(null);
+            return logicalManyMatch;
         }
+
+        // Match
+        if (firstMatchedQueryResult != null)
+        {
+            logger.LogInformation(
+                "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
+                firstMatchedQueryResult.ProcessStage,
+                firstMatchedQueryResult.Status.ToString(),
+                firstMatchedQueryResult.Score
+            );
+            return firstMatchedQueryResult;
+        }
+
+        // Next best match that is not a 'Match'
+        if (bestQueryResult.CurrentSearchResult != null)
+        {
+            logger.LogInformation(
+                "Search query ({Query}) resulted in status '{Status}'",
+                bestQueryResult.CurrentQueryCode,
+                bestQueryResult.CurrentStatus
+            );
+
+            return new MatchResult2(
+                bestQueryResult.CurrentSearchResult,
+                bestQueryResult.CurrentStatus,
+                bestQueryResult.CurrentScore,
+                bestQueryResult.CurrentQueryCode
+            );
+        }
+
+        logger.LogInformation("Search algorithm resulted in status 'NoMatch'");
+
+        return new MatchResult2(MatchStatus.NoMatch);
     }
 
     private void LogLogicalMultiMatch(
