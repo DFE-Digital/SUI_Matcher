@@ -7,6 +7,7 @@ using Shared;
 using Shared.Endpoint;
 using Shared.Models;
 using Shared.Services;
+using Unit.Tests.SharedTests.ServiceTests.ActivityHashServiceTests;
 
 namespace Unit.Tests.Matching;
 
@@ -576,6 +577,8 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task Should_StoreQueryName_When_ExecutingQueries()
     {
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
         var model = new SearchSpecification
         {
             BirthDate = new DateOnly(2000, 11, 16),
@@ -603,6 +606,8 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task Should_StoreSimpleQueryName_When_ExecutingNoLogicSearch()
     {
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
         _nhsFhirClient
             .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
             .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.Unmatched });
@@ -627,6 +632,8 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task Should_CleanUpQueryNameScope_When_PerformSearchThrowsException()
     {
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
         var model = new SearchSpecification
         {
             BirthDate = new DateOnly(2000, 11, 16),
@@ -648,6 +655,8 @@ public sealed class MatchingServiceTests
     [Fact]
     public async Task Should_ScopeQueryNameOnlyDuringQueryExecution_When_MatchFound()
     {
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
         var model = new SearchSpecification
         {
             BirthDate = new DateOnly(2000, 11, 16),
