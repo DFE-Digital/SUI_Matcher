@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Shared.Models;
 using Shared.Util;
 
@@ -10,11 +11,12 @@ public interface IActivityHashService
     string? GetUniqueSearchId();
     void StoreAlgorithmVersion(int versionNumber);
     void StoreSearchStrategy(string searchStrategy);
+    void StoreQueryName(string? queryName);
     string StoreUniqueSearchIdFor(MatchPersonResult personSpecification);
     string StoreUniqueSearchIdFor(PersonSpecification personSpecification);
 }
 
-public class ActivityHashService : IActivityHashService
+public class ActivityHashService(ILogger<ActivityHashService> logger) : IActivityHashService
 {
     public string? GetUniqueSearchId()
     {
@@ -29,6 +31,45 @@ public class ActivityHashService : IActivityHashService
     public void StoreSearchStrategy(string searchStrategy)
     {
         Activity.Current?.SetBaggage(SharedConstants.SearchStrategy.LogName, searchStrategy);
+    }
+
+    public void StoreQueryName(string? queryName)
+    {
+        var activity = Activity.Current;
+        if (activity is null)
+        {
+            return;
+        }
+
+        var value = string.IsNullOrWhiteSpace(queryName) ? null : queryName;
+
+        try
+        {
+            activity.SetBaggage(SharedConstants.SearchQuery.LogName, value);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Exception when storing query name '{QueryName}' in Activity baggage. Clearing query name to avoid attributing subsequent logs to the wrong query.",
+                queryName
+            );
+
+            // Ensure a failed update never leaves a stale/previous query name in baggage,
+            // which would misattribute later log entries to the wrong query.
+            try
+            {
+                activity.SetBaggage(SharedConstants.SearchQuery.LogName, null);
+            }
+            catch (Exception clearEx)
+            {
+                // Highly unlikely this will happen but covered just in case
+                logger.LogWarning(
+                    clearEx,
+                    "Exception when clearing query name in Activity baggage after a failed update."
+                );
+            }
+        }
     }
 
     public string StoreUniqueSearchIdFor(MatchPersonResult personSpecification)
