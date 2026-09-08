@@ -1,5 +1,6 @@
 using System.Diagnostics;
-
+using Microsoft.Extensions.Logging;
+using Moq;
 using Shared.Models;
 using Shared.Services;
 
@@ -7,7 +8,7 @@ namespace Unit.Tests.SharedTests.ServiceTests.ActivityHashServiceTests;
 
 public sealed class ActivityHashServiceTestHarness
 {
-    public ActivityHashService Service { get; } = new();
+    public ActivityHashService Service { get; } = new(Mock.Of<ILogger<ActivityHashService>>());
 
     public static ActivityTestScope StartActivity() => ActivityTestScope.Start();
 

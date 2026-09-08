@@ -1,4 +1,4 @@
-﻿using MatchingApi.Search;
+using MatchingApi.Search;
 using MatchingApi.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -574,9 +574,60 @@ public sealed class MatchingServiceTests
         Assert.Equal(MatchStatus.ManyMatch, result.Result!.MatchStatus);
     }
 
+    [Fact]
+    public async Task Should_StoreQueryName_When_ExecutingQueries()
+    {
+        var model = new SearchSpecification
+        {
+            BirthDate = new DateOnly(2000, 11, 16),
+            Family = "Smith",
+            Given = "John",
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy4,
+            StrategyVersion = 2,
+        };
+
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.Unmatched });
+
+        await _sut.SearchAsync(model);
+
+        // Strategy4 version 2 builds these queries, in order, via SearchQueryBuilder
+        _activityHashService.Verify(x => x.StoreQueryName("NonFuzzyGFD"), Times.Once);
+        _activityHashService.Verify(x => x.StoreQueryName("FuzzyGFD"), Times.Once);
+        _activityHashService.Verify(x => x.StoreQueryName("FuzzyAll"), Times.Once);
+        _activityHashService.Verify(x => x.StoreQueryName("NonFuzzyGFDRangePostcode"), Times.Once);
+        _activityHashService.Verify(x => x.StoreQueryName("FuzzyGFDRangePostcode"), Times.Once);
+        _activityHashService.Verify(x => x.StoreQueryName(null), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task Should_StoreSimpleQueryName_When_ExecutingNoLogicSearch()
+    {
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.Unmatched });
+
+        var model = new PersonSpecificationForNoLogic
+        {
+            AddressPostalCode = "TQ12 5HH",
+            RawBirthDate = ["eq2000-11-11"],
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        await _sut.SearchNoLogicAsync(model);
+
+        _activityHashService.Verify(x => x.StoreQueryName("SimpleQuery"), Times.Once);
+        _activityHashService.Verify(x => x.StoreQueryName(null), Times.Once);
+    }
+
     private void ConfigureActivityHashService()
     {
-        var activityHashService = new ActivityHashService();
+        var activityHashService = new ActivityHashService(Mock.Of<ILogger<ActivityHashService>>());
 
         _activityHashService
             .Setup(x => x.StoreUniqueSearchIdFor(It.IsAny<PersonSpecification>()))
@@ -603,5 +654,9 @@ public sealed class MatchingServiceTests
         _activityHashService
             .Setup(x => x.StoreSearchStrategy(It.IsAny<string>()))
             .Callback<string>(activityHashService.StoreSearchStrategy);
+
+        _activityHashService
+            .Setup(x => x.StoreQueryName(It.IsAny<string>()))
+            .Callback<string?>(activityHashService.StoreQueryName);
     }
 }

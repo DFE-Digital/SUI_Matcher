@@ -1,4 +1,4 @@
-﻿using MatchingApi.Search;
+using MatchingApi.Search;
 using Newtonsoft.Json;
 using Shared.Endpoint;
 using Shared.Models;
@@ -15,6 +15,8 @@ public class MatchingService(
     IActivityHashService activityHashService
 ) : IMatchingService
 {
+    private const string SimpleQueryNameForNoLogic = "SimpleQuery";
+
     public async Task<PersonMatchResponse> SearchAsync(
         SearchSpecification searchSpecification,
         bool logMatch = true
@@ -201,40 +203,48 @@ public class MatchingService(
             ExactMatch = model.ExactMatch,
         };
 
-        var matchStatus = MatchStatus.Error;
-        var searchResult = await nhsFhirClient.PerformSearch(query);
-
-        if (searchResult == null)
+        try
         {
-            return new MatchResult2(MatchStatus.Error);
+            activityHashService.StoreQueryName(SimpleQueryNameForNoLogic);
+            var matchStatus = MatchStatus.Error;
+            var searchResult = await nhsFhirClient.PerformSearch(query);
+
+            if (searchResult == null)
+            {
+                return new MatchResult2(MatchStatus.Error);
+            }
+
+            logger.LogInformation(
+                "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
+                SimpleQueryNameForNoLogic,
+                searchResult.Type,
+                searchResult.Score
+            );
+
+            switch (searchResult.Type)
+            {
+                case SearchResult.ResultType.Matched:
+                    matchStatus = MatchStatus.Match;
+                    break;
+                case SearchResult.ResultType.MultiMatched:
+                    matchStatus = MatchStatus.ManyMatch;
+                    break;
+                case SearchResult.ResultType.Unmatched:
+                    matchStatus = MatchStatus.NoMatch;
+                    break;
+            }
+
+            return new MatchResult2(
+                searchResult,
+                matchStatus,
+                searchResult.Score.GetValueOrDefault(),
+                String.Empty
+            );
         }
-
-        logger.LogInformation(
-            "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
-            "SimpleQuery",
-            searchResult.Type,
-            searchResult.Score
-        );
-
-        switch (searchResult.Type)
+        finally
         {
-            case SearchResult.ResultType.Matched:
-                matchStatus = MatchStatus.Match;
-                break;
-            case SearchResult.ResultType.MultiMatched:
-                matchStatus = MatchStatus.ManyMatch;
-                break;
-            case SearchResult.ResultType.Unmatched:
-                matchStatus = MatchStatus.NoMatch;
-                break;
+            activityHashService.StoreQueryName(null);
         }
-
-        return new MatchResult2(
-            searchResult,
-            matchStatus,
-            searchResult.Score.GetValueOrDefault(),
-            String.Empty
-        );
     }
 
     private async Task<MatchResult2> MatchAsync(SearchSpecification model, ISearchStrategy strategy)
@@ -244,113 +254,123 @@ public class MatchingService(
         MatchResult2? firstMatchedQueryResult = null;
         MatchResult2? logicalManyMatch = null;
 
-        foreach (var queryEntry in queries)
+        try
         {
-            var queryCode = queryEntry.Key;
-            var query = queryEntry.Value;
-
-            logger.LogInformation(
-                "Performing search query ({Query}) against Nhs Fhir API",
-                queryCode
-            );
-
-            var searchResult = await nhsFhirClient.PerformSearch(query);
-            if (searchResult != null)
+            foreach (var queryEntry in queries)
             {
-                if (searchResult.Type == SearchResult.ResultType.Matched)
+                var queryCode = queryEntry.Key;
+                var query = queryEntry.Value;
+
+                activityHashService.StoreQueryName(queryCode);
+
+                logger.LogInformation(
+                    "Performing search query ({Query}) against Nhs Fhir API",
+                    queryCode
+                );
+
+                var searchResult = await nhsFhirClient.PerformSearch(query);
+                if (searchResult != null)
                 {
-                    var score = searchResult.Score.GetValueOrDefault();
-                    var status = GetMatchStatusFromScore(score);
-
-                    bestQueryResult = UpdateSingleMatchBestQueryResult(
-                        searchResult,
-                        bestQueryResult,
-                        queryCode,
-                        score,
-                        status
-                    );
-
-                    if (score >= 0.95m)
+                    if (searchResult.Type == SearchResult.ResultType.Matched)
                     {
-                        if (firstMatchedQueryResult == null)
-                        {
-                            firstMatchedQueryResult = new MatchResult2(
-                                searchResult,
-                                status,
-                                score,
-                                queryCode
-                            );
-                        }
-                        else // Multiple high confidence matches found
-                        {
-                            // we need to check if the NHS number is the same as the first match to determine if this is a logical multi match or not
-                            var nhsNumberIsDifferent =
-                                searchResult.NhsNumber != firstMatchedQueryResult.Result?.NhsNumber;
-                            LogLogicalMultiMatch(
-                                queryCode,
-                                searchResult.Score,
-                                firstMatchedQueryResult.Score,
-                                nhsNumberIsDifferent
-                            );
+                        var score = searchResult.Score.GetValueOrDefault();
+                        var status = GetMatchStatusFromScore(score);
 
-                            if (nhsNumberIsDifferent)
+                        bestQueryResult = UpdateSingleMatchBestQueryResult(
+                            searchResult,
+                            bestQueryResult,
+                            queryCode,
+                            score,
+                            status
+                        );
+
+                        if (score >= 0.95m)
+                        {
+                            if (firstMatchedQueryResult == null)
                             {
-                                // Taking the latest match result as we do not support returning many. Logs can determine other details.
-                                logicalManyMatch = new MatchResult2(
-                                    MatchStatus.ManyMatch,
+                                firstMatchedQueryResult = new MatchResult2(
+                                    searchResult,
+                                    status,
+                                    score,
                                     queryCode
                                 );
                             }
+                            else // Multiple high confidence matches found
+                            {
+                                // we need to check if the NHS number is the same as the first match to determine if this is a logical multi match or not
+                                var nhsNumberIsDifferent =
+                                    searchResult.NhsNumber
+                                    != firstMatchedQueryResult.Result?.NhsNumber;
+                                LogLogicalMultiMatch(
+                                    queryCode,
+                                    searchResult.Score,
+                                    firstMatchedQueryResult.Score,
+                                    nhsNumberIsDifferent
+                                );
+
+                                if (nhsNumberIsDifferent)
+                                {
+                                    // Taking the latest match result as we do not support returning many. Logs can determine other details.
+                                    logicalManyMatch = new MatchResult2(
+                                        MatchStatus.ManyMatch,
+                                        queryCode
+                                    );
+                                }
+                            }
                         }
                     }
-                }
 
-                bestQueryResult = UpdateMultipleMatchBestQueryResult(
-                    searchResult,
-                    bestQueryResult,
-                    queryCode
+                    bestQueryResult = UpdateMultipleMatchBestQueryResult(
+                        searchResult,
+                        bestQueryResult,
+                        queryCode
+                    );
+                }
+            }
+
+            // Logical many match takes precedence over any other match result due to it finding 2 confident matches with different Ids.
+            if (logicalManyMatch is not null)
+            {
+                return logicalManyMatch;
+            }
+
+            // Match
+            if (firstMatchedQueryResult != null)
+            {
+                logger.LogInformation(
+                    "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
+                    firstMatchedQueryResult.ProcessStage,
+                    firstMatchedQueryResult.Status.ToString(),
+                    firstMatchedQueryResult.Score
+                );
+                return firstMatchedQueryResult;
+            }
+
+            // Next best match that is not a 'Match'
+            if (bestQueryResult.CurrentSearchResult != null)
+            {
+                logger.LogInformation(
+                    "Search query ({Query}) resulted in status '{Status}'",
+                    bestQueryResult.CurrentQueryCode,
+                    bestQueryResult.CurrentStatus
+                );
+
+                return new MatchResult2(
+                    bestQueryResult.CurrentSearchResult,
+                    bestQueryResult.CurrentStatus,
+                    bestQueryResult.CurrentScore,
+                    bestQueryResult.CurrentQueryCode
                 );
             }
-        }
 
-        // Logical many match takes precedence over any other match result due to it finding 2 confident matches with different Ids.
-        if (logicalManyMatch is not null)
+            logger.LogInformation("Search algorithm resulted in status 'NoMatch'");
+
+            return new MatchResult2(MatchStatus.NoMatch);
+        }
+        finally
         {
-            return logicalManyMatch;
+            activityHashService.StoreQueryName(null);
         }
-
-        // Match
-        if (firstMatchedQueryResult != null)
-        {
-            logger.LogInformation(
-                "Search query ({Query}) resulted in status '{Status}' and confidence score '{Score}'",
-                firstMatchedQueryResult.ProcessStage,
-                firstMatchedQueryResult.Status.ToString(),
-                firstMatchedQueryResult.Score
-            );
-            return firstMatchedQueryResult;
-        }
-
-        // Next best match that is not a 'Match'
-        if (bestQueryResult.CurrentSearchResult != null)
-        {
-            logger.LogInformation(
-                "Search query ({Query}) resulted in status '{Status}'",
-                bestQueryResult.CurrentQueryCode,
-                bestQueryResult.CurrentStatus
-            );
-
-            return new MatchResult2(
-                bestQueryResult.CurrentSearchResult,
-                bestQueryResult.CurrentStatus,
-                bestQueryResult.CurrentScore,
-                bestQueryResult.CurrentQueryCode
-            );
-        }
-
-        logger.LogInformation("Search algorithm resulted in status 'NoMatch'");
-
-        return new MatchResult2(MatchStatus.NoMatch);
     }
 
     private void LogLogicalMultiMatch(
