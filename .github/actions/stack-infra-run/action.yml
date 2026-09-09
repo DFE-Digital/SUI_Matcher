@@ -132,6 +132,10 @@ inputs:
     description: "Optional cron expression for scheduled runs"
     required: false
     default: ""
+  filter_by_worklist_definition_id:
+    description: "Optional toggle to filter by worklist definition ID in the GraphQL process job"
+    required: false
+    default: ""
   graphql_process_job_configuration:
     description: "Optional JSON object containing protected GraphQL process job runtime configuration"
     required: false
@@ -236,6 +240,10 @@ runs:
 
         if [ -n "${{ inputs.cron_expression }}" ]; then
           PARAMETERS+=("cronExpression=${{ inputs.cron_expression }}")
+        fi
+
+        if [ -n "${{ inputs.filter_by_worklist_definition_id }}" ]; then
+          PARAMETERS+=("filterByWorklistDefinitionId=${{ inputs.filter_by_worklist_definition_id }}")
         fi
 
         if [ -n "${GRAPHQL_PROCESS_JOB_CONFIGURATION}" ]; then

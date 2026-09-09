@@ -13,6 +13,7 @@ public sealed class GraphQlProcessJobOptions
     public bool UseAuth { get; init; }
     public string? MatchApiBaseAddress { get; set; }
     public string? KnownSafeguardingConcernWorklistDefinitionId { get; init; }
+    public bool FilterByWorklistDefinitionId { get; init; }
     public string ProcessingMode { get; init; } = ProcessingModes.Matching;
 }
 

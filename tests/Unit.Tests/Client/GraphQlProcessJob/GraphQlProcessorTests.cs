@@ -1143,7 +1143,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldSkipRecord_WhenSafeguardingConcernIdDoesNotMatch()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId, FilterByWorklistDefinitionId = true });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
@@ -1204,7 +1204,7 @@ public class GraphQlProcessorTests
     public async Task RunAsync_ShouldSkipRecord_WhenNoSafeguardingConcernIsAssigned()
     {
         // Arrange
-        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId });
+        var options = Options.Create(new GraphQlProcessJobOptions { MaxAge = 17, KnownSafeguardingConcernWorklistDefinitionId = SafeguardingConcernId, FilterByWorklistDefinitionId = true });
         var sut = new GraphQlProcessor(
             _loggerMock.Object,
             _eclipseClientMock.Object,
