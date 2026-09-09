@@ -49,6 +49,9 @@ param deploymentMode string = 'manual'
 @description('The cron expression for the scheduled trigger when deploymentMode is automatic')
 param cronExpression string = '0 9,12,15 * * 1-5'
 
+@description('Toggle to filter by worklist definition ID in the GraphQL process job')
+param filterByWorklistDefinitionId bool = false
+
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
@@ -181,6 +184,10 @@ resource graphqlProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
               {
                 name: 'GraphQLProcessJob__KnownSafeguardingConcernWorklistDefinitionId'
                 secretRef: 'graphql-safeguarding-id'
+              }
+              {
+                name: 'GraphQLProcessJob__FilterByWorklistDefinitionId'
+                value: string(filterByWorklistDefinitionId)
               }
             ],
             graphqlProcessJobConfigurationEnvironment
