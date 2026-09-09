@@ -10,6 +10,8 @@ public interface IActivityHashService
     string? GetUniqueSearchId();
     void StoreAlgorithmVersion(int versionNumber);
     void StoreSearchStrategy(string searchStrategy);
+    void StoreQueryName(string? queryName);
+    IDisposable BeginQueryScope(string? queryName);
     string StoreUniqueSearchIdFor(MatchPersonResult personSpecification);
     string StoreUniqueSearchIdFor(PersonSpecification personSpecification);
 }
@@ -29,6 +31,22 @@ public class ActivityHashService : IActivityHashService
     public void StoreSearchStrategy(string searchStrategy)
     {
         Activity.Current?.SetBaggage(SharedConstants.SearchStrategy.LogName, searchStrategy);
+    }
+
+    public void StoreQueryName(string? queryName)
+    {
+        SetQueryNameOn(Activity.Current, queryName);
+    }
+
+    public IDisposable BeginQueryScope(string? queryName)
+    {
+        // Capture the activity and its current query name so the scope restores exactly what it
+        // replaced, on the activity it actually changed, even when scopes nest.
+        var activity = Activity.Current;
+        var previousQueryName = activity?.GetBaggageItem(SharedConstants.SearchQuery.LogName);
+
+        SetQueryNameOn(activity, queryName);
+        return new QueryScope(() => SetQueryNameOn(activity, previousQueryName));
     }
 
     public string StoreUniqueSearchIdFor(MatchPersonResult personSpecification)
@@ -59,6 +77,12 @@ public class ActivityHashService : IActivityHashService
 
         Activity.Current?.SetBaggage("SearchId", hash);
         return hash;
+    }
+
+    private static void SetQueryNameOn(Activity? activity, string? queryName)
+    {
+        var value = string.IsNullOrWhiteSpace(queryName) ? null : queryName;
+        activity?.SetBaggage(SharedConstants.SearchQuery.LogName, value);
     }
 
     private static string FormatGender(string inputGender)
@@ -119,5 +143,10 @@ public class ActivityHashService : IActivityHashService
     )
     {
         return $"{given}{family}{birthDate}{gender}{postalCode}";
+    }
+
+    private sealed class QueryScope(Action onDispose) : IDisposable
+    {
+        public void Dispose() => onDispose();
     }
 }

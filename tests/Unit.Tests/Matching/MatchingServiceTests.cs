@@ -1,13 +1,13 @@
-﻿using MatchingApi.Search;
+using System.Diagnostics;
 using MatchingApi.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json;
 using Shared;
 using Shared.Endpoint;
-using Shared.Logging;
 using Shared.Models;
 using Shared.Services;
+using Unit.Tests.SharedTests.ServiceTests.ActivityHashServiceTests;
 
 namespace Unit.Tests.Matching;
 
@@ -574,6 +574,117 @@ public sealed class MatchingServiceTests
         Assert.Equal(MatchStatus.ManyMatch, result.Result!.MatchStatus);
     }
 
+    [Fact]
+    public async Task Should_StoreQueryName_When_ExecutingQueries()
+    {
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
+        var model = new SearchSpecification
+        {
+            BirthDate = new DateOnly(2000, 11, 16),
+            Family = "Smith",
+            Given = "John",
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy4,
+            StrategyVersion = 2,
+        };
+
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.Unmatched });
+
+        await _sut.SearchAsync(model);
+
+        // Strategy4 version 2 builds these queries, in order, via SearchQueryBuilder
+        _activityHashService.Verify(x => x.BeginQueryScope("NonFuzzyGFD"), Times.Once);
+        _activityHashService.Verify(x => x.BeginQueryScope("FuzzyGFD"), Times.Once);
+        _activityHashService.Verify(x => x.BeginQueryScope("FuzzyAll"), Times.Once);
+        _activityHashService.Verify(x => x.BeginQueryScope("NonFuzzyGFDRangePostcode"), Times.Once);
+        _activityHashService.Verify(x => x.BeginQueryScope("FuzzyGFDRangePostcode"), Times.Once);
+        Assert.Null(Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName));
+    }
+
+    [Fact]
+    public async Task Should_StoreSimpleQueryName_When_ExecutingNoLogicSearch()
+    {
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(new SearchResult { Type = SearchResult.ResultType.Unmatched });
+
+        var model = new PersonSpecificationForNoLogic
+        {
+            AddressPostalCode = "TQ12 5HH",
+            RawBirthDate = ["eq2000-11-11"],
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        await _sut.SearchNoLogicAsync(model);
+
+        _activityHashService.Verify(x => x.BeginQueryScope("SimpleQuery"), Times.Once);
+        Assert.Null(Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName));
+    }
+
+    [Fact]
+    public async Task Should_CleanUpQueryNameScope_When_PerformSearchThrowsException()
+    {
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
+        var model = new SearchSpecification
+        {
+            BirthDate = new DateOnly(2000, 11, 16),
+            Family = "Smith",
+            Given = "John",
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy4,
+            StrategyVersion = 2,
+        };
+
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ThrowsAsync(new HttpRequestException("Network failure"));
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => _sut.SearchAsync(model));
+
+        Assert.Null(Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName));
+    }
+
+    [Fact]
+    public async Task Should_ScopeQueryNameOnlyDuringQueryExecution_When_MatchFound()
+    {
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
+        var model = new SearchSpecification
+        {
+            BirthDate = new DateOnly(2000, 11, 16),
+            Family = "Smith",
+            Given = "John",
+            SearchStrategy = SharedConstants.SearchStrategy.Strategies.Strategy4,
+            StrategyVersion = 2,
+        };
+
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(
+                new SearchResult
+                {
+                    Type = SearchResult.ResultType.Matched,
+                    Score = 0.98m,
+                    NhsNumber = "9999999999",
+                }
+            );
+
+        var result = await _sut.SearchAsync(model);
+
+        Assert.Equal(MatchStatus.Match, result.Result!.MatchStatus);
+        // NonFuzzyGFD is only scoped during query execution, not during post-search logging
+        _activityHashService.Verify(x => x.BeginQueryScope("NonFuzzyGFD"), Times.Once);
+        Assert.Null(Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName));
+    }
+
     private void ConfigureActivityHashService()
     {
         var activityHashService = new ActivityHashService();
@@ -603,5 +714,13 @@ public sealed class MatchingServiceTests
         _activityHashService
             .Setup(x => x.StoreSearchStrategy(It.IsAny<string>()))
             .Callback<string>(activityHashService.StoreSearchStrategy);
+
+        _activityHashService
+            .Setup(x => x.StoreQueryName(It.IsAny<string>()))
+            .Callback<string?>(activityHashService.StoreQueryName);
+
+        _activityHashService
+            .Setup(x => x.BeginQueryScope(It.IsAny<string?>()))
+            .Returns<string?>(queryName => activityHashService.BeginQueryScope(queryName));
     }
 }
