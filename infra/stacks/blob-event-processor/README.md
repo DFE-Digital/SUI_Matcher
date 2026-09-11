@@ -25,6 +25,35 @@ It can also deploy into an existing resource group by setting:
 - `resourceGroupMode=existing`
 - `targetResourceGroupName=<existing-resource-group-name>`
 
+## Resource provider registration
+
+The target subscription must have the resource providers used by this stack registered before the first deployment. An unregistered provider fails the deployment with `MissingSubscriptionRegistration`.
+
+| Provider | Used for |
+| --- | --- |
+| `Microsoft.App` | Container Apps environment, container apps, and the storage process ACA job |
+| `Microsoft.EventGrid` | Event Grid system topic and blob-created subscription |
+| `Microsoft.OperationalInsights` | Log Analytics workspace and custom tables |
+| `Microsoft.Insights` | Application Insights, diagnostic settings, action groups, and alert rules |
+| `Microsoft.ContainerRegistry` | Stack container registry |
+| `Microsoft.KeyVault` | Secrets Key Vault |
+| `Microsoft.Storage` | Storage account, blob containers, and queues |
+| `Microsoft.Network` | VNets, subnets, route tables, peering, egress firewall, private endpoints, and private DNS |
+| `Microsoft.ManagedIdentity` | Shared user-assigned managed identity |
+
+`Microsoft.Resources` and `Microsoft.Authorization`, used for the resource group and role assignments, are registered on every subscription and do not need registering.
+
+You can view from this command or look in the portal at Subscriptions -> Settings -> Resource providers
+
+```bash
+az provider list \
+  --subscription <subscription-id> \
+  --query "[?namespace=='Microsoft.App' || namespace=='Microsoft.EventGrid' || namespace=='Microsoft.OperationalInsights' || namespace=='Microsoft.Insights' || namespace=='Microsoft.ContainerRegistry' || namespace=='Microsoft.KeyVault' || namespace=='Microsoft.Storage' || namespace=='Microsoft.Network' || namespace=='Microsoft.ManagedIdentity'].{provider:namespace, state:registrationState}" \
+  --output table
+```
+
+Registering a provider needs subscription-level permission. In restricted client subscriptions this is usually a subscription owner task to complete before the deployment runs.
+
 ## Storage modes
 
 The default storage mode is `storageAccountMode=create`. In this mode the stack creates the storage account, the blob/queue containers, and the blob/queue private endpoints and private DNS wiring.

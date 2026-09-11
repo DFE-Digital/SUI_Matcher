@@ -12,6 +12,9 @@ or the storage processor event job image.
 - Permission to deploy to the target Azure subscription and existing resource group.
 - Bash, WSL, or Git Bash for the examples below.
 - A clean checkout of the branch, tag, or commit you intend to deploy.
+- The resource providers used by the stack registered on the target subscription. See
+  [Resource provider registration](../../../infra/stacks/blob-event-processor/README.md#resource-provider-registration)
+  in the stack README for the provider list and the registration commands.
 
 ## Choose your task
 
