@@ -23,6 +23,23 @@ Supported deployment roots:
 - `infra/stacks/client-agent/main.bicep` is the full DfE-hosted test stack root
 - `infra/stacks/*/subscription.bicep` are the stack-owned resource-group entrypoints for the stack roots
 
+## Shared deployment configuration
+
+### ODS code
+
+`odsCode` is a cross-stack parameter for every stack that deploys the external API: currently `blob-event-processor` and
+`api-batch-processor`. It does not apply to `client-agent`, which does not deploy the external API.
+
+- When set, the stack surfaces it to the external API container app as the `NhsFhirConfig__OdsCode` environment
+  variable, and the external API sends it as the `NHSD-End-User-Organisation-ODS` header on PDS FHIR requests.
+- It defaults to an empty string. When empty, the environment variable is not added to the container app and no header
+  is sent. A missing value therefore deploys successfully and fails silently at runtime, so confirm the value is set for
+  the target environment rather than assuming the deployment applied it.
+- Workflow deployments read it from the `ODS_CODE` GitHub Actions *variable* (`vars.ODS_CODE`), not a secret. Set it at
+  repository or organisation level under Settings, then Secrets and variables, then Actions, then Variables.
+  `.github/actions/stack-infra-run` only appends `odsCode=` to the deployment parameters when the value is non-empty.
+- Direct deployments pass `odsCode=<value>` in the `--parameters` list.
+
 CI/CD:
 
 - `.github/workflows/gh-deploy-infra.yml` remains the existing `src/app-host/infra` infrastructure workflow and still drives the current `azd provision` path
