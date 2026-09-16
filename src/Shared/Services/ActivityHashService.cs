@@ -10,7 +10,6 @@ public interface IActivityHashService
     string? GetUniqueSearchId();
     void StoreAlgorithmVersion(int versionNumber);
     void StoreSearchStrategy(string searchStrategy);
-    void StoreQueryName(string? queryName);
     IDisposable BeginQueryScope(string? queryName);
     string StoreUniqueSearchIdFor(MatchPersonResult personSpecification);
     string StoreUniqueSearchIdFor(PersonSpecification personSpecification);
@@ -31,11 +30,6 @@ public class ActivityHashService : IActivityHashService
     public void StoreSearchStrategy(string searchStrategy)
     {
         Activity.Current?.SetBaggage(SharedConstants.SearchStrategy.LogName, searchStrategy);
-    }
-
-    public void StoreQueryName(string? queryName)
-    {
-        SetQueryNameOn(Activity.Current, queryName);
     }
 
     public IDisposable BeginQueryScope(string? queryName)

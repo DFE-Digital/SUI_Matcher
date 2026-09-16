@@ -575,7 +575,7 @@ public sealed class MatchingServiceTests
     }
 
     [Fact]
-    public async Task Should_StoreQueryName_When_ExecutingQueries()
+    public async Task Should_BeginQueryScopeForEachQuery_When_ExecutingQueries()
     {
         using var activityScope = ActivityHashServiceTestHarness.StartActivity();
 
@@ -714,10 +714,6 @@ public sealed class MatchingServiceTests
         _activityHashService
             .Setup(x => x.StoreSearchStrategy(It.IsAny<string>()))
             .Callback<string>(activityHashService.StoreSearchStrategy);
-
-        _activityHashService
-            .Setup(x => x.StoreQueryName(It.IsAny<string>()))
-            .Callback<string?>(activityHashService.StoreQueryName);
 
         _activityHashService
             .Setup(x => x.BeginQueryScope(It.IsAny<string?>()))

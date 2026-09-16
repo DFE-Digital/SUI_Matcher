@@ -3,37 +3,23 @@ using Shared;
 
 namespace Unit.Tests.SharedTests.ServiceTests.ActivityHashServiceTests;
 
-public class StoreQueryNameTests
+public class BeginQueryScopeTests
 {
     [Fact]
-    public void Should_SetBaggageItem_When_ActivityIsPresent()
+    public void Should_SetAndClearBaggage_When_UsingBeginQueryScope()
     {
         var harness = new ActivityHashServiceTestHarness();
 
         using var activityScope = ActivityHashServiceTestHarness.StartActivity();
 
-        harness.Service.StoreQueryName("Query1");
+        using (harness.Service.BeginQueryScope("ScopedQuery"))
+        {
+            Assert.Equal(
+                "ScopedQuery",
+                Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName)
+            );
+        }
 
-        Assert.Equal(
-            "Query1",
-            Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName)
-        );
-    }
-
-    [Fact]
-    public void Should_ClearBaggageItem_When_QueryNameIsNull()
-    {
-        var harness = new ActivityHashServiceTestHarness();
-
-        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
-
-        harness.Service.StoreQueryName("Query1");
-        Assert.Equal(
-            "Query1",
-            Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName)
-        );
-
-        harness.Service.StoreQueryName(null);
         Assert.Null(Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName));
     }
 
@@ -41,20 +27,41 @@ public class StoreQueryNameTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData("\t\n")]
-    public void Should_ClearBaggageItem_When_QueryNameIsEmptyOrWhitespace(string queryName)
+    public void Should_NotSetBaggage_When_QueryNameIsEmptyOrWhitespace(string queryName)
     {
         var harness = new ActivityHashServiceTestHarness();
 
         using var activityScope = ActivityHashServiceTestHarness.StartActivity();
 
-        harness.Service.StoreQueryName("Query1");
-        Assert.Equal(
-            "Query1",
-            Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName)
-        );
+        using (harness.Service.BeginQueryScope(queryName))
+        {
+            Assert.Null(Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName));
+        }
 
-        harness.Service.StoreQueryName(queryName);
         Assert.Null(Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName));
+    }
+
+    [Fact]
+    public void Should_ClearOuterQueryName_When_InnerQueryNameIsEmptyOrWhitespace()
+    {
+        var harness = new ActivityHashServiceTestHarness();
+
+        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
+
+        using (harness.Service.BeginQueryScope("OuterQuery"))
+        {
+            using (harness.Service.BeginQueryScope("   "))
+            {
+                Assert.Null(
+                    Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName)
+                );
+            }
+
+            Assert.Equal(
+                "OuterQuery",
+                Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName)
+            );
+        }
     }
 
     [Fact]
@@ -62,9 +69,6 @@ public class StoreQueryNameTests
     {
         var harness = new ActivityHashServiceTestHarness();
         Activity.Current = null;
-
-        var exception = Record.Exception(() => harness.Service.StoreQueryName("Query1"));
-        Assert.Null(exception);
 
         using (var scope = harness.Service.BeginQueryScope("Query1"))
         {
@@ -120,23 +124,5 @@ public class StoreQueryNameTests
         }
 
         Assert.Null(outerActivity.GetBaggageItem(SharedConstants.SearchQuery.LogName));
-    }
-
-    [Fact]
-    public void Should_SetAndClearBaggage_When_UsingBeginQueryScope()
-    {
-        var harness = new ActivityHashServiceTestHarness();
-
-        using var activityScope = ActivityHashServiceTestHarness.StartActivity();
-
-        using (harness.Service.BeginQueryScope("ScopedQuery"))
-        {
-            Assert.Equal(
-                "ScopedQuery",
-                Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName)
-            );
-        }
-
-        Assert.Null(Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName));
     }
 }
