@@ -1,5 +1,4 @@
 using System.Diagnostics;
-
 using Shared.Models;
 using Shared.Services;
 
@@ -51,7 +50,6 @@ public sealed class ActivityHashServiceTestHarness
     {
         private readonly ActivityListener _listener;
         private readonly ActivitySource _activitySource;
-        private readonly Activity _activity;
 
         private ActivityTestScope(
             ActivityListener listener,
@@ -61,8 +59,10 @@ public sealed class ActivityHashServiceTestHarness
         {
             _listener = listener;
             _activitySource = activitySource;
-            _activity = activity;
+            Activity = activity;
         }
+
+        public Activity Activity { get; }
 
         public static ActivityTestScope Start()
         {
@@ -83,8 +83,8 @@ public sealed class ActivityHashServiceTestHarness
 
         public void Dispose()
         {
-            _activity.Stop();
-            _activity.Dispose();
+            Activity.Stop();
+            Activity.Dispose();
             _activitySource.Dispose();
             _listener.Dispose();
         }
