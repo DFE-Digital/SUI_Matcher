@@ -77,6 +77,16 @@ Existing storage mode expects the storage account to already exist in the target
 
 Both storage modes create blob and queue private endpoints plus private DNS wiring for the configured storage account. In existing storage mode, the private endpoints target the supplied account.
 
+## Virtual network modes
+
+The default virtual network mode is `virtualNetworkMode=create`. In this mode the stack creates and updates the container app virtual network.
+
+Set `virtualNetworkMode=existing` to leave the virtual network untouched. The stack then skips the virtual network write and manages only its own subnets, so any configuration applied to the network outside this stack is preserved.
+
+Both modes resolve the same name from the stack naming convention, so existing mode reuses the virtual network that an earlier create-mode deployment made. That network must already exist in the target resource group, and `containerAppVnet` must match what is already deployed because the address space is no longer applied.
+
+This parameter is only exposed on `main.bicep`, alongside `deployEgressFirewall` and `clientFirewallIpAddress`, so it applies to resource-group scope deployments.
+
 ## Tag configuration
 
 The stack applies a common tag set to managed resources. Two optional parameters support policy-shaped environments without hard-coding those policy tags into client infrastructure:
