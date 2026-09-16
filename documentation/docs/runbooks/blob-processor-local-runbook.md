@@ -102,6 +102,7 @@ AZURE_CONTAINER_APP_ENV_SUBNET="<container-app-environment-subnet-cidr>"
 AZURE_CONTAINER_APP_PE_SUBNET="<private-endpoint-subnet-cidr>"
 AZURE_DEPLOY_EGRESS_FIREWALL="true" # "true" to deploy the stack's own firewall/VNet, "false" to use a client-supplied firewall as the UDR next hop.
 AZURE_CLIENT_FIREWALL_IP_ADDRESS="" # Required when AZURE_DEPLOY_EGRESS_FIREWALL is "false"; the client firewall's private IP address.
+VIRTUAL_NETWORK_MODE="create" # "create" or "existing". Use "existing" to leave the VNet untouched.
 
 # Workflow defaults. Change these only when the target deployment requires it.
 AZURE_INCLUDE_ROLE_ASSIGNMENTS="true"
@@ -121,6 +122,13 @@ STORAGE_PROCESS_JOB_CONFIGURATION='<protected-storage-process-job-configuration-
 `STORAGE_PROCESS_JOB_CONFIGURATION` is passed to the ACA job as runtime environment configuration. It must include the storage job processing mode and CSV mapping keys before the storage processor can process files. Keep deployment-specific source column names in the approved external runbook, not in this repository.
 
 By default (`AZURE_DEPLOY_EGRESS_FIREWALL="true"`) the stack deploys its own egress firewall and VNet, and the container app environment routes egress traffic to that firewall. Set `AZURE_DEPLOY_EGRESS_FIREWALL="false"` for client environments that already provide their own firewall for the network hop; in that case, set `AZURE_CLIENT_FIREWALL_IP_ADDRESS` to the client firewall's private IP address, which is used as the next hop in the stack's route table instead.
+
+By default (`VIRTUAL_NETWORK_MODE="create"`) the stack creates and updates the container app VNet. Set
+`VIRTUAL_NETWORK_MODE="existing"` to leave the VNet untouched; the stack then skips the VNet write and manages only its own
+subnets, so any configuration applied to the VNet outside this stack is preserved. Both modes resolve the same VNet name
+from the stack naming convention, so existing mode reuses the VNet that an earlier create-mode deployment made. That VNet
+must still exist in the target resource group, and `AZURE_CONTAINER_APP_VNET` must match what is already deployed because
+the address space is no longer applied.
 
 `ODS_CODE` is optional and shared across every stack that deploys the external API, not just this one. When set, it
 is passed to the external API container app as the `NhsFhirConfig__OdsCode` environment variable, and the external
@@ -225,6 +233,7 @@ Required variables:
 - `STORAGE_PROCESS_JOB_CONFIGURATION`
 - `AZURE_DEPLOY_EGRESS_FIREWALL`
 - `AZURE_CLIENT_FIREWALL_IP_ADDRESS` when `AZURE_DEPLOY_EGRESS_FIREWALL` is `false`
+- `VIRTUAL_NETWORK_MODE`
 
 Optional variables:
 
@@ -255,6 +264,11 @@ fi
 
 if [ "${AZURE_DEPLOY_EGRESS_FIREWALL}" = "false" ] && [ -z "${AZURE_CLIENT_FIREWALL_IP_ADDRESS}" ]; then
   echo "AZURE_CLIENT_FIREWALL_IP_ADDRESS must be set when AZURE_DEPLOY_EGRESS_FIREWALL is false."
+  exit 1
+fi
+
+if [ "${VIRTUAL_NETWORK_MODE}" != "create" ] && [ "${VIRTUAL_NETWORK_MODE}" != "existing" ]; then
+  echo "VIRTUAL_NETWORK_MODE must be set to create or existing."
   exit 1
 fi
 ```
@@ -296,7 +310,8 @@ az deployment group what-if \
     tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME}" \
     additionalTags="${AZURE_ADDITIONAL_TAGS}" \
     deployEgressFirewall="${AZURE_DEPLOY_EGRESS_FIREWALL}" \
-    clientFirewallIpAddress="${AZURE_CLIENT_FIREWALL_IP_ADDRESS}"
+    clientFirewallIpAddress="${AZURE_CLIENT_FIREWALL_IP_ADDRESS}" \
+    virtualNetworkMode="${VIRTUAL_NETWORK_MODE}"
 ```
 
 ## Run the infrastructure deploy
@@ -343,7 +358,8 @@ az deployment group create \
     tagEnvironmentName="${AZURE_TAG_ENVIRONMENT_NAME}" \
     additionalTags="${AZURE_ADDITIONAL_TAGS}" \
     deployEgressFirewall="${AZURE_DEPLOY_EGRESS_FIREWALL}" \
-    clientFirewallIpAddress="${AZURE_CLIENT_FIREWALL_IP_ADDRESS}"
+    clientFirewallIpAddress="${AZURE_CLIENT_FIREWALL_IP_ADDRESS}" \
+    virtualNetworkMode="${VIRTUAL_NETWORK_MODE}"
 ```
 
 ## Add the NHS Digital secrets to Key Vault
@@ -566,6 +582,7 @@ Required variables for this task:
 - `STORAGE_PROCESS_JOB_CONFIGURATION`
 - `AZURE_DEPLOY_EGRESS_FIREWALL`
 - `AZURE_CLIENT_FIREWALL_IP_ADDRESS` when `AZURE_DEPLOY_EGRESS_FIREWALL` is `false`
+- `VIRTUAL_NETWORK_MODE`
 - `EXTERNAL_API_IMAGE_TAG`
 - `MATCHING_API_IMAGE_TAG`
 - `STORAGE_PROCESS_JOB_IMAGE_TAG`
