@@ -113,6 +113,7 @@ STORAGE_ACCOUNT_MODE="create" # "create" or "existing"
 EXISTING_STORAGE_ACCOUNT_NAME="" # Leave blank if it does not exist.
 AZURE_TAG_ENVIRONMENT_NAME="" # Optional override for the Environment tag.
 AZURE_ADDITIONAL_TAGS="{}" # Optional additional tags as a JSON object string.
+ODS_CODE="" # Optional ODS code sent with PDS FHIR requests. Leave blank if the deployment does not need one.
 # Obtain this protected JSON object from the approved external runbook.
 STORAGE_PROCESS_JOB_CONFIGURATION='<protected-storage-process-job-configuration-json>'
 ```
@@ -120,6 +121,14 @@ STORAGE_PROCESS_JOB_CONFIGURATION='<protected-storage-process-job-configuration-
 `STORAGE_PROCESS_JOB_CONFIGURATION` is passed to the ACA job as runtime environment configuration. It must include the storage job processing mode and CSV mapping keys before the storage processor can process files. Keep deployment-specific source column names in the approved external runbook, not in this repository.
 
 By default (`AZURE_DEPLOY_EGRESS_FIREWALL="true"`) the stack deploys its own egress firewall and VNet, and the container app environment routes egress traffic to that firewall. Set `AZURE_DEPLOY_EGRESS_FIREWALL="false"` for client environments that already provide their own firewall for the network hop; in that case, set `AZURE_CLIENT_FIREWALL_IP_ADDRESS` to the client firewall's private IP address, which is used as the next hop in the stack's route table instead.
+
+`ODS_CODE` is optional and shared across every stack that deploys the external API, not just this one. When set, it
+is passed to the external API container app as the `NhsFhirConfig__OdsCode` environment variable, and the external
+API sends it as the `NHSD-End-User-Organisation-ODS` header on PDS FHIR requests. When left blank, the environment
+variable is not added and no header is sent, so a missing value deploys successfully and only shows up at runtime.
+Confirm the value is correct for the target environment before deploying. Workflow deployments read the same value
+from the `ODS_CODE` GitHub Actions variable. See
+[Shared deployment configuration](../../../infra/README.md#ods-code) in the infrastructure README.
 
 ## Add optional properties to storage processor logs
 
@@ -221,6 +230,7 @@ Optional variables:
 
 - `AZURE_TAG_ENVIRONMENT_NAME`
 - `AZURE_ADDITIONAL_TAGS`
+- `ODS_CODE`
 
 ```bash
 if [ "${RESOURCE_GROUP_MODE}" != "existing" ]; then
@@ -279,6 +289,7 @@ az deployment group what-if \
     storageProcessJobImageTag="${STORAGE_PROCESS_JOB_IMAGE_TAG}" \
     matchingApiImageTag="${MATCHING_API_IMAGE_TAG}" \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
+    odsCode="${ODS_CODE}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}" \
     storageProcessJobConfiguration="${STORAGE_PROCESS_JOB_CONFIGURATION}" \
@@ -325,6 +336,7 @@ az deployment group create \
     storageProcessJobImageTag="${STORAGE_PROCESS_JOB_IMAGE_TAG}" \
     matchingApiImageTag="${MATCHING_API_IMAGE_TAG}" \
     externalApiImageTag="${EXTERNAL_API_IMAGE_TAG}" \
+    odsCode="${ODS_CODE}" \
     storageAccountMode="${STORAGE_ACCOUNT_MODE}" \
     existingStorageAccountName="${EXISTING_STORAGE_ACCOUNT_NAME}" \
     storageProcessJobConfiguration="${STORAGE_PROCESS_JOB_CONFIGURATION}" \
