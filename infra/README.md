@@ -40,6 +40,20 @@ Supported deployment roots:
   `.github/actions/stack-infra-run` only appends `odsCode=` to the deployment parameters when the value is non-empty.
 - Direct deployments pass `odsCode=<value>` in the `--parameters` list.
 
+## Stack-scoped deployment configuration
+
+### Client-supplied egress firewall
+
+`blob-event-processor` can run against a client-supplied firewall instead of deploying its own. That is configured with
+the `CLIENT_FIREWALL_IP_ADDRESS` secret and the `VIRTUAL_NETWORK_MODE` variable, which together drive the stack's
+`clientFirewallIpAddress`, `deployEgressFirewall` and `virtualNetworkMode` parameters. These are stack-scoped rather
+than cross-stack: `api-batch-processor` and `client-agent` always deploy their own firewall.
+
+Setting `CLIENT_FIREWALL_IP_ADDRESS` changes what the deployment does, so read
+[Client firewall environments](stacks/blob-event-processor/README.md#client-firewall-environments) before configuring
+it. In particular, `VIRTUAL_NETWORK_MODE` must be `existing` for those environments, and the workflow refuses to run if
+it is not.
+
 CI/CD:
 
 - `.github/workflows/gh-deploy-infra.yml` remains the existing `src/app-host/infra` infrastructure workflow and still drives the current `azd provision` path

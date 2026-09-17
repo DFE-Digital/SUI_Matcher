@@ -95,7 +95,7 @@ Set `virtualNetworkMode=existing` to leave the virtual network untouched. The st
 
 Both modes resolve the same name from the stack naming convention, so existing mode reuses the virtual network that an earlier create-mode deployment made. That network must already exist in the target resource group, and `containerAppVnet` must match what is already deployed because the address space is no longer applied.
 
-This parameter is only exposed on `main.bicep`, alongside `deployEgressFirewall` and `clientFirewallIpAddress`, so it applies to resource-group scope deployments.
+Both parameters are exposed on `main.bicep` and `subscription.bicep`, so they apply to direct deployments and to workflow deployments alike. See [GitHub workflow behaviour](#github-workflow-behaviour) for how the workflow resolves them.
 
 ## Tag configuration
 
@@ -112,12 +112,30 @@ The deploy workflow wraps the same subscription-scope Bicep template and adds a 
 - validates `containerAppPeSubnet` is configured
 - validates `targetResourceGroupName` when `resourceGroupMode=existing`
 - validates `existingStorageAccountName` when `storageAccountMode=existing`
+- resolves `virtualNetworkMode` from the `virtual_network_mode` input, then the `VIRTUAL_NETWORK_MODE` variable, then `create`
+- derives `deployEgressFirewall` from whether the `CLIENT_FIREWALL_IP_ADDRESS` secret is set, and passes that secret to `clientFirewallIpAddress`
+- refuses to run when `CLIENT_FIREWALL_IP_ADDRESS` is set and `virtualNetworkMode` resolves to `create` without `virtual_network_mode` being passed explicitly
 - passes `AZURE_TAG_ENVIRONMENT_NAME` to `tagEnvironmentName` when set
 - passes `AZURE_ADDITIONAL_TAGS` to `additionalTags` when set
 - derives the stack resource group as `${environmentPrefix}-${environmentName,,}-blob-event-processor`, unless an existing resource group is supplied
 - derives the deployment name as `${resourceGroupName}-${location,,}-${mode}`
 - runs `az deployment sub what-if` or `az deployment sub create`
 - writes GitHub summaries, template outputs, and a post-deploy resource inventory
+
+### Client firewall environments
+
+An environment fronted by a client-supplied firewall is configured once, by setting the `CLIENT_FIREWALL_IP_ADDRESS`
+secret and the `VIRTUAL_NETWORK_MODE` variable to `existing`. There is no separate flag for the firewall: setting the
+secret is what selects the mode, so the two settings cannot contradict each other and nothing has to be remembered per
+run.
+
+The guard exists because the failure is silent. A create-mode virtual network write replaces the resource and removes
+peerings this stack does not declare, including the one that reaches the client firewall. Peerings are not in the
+template, so `what-if` reports the virtual network as unchanged and gives no warning before that happens.
+
+A first deployment into such an environment is the one case that legitimately needs `create`, because the virtual
+network does not exist yet. Pass `create` as the `virtual_network_mode` input for that run; the guard only blocks the
+resolved default, not an explicit choice.
 
 ## Direct deployment
 
