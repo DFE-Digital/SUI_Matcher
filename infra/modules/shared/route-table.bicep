@@ -10,7 +10,9 @@ param lowercaseEnvironmentName string
 @description('Short stack-specific suffix used to avoid cross-stack name collisions.')
 param stackNameSuffix string = ''
 
-@description('The private IP address of the next-hop network appliance (e.g. a firewall) for the default route')
+@minLength(7)
+@maxLength(15)
+@description('The private IPv4 address of the next-hop network appliance (e.g. a firewall) for the default route')
 param nextHopIpAddress string
 
 @description('Tags that will be applied to all resources')
