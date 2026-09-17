@@ -116,6 +116,18 @@ inputs:
     description: "Optional existing storage account name when storage_account_mode is existing"
     required: false
     default: ""
+  virtual_network_mode:
+    description: "Optional container app virtual network mode: create or existing"
+    required: false
+    default: ""
+  deploy_egress_firewall:
+    description: "Optional toggle for deploying a dedicated egress firewall: true or false"
+    required: false
+    default: ""
+  client_firewall_ip_address:
+    description: "Optional client-supplied firewall private IP used as the UDR next hop when deploy_egress_firewall is false"
+    required: false
+    default: ""
   storage_process_job_configuration:
     description: "Optional JSON object containing protected storage process job runtime configuration"
     required: false
@@ -170,6 +182,7 @@ runs:
         STORAGE_PROCESS_JOB_CONFIGURATION: ${{ inputs.storage_process_job_configuration }}
         GRAPHQL_PROCESS_JOB_CONFIGURATION: ${{ inputs.graphql_process_job_configuration }}
         ALLOWED_GRAPHQL_FQDNS: ${{ inputs.allowed_graphql_fqdns }}
+        CLIENT_FIREWALL_IP_ADDRESS: ${{ inputs.client_firewall_ip_address }}
       run: |
         set -euo pipefail
 
@@ -290,6 +303,18 @@ runs:
 
         if [ -n "${{ inputs.existing_storage_account_name }}" ]; then
           PARAMETERS+=("existingStorageAccountName=${{ inputs.existing_storage_account_name }}")
+        fi
+
+        if [ -n "${{ inputs.virtual_network_mode }}" ]; then
+          PARAMETERS+=("virtualNetworkMode=${{ inputs.virtual_network_mode }}")
+        fi
+
+        if [ -n "${{ inputs.deploy_egress_firewall }}" ]; then
+          PARAMETERS+=("deployEgressFirewall=${{ inputs.deploy_egress_firewall }}")
+        fi
+
+        if [ -n "${CLIENT_FIREWALL_IP_ADDRESS}" ]; then
+          PARAMETERS+=("clientFirewallIpAddress=${CLIENT_FIREWALL_IP_ADDRESS}")
         fi
 
         cleanup() {
