@@ -77,6 +77,16 @@ Existing storage mode expects the storage account to already exist in the target
 
 Both storage modes create blob and queue private endpoints plus private DNS wiring for the configured storage account. In existing storage mode, the private endpoints target the supplied account.
 
+## Egress firewall modes
+
+The default is `deployEgressFirewall=true`. In this mode the stack deploys its own Azure Firewall and firewall VNet, peers that VNet to the container app VNet, and points the container app environment subnet's default route at the firewall private IP.
+
+Set `deployEgressFirewall=false` when the client supplies the firewall. The stack then deploys neither the firewall nor the peering, and creates only the route table, using `clientFirewallIpAddress` as the `0.0.0.0/0` next hop.
+
+`clientFirewallIpAddress` is mandatory when `deployEgressFirewall=false`. It takes an IPv4 address and is rejected when empty, so a deployment that omits it fails early rather than creating a route table that blackholes all container app egress. It is ignored when `deployEgressFirewall=true`.
+
+The supplied address must already be reachable from the container app VNet. The stack does not create a peering to the client's firewall network, so that peering has to exist before the container app environment is deployed, and it has to be created outside this stack. Use `virtualNetworkMode=existing` on subsequent deployments so the virtual network write does not remove it.
+
 ## Virtual network modes
 
 The default virtual network mode is `virtualNetworkMode=create`. In this mode the stack creates and updates the container app virtual network.
