@@ -10,8 +10,6 @@ param lowercaseEnvironmentName string
 @description('Short stack-specific suffix used to avoid cross-stack name collisions.')
 param stackNameSuffix string = ''
 
-@minLength(7)
-@maxLength(15)
 @description('The private IPv4 address of the next-hop network appliance (e.g. a firewall) for the default route')
 param nextHopIpAddress string
 
@@ -20,6 +18,12 @@ param tags object = {}
 
 var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
 var routeTableName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-rt-01'
+
+// Validation
+var parsedNextHop = parseCidr('${nextHopIpAddress}/32')
+var nextHopAddress = contains(parsedNextHop.network, '.')
+  ? parsedNextHop.network
+  : fail('nextHopIpAddress must be a valid IPv4 address.')
 
 resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
   name: routeTableName
@@ -33,7 +37,7 @@ resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
         properties: {
           addressPrefix: '0.0.0.0/0'
           nextHopType: 'VirtualAppliance'
-          nextHopIpAddress: nextHopIpAddress
+          nextHopIpAddress: nextHopAddress
         }
         type: 'Microsoft.Network/routeTables/routes'
       }

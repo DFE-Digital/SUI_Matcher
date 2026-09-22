@@ -83,7 +83,7 @@ The default is `deployEgressFirewall=true`. In this mode the stack deploys its o
 
 Set `deployEgressFirewall=false` when the client supplies the firewall. The stack then deploys neither the firewall nor the peering, and creates only the route table, using `clientFirewallIpAddress` as the `0.0.0.0/0` next hop.
 
-`clientFirewallIpAddress` is mandatory when `deployEgressFirewall=false`. It takes an IPv4 address and is rejected when empty, so a deployment that omits it fails early rather than creating a route table that blackholes all container app egress. It is ignored when `deployEgressFirewall=true`.
+`clientFirewallIpAddress` is mandatory when `deployEgressFirewall=false`. The route table module parses it as an IP address, so an empty or malformed value fails template evaluation rather than creating a route table that blackholes all container app egress. It is ignored when `deployEgressFirewall=true`.
 
 The supplied address must already be reachable from the container app VNet. The stack does not create a peering to the client's firewall network, so that peering has to exist before the container app environment is deployed, and it has to be created outside this stack. Use `virtualNetworkMode=existing` on subsequent deployments so the virtual network write does not remove it.
 
