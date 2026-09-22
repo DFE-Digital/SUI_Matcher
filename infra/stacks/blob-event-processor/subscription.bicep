@@ -73,6 +73,19 @@ param storageAccountMode string = 'create'
 @description('The name of the existing storage account to use when storageAccountMode is existing.')
 param existingStorageAccountName string = ''
 
+@allowed([
+  'create'
+  'existing'
+])
+@description('Whether the stack should create its container app virtual network or reuse an existing network in the target resource group. Use existing when the virtual network carries peerings managed outside this stack that a virtual network write would otherwise remove.')
+param virtualNetworkMode string = 'create'
+
+@description('Whether to deploy a dedicated egress firewall and VNet for this stack. Set to false when a client-supplied firewall IP should be used as the CAE subnet route table next hop instead.')
+param deployEgressFirewall bool = true
+
+@description('Private IP address of a client-supplied firewall to use as the UDR next hop when deployEgressFirewall is false. Required in that case; ignored otherwise.')
+param clientFirewallIpAddress string = ''
+
 @description('Optional value for the Environment tag when Azure Policy expects a different tag value than the deployment environment name.')
 param tagEnvironmentName string = ''
 
@@ -122,6 +135,9 @@ module stackDeployment 'main.bicep' = {
     odsCode: odsCode
     storageAccountMode: storageAccountMode
     existingStorageAccountName: existingStorageAccountName
+    virtualNetworkMode: virtualNetworkMode
+    deployEgressFirewall: deployEgressFirewall
+    clientFirewallIpAddress: clientFirewallIpAddress
     tagEnvironmentName: tagEnvironmentName
     additionalTags: additionalTags
     storageProcessJobConfiguration: storageProcessJobConfiguration
