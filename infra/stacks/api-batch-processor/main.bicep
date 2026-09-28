@@ -65,6 +65,12 @@ param cronExpression string = '0 9,12,15 * * 1-5'
 @description('Toggle to filter by worklist definition ID in the GraphQL process job')
 param filterByWorklistDefinitionId bool = false
 
+@description('The URL for the GraphQL endpoint')
+param graphQlUrl string = ''
+
+@description('Toggle to use authentication for the GraphQL endpoint')
+param graphQlUseAuth bool = false
+
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
@@ -238,6 +244,7 @@ module monitoring '../../modules/shared/monitoring.bicep' = {
     turnOnAlerts: turnOnAlerts
     logAnalyticsWorkspaceId: observability.outputs.workspaceId
     actionGroupEmail: monitoringActionGroupEmail
+    tags: tags
   }
 }
 
@@ -334,6 +341,8 @@ module graphqlProcessJob '../../modules/api-batch-processor/graphql-process-job.
     keyVaultUri: secrets.outputs.vaultUri
     applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString
     graphqlProcessJobConfiguration: graphqlProcessJobConfiguration
+    graphQlUrl: graphQlUrl
+    graphQlUseAuth: graphQlUseAuth
     deploymentMode: deploymentMode
     cronExpression: cronExpression
     filterByWorklistDefinitionId: filterByWorklistDefinitionId
