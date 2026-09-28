@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Diagnostics.Enrichment;
 
 namespace Shared.Logging;
@@ -27,6 +28,11 @@ public class ApplicationEnricher(IHttpContextAccessor httpContextAccessor) : ILo
         )
         {
             collector.Add(SharedConstants.SearchStrategy.LogName, searchStrategy);
+        }
+
+        if (Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName) is { } queryName)
+        {
+            collector.Add(SharedConstants.SearchQuery.LogName, queryName);
         }
 
         if (Activity.Current?.GetBaggageItem("ReconciliationId") is { } reconciliationId)

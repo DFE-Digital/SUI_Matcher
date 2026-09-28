@@ -42,6 +42,12 @@ param includeRoleAssignments bool = true
 @description('Optional ODS code sent with PDS FHIR requests')
 param odsCode string = ''
 
+@description('Optional NHS OAuth token endpoint override, used to route non-production traffic to the PDS emulator')
+param nhsDigitalTokenUrl string = ''
+
+@description('Optional NHS FHIR endpoint override, used to route non-production traffic to the PDS emulator')
+param nhsDigitalFhirEndpoint string = ''
+
 var appName = 'external-api'
 var targetPort = 8080
 
@@ -141,6 +147,16 @@ resource externalApi 'Microsoft.App/containerApps@2024-10-02-preview' = {
             {
               name: 'NhsFhirConfig__OdsCode'
               value: odsCode
+            }
+          ], empty(nhsDigitalTokenUrl) ? [] : [
+            {
+              name: 'NhsAuthConfig__NHS_DIGITAL_TOKEN_URL'
+              value: nhsDigitalTokenUrl
+            }
+          ], empty(nhsDigitalFhirEndpoint) ? [] : [
+            {
+              name: 'NhsAuthConfig__NHS_DIGITAL_FHIR_ENDPOINT'
+              value: nhsDigitalFhirEndpoint
             }
           ])
         }

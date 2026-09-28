@@ -105,6 +105,11 @@ public class GraphQlProcessor(
 
     private bool ShouldProcessRecord(IPersonByCriteria_PersonByCriteria_Results_Person person)
     {
+        if (!options.Value.FilterByWorklistDefinitionId)
+        {
+            return true;
+        }
+
         bool shouldProcess = string.IsNullOrEmpty(options.Value.KnownSafeguardingConcernWorklistDefinitionId) ||
                              (person.WorklistInstances.Any(w =>
                                  w.WorklistDefinition?.Id ==

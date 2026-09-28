@@ -23,32 +23,32 @@ public class LogConsoleFormatter() : ConsoleFormatter(Shared.SharedConstants.Log
         var reconcilationId = Activity.Current?.GetBaggageItem("ReconciliationId");
         var algorithmVersion = Activity.Current?.GetBaggageItem("AlgorithmVersion");
         var strategy = Activity.Current?.GetBaggageItem(SharedConstants.SearchStrategy.LogName);
+        var queryName = Activity.Current?.GetBaggageItem(SharedConstants.SearchQuery.LogName);
 
-        if (searchId is not null && algorithmVersion is not null && !string.IsNullOrEmpty(strategy))
+        textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] ");
+
+        if (algorithmVersion is not null)
         {
-            textWriter.Write(
-                $"{DateTime.UtcNow} [{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [{SharedConstants.SearchStrategy.LogName}={strategy}] [SearchId={searchId}] "
-            );
+            textWriter.Write($"[Algorithm=v{algorithmVersion}] ");
         }
-        else if (searchId is not null && algorithmVersion is not null)
+
+        if (!string.IsNullOrEmpty(strategy))
         {
-            textWriter.Write(
-                $"{DateTime.UtcNow} [{logEntry.LogLevel}] [Algorithm=v{algorithmVersion}] [SearchId={searchId}] "
-            );
+            textWriter.Write($"[{SharedConstants.SearchStrategy.LogName}={strategy}] ");
         }
-        else if (searchId is not null)
+
+        if (!string.IsNullOrEmpty(queryName))
         {
-            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] [SearchId={searchId}] ");
+            textWriter.Write($"[{SharedConstants.SearchQuery.LogName}={queryName}] ");
+        }
+
+        if (searchId is not null)
+        {
+            textWriter.Write($"[SearchId={searchId}] ");
         }
         else if (reconcilationId is not null)
         {
-            textWriter.Write(
-                $"{DateTime.UtcNow} [{logEntry.LogLevel}] [ReconciliationId={reconcilationId}] "
-            );
-        }
-        else
-        {
-            textWriter.Write($"{DateTime.UtcNow} [{logEntry.LogLevel}] ");
+            textWriter.Write($"[ReconciliationId={reconcilationId}] ");
         }
 
         textWriter.WriteLine(message);

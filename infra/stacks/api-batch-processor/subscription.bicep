@@ -47,6 +47,13 @@ param matchingApiImageTag string = 'latest'
 @description('Container image tag for the external API')
 param externalApiImageTag string = 'latest'
 
+@minLength(1)
+@description('Container image tag for the PDS Emulator')
+param pdsEmulatorImageTag string = 'latest'
+
+@description('Toggle to use the PDS Emulator in the stack.')
+param usePdsEmulator bool = false
+
 @allowed([
   'automatic'
   'manual'
@@ -56,6 +63,9 @@ param deploymentMode string = 'manual'
 
 @description('The cron expression for the scheduled trigger when deploymentMode is automatic')
 param cronExpression string = '0 9,12,15 * * 1-5'
+
+@description('Toggle to filter by worklist definition ID in the GraphQL process job')
+param filterByWorklistDefinitionId bool = false
 
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
@@ -121,8 +131,11 @@ module stackDeployment 'main.bicep' = {
     graphqlProcessJobImageTag: graphqlProcessJobImageTag
     matchingApiImageTag: matchingApiImageTag
     externalApiImageTag: externalApiImageTag
+    pdsEmulatorImageTag: pdsEmulatorImageTag
+    usePdsEmulator: usePdsEmulator
     deploymentMode: deploymentMode
     cronExpression: cronExpression
+    filterByWorklistDefinitionId: filterByWorklistDefinitionId
     includeRoleAssignments: includeRoleAssignments
     odsCode: odsCode
     tagEnvironmentName: tagEnvironmentName
@@ -164,3 +177,5 @@ output MATCHING_API_NAME string = stackDeployment.outputs.MATCHING_API_NAME
 output MATCHING_API_ID string = stackDeployment.outputs.MATCHING_API_ID
 output EXTERNAL_API_NAME string = stackDeployment.outputs.EXTERNAL_API_NAME
 output EXTERNAL_API_ID string = stackDeployment.outputs.EXTERNAL_API_ID
+output PDS_EMULATOR_NAME string = stackDeployment.outputs.PDS_EMULATOR_NAME
+output PDS_EMULATOR_ID string = stackDeployment.outputs.PDS_EMULATOR_ID

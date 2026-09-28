@@ -58,7 +58,6 @@ var firewallName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameT
 var firewallPolicyName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-fwp-01'
 var publicIpName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-pib-01'
 var managementPublicIpName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-pib-mgmt-01'
-var routeTableName = '${environmentPrefix}-${lowercaseEnvironmentName}${stackNameToken}-rt-01'
 var containerAppRegion = toLower(replace(location, ' ', ''))
 
 var platformFqdnRules = [
@@ -363,23 +362,15 @@ resource networkRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleColl
   }
 }
 
-resource routeTable 'Microsoft.Network/routeTables@2024-05-01' = {
-  name: routeTableName
-  location: location
-  tags: tags
-  properties: {
-    disableBgpRoutePropagation: true
-    routes: [
-      {
-        name: 'DefaultToFirewall'
-        properties: {
-          addressPrefix: '0.0.0.0/0'
-          nextHopType: 'VirtualAppliance'
-          nextHopIpAddress: firewall.properties.ipConfigurations[0].properties.privateIPAddress
-        }
-        type: 'Microsoft.Network/routeTables/routes'
-      }
-    ]
+module routeTable './route-table.bicep' = {
+  name: 'route-table'
+  params: {
+    location: location
+    environmentPrefix: environmentPrefix
+    lowercaseEnvironmentName: lowercaseEnvironmentName
+    stackNameSuffix: stackNameSuffix
+    nextHopIpAddress: firewall.properties.ipConfigurations[0].properties.privateIPAddress
+    tags: tags
   }
 }
 
@@ -403,8 +394,8 @@ resource firewallDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-p
   }
 }
 
-output routeTableId string = routeTable.id
-output routeTableName string = routeTable.name
+output routeTableId string = routeTable.outputs.routeTableId
+output routeTableName string = routeTable.outputs.routeTableName
 output firewallName string = firewall.name
 output firewallPrivateIp string = firewall.properties.ipConfigurations[0].properties.privateIPAddress
 output firewallVnetName string = firewallVirtualNetwork.name

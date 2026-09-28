@@ -48,6 +48,10 @@ param matchingApiImageTag string = 'latest'
 @description('Container image tag for the external API')
 param externalApiImageTag string = 'latest'
 
+@minLength(1)
+@description('Container image tag for the PDS Emulator')
+param pdsEmulatorImageTag string = 'latest'
+
 @allowed([
   'automatic'
   'manual'
@@ -57,6 +61,9 @@ param deploymentMode string = 'manual'
 
 @description('The cron expression for the scheduled trigger when deploymentMode is automatic')
 param cronExpression string = '0 9,12,15 * * 1-5'
+
+@description('Toggle to filter by worklist definition ID in the GraphQL process job')
+param filterByWorklistDefinitionId bool = false
 
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
@@ -80,6 +87,8 @@ param graphqlProcessJobConfiguration object
 var lowercaseEnvironmentName = toLower(environmentName)
 var stackNameSuffix = 'abp'
 var isProductionEnvironment = lowercaseEnvironmentName == 'prod' || lowercaseEnvironmentName == 'production'
+@description('Toggle to use the PDS Emulator in the stack.')
+param usePdsEmulator bool = false
 var defaultNhsFqdns = isProductionEnvironment ? [
   'api.service.nhs.uk'
 ] : [
@@ -289,10 +298,25 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
     tags: tags
     includeRoleAssignments: includeRoleAssignments
     odsCode: odsCode
+    nhsDigitalTokenUrl: usePdsEmulator ? (pdsEmulator.?outputs.?tokenUrl ?? '') : ''
+    nhsDigitalFhirEndpoint: usePdsEmulator ? (pdsEmulator.?outputs.?fhirEndpoint ?? '') : ''
   }
   dependsOn: [
     keyVaultPrivateEndpoint
   ]
+}
+
+module pdsEmulator '../../modules/api-apps/pds-emulator.bicep' = if (usePdsEmulator) {
+  name: 'pds-emulator'
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppEnvironment.outputs.id
+    containerRegistryServer: containerRegistry.outputs.endpoint
+    managedIdentityId: identity.outputs.id
+    environmentName: environmentName
+    imageTag: pdsEmulatorImageTag
+    tags: tags
+  }
 }
 
 module graphqlProcessJob '../../modules/api-batch-processor/graphql-process-job.bicep' = {
@@ -312,6 +336,7 @@ module graphqlProcessJob '../../modules/api-batch-processor/graphql-process-job.
     graphqlProcessJobConfiguration: graphqlProcessJobConfiguration
     deploymentMode: deploymentMode
     cronExpression: cronExpression
+    filterByWorklistDefinitionId: filterByWorklistDefinitionId
     tags: tags
   }
 }
@@ -343,3 +368,5 @@ output MATCHING_API_NAME string = matchingApi.outputs.name
 output MATCHING_API_ID string = matchingApi.outputs.id
 output EXTERNAL_API_NAME string = externalApi.outputs.name
 output EXTERNAL_API_ID string = externalApi.outputs.id
+output PDS_EMULATOR_NAME string = pdsEmulator.?outputs.?name ?? ''
+output PDS_EMULATOR_ID string = pdsEmulator.?outputs.?id ?? ''
