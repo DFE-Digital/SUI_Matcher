@@ -7,6 +7,7 @@ public static class SharedConstants
     public static class SearchQuery
     {
         public const string DateFormat = "yyyy-MM-dd";
+        public const string LogName = "QueryName";
     }
 
     public static class SearchStrategy

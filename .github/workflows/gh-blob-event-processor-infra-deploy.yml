@@ -67,6 +67,10 @@ on:
         description: Existing storage account name when storage_account_mode is existing
         required: false
         type: string
+      virtual_network_mode:
+        description: "Virtual network mode: create or existing. Leave blank to use the VIRTUAL_NETWORK_MODE variable, or create when unset."
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -97,6 +101,14 @@ env:
   TARGET_RESOURCE_GROUP_NAME: ${{ inputs.target_resource_group_name }}
   STORAGE_ACCOUNT_MODE: ${{ inputs.storage_account_mode || 'create' }}
   EXISTING_STORAGE_ACCOUNT_NAME: ${{ inputs.existing_storage_account_name }}
+  VIRTUAL_NETWORK_MODE: ${{ inputs.virtual_network_mode || vars.VIRTUAL_NETWORK_MODE || 'create' }}
+  # Kept separately so the guard below can tell an explicit per-run choice from the resolved default.
+  VIRTUAL_NETWORK_MODE_INPUT: ${{ inputs.virtual_network_mode }}
+  # The client's firewall address is internal network detail, so it follows AZURE_CONTAINER_APP_VNET into secrets.
+  CLIENT_FIREWALL_IP_ADDRESS: ${{ secrets.CLIENT_FIREWALL_IP_ADDRESS }}
+  # Derived rather than flagged: configuring a client firewall address is what selects the mode, so the
+  # two settings cannot contradict each other and there is no separate flag to forget.
+  DEPLOY_EGRESS_FIREWALL: ${{ secrets.CLIENT_FIREWALL_IP_ADDRESS && 'false' || 'true' }}
   # Column mappings may identify a specific deployment, so keep them in secrets to avoid leaking them in workflow logs.
   STORAGE_PROCESS_JOB_CONFIGURATION: ${{ secrets.STORAGE_PROCESS_JOB_CONFIGURATION }}
 
@@ -156,6 +168,24 @@ jobs:
             exit 1
           fi
 
+          case "${VIRTUAL_NETWORK_MODE}" in
+            create|existing) ;;
+            *)
+              echo "::error::virtual_network_mode must be create or existing, got '${VIRTUAL_NETWORK_MODE}'."
+              exit 1
+              ;;
+          esac
+
+          # A create-mode virtual network write replaces the resource and removes peerings this stack does not
+          # declare, including the one reaching the client firewall. what-if does not report that removal, so
+          # refuse the combination unless create was asked for explicitly, which a first deployment must do.
+          if [ -n "${CLIENT_FIREWALL_IP_ADDRESS}" ] \
+            && [ "${VIRTUAL_NETWORK_MODE}" = "create" ] \
+            && [ -z "${VIRTUAL_NETWORK_MODE_INPUT}" ]; then
+            echo "::error::CLIENT_FIREWALL_IP_ADDRESS is configured, so virtual_network_mode must be existing to preserve the peering to the client firewall network. Set the VIRTUAL_NETWORK_MODE variable to existing, or pass create as the virtual_network_mode input for a first deployment where the virtual network does not exist yet."
+            exit 1
+          fi
+
           DEPLOYMENT_NAME="${STACK_RESOURCE_GROUP}-${AZURE_LOCATION,,}-${DEPLOYMENT_MODE}"
 
           {
@@ -178,6 +208,8 @@ jobs:
             echo "- Resource group: \`${STACK_RESOURCE_GROUP}\`"
             echo "- Resource group mode: \`${RESOURCE_GROUP_MODE}\`"
             echo "- Storage account mode: \`${STORAGE_ACCOUNT_MODE}\`"
+            echo "- Virtual network mode: \`${VIRTUAL_NETWORK_MODE}\`"
+            echo "- Deploy egress firewall: \`${DEPLOY_EGRESS_FIREWALL}\`"
             echo "- Deployment name: \`${DEPLOYMENT_NAME}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -227,6 +259,9 @@ jobs:
           target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
           storage_account_mode: ${{ env.STORAGE_ACCOUNT_MODE }}
           existing_storage_account_name: ${{ env.EXISTING_STORAGE_ACCOUNT_NAME }}
+          virtual_network_mode: ${{ env.VIRTUAL_NETWORK_MODE }}
+          deploy_egress_firewall: ${{ env.DEPLOY_EGRESS_FIREWALL }}
+          client_firewall_ip_address: ${{ env.CLIENT_FIREWALL_IP_ADDRESS }}
           storage_process_job_configuration: ${{ env.STORAGE_PROCESS_JOB_CONFIGURATION }}
 
   deploy:
@@ -275,6 +310,9 @@ jobs:
           target_resource_group_name: ${{ env.TARGET_RESOURCE_GROUP_NAME }}
           storage_account_mode: ${{ env.STORAGE_ACCOUNT_MODE }}
           existing_storage_account_name: ${{ env.EXISTING_STORAGE_ACCOUNT_NAME }}
+          virtual_network_mode: ${{ env.VIRTUAL_NETWORK_MODE }}
+          deploy_egress_firewall: ${{ env.DEPLOY_EGRESS_FIREWALL }}
+          client_firewall_ip_address: ${{ env.CLIENT_FIREWALL_IP_ADDRESS }}
           storage_process_job_configuration: ${{ env.STORAGE_PROCESS_JOB_CONFIGURATION }}
 
   summarize:

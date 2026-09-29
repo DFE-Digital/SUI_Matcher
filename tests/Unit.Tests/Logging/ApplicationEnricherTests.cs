@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Diagnostics.Enrichment;
 using Moq;
+using Shared;
 using Shared.Logging;
 
 namespace Unit.Tests.Logging;
@@ -45,6 +46,29 @@ public class ApplicationEnricherTests
 
         // Assert
         collector.Verify(c => c.Add("ReconciliationId", "12345"), Times.Once);
+
+        activity.Stop();
+    }
+
+    [Fact]
+    public void Enrich_AddsQueryNameToCollector_WhenQueryNameExistsInActivity()
+    {
+        // Arrange
+        var httpContextAccessor = new HttpContextAccessor();
+        var collector = new Mock<IEnrichmentTagCollector>();
+        var enricher = new ApplicationEnricher(httpContextAccessor);
+        var activity = new Activity("TestActivity");
+        activity.AddBaggage(SharedConstants.SearchQuery.LogName, "NonFuzzyGFD");
+        activity.Start();
+
+        // Act
+        enricher.Enrich(collector.Object);
+
+        // Assert
+        collector.Verify(
+            c => c.Add(SharedConstants.SearchQuery.LogName, "NonFuzzyGFD"),
+            Times.Once
+        );
 
         activity.Stop();
     }
