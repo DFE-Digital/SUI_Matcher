@@ -1,0 +1,1755 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../blob-processor-local-runbook/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>GraphQL processor local run book - SUI Matcher Public Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#graphql-processor-local-run-book" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SUI Matcher Public Documentation" class="md-header__button md-logo" aria-label="SUI Matcher Public Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SUI Matcher Public Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              GraphQL processor local run book
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SUI Matcher Public Documentation" class="md-nav__button md-logo" aria-label="SUI Matcher Public Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SUI Matcher Public Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adrs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Decision Records
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cicd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clientarchitecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Client Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gettingstarted/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../waysof/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ways of Working
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Design
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/azure-deployment-stacks-spike/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SUI-1838: Azure Deployment Stacks Spike
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/infra-stack-segregation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment IaC Stack Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matching algorithm
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Matching algorithm
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matching-algorithm/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matching-algorithm/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    List of rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matching-algorithm/strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    List of strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matching-algorithm/strategy3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strategy 3 Full Version History
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reconciliation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reconciliation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reconciliation/address_parsing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Address Parsing &amp; Comparison Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reconciliation/reconciliation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reconciliation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runbooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blob-processor-local-runbook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blob processor local run book
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GraphQL processor local run book
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GraphQL processor local run book
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choose-your-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choose your task
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-deployment-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full deployment flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pick-a-branch-tag-or-commit-to-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pick a branch, tag or commit to deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-dotnet-restore-build-and-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run dotnet restore, build and tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#infrastructure-deployment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Infrastructure deployment variables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-infrastructure-what-if" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the infrastructure what-if
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-infrastructure-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the infrastructure deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting-policy-or-deployment-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting policy or deployment errors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-the-secrets-to-key-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add the secrets to Key Vault
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publish-the-api-images-to-azure-container-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish the API images to Azure Container Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publish-the-graphql-processor-image-to-azure-container-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish the GraphQL processor image to Azure Container Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choose-your-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choose your task
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-deployment-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full deployment flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pick-a-branch-tag-or-commit-to-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pick a branch, tag or commit to deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-dotnet-restore-build-and-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run dotnet restore, build and tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#infrastructure-deployment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Infrastructure deployment variables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-infrastructure-what-if" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the infrastructure what-if
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-infrastructure-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the infrastructure deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting-policy-or-deployment-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting policy or deployment errors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-the-secrets-to-key-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add the secrets to Key Vault
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publish-the-api-images-to-azure-container-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish the API images to Azure Container Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publish-the-graphql-processor-image-to-azure-container-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish the GraphQL processor image to Azure Container Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="graphql-processor-local-run-book">GraphQL processor local run book</h1>
+<h2 id="purpose">Purpose</h2>
+<p>This run book explains how to deploy the api-batch-processor stack from a laptop using Azure CLI (either creating a new resource group or deploying into an existing one). It is written for repeatable local deployments, including cases where you only need to publish the API images or the GraphQL processor event job image.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Azure CLI (<code>az</code>) installed.</li>
+<li>Permission to deploy to the target Azure subscription and resource group.</li>
+<li>Bash, WSL, or Git Bash for the examples below.</li>
+<li>A clean checkout of the branch, tag, or commit you intend to deploy.</li>
+</ul>
+<h2 id="choose-your-task">Choose your task</h2>
+<ul>
+<li>Full first-time deployment: follow <a href="#full-deployment-flow">Full deployment flow</a>.</li>
+<li>Infrastructure only: follow <a href="#common-setup">Common setup</a>, then
+  <a href="#infrastructure-deployment-variables">Infrastructure deployment variables</a>,
+  <a href="#run-the-infrastructure-what-if">Run the infrastructure what-if</a> and
+  <a href="#run-the-infrastructure-deploy">Run the infrastructure deploy</a>.</li>
+<li>API images only: follow <a href="#publish-the-api-images-to-azure-container-registry">Publish the API images to Azure Container Registry</a>.</li>
+<li>GraphQL processor event job image only: follow
+  <a href="#publish-the-graphql-processor-image-to-azure-container-registry">Publish the GraphQL processor image to Azure Container Registry</a>.</li>
+<li>PDS emulator image only: follow
+  <a href="#publish-the-pds-emulator-image-to-azure-container-registry">Publish the PDS emulator image to Azure Container Registry</a>.</li>
+<li>Final application deployment after publishing images: follow
+  <a href="#redeploy-infrastructure-after-publishing-images">Redeploy infrastructure after publishing images</a>.</li>
+<li>Smoke test: follow <a href="#smoke-test-the-deployment">Smoke test the deployment</a>.</li>
+<li>Troubleshooting: follow <a href="#troubleshooting-policy-or-deployment-errors">Troubleshooting policy or deployment errors</a>.</li>
+</ul>
+<h2 id="full-deployment-flow">Full deployment flow</h2>
+<ol>
+<li><a href="#pick-a-branch-tag-or-commit-to-deploy">Pick a branch, tag or commit to deploy</a>.</li>
+<li><a href="#run-dotnet-restore-build-and-tests">Run dotnet restore, build and tests</a>.</li>
+<li><a href="#common-setup">Common setup</a>.</li>
+<li><a href="#infrastructure-deployment-variables">Infrastructure deployment variables</a>.</li>
+<li><a href="#run-the-infrastructure-what-if">Run the infrastructure what-if</a>.</li>
+<li><a href="#run-the-infrastructure-deploy">Run the infrastructure deploy</a>.</li>
+<li><a href="#add-the-secrets-to-key-vault">Add the secrets to Key Vault</a>.</li>
+<li><a href="#publish-the-api-images-to-azure-container-registry">Publish the API images to Azure Container Registry</a>.</li>
+<li><a href="#publish-the-graphql-processor-image-to-azure-container-registry">Publish the GraphQL processor image to Azure Container Registry</a>.</li>
+<li><a href="#publish-the-pds-emulator-image-to-azure-container-registry">Publish the PDS emulator image to Azure Container Registry</a> (if deploying in test mode).</li>
+<li><a href="#redeploy-infrastructure-after-publishing-images">Redeploy infrastructure after publishing images</a>.</li>
+<li><a href="#smoke-test-the-deployment">Smoke test the deployment</a>.</li>
+</ol>
+<h2 id="pick-a-branch-tag-or-commit-to-deploy">Pick a branch, tag or commit to deploy</h2>
+<p>Ensure the branch is clean of any uncommitted changes. Example for <code>main</code>:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>main
+git<span class="w"> </span>pull
+</code></pre></div>
+<h2 id="run-dotnet-restore-build-and-tests">Run dotnet restore, build and tests</h2>
+<div class="highlight"><pre><span></span><code>dotnet<span class="w"> </span>restore
+dotnet<span class="w"> </span>build<span class="w"> </span>--no-restore
+dotnet<span class="w"> </span><span class="nb">test</span>
+</code></pre></div>
+<h2 id="common-setup">Common setup</h2>
+<p>Run these commands from the repository root.</p>
+<p>The local commands mirror the GitHub workflows:</p>
+<ul>
+<li><code>.github/workflows/gh-api-batch-processor-infra-deploy.yml</code></li>
+<li><code>.github/workflows/gh-api-batch-processor-api-images.yml</code></li>
+<li><code>.github/workflows/gh-api-batch-processor-graphql-job-image.yml</code></li>
+</ul>
+<p>The GitHub workflow's <code>AZURE_CLIENT_ID</code> value is only needed for GitHub OIDC login. It is not needed when running
+commands locally with an interactive <code>az login</code>.</p>
+<p>Native PowerShell does not support <code>source .env</code> or the Bash examples as written. Use WSL or Git Bash, or translate the
+setup into PowerShell syntax before running the Azure CLI commands.</p>
+<p>Create a <code>.env-api-batch-processor</code> file in the repository root based on this template and fill in your target values:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Target values.</span>
+<span class="nv">AZURE_ENV_NAME</span><span class="o">=</span><span class="s2">&quot;Prod&quot;</span>
+<span class="nv">AZURE_ENV_PREFIX</span><span class="o">=</span><span class="s2">&quot;&lt;environment-prefix&gt;&quot;</span>
+<span class="nv">AZURE_TENANT_ID</span><span class="o">=</span><span class="s2">&quot;&lt;tenant-id&gt;&quot;</span>
+<span class="nv">AZURE_SUBSCRIPTION_ID</span><span class="o">=</span><span class="s2">&quot;&lt;subscription-id&gt;&quot;</span>
+<span class="nv">AZURE_LOCATION</span><span class="o">=</span><span class="s2">&quot;&lt;azure-region&gt;&quot;</span>
+
+<span class="c1"># Resource group mode: &quot;create&quot; (creates new stack RG) or &quot;existing&quot; (deploys into existing RG).</span>
+<span class="nv">RESOURCE_GROUP_MODE</span><span class="o">=</span><span class="s2">&quot;create&quot;</span>
+<span class="nv">TARGET_RESOURCE_GROUP_NAME</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="c1"># Required only when RESOURCE_GROUP_MODE=&quot;existing&quot;.</span>
+
+<span class="c1"># Infrastructure values.</span>
+<span class="nv">AZURE_MONITORING_ACTION_GROUP_EMAIL</span><span class="o">=</span><span class="s2">&quot;&lt;monitoring-alert-email-address&gt;&quot;</span>
+<span class="nv">AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER</span><span class="o">=</span><span class="s2">&quot;&lt;managed-environment-number&gt;&quot;</span>
+<span class="nv">AZURE_CONTAINER_APP_VNET</span><span class="o">=</span><span class="s2">&quot;&lt;container-app-vnet-cidr&gt;&quot;</span>
+<span class="nv">AZURE_CONTAINER_APP_ENV_SUBNET</span><span class="o">=</span><span class="s2">&quot;&lt;container-app-environment-subnet-cidr&gt;&quot;</span>
+<span class="nv">AZURE_CONTAINER_APP_PE_SUBNET</span><span class="o">=</span><span class="s2">&quot;&lt;private-endpoint-subnet-cidr&gt;&quot;</span>
+
+<span class="c1"># Workflow defaults. Change these only when the target deployment requires it.</span>
+<span class="nv">AZURE_INCLUDE_ROLE_ASSIGNMENTS</span><span class="o">=</span><span class="s2">&quot;true&quot;</span>
+<span class="nv">AZURE_TURN_ON_ALERTS</span><span class="o">=</span><span class="s2">&quot;false&quot;</span>
+<span class="nv">GRAPHQL_PROCESS_JOB_IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;latest&quot;</span>
+<span class="nv">MATCHING_API_IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;latest&quot;</span>
+<span class="nv">EXTERNAL_API_IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;latest&quot;</span>
+<span class="nv">PDS_EMULATOR_IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;latest&quot;</span>
+<span class="nv">USE_PDS_EMULATOR</span><span class="o">=</span><span class="s2">&quot;false&quot;</span>
+<span class="nv">DEPLOYMENT_MODE</span><span class="o">=</span><span class="s2">&quot;manual&quot;</span>
+<span class="nv">CRON_EXPRESSION</span><span class="o">=</span><span class="s2">&quot;0 9,12,15 * * 1-5&quot;</span>
+<span class="nv">ALLOWED_GRAPHQL_FQDNS</span><span class="o">=</span><span class="s1">&#39;[]&#39;</span>
+<span class="nv">GRAPHQL_URL</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="c1"># Optional URL for the GraphQL endpoint</span>
+<span class="nv">GRAPHQL_USE_AUTH</span><span class="o">=</span><span class="s2">&quot;false&quot;</span><span class="w"> </span><span class="c1"># Optional toggle to use authentication for the GraphQL endpoint</span>
+<span class="nv">AZURE_TAG_ENVIRONMENT_NAME</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="c1"># Optional override for the Environment tag.</span>
+<span class="nv">AZURE_ADDITIONAL_TAGS</span><span class="o">=</span><span class="s2">&quot;{}&quot;</span><span class="w"> </span><span class="c1"># Optional additional tags as a JSON object string.</span>
+<span class="nv">ODS_CODE</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="c1"># Optional ODS code.</span>
+
+<span class="c1"># A JSON object of settings to override from the appsettings. Use &#39;{}&#39; if no overrides are needed.</span>
+<span class="nv">GRAPHQL_PROCESS_JOB_CONFIGURATION</span><span class="o">=</span><span class="s1">&#39;{}&#39;</span>
+</code></pre></div>
+<h2 id="infrastructure-deployment-variables">Infrastructure deployment variables</h2>
+<p>The infrastructure what-if and deployment use the same variables. Check these values before running either command.</p>
+<p>Required variables:</p>
+<ul>
+<li>All <a href="#required-common-variables">common variables</a>.</li>
+<li><code>AZURE_MONITORING_ACTION_GROUP_EMAIL</code></li>
+<li><code>AZURE_CONTAINER_APP_VNET</code></li>
+<li><code>AZURE_CONTAINER_APP_ENV_SUBNET</code></li>
+<li><code>AZURE_CONTAINER_APP_PE_SUBNET</code></li>
+<li><code>AZURE_INCLUDE_ROLE_ASSIGNMENTS</code></li>
+<li><code>AZURE_TURN_ON_ALERTS</code></li>
+<li><code>GRAPHQL_PROCESS_JOB_IMAGE_TAG</code></li>
+<li><code>MATCHING_API_IMAGE_TAG</code></li>
+<li><code>EXTERNAL_API_IMAGE_TAG</code></li>
+<li><code>GRAPHQL_PROCESS_JOB_CONFIGURATION</code> (use <code>{}</code> if empty)</li>
+</ul>
+<p>Optional variables:</p>
+<ul>
+<li><code>AZURE_TAG_ENVIRONMENT_NAME</code></li>
+<li><code>AZURE_ADDITIONAL_TAGS</code></li>
+<li><code>PDS_EMULATOR_IMAGE_TAG</code></li>
+<li><code>USE_PDS_EMULATOR</code></li>
+<li><code>ODS_CODE</code></li>
+<li><code>DEPLOYMENT_MODE</code></li>
+<li><code>CRON_EXPRESSION</code></li>
+<li><code>ALLOWED_GRAPHQL_FQDNS</code></li>
+<li><code>GRAPHQL_URL</code></li>
+<li><code>GRAPHQL_USE_AUTH</code></li>
+</ul>
+<p>The following variables must be set before starting any task from the middle of this run book:</p>
+<ul>
+<li><strong><code>AZURE_ENV_NAME</code></strong>: The target environment name (e.g. <code>Prod</code>, <code>Test</code>, <code>Dev</code>).</li>
+<li><em>How to get:</em> Defined by your team's deployment target. Used in resource naming conventions and injected into containers as <code>ASPNETCORE_ENVIRONMENT</code>.</li>
+<li><strong><code>AZURE_ENV_PREFIX</code></strong>: The prefix identifier used across resource names and resource groups (e.g. <code>sui</code>).</li>
+<li><em>How to get:</em> Defined by project naming standards. In Azure Portal, check the prefix on existing resources within your target resource group.</li>
+<li><strong><code>AZURE_TENANT_ID</code></strong>: The Microsoft Entra ID (Azure Active Directory) Tenant ID GUID.</li>
+<li><em>Azure Portal:</em> Navigate to <strong>Microsoft Entra ID</strong> &gt; <strong>Overview</strong> &gt; copy <strong>Tenant ID</strong> under <em>Basic information</em>.</li>
+<li><em>Azure CLI:</em> <code>az account show --query tenantId -o tsv</code></li>
+<li><strong><code>AZURE_SUBSCRIPTION_ID</code></strong>: The Azure Subscription ID GUID where the resources are deployed.</li>
+<li><em>Azure Portal:</em> Search for <strong>Subscriptions</strong> in the top search bar &gt; select your subscription &gt; copy <strong>Subscription ID</strong> from the <em>Overview</em> blade.</li>
+<li><em>Azure CLI:</em> <code>az account show --query id -o tsv</code> or <code>az account list --output table</code></li>
+<li><strong><code>AZURE_LOCATION</code></strong>: The Azure region code (e.g. <code>uksouth</code>, <code>ukwest</code>, <code>westeurope</code>).</li>
+<li><em>Azure Portal:</em> Open your target resource group &gt; check the region name in the <strong>Location</strong> field in the <em>Overview</em> blade (convert display name to short code, e.g. "UK South" $\rightarrow$ <code>uksouth</code>).</li>
+<li><em>Azure CLI:</em> <code>az group show --name &lt;RESOURCE_GROUP_NAME&gt; --query location -o tsv</code> or <code>az account list-locations --output table</code></li>
+<li><strong><code>RESOURCE_GROUP_MODE</code></strong>: Determines whether deployment creates a new stack resource group (<code>create</code>) or targets an existing one (<code>existing</code>). Default is <code>create</code>.</li>
+<li><strong><code>TARGET_RESOURCE_GROUP_NAME</code></strong>: The exact name of an existing target Azure Resource Group. Required only when <code>RESOURCE_GROUP_MODE="existing"</code>.</li>
+<li><em>Azure Portal:</em> Search for <strong>Resource groups</strong> &gt; find and copy the name of the destination resource group.</li>
+<li><em>Azure CLI:</em> <code>az group list --query "[].name" -o table</code></li>
+<li><strong><code>AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER</code></strong>: The sequence or version suffix for the Container Apps Environment naming convention (e.g. <code>01</code>, <code>02</code>).</li>
+<li><em>How to get:</em> Typically <code>"01"</code>. In Azure Portal, check existing Container App Environment resource names in your resource group (e.g. <code>&lt;prefix&gt;-&lt;env&gt;-abp-cae-01</code>) to match the suffix.</li>
+<li><strong><code>STACK_RESOURCE_GROUP</code></strong>: The shell variable representing the target resource group.</li>
+<li><em>How to get:</em> Computed automatically by the setup script block above from <code>TARGET_RESOURCE_GROUP_NAME</code> (when <code>RESOURCE_GROUP_MODE="existing"</code>) or derived from <code>${AZURE_ENV_PREFIX}-$(printf '%s' "$AZURE_ENV_NAME" | tr '[:upper:]' '[:lower:]')-api-batch-processor</code>.</li>
+</ul>
+<p>If you are starting from an API image, GraphQL processor image, or infrastructure redeploy section, run this first:</p>
+<p>Load the configuration variables into your terminal session and resolve the target stack resource group:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">set</span><span class="w"> </span>-euo<span class="w"> </span>pipefail
+<span class="nb">source</span><span class="w"> </span>.env-api-batch-processor
+
+<span class="nv">STACK_RESOURCE_GROUP</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_PREFIX</span><span class="si">}</span><span class="s2">-</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AZURE_ENV_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;[:upper:]&#39;</span><span class="w"> </span><span class="s1">&#39;[:lower:]&#39;</span><span class="k">)</span><span class="s2">-api-batch-processor&quot;</span>
+
+<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RESOURCE_GROUP_MODE</span><span class="k">:-</span><span class="nv">create</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;existing&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">  </span><span class="nv">STACK_RESOURCE_GROUP</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">TARGET_RESOURCE_GROUP_NAME</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="k">fi</span>
+</code></pre></div>
+<p>Log in to the Azure CLI targeting your specific Microsoft Entra tenant:</p>
+<div class="highlight"><pre><span></span><code>az<span class="w"> </span>login<span class="w"> </span>--tenant<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_TENANT_ID</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<p>The az cli should ask you which subscription to set but if in doubt you can Set the active Azure subscription for all subsequent deployment commands:</p>
+<div class="highlight"><pre><span></span><code>az<span class="w"> </span>account<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--subscription<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_SUBSCRIPTION_ID</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<p>Verify that the active subscription and tenant match your expected environment:</p>
+<div class="highlight"><pre><span></span><code>az<span class="w"> </span>account<span class="w"> </span>show<span class="w"> </span>--query<span class="w"> </span><span class="s2">&quot;{subscription:name, tenantId:tenantId}&quot;</span><span class="w"> </span>--output<span class="w"> </span>table
+</code></pre></div>
+<h2 id="run-the-infrastructure-what-if">Run the infrastructure what-if</h2>
+<p>Run the what-if:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: STACK_RESOURCE_GROUP is not set. Please run the setup block first.&quot;</span>
+<span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<span class="k">fi</span>
+
+<span class="nv">TEMPLATE_FILE</span><span class="o">=</span><span class="s2">&quot;infra/stacks/api-batch-processor/subscription.bicep&quot;</span>
+<span class="nv">DEPLOYMENT_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="si">}</span><span class="s2">-</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AZURE_LOCATION</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;[:upper:]&#39;</span><span class="w"> </span><span class="s1">&#39;[:lower:]&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39; &#39;</span><span class="k">)</span><span class="s2">-what-if&quot;</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Target stack resource group: </span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Deployment name: </span><span class="si">${</span><span class="nv">DEPLOYMENT_NAME</span><span class="si">}</span><span class="s2">&quot;</span>
+
+az<span class="w"> </span>deployment<span class="w"> </span>sub<span class="w"> </span>what-if<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DEPLOYMENT_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--location<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_LOCATION</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--template-file<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">TEMPLATE_FILE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--parameters<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">environmentName</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">environmentPrefix</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">location</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_LOCATION</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">monitoringActionGroupEmail</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_MONITORING_ACTION_GROUP_EMAIL</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">containerAppManagedEnvironmentNumber</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">containerAppVnet</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_VNET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">containerAppEnvSubnet</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_ENV_SUBNET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">containerAppPeSubnet</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_PE_SUBNET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">includeRoleAssignments</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_INCLUDE_ROLE_ASSIGNMENTS</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">turnOnAlerts</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_TURN_ON_ALERTS</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">graphqlProcessJobImageTag</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">GRAPHQL_PROCESS_JOB_IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">matchingApiImageTag</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">MATCHING_API_IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">externalApiImageTag</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EXTERNAL_API_IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">pdsEmulatorImageTag</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PDS_EMULATOR_IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">usePdsEmulator</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USE_PDS_EMULATOR</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">deploymentMode</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DEPLOYMENT_MODE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">cronExpression</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CRON_EXPRESSION</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">odsCode</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ODS_CODE</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">allowedGraphQLFqdns</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ALLOWED_GRAPHQL_FQDNS</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">resourceGroupMode</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RESOURCE_GROUP_MODE</span><span class="k">:-</span><span class="nv">create</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">targetResourceGroupName</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">TARGET_RESOURCE_GROUP_NAME</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">graphqlProcessJobConfiguration</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">GRAPHQL_PROCESS_JOB_CONFIGURATION</span><span class="k">:-</span><span class="p">{</span><span class="se">\}</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">tagEnvironmentName</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_TAG_ENVIRONMENT_NAME</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">additionalTags</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ADDITIONAL_TAGS</span><span class="k">:-</span><span class="p">{</span><span class="se">\}</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">graphQlUrl</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">GRAPHQL_URL</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">graphQlUseAuth</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">GRAPHQL_USE_AUTH</span><span class="k">:-</span><span class="nv">false</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h2 id="run-the-infrastructure-deploy">Run the infrastructure deploy</h2>
+<p>Use the values checked in <a href="#infrastructure-deployment-variables">Infrastructure deployment variables</a>.</p>
+<p>Review the what-if output before running the deployment. This command deploys
+<code>infra/stacks/api-batch-processor/subscription.bicep</code> directly into the target subscription.</p>
+<p>The first infrastructure deployment can fail if the container app images do not exist in Azure Container Registry yet.
+If that happens, publish the API and GraphQL processor images, then run
+<a href="#redeploy-infrastructure-after-publishing-images">Redeploy infrastructure after publishing images</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: STACK_RESOURCE_GROUP is not set. Please run the setup block first.&quot;</span>
+<span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<span class="k">fi</span>
+
+<span class="nv">TEMPLATE_FILE</span><span class="o">=</span><span class="s2">&quot;infra/stacks/api-batch-processor/subscription.bicep&quot;</span>
+<span class="nv">DEPLOYMENT_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="si">}</span><span class="s2">-</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AZURE_LOCATION</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;[:upper:]&#39;</span><span class="w"> </span><span class="s1">&#39;[:lower:]&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39; &#39;</span><span class="k">)</span><span class="s2">-deploy&quot;</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Target stack resource group: </span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Deployment name: </span><span class="si">${</span><span class="nv">DEPLOYMENT_NAME</span><span class="si">}</span><span class="s2">&quot;</span>
+
+az<span class="w"> </span>deployment<span class="w"> </span>sub<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DEPLOYMENT_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--location<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_LOCATION</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--template-file<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">TEMPLATE_FILE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--parameters<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">environmentName</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">environmentPrefix</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">location</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_LOCATION</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">monitoringActionGroupEmail</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_MONITORING_ACTION_GROUP_EMAIL</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">containerAppManagedEnvironmentNumber</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">containerAppVnet</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_VNET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">containerAppEnvSubnet</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_ENV_SUBNET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">containerAppPeSubnet</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_PE_SUBNET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">includeRoleAssignments</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_INCLUDE_ROLE_ASSIGNMENTS</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">turnOnAlerts</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_TURN_ON_ALERTS</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">graphqlProcessJobImageTag</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">GRAPHQL_PROCESS_JOB_IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">matchingApiImageTag</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">MATCHING_API_IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">externalApiImageTag</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EXTERNAL_API_IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">pdsEmulatorImageTag</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PDS_EMULATOR_IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">usePdsEmulator</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USE_PDS_EMULATOR</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">deploymentMode</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DEPLOYMENT_MODE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">cronExpression</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CRON_EXPRESSION</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">odsCode</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ODS_CODE</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">allowedGraphQLFqdns</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ALLOWED_GRAPHQL_FQDNS</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">resourceGroupMode</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RESOURCE_GROUP_MODE</span><span class="k">:-</span><span class="nv">create</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">targetResourceGroupName</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">TARGET_RESOURCE_GROUP_NAME</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">graphqlProcessJobConfiguration</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">GRAPHQL_PROCESS_JOB_CONFIGURATION</span><span class="k">:-</span><span class="p">{</span><span class="se">\}</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">tagEnvironmentName</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_TAG_ENVIRONMENT_NAME</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">additionalTags</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ADDITIONAL_TAGS</span><span class="k">:-</span><span class="p">{</span><span class="se">\}</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">graphQlUrl</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">GRAPHQL_URL</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">graphQlUseAuth</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">GRAPHQL_USE_AUTH</span><span class="k">:-</span><span class="nv">false</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h2 id="troubleshooting-policy-or-deployment-errors">Troubleshooting policy or deployment errors</h2>
+<p>If the <code>what-if</code> or <code>deploy</code> command is rejected due to a "RequestDisallowedByPolicy" error or fails unexpectedly, it might be due to missing tags or naming conventions on your Azure subscription.</p>
+<p>To see exactly what is failing policy, you can view the errors directly using this script:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">DEPLOYMENT_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="si">}</span><span class="s2">-</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AZURE_LOCATION</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;[:upper:]&#39;</span><span class="w"> </span><span class="s1">&#39;[:lower:]&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39; &#39;</span><span class="k">)</span><span class="s2">-deploy&quot;</span>
+az<span class="w"> </span>deployment<span class="w"> </span>sub<span class="w"> </span>operation<span class="w"> </span>list<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DEPLOYMENT_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--query<span class="w"> </span><span class="s2">&quot;[?properties.provisioningState==&#39;Failed&#39;].{Resource:properties.targetResource.resourceName, Type:properties.targetResource.resourceType, Error:properties.statusMessage.error.message}&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>table
+</code></pre></div>
+<p>Alternatively, to output the full debug trace payload and search for policy errors, append <code>--debug 2&gt;&amp;1 | grep "RequestDisallowedByPolicy"</code> to the end of the <code>az deployment sub create</code> command, which will filter the immense debug log to only standard policy rejections.</p>
+<h2 id="add-the-secrets-to-key-vault">Add the secrets to Key Vault</h2>
+<p>After the infrastructure deployment has created the Key Vault, manually add the secrets.</p>
+<p>The deployment output includes <code>SECRETS_VAULT_NAME</code>. Add these secrets to that Key Vault:</p>
+<ul>
+<li><code>nhs-digital-client-id</code>: the NHS Digital API key value.</li>
+<li><code>nhs-digital-private-key</code>: the private key PEM that matches the public key uploaded to the NHS Digital application.</li>
+<li><code>nhs-digital-kid</code>: the key ID for the uploaded NHS Digital public key.</li>
+<li><code>GraphQlProcessJob--ClientId</code>: The client ID for connecting to the graphQL instance</li>
+<li><code>GraphQlProcessJob--ClientSecret</code>: The client secret for connecting to the graphQL instance</li>
+<li><code>GraphQlProcessJob--Scope</code>: The scope for connecting to the graphQL instance</li>
+<li><code>GraphQlProcessJob--TenantId</code>: The tenant ID for connecting to the graphQL instance</li>
+<li><code>GraphQLProcessJob--KnownSafeguardingConcernWorklistDefinitionId</code>: The Id to filter results by</li>
+</ul>
+<p>These secrets can be added later if needed, but the external API app will not start successfully until all three secrets
+exist in Key Vault.</p>
+<h2 id="publish-the-api-images-to-azure-container-registry">Publish the API images to Azure Container Registry</h2>
+<p>Use this section when you only need to publish the external API and matching API images.</p>
+<p>If you are starting here, run <a href="#common-setup">Common setup</a> first, or at least run the short setup block in
+<a href="#required-common-variables">Required common variables</a>.</p>
+<p>Required variables for this task:</p>
+<ul>
+<li><code>AZURE_ENV_NAME</code></li>
+<li><code>AZURE_ENV_PREFIX</code></li>
+<li><code>AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER</code></li>
+<li><code>AZURE_SUBSCRIPTION_ID</code></li>
+<li><code>STACK_RESOURCE_GROUP</code></li>
+</ul>
+<p>The infrastructure deployment must already have created the Azure Container Registry and Container Apps environment.</p>
+<p>This mirrors <code>.github/workflows/gh-api-batch-processor-api-images.yml</code>. The images are built in Azure Container
+Registry using <code>az acr build</code>, and each API image is tagged with the current Git commit hash and <code>latest</code> tag.</p>
+<div class="highlight"><pre><span></span><code><span class="nv">LOWERCASE_ENVIRONMENT_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AZURE_ENV_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;[:upper:]&#39;</span><span class="w"> </span><span class="s1">&#39;[:lower:]&#39;</span><span class="k">)</span><span class="s2">&quot;</span>
+<span class="nv">ACR_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_PREFIX</span><span class="si">}${</span><span class="nv">LOWERCASE_ENVIRONMENT_NAME</span><span class="si">}</span><span class="s2">abpacr01&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span><span class="s2">&quot;</span>
+<span class="nv">CONTAINER_APPS_ENVIRONMENT_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_PREFIX</span><span class="si">}</span><span class="s2">-</span><span class="si">${</span><span class="nv">LOWERCASE_ENVIRONMENT_NAME</span><span class="si">}</span><span class="s2">-abp-cae-</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--short<span class="o">=</span><span class="m">12</span><span class="w"> </span>HEAD<span class="k">)</span><span class="s2">&quot;</span>
+<span class="nv">EXTERNAL_API_IMAGE_REPOSITORY</span><span class="o">=</span><span class="s2">&quot;external-api&quot;</span>
+<span class="nv">MATCHING_API_IMAGE_REPOSITORY</span><span class="o">=</span><span class="s2">&quot;matching-api&quot;</span>
+
+az<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>extension.use_dynamic_install<span class="o">=</span>yes_without_prompt
+
+
+<span class="nv">ACR_LOGIN_SERVER</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>az<span class="w"> </span>acr<span class="w"> </span>show<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ACR_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--resource-group<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--query<span class="w"> </span>loginServer<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>tsv<span class="k">)</span><span class="s2">&quot;</span>
+
+<span class="nv">CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>az<span class="w"> </span>containerapp<span class="w"> </span>env<span class="w"> </span>show<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CONTAINER_APPS_ENVIRONMENT_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--resource-group<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--query<span class="w"> </span>properties.defaultDomain<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>tsv<span class="k">)</span><span class="s2">&quot;</span>
+
+<span class="nv">EXTERNAL_API_HTTP_ENDPOINT</span><span class="o">=</span><span class="s2">&quot;http://external-api.internal.</span><span class="si">${</span><span class="nv">CONTAINER_APPS_ENVIRONMENT_DEFAULTDomain</span><span class="k">:-</span><span class="si">${</span><span class="nv">CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN</span><span class="si">}}</span><span class="s2">&quot;</span>
+<span class="nv">EXTERNAL_API_HTTPS_ENDPOINT</span><span class="o">=</span><span class="s2">&quot;https://external-api.internal.</span><span class="si">${</span><span class="nv">CONTAINER_APPS_ENVIRONMENT_DEFAULTDomain</span><span class="k">:-</span><span class="si">${</span><span class="nv">CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN</span><span class="si">}}</span><span class="s2">&quot;</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ACR: </span><span class="si">${</span><span class="nv">ACR_LOGIN_SERVER</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;External API image tag: </span><span class="si">${</span><span class="nv">IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Matching API image tag: </span><span class="si">${</span><span class="nv">IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;External API endpoint for matching API: </span><span class="si">${</span><span class="nv">EXTERNAL_API_HTTPS_ENDPOINT</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<p>Build the external API image in Azure Container Registry:</p>
+<div class="highlight"><pre><span></span><code>az<span class="w"> </span>acr<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--registry<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ACR_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EXTERNAL_API_IMAGE_REPOSITORY</span><span class="si">}</span><span class="s2">:</span><span class="si">${</span><span class="nv">IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EXTERNAL_API_IMAGE_REPOSITORY</span><span class="si">}</span><span class="s2">:latest&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--file<span class="w"> </span>src/external-api/Dockerfile<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">ASPNETCORE_ENVIRONMENT</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>.
+</code></pre></div>
+<p>Build the matching API image in Azure Container Registry:</p>
+<div class="highlight"><pre><span></span><code>az<span class="w"> </span>acr<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--registry<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ACR_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">MATCHING_API_IMAGE_REPOSITORY</span><span class="si">}</span><span class="s2">:</span><span class="si">${</span><span class="nv">IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">MATCHING_API_IMAGE_REPOSITORY</span><span class="si">}</span><span class="s2">:latest&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--file<span class="w"> </span>src/matching-api/Dockerfile<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">ASPNETCORE_ENVIRONMENT</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">EXTERNAL_API_HTTP_ENDPOINT</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EXTERNAL_API_HTTP_ENDPOINT</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">EXTERNAL_API_HTTPS_ENDPOINT</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EXTERNAL_API_HTTPS_ENDPOINT</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>.
+</code></pre></div>
+<p>Check that both repositories contain the current Git commit hash and <code>latest</code> tags:</p>
+<div class="highlight"><pre><span></span><code>az<span class="w"> </span>acr<span class="w"> </span>repository<span class="w"> </span>show-tags<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ACR_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--repository<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EXTERNAL_API_IMAGE_REPOSITORY</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>table
+
+az<span class="w"> </span>acr<span class="w"> </span>repository<span class="w"> </span>show-tags<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ACR_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--repository<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">MATCHING_API_IMAGE_REPOSITORY</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>table
+</code></pre></div>
+<p>Use this tag when you redeploy infrastructure after publishing images:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">EXTERNAL_API_IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">MATCHING_API_IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h2 id="publish-the-graphql-processor-image-to-azure-container-registry">Publish the GraphQL processor image to Azure Container Registry</h2>
+<p>Use this section when you only need to publish the GraphQL processor event job image.</p>
+<p>If you are starting here, run <a href="#common-setup">Common setup</a> first, or at least run the short setup block in
+<a href="#required-common-variables">Required common variables</a>.</p>
+<p>Required variables for this task:</p>
+<ul>
+<li><code>AZURE_ENV_NAME</code></li>
+<li><code>AZURE_ENV_PREFIX</code></li>
+<li><code>AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER</code></li>
+<li><code>AZURE_SUBSCRIPTION_ID</code></li>
+<li><code>STACK_RESOURCE_GROUP</code></li>
+</ul>
+<p>The API images must already have been published, and the infrastructure deployment must already have created the Azure
+Container Registry and Container Apps environment.</p>
+<p>This mirrors <code>.github/workflows/gh-api-batch-processor-graphql-job-image.yml</code>. The image is built in Azure Container
+Registry using <code>az acr build</code>, and the GraphQL processor image is tagged with the current Git commit hash and <code>latest</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="nv">LOWERCASE_ENVIRONMENT_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AZURE_ENV_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;[:upper:]&#39;</span><span class="w"> </span><span class="s1">&#39;[:lower:]&#39;</span><span class="k">)</span><span class="s2">&quot;</span>
+<span class="nv">ACR_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_PREFIX</span><span class="si">}${</span><span class="nv">LOWERCASE_ENVIRONMENT_NAME</span><span class="si">}</span><span class="s2">abpacr01&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span><span class="s2">&quot;</span>
+<span class="nv">CONTAINER_APPS_ENVIRONMENT_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AZURE_ENV_PREFIX</span><span class="si">}</span><span class="s2">-</span><span class="si">${</span><span class="nv">LOWERCASE_ENVIRONMENT_NAME</span><span class="si">}</span><span class="s2">-abp-cae-</span><span class="si">${</span><span class="nv">AZURE_CONTAINER_APP_MANAGED_ENVIRONMENT_NUMBER</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--short<span class="o">=</span><span class="m">12</span><span class="w"> </span>HEAD<span class="k">)</span><span class="s2">&quot;</span>
+<span class="nv">IMAGE_REPOSITORY</span><span class="o">=</span><span class="s2">&quot;sui-client-graphql-process-job&quot;</span>
+
+az<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>extension.use_dynamic_install<span class="o">=</span>yes_without_prompt
+
+
+<span class="nv">ACR_LOGIN_SERVER</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>az<span class="w"> </span>acr<span class="w"> </span>show<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ACR_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--resource-group<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">STACK_RESOURCE_GROUP</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--query<span class="w"> </span>loginServer<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>tsv<span class="k">)</span><span class="s2">&quot;</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ACR: </span><span class="si">${</span><span class="nv">ACR_LOGIN_SERVER</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;GraphQL processor image tag: </span><span class="si">${</span><span class="nv">IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<p>Build the GraphQL processor image in Azure Container Registry:</p>
+<div class="highlight"><pre><span></span><code>az<span class="w"> </span>acr<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--registry<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">ACR_NAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">IMAGE_REPOSITORY</span><span class="si">}</span><span class="s2">:</span><span class="si">${</span><span class="nv">IMAGE_TAG</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">IMAGE_REPOSITORY</span><span class="si">}</span><span class="s2">:latest&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--file<span class="w"> </span>src/SUI.Client/SUI.Client.GraphQLProcessJob/Dockerfile<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>.
+</code></pre></div>
+<p><code>GRAPHQL_PROCESS_JOB_CONFIGURATION</code> is runtime deployment configuration. Obtain the protected configuration from the approved external runbook; do not add its values to this repository or image build command.</p>
+<p>Check that the repository contains the current Git commit hash and <code>latest</code> tags:</p>
+<p>```bash
+az acr repository show-tags \</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
