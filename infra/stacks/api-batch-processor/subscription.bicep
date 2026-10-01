@@ -67,6 +67,12 @@ param cronExpression string = '0 9,12,15 * * 1-5'
 @description('Toggle to filter by worklist definition ID in the GraphQL process job')
 param filterByWorklistDefinitionId bool = false
 
+@description('The URL for the GraphQL endpoint')
+param graphQlUrl string = ''
+
+@description('Toggle to use authentication for the GraphQL endpoint')
+param graphQlUseAuth bool = false
+
 @description('Whether or not to include role assignments, since some environments may restrict these.')
 param includeRoleAssignments bool = true
 
@@ -142,6 +148,8 @@ module stackDeployment 'main.bicep' = {
     additionalTags: additionalTags
     allowedGraphQLFqdns: allowedGraphQLFqdns
     graphqlProcessJobConfiguration: graphqlProcessJobConfiguration
+    graphQlUrl: graphQlUrl
+    graphQlUseAuth: graphQlUseAuth
   }
   dependsOn: [
     stackResourceGroup

@@ -6,6 +6,8 @@ param turnOnAlerts bool = true
 param location string = resourceGroup().location
 param logAnalyticsWorkspaceId string
 param actionGroupEmail string
+@description('Tags that will be applied to all resources')
+param tags object = {}
 
 var containers = [
   'external-api'
@@ -16,6 +18,7 @@ var containers = [
 resource supportTeamActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-preview' = {
   name: actionGroupName
   location: 'global'
+  tags: tags
   properties: {
     enabled: true
     groupShortName: actionGroupName
@@ -32,6 +35,7 @@ resource supportTeamActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-prev
 resource CpuAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [for container in containers: if (turnOnAlerts) {
   name: '${container}-cpu-alert'
   location: 'global'
+  tags: tags
   properties: {
     description: 'CPU usage alert for ${container}'
     severity: 2
@@ -81,6 +85,7 @@ resource CpuAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [for container
 resource MemoryAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [for container in containers: if (turnOnAlerts) {
   name: '${container}-memory-alert'
   location: 'global'
+  tags: tags
   properties: {
     description: 'Memory usage alert for ${container}'
     severity: 2
@@ -130,6 +135,7 @@ resource MemoryAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [for contai
 resource ErrorLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = if (turnOnAlerts) {
   name: 'Error-Log-Alert'
   location: location
+  tags: tags
   properties: {
     displayName: 'Error Log Alert'
     description: 'Log alert for errors in containers'
@@ -163,6 +169,7 @@ resource ErrorLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-previ
 resource WarningLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = if (turnOnAlerts) {
   name: 'Warning-Log-Alert'
   location: location
+  tags: tags
   properties: {
     displayName: 'Warning Log Alert'
     description: 'Log alert for warnings in containers'
@@ -196,6 +203,7 @@ resource WarningLogAlerts 'Microsoft.Insights/scheduledQueryRules@2023-03-15-pre
 resource ContainerTerminated 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = if (turnOnAlerts) {
   name: 'Container-Terminated-Alert'
   location: location
+  tags: tags
   properties: {
     displayName: 'Warning Log Alert'
     description: 'Log alert for warnings for containers'

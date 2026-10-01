@@ -28,6 +28,12 @@ param imageTag string
 @description('The base address of the matching API')
 param matchApiBaseAddress string = ''
 
+@description('The URL for the GraphQL endpoint')
+param graphQlUrl string = ''
+
+@description('Toggle to use authentication for the GraphQL endpoint')
+param graphQlUseAuth bool = false
+
 @description('The Key Vault URI')
 param keyVaultUri string
 
@@ -144,6 +150,14 @@ resource graphqlProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
               {
                 name: 'GraphQLProcessJob__MatchApiBaseAddress'
                 value: matchApiBaseAddress
+              }
+              {
+                name: 'GraphQLProcessJob__Url'
+                value: graphQlUrl
+              }
+              {
+                name: 'GraphQLProcessJob__UseAuth'
+                value: string(graphQlUseAuth)
               }
               {
                 name: 'AZURE_CLIENT_ID'
