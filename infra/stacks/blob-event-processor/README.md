@@ -15,6 +15,7 @@ Current scope:
 - storage process ACA job triggered from the primary storage queue
 - matching API and external API container apps (internal ingress) deployed into the stack's CAE
 - Key Vault private endpoint for application secrets access
+- ACR private endpoint for secure container registry access
 
 Production egress allows `api.service.nhs.uk`. Non-production egress allows `int.api.service.nhs.uk`.
 

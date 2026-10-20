@@ -176,6 +176,17 @@ module containerAppNetwork '../../modules/shared/container-app-network.bicep' = 
   }
 }
 
+module acrPrivateEndpoint '../../modules/shared/acr-private-endpoint.bicep' = {
+  name: 'acr-private-endpoint'
+  params: {
+    location: location
+    tags: tags
+    registryName: containerRegistry.outputs.name
+    peSubnetId: containerAppNetwork.outputs.privateEndpointSubnetId
+    vnetId: containerAppNetwork.outputs.virtualNetworkId
+  }
+}
+
 module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' = if (deployEgressFirewall) {
   name: 'cae-firewall-peering'
   params: {
@@ -220,6 +231,7 @@ module containerAppEnvironment '../../modules/shared/container-app-environment.b
   }
   dependsOn: [
     caeFirewallPeering
+    acrPrivateEndpoint
   ]
 }
 
