@@ -26,6 +26,9 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2026-01-01-pr
   properties: {
     dataEndpointEnabled: true
     publicNetworkAccess: 'Disabled'
+    // Allow ACR Tasks (az acr build) to push through the network rules.
+    networkRuleBypassOptions: 'AzureServices'
+    networkRuleBypassAllowedForTasks: true
     policies: {
       softDeletePolicy: {
         status: 'enabled'
