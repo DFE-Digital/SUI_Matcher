@@ -30,6 +30,7 @@ or the storage processor event job image.
   [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
 - Add optional reconciliation properties to logs: follow
   [Add optional properties to storage processor logs](#add-optional-properties-to-storage-processor-logs).
+- Add a one-off secret to Key Vault: follow the [Key Vault secrets run book](key-vault-secrets-runbook.md).
 - Smoke test: follow [Smoke test the deployment](#smoke-test-the-deployment).
 
 ## Full deployment flow
@@ -375,6 +376,10 @@ The deployment output includes `SECRETS_VAULT_NAME`. Add these secrets to that K
 
 These secrets can be added later if needed, but the external API app will not start successfully until all three secrets
 exist in Key Vault.
+
+Public network access is disabled on this stack's Key Vault. To add the secrets, follow
+[Add a secret when public network access is disabled](key-vault-secrets-runbook.md#add-a-secret-when-public-network-access-is-disabled)
+in the Key Vault secrets run book.
 
 ## Publish the API images to Azure Container Registry
 
