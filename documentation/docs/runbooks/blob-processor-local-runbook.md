@@ -435,6 +435,16 @@ echo "Matching API image tag: ${IMAGE_TAG}"
 echo "External API endpoint for matching API: ${EXTERNAL_API_HTTPS_ENDPOINT}"
 ```
 
+Enable public network access from all networks on the registry so `az acr build` can run:
+
+```bash
+az acr update \
+  --name "${ACR_NAME}" \
+  --resource-group "${STACK_RESOURCE_GROUP}" \
+  --public-network-enabled true \
+  --default-action Allow
+```
+
 Build the external API image in Azure Container Registry:
 
 ```bash
@@ -474,6 +484,16 @@ az acr repository show-tags \
   --repository "${MATCHING_API_IMAGE_REPOSITORY}" \
   --output table
 ```
+
+> [!IMPORTANT]
+> **Set the registry back to private once the builds finish, even if they failed.**
+>
+> ```bash
+> az acr update \
+>   --name "${ACR_NAME}" \
+>   --resource-group "${STACK_RESOURCE_GROUP}" \
+>   --public-network-enabled false
+> ```
 
 Use this tag when you redeploy infrastructure after publishing images:
 
@@ -534,6 +554,16 @@ echo "Storage processor image tag: ${IMAGE_TAG}"
 echo "Matching API base address: ${MATCH_API_BASE_ADDRESS}"
 ```
 
+Enable public network access from all networks on the registry so `az acr build` can run:
+
+```bash
+az acr update \
+  --name "${ACR_NAME}" \
+  --resource-group "${STACK_RESOURCE_GROUP}" \
+  --public-network-enabled true \
+  --default-action Allow
+```
+
 Build the storage processor image in Azure Container Registry:
 
 ```bash
@@ -558,6 +588,16 @@ az acr repository show-tags \
   --repository "${IMAGE_REPOSITORY}" \
   --output table
 ```
+
+> [!IMPORTANT]
+> **Set the registry back to private once the builds finish, even if they failed.**
+>
+> ```bash
+> az acr update \
+>   --name "${ACR_NAME}" \
+>   --resource-group "${STACK_RESOURCE_GROUP}" \
+>   --public-network-enabled false
+> ```
 
 Use this tag when you redeploy infrastructure after publishing images:
 
