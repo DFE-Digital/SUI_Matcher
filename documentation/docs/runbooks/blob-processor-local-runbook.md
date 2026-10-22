@@ -23,8 +23,7 @@ or the storage processor event job image.
   [Infrastructure deployment variables](#infrastructure-deployment-variables),
   [Run the infrastructure what-if](#run-the-infrastructure-what-if) and
   [Run the infrastructure deploy](#run-the-infrastructure-deploy).
-- Build and scan container images locally (optional): follow
-  [Build and scan container images locally with Podman](#build-and-scan-container-images-locally-with-podman).
+- Build and scan container images locally (optional): follow the [Container image security scanning run book](container-image-security-scan-runbook.md).
 - API images only: follow [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
 - Storage processor event job image only: follow
   [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
@@ -45,7 +44,7 @@ or the storage processor event job image.
 6. [Run the infrastructure what-if](#run-the-infrastructure-what-if).
 7. [Run the infrastructure deploy](#run-the-infrastructure-deploy).
 8. [Add the NHS Digital secrets to Key Vault](#add-the-nhs-digital-secrets-to-key-vault).
-9. [Build and scan container images locally with Podman (optional)](#build-and-scan-container-images-locally-with-podman).
+9. [Build and scan container images locally with Podman or Docker (optional)](container-image-security-scan-runbook.md).
 10. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
 11. [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
 12. [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
@@ -384,114 +383,21 @@ Public network access is disabled on this stack's Key Vault. To add the secrets,
 [Add a secret when public network access is disabled](key-vault-secrets-runbook.md#add-a-secret-when-public-network-access-is-disabled)
 in the Key Vault secrets run book.
 
-## Build and scan container images locally with Podman
+## Build and scan container images locally with Podman or Docker
 
-Before publishing container images to Azure Container Registry (ACR), you can build them locally using Podman and
-perform a vulnerability scan. This ensures that the images compile properly, verifies that the non-root distroless
-runtime operates as expected, and validates that zero critical vulnerabilities exist prior to deployment.
+Before publishing container images to Azure Container Registry (ACR), you can build them locally using either Podman or Docker and
+perform a vulnerability scan with Aqua Trivy.
 
 All application Dockerfiles use Microsoft's hardened Azure Linux 3.0 Distroless base image
 (`mcr.microsoft.com/dotnet/aspnet:10.0-azurelinux3.0-distroless-extra`) running as non-root `$APP_UID` (UID 1654).
 
-### Prerequisites
-
-- Podman installed (`podman --version`).
-- Podman machine running on macOS:
-
-```bash
-podman machine start
-```
-
-### Build images locally
-
-Run these commands from the repository root:
-
-Build the external API image:
-
-```bash
-podman build -t external-api:local -f src/external-api/Dockerfile .
-```
-
-Build the matching API image:
-
-```bash
-podman build -t matching-api:local -f src/matching-api/Dockerfile .
-```
-
-Build the storage processor job image:
-
-```bash
-podman build -t sui-client-storage-process-job:local -f src/SUI.Client/SUI.Client.StorageProcessJob/Dockerfile .
-```
-
-### Scan images for vulnerabilities with Aqua Trivy
-
-[Aqua Trivy](https://github.com/aquasecurity/trivy) is the project's standard vulnerability scanner, mirroring
-`.github/workflows/gh-trivy.yml`. It scans both the minimal OS layer (Azure Linux RPM packages) and application-level language
-dependencies (NuGet packages recorded in `.deps.json`).
-
-Run Trivy directly via Podman without installing local host binaries:
-
-```bash
-podman run --rm \
-  --security-opt label=disable \
-  --user 0 \
-  -v /run/podman/podman.sock:/var/run/docker.sock \
-  -v trivy-cache:/root/.cache/ \
-  aquasec/trivy image localhost/external-api:local
-```
-
-Command options explained:
-
-- `--security-opt label=disable`: Disables container SELinux separation so the container can access the mounted Podman socket.
-- `--user 0`: Runs the scanner container as root to allow reading the forwarded socket inside the Podman machine.
-- `-v /run/podman/podman.sock:/var/run/docker.sock`: Mounts the Podman daemon socket into the standard Docker socket location expected by Trivy.
-- `-v trivy-cache:/root/.cache/`: Caches the downloaded vulnerability database in a named volume so subsequent scans complete rapidly.
-
-### Generate vulnerability reports
-
-#### Export a structured JSON report
-
-Export the vulnerability scan results to a JSON file in the repository root:
-
-```bash
-podman run --rm \
-  --security-opt label=disable \
-  --user 0 \
-  -v /run/podman/podman.sock:/var/run/docker.sock \
-  -v "$(pwd)":/reports \
-  aquasec/trivy image \
-    --format json \
-    --output /reports/external-api-trivy-report.json \
-    localhost/external-api:local
-```
-
-#### Fail on High or Critical vulnerabilities (CI gating)
-
-To use the scan as an automated gate that returns an exit code of 1 if HIGH or CRITICAL issues are detected:
-
-```bash
-podman run --rm \
-  --security-opt label=disable \
-  --user 0 \
-  -v /run/podman/podman.sock:/var/run/docker.sock \
-  aquasec/trivy image \
-    --exit-code 1 \
-    --severity HIGH,CRITICAL \
-    localhost/external-api:local
-```
-
-### Cross-validate with Anchore Grype (optional)
-
-Optionally cross-validate vulnerability results using [Anchore Grype](https://github.com/anchore/grype):
-
-```bash
-podman run --rm \
-  --security-opt label=disable \
-  --user 0 \
-  -v /run/podman/podman.sock:/var/run/docker.sock \
-  anchore/grype:latest localhost/external-api:local
-```
+Follow the [Container image security scanning run book](container-image-security-scan-runbook.md) for:
+- Local image build commands for each service (`external-api`, `matching-api`, `sui-client-storage-process-job`).
+- Running Aqua Trivy scans via container socket forwarding.
+- Exporting structured JSON or HTML vulnerability reports.
+- Configuring automated quality gates that fail on HIGH or CRITICAL severity.
+- Scanning remote images directly in ACR using temporary access tokens.
+- Benchmark vulnerability comparison against previous base images.
 
 ## Publish the API images to Azure Container Registry
 
