@@ -18,8 +18,6 @@ This run book explains how to deploy the api-batch-processor stack from a laptop
   [Infrastructure deployment variables](#infrastructure-deployment-variables),
   [Run the infrastructure what-if](#run-the-infrastructure-what-if) and
   [Run the infrastructure deploy](#run-the-infrastructure-deploy).
-- Build and scan container images locally (optional): follow
-  [Build and scan container images locally with Podman](#build-and-scan-container-images-locally-with-podman).
 - API images only: follow [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
 - GraphQL processor event job image only: follow
   [Publish the GraphQL processor image to Azure Container Registry](#publish-the-graphql-processor-image-to-azure-container-registry).
@@ -27,6 +25,7 @@ This run book explains how to deploy the api-batch-processor stack from a laptop
   [Publish the PDS emulator image to Azure Container Registry](#publish-the-pds-emulator-image-to-azure-container-registry).
 - Final application deployment after publishing images: follow
   [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
+- Add a one-off secret to Key Vault: follow the [Key Vault secrets run book](key-vault-secrets-runbook.md).
 - Smoke test: follow [Smoke test the deployment](#smoke-test-the-deployment).
 - Troubleshooting: follow [Troubleshooting policy or deployment errors](#troubleshooting-policy-or-deployment-errors).
 
@@ -347,6 +346,12 @@ The deployment output includes `SECRETS_VAULT_NAME`. Add these secrets to that K
 
 These secrets can be added later if needed, but the external API app will not start successfully until all three secrets
 exist in Key Vault.
+
+This stack's Key Vault currently allows public network access. To add the secrets, follow
+[Add a secret when public network access is enabled](key-vault-secrets-runbook.md#add-a-secret-when-public-network-access-is-enabled)
+in the Key Vault secrets run book. If public network access is changed to disabled, follow
+[Add a secret when public network access is disabled](key-vault-secrets-runbook.md#add-a-secret-when-public-network-access-is-disabled)
+instead.
 
 ## Build and scan container images locally with Podman
 

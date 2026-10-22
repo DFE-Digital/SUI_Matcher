@@ -230,6 +230,7 @@ module secrets '../../modules/shared/secrets.bicep' = {
     environmentName: environmentName
     environmentPrefix: environmentPrefix
     stackNameSuffix: stackNameSuffix
+    publicNetworkAccess: 'Disabled'
     tags: tags
   }
 }

@@ -11,9 +11,19 @@ param stackNameSuffix string = ''
 @description('Tags that will be applied to the Key Vault')
 param tags object = {}
 
+@allowed([
+  'Enabled'
+  'Disabled'
+])
+@description('Whether the Key Vault accepts public network traffic. Set to Disabled only when the caller provisions a Key Vault private endpoint with private DNS.')
+param publicNetworkAccess string = 'Enabled'
+
 var environmentToken = toLower(substring(environmentName, 0, environmentName == 'Production' ? 4 : 3))
 var stackNameToken = empty(stackNameSuffix) ? '' : '-${toLower(stackNameSuffix)}'
-var uniqueSuffix = take(uniqueString(subscription().subscriptionId, resourceGroup().name, environmentPrefix, environmentName, stackNameSuffix), 3)
+var uniqueSuffix = take(
+  uniqueString(subscription().subscriptionId, resourceGroup().name, environmentPrefix, environmentName, stackNameSuffix),
+  3
+)
 var keyVaultTags = union(tags, {
   'aspire-resource-name': 'secrets'
 })
@@ -32,6 +42,11 @@ resource secrets 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true
     enableSoftDelete: true
     enablePurgeProtection: true
+    publicNetworkAccess: publicNetworkAccess
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: publicNetworkAccess == 'Disabled' ? 'Deny' : 'Allow'
+    }
   }
 }
 
