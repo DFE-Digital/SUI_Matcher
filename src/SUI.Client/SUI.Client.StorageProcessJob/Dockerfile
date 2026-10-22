@@ -15,7 +15,7 @@ RUN dotnet publish src/SUI.Client/SUI.Client.StorageProcessJob/SUI.Client.Storag
     --no-restore \
     --output /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-azurelinux3.0-distroless-extra AS final
 WORKDIR /app
 
 ARG MATCH_API_BASE_ADDRESS
@@ -24,5 +24,5 @@ ENV DOTNET_ENVIRONMENT=Production \
     StorageProcessJob__MatchApiBaseAddress=${MATCH_API_BASE_ADDRESS}
 
 COPY --from=build /app/publish .
-USER app
+USER $APP_UID
 ENTRYPOINT ["dotnet", "SUI.Client.StorageProcessJob.dll"]

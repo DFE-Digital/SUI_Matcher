@@ -15,14 +15,11 @@ RUN dotnet publish src/SUI.Client/SUI.Client.GraphQLProcessJob/SUI.Client.GraphQ
     --no-restore \
     --output /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-azurelinux3.0-distroless-extra AS final
 WORKDIR /app
 
 ENV DOTNET_ENVIRONMENT=Production
 
-HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD echo "healthy" || exit 1
-
 COPY --from=build /app/publish .
-USER app
+USER $APP_UID
 ENTRYPOINT ["dotnet", "SUI.Client.GraphQLProcessJob.dll"]

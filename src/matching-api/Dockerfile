@@ -13,7 +13,7 @@ RUN dotnet publish src/matching-api/Matching.csproj \
     --no-restore \
     --output /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-azurelinux3.0-distroless-extra AS final
 WORKDIR /app
 
 ARG ASPNETCORE_ENVIRONMENT=Production
@@ -27,5 +27,5 @@ ENV ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT} \
     services__external-api__https__0=${EXTERNAL_API_HTTPS_ENDPOINT}
 
 COPY --from=build /app/publish .
-USER app
+USER $APP_UID
 ENTRYPOINT ["dotnet", "Matching.dll"]

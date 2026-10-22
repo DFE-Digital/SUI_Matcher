@@ -23,6 +23,7 @@ or the storage processor event job image.
   [Infrastructure deployment variables](#infrastructure-deployment-variables),
   [Run the infrastructure what-if](#run-the-infrastructure-what-if) and
   [Run the infrastructure deploy](#run-the-infrastructure-deploy).
+- Build and scan container images locally (optional): follow the [Container image security scanning run book](container-image-security-scan-runbook.md).
 - API images only: follow [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
 - Storage processor event job image only: follow
   [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
@@ -43,10 +44,11 @@ or the storage processor event job image.
 6. [Run the infrastructure what-if](#run-the-infrastructure-what-if).
 7. [Run the infrastructure deploy](#run-the-infrastructure-deploy).
 8. [Add the NHS Digital secrets to Key Vault](#add-the-nhs-digital-secrets-to-key-vault).
-9. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
-10. [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
-11. [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
-12. [Smoke test the deployment](#smoke-test-the-deployment).
+9. [Build and scan container images locally with Podman or Docker (optional)](container-image-security-scan-runbook.md).
+10. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
+11. [Publish the storage processor image to Azure Container Registry](#publish-the-storage-processor-image-to-azure-container-registry).
+12. [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
+13. [Smoke test the deployment](#smoke-test-the-deployment).
 
 ## Pick a branch, tag or commit to deploy
 
@@ -380,6 +382,22 @@ exist in Key Vault.
 Public network access is disabled on this stack's Key Vault. To add the secrets, follow
 [Add a secret when public network access is disabled](key-vault-secrets-runbook.md#add-a-secret-when-public-network-access-is-disabled)
 in the Key Vault secrets run book.
+
+## Build and scan container images locally with Podman or Docker
+
+Before publishing container images to Azure Container Registry (ACR), you can build them locally using either Podman or Docker and
+perform a vulnerability scan with Aqua Trivy.
+
+All application Dockerfiles use Microsoft's hardened Azure Linux 3.0 Distroless base image
+(`mcr.microsoft.com/dotnet/aspnet:10.0-azurelinux3.0-distroless-extra`) running as non-root `$APP_UID` (UID 1654).
+
+Follow the [Container image security scanning run book](container-image-security-scan-runbook.md) for:
+- Local image build commands for each service (`external-api`, `matching-api`, `sui-client-storage-process-job`).
+- Running Aqua Trivy scans via container socket forwarding.
+- Exporting structured JSON or HTML vulnerability reports.
+- Configuring automated quality gates that fail on HIGH or CRITICAL severity.
+- Scanning remote images directly in ACR using temporary access tokens.
+- Benchmark vulnerability comparison against previous base images.
 
 ## Publish the API images to Azure Container Registry
 
