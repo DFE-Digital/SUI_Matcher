@@ -17,7 +17,7 @@ var stackNameToken = empty(stackNameSuffix) ? '' : toLower(stackNameSuffix)
 var noHypenEnvironment = replace(environmentPrefix, '-', '')
 
 // The resource name can only contain alphanumeric characters.
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2026-01-01-preview' = {
   name: '${noHypenEnvironment}${lowercaseEnvironmentName}${stackNameToken}acr01'
   location: location
   sku: {
@@ -25,6 +25,16 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
   }
   properties: {
     dataEndpointEnabled: true
+    publicNetworkAccess: 'Disabled'
+    // Allow ACR Tasks (az acr build) to push through the network rules.
+    networkRuleBypassOptions: 'AzureServices'
+    networkRuleBypassAllowedForTasks: true
+    policies: {
+      softDeletePolicy: {
+        status: 'enabled'
+        retentionDays: 7
+      }
+    }
   }
   tags: tags
 }
