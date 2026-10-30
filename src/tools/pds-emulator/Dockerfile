@@ -11,7 +11,7 @@ RUN dotnet publish src/tools/pds-emulator/PdsEmulator/PdsEmulator.csproj \
     --no-restore \
     --output /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-azurelinux3.0-distroless-extra AS final
 WORKDIR /app
 
 ARG ASPNETCORE_ENVIRONMENT=Prod
@@ -21,5 +21,5 @@ ENV ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT} \
     HTTP_PORTS=${HTTP_PORTS}
 
 COPY --from=build /app/publish .
-USER app
+USER $APP_UID
 ENTRYPOINT ["dotnet", "PdsEmulator.dll"]

@@ -38,11 +38,12 @@ This run book explains how to deploy the api-batch-processor stack from a laptop
 5. [Run the infrastructure what-if](#run-the-infrastructure-what-if).
 6. [Run the infrastructure deploy](#run-the-infrastructure-deploy).
 7. [Add the secrets to Key Vault](#add-the-secrets-to-key-vault).
-8. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
-9. [Publish the GraphQL processor image to Azure Container Registry](#publish-the-graphql-processor-image-to-azure-container-registry).
-10. [Publish the PDS emulator image to Azure Container Registry](#publish-the-pds-emulator-image-to-azure-container-registry) (if deploying in test mode).
-11. [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
-12. [Smoke test the deployment](#smoke-test-the-deployment).
+8. [Build and scan container images locally with Podman or Docker (optional)](container-image-security-scan-runbook.md).
+9. [Publish the API images to Azure Container Registry](#publish-the-api-images-to-azure-container-registry).
+10. [Publish the GraphQL processor image to Azure Container Registry](#publish-the-graphql-processor-image-to-azure-container-registry).
+11. [Publish the PDS emulator image to Azure Container Registry](#publish-the-pds-emulator-image-to-azure-container-registry) (if deploying in test mode).
+12. [Redeploy infrastructure after publishing images](#redeploy-infrastructure-after-publishing-images).
+13. [Smoke test the deployment](#smoke-test-the-deployment).
 
 ## Pick a branch, tag or commit to deploy
 
@@ -351,6 +352,22 @@ This stack's Key Vault currently allows public network access. To add the secret
 in the Key Vault secrets run book. If public network access is changed to disabled, follow
 [Add a secret when public network access is disabled](key-vault-secrets-runbook.md#add-a-secret-when-public-network-access-is-disabled)
 instead.
+
+## Build and scan container images locally with Podman or Docker
+
+Before publishing container images to Azure Container Registry (ACR), you can build them locally using either Podman or Docker and
+perform a vulnerability scan with Aqua Trivy.
+
+All application Dockerfiles use Microsoft's hardened Azure Linux 3.0 Distroless base image
+(`mcr.microsoft.com/dotnet/aspnet:10.0-azurelinux3.0-distroless-extra`) running as non-root `$APP_UID` (UID 1654).
+
+Follow the [Container image security scanning run book](container-image-security-scan-runbook.md) for:
+- Local image build commands for each service (`external-api`, `matching-api`, `sui-client-graphql-process-job`, `pds-emulator`).
+- Running Aqua Trivy scans via container socket forwarding.
+- Exporting structured JSON or HTML vulnerability reports.
+- Configuring automated quality gates that fail on HIGH or CRITICAL severity.
+- Scanning remote images directly in ACR using temporary access tokens.
+- Benchmark vulnerability comparison against previous base images.
 
 ## Publish the API images to Azure Container Registry
 
