@@ -103,7 +103,7 @@ resource storageProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
   }
   properties: {
     environmentId: containerAppsEnvironmentId
-    workloadProfileName: 'default'
+    workloadProfileName: 'Consumption'
     configuration: {
       triggerType: 'Event'
       replicaTimeout: 21600 // 6 hours, to allow for long-running processing of large files

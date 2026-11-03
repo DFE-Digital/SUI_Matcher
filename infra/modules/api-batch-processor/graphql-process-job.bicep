@@ -84,7 +84,7 @@ resource graphqlProcessJob 'Microsoft.App/jobs@2024-10-02-preview' = {
   }
   properties: {
     environmentId: containerAppsEnvironmentId
-    workloadProfileName: 'default'
+    workloadProfileName: 'Consumption'
     configuration: {
       triggerType: triggerType
       replicaTimeout: 21600

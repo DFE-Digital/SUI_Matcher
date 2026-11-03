@@ -112,10 +112,8 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-10-02-p
     }
     workloadProfiles: [
       {
-        name: 'default'
-        workloadProfileType: 'D4'
-        minimumCount: 1
-        maximumCount: 1
+        name: 'Consumption'
+        workloadProfileType: 'Consumption'
       }
     ]
     peerTrafficConfiguration: {
