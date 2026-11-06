@@ -176,10 +176,9 @@ public class ReconciliationService(
             );
 
         logger.LogInformation(
-            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, Differences: {Differences}, LocalMissing: {LocalMissing}, NhsMissing: {NhsMissing}, SourceNhsNumberPresent: {SourceNhsNumberPresent}, SourceNhsNumberEqualsMatchedNhsNumber: {SourceNhsNumberEqualsMatchedNhsNumber}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {Score}",
+            "[RECONCILIATION_COMPLETED] AgeGroup: {AgeGroup}, Gender: {Gender}, Differences: {Differences}, LocalMissing: {LocalMissing}, NhsMissing: {NhsMissing}, SourceNhsNumberPresent: {SourceNhsNumberPresent}, SourceNhsNumberEqualsMatchedNhsNumber: {SourceNhsNumberEqualsMatchedNhsNumber}, Status: {Status}, Matching Status: {MatchingStatus}, ProcessStage: {Stage}, Confidence Score: {Score}",
             ageGroup,
             request.Gender ?? "Unknown",
-            request.AddressPostalCode ?? "Unknown",
             JsonConvert.SerializeObject(reconciliationResponse.DifferenceFields),
             JsonConvert.SerializeObject(reconciliationResponse.MissingLocalFields),
             JsonConvert.SerializeObject(reconciliationResponse.MissingNhsFields),

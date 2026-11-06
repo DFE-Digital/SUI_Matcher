@@ -159,13 +159,12 @@ public class MatchingService(
             : "Unknown";
 
         logger.LogInformation(
-            "[MATCH_COMPLETED] [ConfidenceScore={Score}] [ProcessStage={Stage}] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, Postcode: {Postcode}, DataQuality: {DataQuality}, OptionalProperties: {OptionalProperties}",
+            "[MATCH_COMPLETED] [ConfidenceScore={Score}] [ProcessStage={Stage}] MatchStatus: {MatchStatus}, AgeGroup: {AgeGroup}, Gender: {Gender}, DataQuality: {DataQuality}, OptionalProperties: {OptionalProperties}",
             score,
             resultProcessStage,
             matchStatus,
             ageGroup,
             personSpecification.Gender ?? "Unknown",
-            personSpecification.AddressPostalCode ?? "Unknown",
             JsonConvert.SerializeObject(dataQualityResult.ToDictionary()),
             JsonSerializer.Serialize(personSpecification.OptionalProperties)
         );
