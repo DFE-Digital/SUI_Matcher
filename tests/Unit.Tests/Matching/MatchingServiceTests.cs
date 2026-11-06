@@ -307,7 +307,7 @@ public sealed class MatchingServiceTests
     }
 
     [Fact]
-    public async Task ShouldLogPersonSpecificationAndResultStatus_WithMatchCompletedForAggregate()
+    public async Task Should_LogAggregateFields_When_MatchCompleted()
     {
         // Arrange
         var eighteenYearsAgo = DateTime.UtcNow.AddYears(-18);
@@ -347,11 +347,52 @@ public sealed class MatchingServiceTests
                         && v.ToString()!.Contains("MatchStatus: Match")
                         && v.ToString()!.Contains("AgeGroup: 16-18 years")
                         && v.ToString()!.Contains("Gender: male")
-                        && v.ToString()!.Contains("Postcode: TQ12 5HH")
                 ),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()
             )
+        );
+    }
+
+    [Fact]
+    public async Task Should_NotLogPostcode_When_MatchCompleted()
+    {
+        // Arrange
+        var model = new SearchSpecification
+        {
+            AddressPostalCode = "TQ12 5HH",
+            BirthDate = new DateOnly(2000, 11, 11),
+            Email = "test@test.com",
+            Family = "Smith",
+            Given = "John",
+            Gender = "male",
+            Phone = "000000000",
+        };
+
+        _nhsFhirClient
+            .Setup(x => x.PerformSearch(It.IsAny<SearchQuery>()))
+            .ReturnsAsync(
+                new SearchResult { Type = SearchResult.ResultType.Matched, Score = 0.99m }
+            );
+
+        // Act
+        await _sut.SearchAsync(model);
+
+        // Assert
+        _loggerMock.Verify(
+            logger =>
+                logger.Log(
+                    It.IsAny<LogLevel>(),
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>(
+                        (v, t) =>
+                            v.ToString()!.Contains("Postcode:")
+                            || v.ToString()!.Contains("TQ12 5HH")
+                    ),
+                    It.IsAny<Exception?>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.Never
         );
     }
 

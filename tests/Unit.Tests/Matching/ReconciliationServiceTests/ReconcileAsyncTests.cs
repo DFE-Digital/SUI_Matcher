@@ -543,6 +543,85 @@ public class ReconcileAsyncTests
             );
     }
 
+    [Fact]
+    public async Task Should_NotLogPostcode_When_ReconciliationCompletes()
+    {
+        // Arrange
+        const string localPostcode = "AA11 2BB";
+        const string nhsPostcode = "CC33 4DD";
+
+        _matchingService
+            .Setup(x => x.SearchAsync(It.IsAny<SearchSpecification>(), false))
+            .ReturnsAsync(
+                new PersonMatchResponse
+                {
+                    Result = new MatchResult
+                    {
+                        MatchStatus = MatchStatus.Match,
+                        NhsNumber = ValidNhsNumber,
+                    },
+                }
+            );
+        _nhsFhirClient
+            .Setup(x => x.PerformSearchByNhsId(ValidNhsNumber))
+            .ReturnsAsync(
+                new DemographicResult
+                {
+                    Result = new NhsPerson
+                    {
+                        NhsNumber = ValidNhsNumber,
+                        AddressPostalCodes = [nhsPostcode],
+                    },
+                }
+            );
+
+        var logger = Mock.Of<ILogger<ReconciliationService>>();
+        var sut = new ReconciliationService(_matchingService.Object, logger, _nhsFhirClient.Object);
+
+        // Act
+        await sut.ReconcileAsync(
+            new ReconciliationRequest
+            {
+                NhsNumber = ValidNhsNumber,
+                AddressPostalCode = localPostcode,
+            }
+        );
+
+        // Assert
+        Mock.Get(logger)
+            .Verify(
+                x =>
+                    x.Log(
+                        LogLevel.Information,
+                        It.IsAny<EventId>(),
+                        It.Is<It.IsAnyType>(
+                            (v, t) =>
+                                v.ToString()!.Contains("[RECONCILIATION_COMPLETED]")
+                                && !v.ToString()!.Contains("Postcode:")
+                        ),
+                        It.IsAny<Exception>(),
+                        It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                    ),
+                Times.Once
+            );
+        Mock.Get(logger)
+            .Verify(
+                x =>
+                    x.Log(
+                        It.IsAny<LogLevel>(),
+                        It.IsAny<EventId>(),
+                        It.Is<It.IsAnyType>(
+                            (v, t) =>
+                                v.ToString()!.Contains(localPostcode)
+                                || v.ToString()!.Contains(nhsPostcode)
+                        ),
+                        It.IsAny<Exception>(),
+                        It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                    ),
+                Times.Never
+            );
+    }
+
     private static bool ContainsReconciliationCompletedLogState(
         object state,
         bool expectedSourceNhsNumberPresent,
