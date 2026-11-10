@@ -180,6 +180,7 @@ resource firewallSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' =
   name: 'AzureFirewallSubnet'
   properties: {
     addressPrefix: firewallSubnetAddressPrefix
+    privateEndpointNetworkPolicies: 'Enabled'
   }
 }
 
@@ -188,6 +189,7 @@ resource firewallManagementSubnet 'Microsoft.Network/virtualNetworks/subnets@202
   name: 'AzureFirewallManagementSubnet'
   properties: {
     addressPrefix: firewallManagementSubnetAddressPrefix
+    privateEndpointNetworkPolicies: 'Enabled'
   }
 }
 
@@ -196,11 +198,15 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
   location: location
   sku: {
     name: 'Standard'
+    tier: 'Regional'
   }
   tags: tags
   properties: {
     publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
+    ddosSettings:{
+        protectionMode: 'VirtualNetworkInherited'
+    }
   }
 }
 
@@ -209,11 +215,15 @@ resource managementPublicIP 'Microsoft.Network/publicIPAddresses@2023-06-01' = {
   location: location
   sku: {
     name: 'Standard'
+    tier: 'Regional'
   }
   tags: tags
   properties: {
     publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
+    ddosSettings:{
+        protectionMode: 'VirtualNetworkInherited'
+    }
   }
 }
 
@@ -269,7 +279,7 @@ resource firewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
   }
 }
 
-resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
+resource applicationRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2026-01-01' = {
   parent: firewallPolicy
   name: 'DefaultApplicationRuleCollectionGroup'
   properties: {

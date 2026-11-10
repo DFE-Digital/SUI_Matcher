@@ -23,6 +23,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
     sku: {
       name: 'PerGB2018'
     }
+    retentionInDays: 30
   }
 }
 
@@ -58,6 +59,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
     Application_Type: 'web'
     Flow_Type: 'Bluefield'
     WorkspaceResourceId: logAnalyticsWorkspace.id
+    Request_Source: 'rest'
   }
 }
 
