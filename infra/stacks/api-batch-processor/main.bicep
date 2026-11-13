@@ -244,6 +244,7 @@ module containerAppEnvironment '../../modules/shared/container-app-environment.b
   }
   dependsOn: [
     caeFirewallPeering
+    acrPrivateEndpoint
   ]
 }
 
