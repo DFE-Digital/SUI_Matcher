@@ -24,6 +24,12 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2026-01-01-pr
     name: 'Premium'
   }
   properties: {
+      encryption: {
+        status: 'disabled'
+      }
+    endpointProtocol: 'IPv4'
+    regionalEndpoints: 'Disabled'
+    roleAssignmentMode: 'LegacyRegistryPermissions'
     dataEndpointEnabled: true
     publicNetworkAccess: 'Disabled'
     // Allow ACR Tasks (az acr build) to push through the network rules.

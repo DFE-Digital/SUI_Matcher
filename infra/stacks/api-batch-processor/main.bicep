@@ -161,17 +161,6 @@ module secrets '../../modules/shared/secrets.bicep' = {
   }
 }
 
-module keyVaultPrivateEndpoint '../../modules/shared/key-vault-private-endpoint.bicep' = {
-  name: 'secrets-private-endpoint'
-  params: {
-    location: location
-    tags: tags
-    keyVaultName: secrets.outputs.name
-    peSubnetId: containerAppNetwork.outputs.privateEndpointSubnetId
-    vnetId: containerAppNetwork.outputs.virtualNetworkId
-  }
-}
-
 module egressFirewall '../../modules/shared/egress-firewall.bicep' = {
   name: 'egress-firewall'
   params: {
@@ -205,6 +194,27 @@ module containerAppNetwork '../../modules/shared/container-app-network.bicep' = 
     tags: tags
   }
 }
+module keyVaultPrivateEndpoint '../../modules/shared/key-vault-private-endpoint.bicep' = {
+  name: 'secrets-private-endpoint'
+  params: {
+    location: location
+    tags: tags
+    keyVaultName: secrets.outputs.name
+    peSubnetId: containerAppNetwork.outputs.privateEndpointSubnetId
+    vnetId: containerAppNetwork.outputs.virtualNetworkId
+  }
+}
+
+module acrPrivateEndpoint '../../modules/shared/acr-private-endpoint.bicep' = {
+  name: 'acr-private-endpoint'
+  params: {
+    location: location
+    tags: tags
+    registryName: containerRegistry.outputs.name
+    peSubnetId: containerAppNetwork.outputs.privateEndpointSubnetId
+    vnetId: containerAppNetwork.outputs.virtualNetworkId
+  }
+}
 
 module caeFirewallPeering '../../modules/shared/virtual-network-peering.bicep' = {
   name: 'cae-firewall-peering'
@@ -234,6 +244,7 @@ module containerAppEnvironment '../../modules/shared/container-app-environment.b
   }
   dependsOn: [
     caeFirewallPeering
+    acrPrivateEndpoint
   ]
 }
 
@@ -288,6 +299,19 @@ module matchingApi '../../modules/api-apps/matching-api.bicep' = {
   }
 }
 
+module pdsEmulator '../../modules/api-apps/pds-emulator.bicep' = if (usePdsEmulator) {
+  name: 'pds-emulator'
+  params: {
+    location: location
+    containerAppsEnvironmentId: containerAppEnvironment.outputs.id
+    containerRegistryServer: containerRegistry.outputs.endpoint
+    managedIdentityId: identity.outputs.id
+    environmentName: environmentName
+    imageTag: pdsEmulatorImageTag
+    tags: tags
+  }
+}
+
 module externalApi '../../modules/api-apps/external-api.bicep' = {
   name: 'external-api'
   params: {
@@ -311,19 +335,6 @@ module externalApi '../../modules/api-apps/external-api.bicep' = {
   dependsOn: [
     keyVaultPrivateEndpoint
   ]
-}
-
-module pdsEmulator '../../modules/api-apps/pds-emulator.bicep' = if (usePdsEmulator) {
-  name: 'pds-emulator'
-  params: {
-    location: location
-    containerAppsEnvironmentId: containerAppEnvironment.outputs.id
-    containerRegistryServer: containerRegistry.outputs.endpoint
-    managedIdentityId: identity.outputs.id
-    environmentName: environmentName
-    imageTag: pdsEmulatorImageTag
-    tags: tags
-  }
 }
 
 module graphqlProcessJob '../../modules/api-batch-processor/graphql-process-job.bicep' = {
