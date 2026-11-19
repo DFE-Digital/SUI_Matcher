@@ -37,9 +37,10 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                     return SearchResult.MultiMatched();
                 }
 
-                return SearchResult.Error(
-                    "Error occurred while parsing Nhs Digital FHIR API search response"
-                );
+                const string errorMessage =
+                    "Error occurred while parsing Nhs Digital FHIR API search response";
+                logger.LogError("[PdsResponseError] {ErrorMessage}", errorMessage);
+                return SearchResult.Error(errorMessage);
             }
 
             logger.LogInformation("{EntryCount} patient record(s) found", patient.Entry.Count);
@@ -50,6 +51,7 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                 case 1:
                     if (patient.Entry[0].Resource is Patient patientObj)
                     {
+                        LogSecurityFlags(patientObj);
                         LogInputAndPdsDifferences(query, patientObj);
                     }
 
@@ -58,14 +60,18 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
 
                     return SearchResult.Match(patient.Entry[0].Resource?.Id ?? string.Empty, score);
                 default:
-                    return SearchResult.Error(
-                        "Error occurred while parsing Nhs Digital FHIR API search response, more than 1 entry found"
-                    );
+                    const string errorMessage =
+                        "Error occurred while parsing Nhs Digital FHIR API search response, more than 1 entry found";
+                    logger.LogError("[PdsResponseError] {ErrorMessage}", errorMessage);
+                    return SearchResult.Error(errorMessage);
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error occurred while performing Nhs Digital FHIR API search");
+            logger.LogError(
+                ex,
+                "[PdsResponseError] Error occurred while performing Nhs Digital FHIR API search"
+            );
             return SearchResult.Error(ex.Message);
         }
     }
@@ -88,10 +94,13 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             }
 
             logger.LogInformation("Patient record found for Nhs number");
-            logger.LogInformation(
-                "Security flags {SecurityFlag}",
-                string.Join(',', data.Meta?.Security.Select(c => c.Code) ?? [])
-            );
+            LogSecurityFlags(data);
+            if (!string.Equals(nhsId?.Trim(), data.Id?.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogInformation(
+                    "[PdsNhsNumberSuperseded] Number provided does not match number fetched from PDS."
+                );
+            }
             return new DemographicResult
             {
                 Result = new NhsPerson
@@ -175,7 +184,7 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
             }
             logger.LogError(
                 ex,
-                "Error occurred while performing Nhs Digital FHIR API search by NHS ID{FhirError}",
+                "[PdsResponseError] Error occurred while performing Nhs Digital FHIR API search by NHS ID: {FhirError}",
                 fhirError
             );
             return DemographicResult(fhirError, status);
@@ -193,6 +202,14 @@ public class NhsFhirClient(IFhirClientFactory fhirClientFactory, ILogger<NhsFhir
                 "Error occurred while performing Nhs Digital FHIR API search by NHS ID" + fhirError,
             Status = status,
         };
+    }
+
+    private void LogSecurityFlags(Resource resource)
+    {
+        logger.LogInformation(
+            "[PdsSecurityFlag] {SecurityFlag}",
+            string.Join(',', resource.Meta?.Security.Select(c => c.Code) ?? [])
+        );
     }
 
     private void LogInputAndPdsDifferences(SearchQuery query, Patient patient)
