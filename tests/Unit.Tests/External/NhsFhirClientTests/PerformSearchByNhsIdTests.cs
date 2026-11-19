@@ -120,7 +120,7 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
-        await client.PerformSearchByNhsId("123");
+        await client.PerformSearchByNhsId("9449305552");
 
         // Assert
         VerifyLog(LogLevel.Information, "[PdsSecurityFlag] R", Times.Once());
@@ -136,7 +136,7 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
-        await client.PerformSearchByNhsId("123");
+        await client.PerformSearchByNhsId("9449305552");
 
         // Assert
         VerifyLog(LogLevel.Information, "[PdsNhsNumberSuperseded]", Times.Never());
@@ -152,7 +152,7 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
-        await client.PerformSearchByNhsId("1234567890 ");
+        await client.PerformSearchByNhsId("9999999993");
 
         // Assert
         VerifyLog(
@@ -175,7 +175,7 @@ public class PerformSearchByNhsIdTests : BaseNhsFhirClientTests
         var client = new NhsFhirClient(_fhirClientFactory.Object, _loggerMock.Object);
 
         // Act
-        await client.PerformSearchByNhsId("1234567890");
+        await client.PerformSearchByNhsId("9999999993");
 
         // Assert
         VerifyLog(

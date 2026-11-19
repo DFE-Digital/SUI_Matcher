@@ -41,7 +41,7 @@ public class BaseNhsFhirClientTests
                     {
                         Resource = new Patient
                         {
-                            Id = "123",
+                            Id = "9449305552",
                             Meta = new Meta
                             {
                                 Security =
@@ -76,7 +76,7 @@ public class BaseNhsFhirClientTests
             var resource =
                 new Patient
                 {
-                    Id = "123",
+                    Id = "9449305552",
                     Meta = new Meta
                     {
                         Security =
@@ -297,8 +297,8 @@ public class BaseNhsFhirClientTests
             {
                 Entry =
                 [
-                    new Bundle.EntryComponent { Resource = new Patient { Id = "123" } },
-                    new Bundle.EntryComponent { Resource = new Patient { Id = "456" } },
+                    new Bundle.EntryComponent { Resource = new Patient { Id = "9449305552" } },
+                    new Bundle.EntryComponent { Resource = new Patient { Id = "9449305554" } },
                 ],
             };
 

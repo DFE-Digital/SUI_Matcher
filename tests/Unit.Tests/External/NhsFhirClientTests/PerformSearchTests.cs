@@ -30,7 +30,7 @@ public class PerformSearchTests : BaseNhsFhirClientTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(SearchResult.ResultType.Matched, result.Type);
-        Assert.Equal("123", result.NhsNumber);
+        Assert.Equal("9449305552", result.NhsNumber);
     }
 
     [Fact]
