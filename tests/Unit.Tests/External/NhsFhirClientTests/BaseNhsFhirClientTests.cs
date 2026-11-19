@@ -39,7 +39,20 @@ public class BaseNhsFhirClientTests
                 {
                     new()
                     {
-                        Resource = new Patient { Id = "123" },
+                        Resource = new Patient
+                        {
+                            Id = "123",
+                            Meta = new Meta
+                            {
+                                Security =
+                                [
+                                    new Coding(
+                                        "http://terminology.hl7.org/CodeSystem/v3-Confidentiality",
+                                        "R"
+                                    ),
+                                ],
+                            },
+                        },
                         Search = new Bundle.SearchComponent()
                         {
                             Mode = Bundle.SearchEntryMode.Match,
@@ -64,6 +77,16 @@ public class BaseNhsFhirClientTests
                 new Patient
                 {
                     Id = "123",
+                    Meta = new Meta
+                    {
+                        Security =
+                        [
+                            new Coding(
+                                "http://terminology.hl7.org/CodeSystem/v3-Confidentiality",
+                                "R"
+                            ),
+                        ],
+                    },
                     Name =
                     [
                         new HumanName("Smith", ["John"]) { Period = null },
@@ -254,6 +277,69 @@ public class BaseNhsFhirClientTests
 
             return await Task.FromResult<Bundle?>(bundle);
         }
+    }
+
+    protected class TestFhirClientMultipleEntries : FhirClient
+    {
+        public TestFhirClientMultipleEntries(
+            string endpoint,
+            FhirClientSettings settings = null!,
+            HttpMessageHandler messageHandler = null!
+        )
+            : base(endpoint, settings, messageHandler) { }
+
+        public override async Task<Bundle?> SearchAsync<TResource>(
+            SearchParams q,
+            CancellationToken? ct = null
+        )
+        {
+            var bundle = new Bundle
+            {
+                Entry =
+                [
+                    new Bundle.EntryComponent { Resource = new Patient { Id = "123" } },
+                    new Bundle.EntryComponent { Resource = new Patient { Id = "456" } },
+                ],
+            };
+
+            return await Task.FromResult<Bundle?>(bundle);
+        }
+    }
+
+    protected void VerifyLog(
+        LogLevel level,
+        string expectedMessage,
+        Times times,
+        bool hasException = false
+    )
+    {
+        if (hasException)
+        {
+            _loggerMock.Verify(
+                logger =>
+                    logger.Log(
+                        level,
+                        It.IsAny<EventId>(),
+                        It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains(expectedMessage)),
+                        It.IsAny<Exception>(),
+                        It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                    ),
+                times
+            );
+            return;
+        }
+
+        _loggerMock.Verify(
+            logger =>
+                logger.Log(
+                    level,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains(expectedMessage)),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            times
+        );
     }
 }
 
